@@ -1,0 +1,270 @@
+html {
+  overflow-y: scroll;
+  height: 100%;
+}
+
+body {
+  padding: 0;
+  height: 100%;
+}
+
+/*
+ * Never "select" buttons.
+ * @see http://stackoverflow.com/questions/20340138/remove-blue-border-from-css-custom-styled-button-in-chrome
+ */
+button:focus {outline:none !important;}
+button:active { outline:none !important; }
+
+.hide {
+  display: none !important;
+}
+
+.max-height {
+  height: 100%;
+}
+
+.max-width {
+  width: 100%;
+}
+
+.overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+}
+
+.overlay-screen > div {
+  display: flex;
+  height: 100%;
+  font-size: 1.5em;
+  flex-direction: column;
+  justify-content: center; /* vertical */
+  align-items: center; /* horizontal */
+}
+
+/**
+ * HACKFIX: react-bootstrap seems to slightly mess up the navbar?
+ * @see http://stackoverflow.com/a/20432251/2228771
+ */
+.navbar-nav.navbar-right:last-child {
+    margin-right: 0;
+}
+
+
+/* Remove border around blocks */
+.blocklyMainBackground {
+  stroke: rgba(0,0,0,0) !important;
+}
+
+/* Remove the drag surface from the workspace entirely */
+.blocklyDragSurface {
+  display: none;
+}
+
+.flex-row-multi {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;  
+  
+  -webkit-flex-flow: row wrap;
+  flex-flow: row wrap;
+}
+
+
+.no-margin {
+  margin: 0 !important;
+}
+.no-padding {
+  padding: 0 !important;
+}
+.no-border {
+  border: 0 !important;
+}
+.no-box-shadow {
+  box-shadow: none !important;
+}
+
+.margin-half {
+  margin: 0.5em;
+}
+.margin {
+  margin: 1em;
+}
+.margin2 {
+  margin: 2em;
+}
+
+.padding-half {
+  padding: 0.5em;
+}
+.padding {
+  padding: 1em;
+}
+.padding2 {
+  padding: 2em;
+}
+
+
+
+.color-green {
+  color: green;
+}
+.color-lightgreen {
+  color: lightgreen;
+}
+.color-gray {
+  color: gray;
+}
+
+.color-red {
+  color: red;
+}
+
+.color-yellow {
+  color: yellow;
+}
+
+.color-lightred {
+  color: IndianRed;
+}
+
+.color-darkred {
+  color: darkred;
+}
+
+.background-red {
+  background-color: red;
+  background-image: none;
+}
+
+.background-light-red {
+  background-color: IndianRed;
+  background-image: none;
+}
+
+
+
+.inline {
+  display: inline;
+}
+
+.inline-block {
+  display: inline-block;
+}
+
+.inline-hcentered {
+  text-align: center;
+}
+
+.inline-vcentered {
+  vertical-align: middle;
+}
+
+
+/**
+ * #######################################################
+ * App-specific classes: Header + Footer
+ * #######################################################
+ */
+
+.header-gavel-button {
+}
+
+.header-gavel-button.active {
+}
+
+.header-right-container {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-right > a {
+  padding: 0 !important;
+}
+
+
+.footer  { order: 3; }
+
+.markdown {
+  font-size: 1.4em;
+}
+
+/**
+ * #######################################################
+ * App-specific classes: User Profile
+ * #######################################################
+ */
+
+ .user-image-tiny {
+  width: 1em;
+ }
+
+ .user-tag {
+  display: flex;
+  align-items: center; /* align vertical */
+ }
+
+
+/**
+ * #######################################################
+ * App-specific classes: Util
+ * #######################################################
+ */
+
+.markdown {
+  max-width: 100%;
+}
+
+.markdown * {
+  max-width: 100%;
+}
+
+
+/**
+ * #######################################################
+ * Useful classes for content embedding
+ * #######################################################
+ */
+
+
+/* see: http://stackoverflow.com/questions/25302836/responsive-video-iframes-keeping-aspect-ratio-with-only-css */
+
+.fill-16-9 {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56%;
+}
+
+.fill-16-9 * {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+}
+
+.fill-4-3 {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 75%;
+}
+
+.fill-4-3 * {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+}
+
+
+.spaced-row {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+}

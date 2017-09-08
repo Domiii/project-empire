@@ -1,0 +1,93 @@
+{
+  "rules": {
+    "dbState": {
+      "current": {
+        ".read": "auth !== null",
+        ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
+      }
+    },
+
+    "notifications": {
+      ".read": "auth !== null",
+
+      "public" : {
+        ".indexOn": ["updatedAt", "type"],
+        
+        "$notificationId" : {
+          ".write": "auth !== null && !data.exists() && newData.exists() && newData.child('uid').val() === auth.uid"
+        }
+      },
+
+      "other" : {
+        ".indexOn": ["updatedAt", "type"],
+        
+        "$notificationId" : {
+          ".write": "auth !== null && !data.exists() && newData.exists() && newData.child('uid').val() === auth.uid"
+        }
+      }
+    },
+    
+    "users": {
+      "public": {
+        ".read": "true",
+
+        "$uid" : {
+          "displayName": {
+            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 5)))"
+          },
+          "photoURL": {
+            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 5)))"
+          },
+          "role" : {
+            ".write": "false"
+          },
+          "locale" : {
+            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 5)))"
+          },
+          "updatedAt": {
+            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 5)))"
+          }
+        }
+      },
+      "private": {
+        "$uid" : {
+          ".read": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 5)))",
+
+          "displayRole" : {
+            ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
+          },
+          "prefs": {
+            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 5)))"
+          },
+          "updatedAt": {
+            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 5)))"
+          },
+          "data": {
+            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 5)))"
+          }
+        }
+      }
+    },
+
+    "groups": {
+      ".read": "auth !== null",
+
+      "$groupId": {
+        ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
+      }
+    },
+
+    "_index": {
+      "userGroups": {
+        "user": {
+          ".read": "auth !== null",
+          ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
+        },
+        "group": {
+          ".read": "auth !== null",
+          ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
+        }
+      }
+    }
+  }
+}
