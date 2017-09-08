@@ -3,7 +3,7 @@
     "dbState": {
       "current": {
         ".read": "auth !== null",
-        ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
+        ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
       }
     },
 
@@ -33,37 +33,37 @@
 
         "$uid" : {
           "displayName": {
-            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 5)))"
+            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
           },
           "photoURL": {
-            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 5)))"
+            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
           },
           "role" : {
             ".write": "false"
           },
           "locale" : {
-            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 5)))"
+            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
           },
           "updatedAt": {
-            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 5)))"
+            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
           }
         }
       },
       "private": {
         "$uid" : {
-          ".read": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 5)))",
+          ".read": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))",
 
           "displayRole" : {
-            ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
+            ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
           },
           "prefs": {
-            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 5)))"
+            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
           },
           "updatedAt": {
-            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 5)))"
+            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
           },
           "data": {
-            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 5)))"
+            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
           }
         }
       }
@@ -73,7 +73,7 @@
       ".read": "auth !== null",
 
       "$groupId": {
-        ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
+        ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
       }
     },
 
@@ -81,11 +81,11 @@
       "userGroups": {
         "user": {
           ".read": "auth !== null",
-          ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
+          ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
         },
         "group": {
           ".read": "auth !== null",
-          ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
+          ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
         }
       }
     }

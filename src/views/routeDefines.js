@@ -8,7 +8,7 @@ import App from './app';
 import SignInPage from './pages/SignInPage';
 import UserProfilePage from './pages/UserProfilePage';
 import LandingPage from './pages/LandingPage';
-import NotificationPage from './pages/NotificationPage';
+import GMPage from './pages/GMPage';
 import GroupPage from './pages/GroupPage';
 //import TestPage from './pages/TestPage';
 
@@ -50,10 +50,10 @@ export const getRoutes = getState => {
         onEnter: requireAuth(getState)
       },
       {
-        name: routeNames.NOTIFICATIONS,
-        path: routeTemplates.NOTIFICATIONS,
+        name: routeNames.GM,
+        path: routeTemplates.GM,
         indexRoute: {
-          component: NotificationPage,
+          component: GMPage,
           onEnter: requireAuth(getState)
         }
       },

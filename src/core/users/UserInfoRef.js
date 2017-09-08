@@ -3,6 +3,8 @@ import { lookupLocalized } from 'src/util/localizeUtil';
 
 import pick from 'lodash/pick';
 
+import Roles from './Roles';
+
 // access to the current user's info
 const UserInfoRef = makeRefWrapper({
   pathTemplate: '/users',
@@ -25,11 +27,11 @@ const UserInfoRef = makeRefWrapper({
         },
 
         isAdmin() {
-          return this.role() >= 5;
+          return this.role() >= Roles.Admin;
         },
 
         isAdminDisplayMode() {
-          return this.isAdmin() && this.displayRole() >= 5;
+          return this.isAdmin() && this.displayRole() >= Roles.Admin;
         },
 
         getLocalized(obj, entry) {
@@ -37,7 +39,7 @@ const UserInfoRef = makeRefWrapper({
         },
 
         setAdminDisplayMode(enabled) {
-          return this.set_displayRole(enabled ? 5 : 1);
+          return this.set_displayRole(enabled ? Roles.Admin : Roles.User);
         },
 
         setUserData(userData) {
