@@ -14,8 +14,8 @@ import fs from 'fs';
 const enableLogging = false;
 
 const secretPaths = {
-  production: './secret.production.json',
-  test: './secret.test.json'
+  production: './secret/secret.production.json',
+  test: './secret/secret.test.json'
 };
 
 const appSettings = {
