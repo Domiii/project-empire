@@ -7,6 +7,30 @@
       }
     },
 
+    "missions": {
+      ".read": "auth !== null",
+
+      "$missionId": {
+        ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+      }
+    },
+
+    "adventures": {
+      ".read": "auth !== null",
+
+      "$adventureId": {
+        ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
+      }
+    },
+
+    "groups": {
+      ".read": "auth !== null",
+
+      "$groupId": {
+        ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+      }
+    },
+
     "notifications": {
       ".read": "auth !== null",
 
@@ -69,14 +93,6 @@
       }
     },
 
-    "groups": {
-      ".read": "auth !== null",
-
-      "$groupId": {
-        ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
-      }
-    },
-
     "_index": {
       "userGroups": {
         "user": {
@@ -86,6 +102,16 @@
         "group": {
           ".read": "auth !== null",
           ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+        }
+      },
+      "adventureUsers": {
+        "user": {
+          ".read": "auth !== null",
+          ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
+        },
+        "adventure": {
+          ".read": "auth !== null",
+          ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
         }
       }
     }

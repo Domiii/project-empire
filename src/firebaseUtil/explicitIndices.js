@@ -314,7 +314,8 @@ class M2MExplicitIndex {
     const leftIds = this.getLeftIdsByRightId(rightIds);
     const result = mapValues(
       pickBy(leftIds, v => !!v), 
-      v => this.leftEntryRef.getAllData(Object.keys(v)));
+      v => this.leftEntryRef.getAllData(Object.keys(pickBy(v, leftId => !!leftId)))
+    );
 
     if (isEmpty(result)) {
       return EmptyObject;

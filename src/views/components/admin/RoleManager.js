@@ -37,19 +37,27 @@ function makeChangeRoleButtons(setRoleName) {
     map(userListNames, roleName => {
       const header = `Make user ${roleName}?`;
       const changeRole = uid => setRoleName(uid, roleName);
-      const btnEl = ({open}) => (<Button onClick={open} bsSize="small"
-            className="color-red no-padding">
-          {roleName}
-        </Button>);
 
-      return ({user, uid}) => (<ConfirmModal
-        key={roleName}
-        header={header}
-        body={(<span>{user.displayName}</span>)}
-        ButtonCreator={btnEl}
-        onConfirm={changeRole}
-        confirmArgs={uid}
-      />);
+      return ({user, uid}) => {
+        const arrowEl = Roles[roleName] < user.role ? 
+          (<span className="color-red"><FAIcon name="level-down" /></span>) :
+          (<span className="color-green"><FAIcon name="level-up" /></span>);
+        const btnEl = ({open}) => (<Button onClick={open} bsSize="small"
+              className="no-padding">
+            { roleName } { arrowEl }
+          </Button>);
+        return (<ConfirmModal
+          key={roleName}
+          header={header}
+          body={(<span>
+            { user.displayName }
+            { arrowEl }
+          </span>)}
+          ButtonCreator={btnEl}
+          onConfirm={changeRole}
+          confirmArgs={uid}
+        />);
+      };
     }
   ));
 }

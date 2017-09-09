@@ -1,3 +1,0 @@
-
-// * Mission list
-// (* Mission Editor)

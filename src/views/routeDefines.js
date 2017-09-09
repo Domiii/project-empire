@@ -8,8 +8,9 @@ import App from './app';
 import SignInPage from './pages/SignInPage';
 import UserProfilePage from './pages/UserProfilePage';
 import LandingPage from './pages/LandingPage';
+import MissionControlPage from './pages/MissionControlPage';
 import GMPage from './pages/GMPage';
-import GuardianPage from './pages/GuardianPage';
+import AdventurePage from './pages/AdventurePage';
 import GroupPage from './pages/GroupPage';
 //import TestPage from './pages/TestPage';
 
@@ -51,6 +52,14 @@ export const getRoutes = getState => {
         onEnter: requireAuth(getState)
       },
       {
+        name: routeNames.MISSION_CONTROL,
+        path: routeTemplates.MISSION_CONTROL,
+        indexRoute: {
+          component: MissionControlPage,
+          onEnter: requireAuth(getState)
+        }
+      },
+      {
         name: routeNames.GM,
         path: routeTemplates.GM,
         indexRoute: {
@@ -59,10 +68,10 @@ export const getRoutes = getState => {
         }
       },
       {
-        name: routeNames.GUARDIAN,
-        path: routeTemplates.GUARDIAN,
+        name: routeNames.ADVENTURES,
+        path: routeTemplates.ADVENTURES,
         indexRoute: {
-          component: GuardianPage,
+          component: AdventurePage,
           onEnter: requireAuth(getState)
         }
       },

@@ -5,6 +5,7 @@ import 'bootstrap/dist/css/bootstrap-theme.css';
 import 'font-awesome/css/font-awesome.min.css';
 
 import 'react-flex/index.css';
+import 'react-select/dist/react-select.css';
 
 // import our own main CSS
 import 'src/views/styles/styles.scss';

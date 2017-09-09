@@ -137,14 +137,12 @@ export default class Header extends PureComponent {
           </Navbar.Header>
           <Navbar.Collapse>
             <Nav>
-              <LinkContainer to='/missionControl'>
+              <LinkContainer to='/mymissions'>
                 <NavItem eventKey={2}>Mission Control</NavItem>
               </LinkContainer>
-              { isGuardian &&
-                <LinkContainer to='/guardians'>
-                  <NavItem eventKey={3}>Guardians</NavItem>
-                </LinkContainer>
-              }
+              <LinkContainer to='/adventures'>
+                <NavItem eventKey={3}>Adventures</NavItem>
+              </LinkContainer>
               { isAdminView &&
                 <LinkContainer to='/gm'>
                   <NavItem eventKey={4}>GM Tools</NavItem>

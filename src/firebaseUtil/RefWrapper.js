@@ -554,10 +554,9 @@ function createRefWrapperBase() {
 
     getAllData(pathOrPaths, defaultValue = null) {
       const paths = isArray(pathOrPaths) ? 
-        pathOrPaths : [pathOrPaths];
+        pathOrPaths : (!!pathOrPaths ? [pathOrPaths] : []);
 
       // TODO: getData not quite working here?
-      //console.log(this.getData(paths[0]));
 
       // create object where paths as keys and data as values
       const result = reduce(paths, 

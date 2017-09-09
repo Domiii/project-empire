@@ -27,7 +27,7 @@ import GroupEditor from './GroupEditor';
     // userInfoRef: UserInfoRef(firebase),
     // groupsRef,
     //userRef,
-    groupsRef: groupsRef && groupsRef.val,
+    groupsRef: groupsRef.val,
     //userGroupRef,
     
     addGroup: groupsRef.push_group,

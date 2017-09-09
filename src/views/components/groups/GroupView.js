@@ -5,7 +5,7 @@ import React, { Component, PropTypes } from 'react';
 import autoBind from 'react-autobind';
 import Moment from 'react-moment';
 import {
-  Alert, Badge, ListGroup, ListGroupItem,
+  Alert, Badge,
   Well
 } from 'react-bootstrap';
 

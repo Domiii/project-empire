@@ -5,8 +5,12 @@
 
 Important:
 
-* Mission list
-* AdventurePage:
+* Mission Control -> Mission list
+* AdventurePage: 『登記任務』
+  * 建立 + edit teams
+    * assign mission
+
+* Mission Control -> Current Adventure:
   * mission name + team members
   * 鑑定前：
     * 個人鑑定表, include:
@@ -14,13 +18,11 @@ Important:
         * also check 準備的資料的完整度
       * more Checklists?
         * 也可以直接選　｢i don't care｣，忽略 checklist
-* GuardianPage: 『登記任務』
-  * 建立 + edit teams
-    * assign mission
+
 * GMPage
-  * RoleManager
   * 鑑定紀錄
     * 一堆 checklist
+    * archiving an adventure
   * 資源的紀錄
 
 (* Game Board)
@@ -39,7 +41,7 @@ Important:
   * My Current Adventure
     * [if no mission] "please register a mission with Guardian"
     * current mission info + team info
-    * Team activity board + 紀錄 area
+    * activity log + notes area
     * [future work] milestones?
     * 鑑定區
       * 預備

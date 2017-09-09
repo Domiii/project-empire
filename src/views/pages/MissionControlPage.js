@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { firebaseConnect } from 'react-redux-firebase'
 import { 
-  Alert, Button, Jumbotron, Well
+  Alert, Button, Jumbotron, Well, Panel
 } from 'react-bootstrap';
 
 import autoBind from 'react-autobind';
@@ -14,12 +14,23 @@ import { LoadOverlay } from 'src/views/components/overlays';
 
 
 @firebaseConnect((props, firebase) => {
+  // const paths = [
+  //   GroupsRef.makeQuery(),
+  //   '/users/public'
+  // ];
+  // UserGroupRef.addIndexQueries(paths);
   return [];
 })
 @connect(({ firebase }, props) => {
+  // const userGroupRef = UserGroupRef(firebase);
+  // return {
+  //   groupsRef: userGroupRef.refs.group,
+  //   userInfoRef: userGroupRef.refs.user,
+  //   userGroupRef
+  // };
   return {};
 })
-export default class LandingPage extends Component {
+export default class MissionControlPage extends Component {
   static contextTypes = {
     currentUserRef: PropTypes.object.isRequired
   };
@@ -36,20 +47,20 @@ export default class LandingPage extends Component {
   }
 
   render() {
+    const {
+      children
+    } = this.props;
+
     if (this.IsNotLoadedYet) {
       // still loading
       return (<LoadOverlay />);
     }
 
-    //console.log(this.context.currentUserRef, this.context.currentUserRef.isAdminDisplayMode());
-
     return (
       <div>
-        <span>hi!</span>
-        <pre>（任務鑑定前自評表）
-  TODO: Rule book
-  TODO: Q & A
-  專案帝國的新聞　（or 上課簡報）</pre>
+        <Panel header="My Current Adventure!">
+          
+        </Panel>
       </div>
     );
   }

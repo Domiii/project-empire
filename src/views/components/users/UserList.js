@@ -7,7 +7,7 @@ import {
 
 
 
-class RenderUserDefault extends Component {
+export class UserBadge extends Component {
   static propTypes = {
     user: PropTypes.object.isRequired,
     uid: PropTypes.string.isRequired,
@@ -45,14 +45,14 @@ export default class UserList extends Component {
       renderUser
     } = this.props;
 
-    const RenderUser = renderUser || RenderUserDefault;
+    const RenderUser = renderUser || UserBadge;
 
-    return (<div>
+    return (<span>
       {map(users, (user, uid) => (
         !user ? null : <span key={uid}>
-          { <RenderUser user={user} uid={uid} /> }
+          { <RenderUser user={user} uid={uid} /> }&nbsp;
         </span>
       ))}
-    </div>);
+    </span>);
   }
 }
