@@ -12,6 +12,8 @@ import {
 
 import { FAIcon } from 'src/views/components/util';
 
+import Roles from 'src/core/users/Roles';
+
 export default class Header extends PureComponent {
   static contextTypes = {
     router: PropTypes.object.isRequired,
@@ -68,6 +70,7 @@ export default class Header extends PureComponent {
     const { signOut } = this.props;
 
     const isAdminView = currentUserRef && currentUserRef.isAdminDisplayMode();
+    const isGuardian = currentUserRef && currentUserRef.role() >= Roles.Guardian;
     const isLoading = !currentUserRef || !currentUserRef.isLoaded;
     const userData = currentUserRef && currentUserRef.data();
     const lang = currentUserRef && currentUserRef.locale() || 'en';
@@ -131,18 +134,23 @@ export default class Header extends PureComponent {
               <Link to='/' onlyActiveOnIndex={true}><span>Home</span></Link>
             </Navbar.Brand>
             <Navbar.Toggle />
-            {isAdminView &&
-              <Nav> 
-                <LinkContainer to='/notifications'>
-                  <NavItem eventKey={1}>Notifications</NavItem>
-                </LinkContainer>
-                <LinkContainer to='/groups'>
-                  <NavItem eventKey={1}>Groups</NavItem>
-                </LinkContainer>
-              </Nav>
-            }
           </Navbar.Header>
           <Navbar.Collapse>
+            <Nav>
+              <LinkContainer to='/missionControl'>
+                <NavItem eventKey={2}>Mission Control</NavItem>
+              </LinkContainer>
+              { isGuardian &&
+                <LinkContainer to='/guardians'>
+                  <NavItem eventKey={3}>Guardians</NavItem>
+                </LinkContainer>
+              }
+              { isAdminView &&
+                <LinkContainer to='/gm'>
+                  <NavItem eventKey={4}>GM Tools</NavItem>
+                </LinkContainer>
+              }
+            </Nav>
             <Nav pullRight className="header-right-container">
               { adminToolsEL }
               { userToolsEl }

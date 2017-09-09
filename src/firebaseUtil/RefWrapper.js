@@ -251,7 +251,6 @@ function _makeAddQuery(makeQuery, groupBy, childrenWrappers) {
   if (!isEmpty(groupBy)) {
     // when groupBy is given, we actually want to query all children instead
     return (paths, ...args) => {
-      // TODO: redo childrenWrappers as name -> content objects
       forEach(childrenWrappers, (child, childName) => {
         _addQueries(child.makeQuery, paths, ...args);
       });
@@ -327,6 +326,7 @@ function _makeRefWrapper(parent, inheritedSettings, cfgOrPath) {
   func.indices = indices;
   func.groupBy = groupBy;
   func.makeQuery = (makeQuery || _makeMakeQuery.call(func, getPath, queryString)).bind(func);
+  func.WrapperClass = WrapperClass;
 
   // recurse and add all children
   cascadingMethods = cascadingMethods || {};
@@ -412,6 +412,9 @@ function createWrapperFunc(parent, WrapperClass, getPath, groupBy, getChildVars)
     let path = getPath(pathArgs);
     path = path.endsWith('/') ? path.substring(0, path.length-1) : path;
 
+    if (!firebaseDataRoot) {
+      throw new Error('invalid ref wrapper initialization, missing `firebase` data root: ' + path);
+    }
 
     //console.log('creating wrapper at: ' + path);
     const {
@@ -460,7 +463,7 @@ function createWrapperFunc(parent, WrapperClass, getPath, groupBy, getChildVars)
 
 function createRefWrapperBase() {
   class RefWrapperBase {
-    constructor(parent, path, firebaseDataRoot, 
+    constructor(parent, path, firebaseDataRoot,
       relativePathTemplate, db, 
       getData, groupBy, childArgs, 
       childrenGetPaths, childrenGetPushPaths, 

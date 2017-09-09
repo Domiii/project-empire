@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { firebaseConnect } from 'react-redux-firebase'
 import { 
-  Alert, Button, Jumbotron, Well
+  Alert, Button, Jumbotron, Well, Panel
 } from 'react-bootstrap';
 
 import autoBind from 'react-autobind';
@@ -19,11 +19,6 @@ import RoleManager from 'src/views/components/admin/RoleManager';
 
 
 @firebaseConnect((props, firebase) => {
-  // const paths = [
-  //   GroupsRef.makeQuery(),
-  //   '/users/public'
-  // ];
-  // UserGroupRef.addIndexQueries(paths);
   return [];
 })
 @connect(({ firebase }, props) => {

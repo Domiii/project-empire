@@ -5,13 +5,59 @@ import pick from 'lodash/pick';
 
 import Roles from './Roles';
 
+
+// TODO: these have different arguments from the grouped methods for some stupid reason...
+const publicUserMethods = {
+  isAdmin(uid) {
+    return this.role(uid) >= Roles.Admin;
+  },
+
+  isAdminDisplayMode(uid) {
+    return this.isAdmin(uid) && this.displayRole(uid) >= Roles.Admin;
+  },
+
+  setRoleName(uid, role) {
+    const roleNum = Roles[role];
+    if (!roleNum) {
+      throw new Error('invalid role: ' + role);
+    }
+
+    // make sure to set display role first.
+    // in case, you demote yourself, you still need your original role for this.
+    return this.setAdminDisplayRole(uid, role).then(() =>
+      this.set_role(uid, roleNum)
+    );
+  },
+
+  setAdminDisplayRole(uid, role) {
+    const roleNum = Roles[role];
+    if (!roleNum) {
+      throw new Error('invalid role: ' + role);
+    }
+    return this.set_displayRole(uid, roleNum);
+  },
+};
+
 // access to the current user's info
 const UserInfoRef = makeRefWrapper({
   pathTemplate: '/users',
 
   children: {
     userList: {
-      pathTemplate: 'public'
+      pathTemplate: 'public',
+      methods: publicUserMethods,
+      children: {
+        user: {
+          pathTemplate: '$(uid)',
+          children: {
+            displayName: 'displayName',
+            photoURL: 'photoURL',
+            locale: 'locale',
+            role: 'role',
+            displayRole: 'displayRole'
+          }
+        }
+      }
     },
 
     user: {
@@ -119,7 +165,8 @@ const UserInfoRef = makeRefWrapper({
             displayName: 'displayName',
             photoURL: 'photoURL',
             locale: 'locale',
-            role: 'role'
+            role: 'role',
+            displayRole: 'displayRole'
           }
         },
 
@@ -128,8 +175,6 @@ const UserInfoRef = makeRefWrapper({
           pushPathTemplate: 'private',
 
           children: {
-            displayRole: 'displayRole',
-
             data: 'data',   // personal user data (we copy this from firebase auth on first use)
 
             // TODO: Put this into a different path. Personal user settings don't belong with account data.

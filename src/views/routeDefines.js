@@ -9,6 +9,7 @@ import SignInPage from './pages/SignInPage';
 import UserProfilePage from './pages/UserProfilePage';
 import LandingPage from './pages/LandingPage';
 import GMPage from './pages/GMPage';
+import GuardianPage from './pages/GuardianPage';
 import GroupPage from './pages/GroupPage';
 //import TestPage from './pages/TestPage';
 
@@ -54,6 +55,14 @@ export const getRoutes = getState => {
         path: routeTemplates.GM,
         indexRoute: {
           component: GMPage,
+          onEnter: requireAuth(getState)
+        }
+      },
+      {
+        name: routeNames.GUARDIAN,
+        path: routeTemplates.GUARDIAN,
+        indexRoute: {
+          component: GuardianPage,
           onEnter: requireAuth(getState)
         }
       },

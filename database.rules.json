@@ -39,7 +39,10 @@
             ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
           },
           "role" : {
-            ".write": "false"
+            ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+          },
+          "displayRole" : {
+            ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
           },
           "locale" : {
             ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
@@ -52,10 +55,7 @@
       "private": {
         "$uid" : {
           ".read": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))",
-
-          "displayRole" : {
-            ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
-          },
+          
           "prefs": {
             ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
           },
