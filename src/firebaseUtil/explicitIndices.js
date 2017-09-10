@@ -29,27 +29,6 @@ const staticConfig = {
  * 2. create index ref object in @connect on list level
  * 3. access dependent refs from index ref
  *
- * ========================
- * Init Example
- * ========================
-
-     export const UserGroupRef = m2mIndex((firebaseRoot) => [
-      'userGroups',
-
-      'user',
-      'group',
-      
-      UserInfoRef(firebaseRoot),
-      GroupsRef(firebaseRoot),
-
-      customMembers
-    ]);
- *  
- *
- * ========================
- * Usage Example
- * ========================
- * const userGroupRef = UserGroupRef(firebase);
  */
 
 
@@ -84,9 +63,49 @@ export function m2mIndex(
     },
 
     // TODO: add limits + other kinds of queries
-    addIndexQueries(queryArr, leftQueryArgs, rightQueryArgs) {
-      queryArr.push(IndexRef.left.makeQuery(leftQueryArgs));
-      queryArr.push(IndexRef.right.makeQuery(rightQueryArgs));
+    addIndexQueries(queryArr, queryArgs) {
+      const leftQueryArgs = queryArgs && queryArgs[leftName];
+      const rightQueryArgs = queryArgs && queryArgs[rightName];
+
+      // for now, we just assume that query args are arrays of ids we are interested in
+      if (!isEmpty(leftQueryArgs)) {
+        if (!isArray(leftQueryArgs)) {
+          throw new Error('Currently, only arrays are supported for arguments to `addIndexQueries`');
+        }
+
+        leftQueryArgs.forEach(id => 
+          queryArr.push(
+            IndexRef[leftName].leftEntry.makeQuery({leftId: id}),
+            IndexRef[rightName].makeQuery(
+              `orderByChild=${id}`,
+              `equalTo=${1}`
+            )
+          )
+        );
+      }
+      if (!isEmpty(rightQueryArgs)) {
+        if (!isArray(rightQueryArgs)) {
+          throw new Error('Currently, only arrays are supported for arguments to `addIndexQueries`');
+        }
+
+        rightQueryArgs.forEach(id => 
+          queryArr.push(
+            IndexRef[rightName].rightEntry.makeQuery({rightId: id}),
+            IndexRef[leftName].makeQuery(
+              `orderByChild=${id}`,
+              `equalTo=${1}`
+            )
+          )
+        );
+      }
+
+
+      // in case, there are no args, get everything
+      if (isEmpty(leftQueryArgs) && isEmpty(rightQueryArgs)) {
+        queryArr.push(IndexRef[leftName].makeQuery(leftQueryArgs));
+        queryArr.push(IndexRef[rightName].makeQuery(rightQueryArgs));
+      }
+
       // const newFilter = { leftId, rightId };
       // //if (this.filter) {
       //   // if (!isEqual(this.filter, newFilter)) {
@@ -173,8 +192,29 @@ function addM2MIndexRef(indexName, leftName, rightName) {
       pathTemplate: indexName,
 
       children: {
-        left: leftName,
-        right: rightName
+        [leftName]: {
+          pathTemplate: leftName,
+
+          children: {
+            leftEntry: {
+              pathTemplate: '$(leftId)'
+            }
+          }
+        },
+
+        [rightName]: {
+          pathTemplate: rightName,
+
+          children: {
+            rightEntry: {
+              pathTemplate: '$(rightId)'
+
+              // children: {
+              //   righToLeft pathTemplate:
+              // }
+            }
+          }
+        }
       }
     }
   });
@@ -218,9 +258,14 @@ class M2MExplicitIndex {
 
     Object.assign(this, members);
 
-    //this.indexRef = IndexRef(this._firebaseDataRoot);
-    this.leftIndexRef = IndexRef.left(this._firebaseDataRoot);
-    this.rightIndexRef = IndexRef.right(this._firebaseDataRoot);
+    this.IndexRef = IndexRef;
+    this.leftIndexRef = IndexRef[leftName](this._firebaseDataRoot);
+    this.rightIndexRef = IndexRef[rightName](this._firebaseDataRoot);
+
+    this.indexRefs = {
+      [leftName]: this.leftIndexRef,
+      [rightName]: this.rightIndexRef
+    };
 
     autoBind(this);
 

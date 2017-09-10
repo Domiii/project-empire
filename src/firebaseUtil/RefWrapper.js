@@ -215,7 +215,7 @@ function _makeMakeQuery(getPath, queryString) {
   let queryArgsFunc = queryString instanceof Function && queryString;
   let queryArgsConst = !(queryString instanceof Function) && queryString;
   let getQueryArgs = (...allArgs) => {
-    let res = queryArgsFunc && queryArgsFunc.apply(this, allArgs) || queryArgsConst;
+    let res = queryArgsFunc && queryArgsFunc.apply(this, allArgs) || allArgs || queryArgsConst;
     return res;
   };
 

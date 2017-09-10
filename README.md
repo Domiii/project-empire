@@ -5,11 +5,6 @@
 
 Important:
 
-* Mission Control -> Mission list
-* AdventurePage: 『登記任務』
-  * 建立 + edit teams
-    * assign mission
-
 * Mission Control -> Current Adventure:
   * mission name + team members
   * 鑑定前：

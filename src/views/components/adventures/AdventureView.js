@@ -80,7 +80,7 @@ export default class AdventureView extends Component {
       mission
     } = this.props;
 
-    const usersString = map(users, user => user.displayName).join(', ');
+    const usersString = map(users, user => user && user.displayName).join(', ');
     const missionInfo = mission && `${mission.code} - ${mission.title}` || 'mission';
     const adventureInfo = `${missionInfo} (${usersString})`;
 
