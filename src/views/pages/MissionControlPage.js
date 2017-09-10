@@ -2,6 +2,14 @@ import AdventuresRef, { UserAdventureRef } from 'src/core/adventures/AdventuresR
 import UserInfoRef from 'src/core/users/UserInfoRef';
 import MissionsRef from 'src/core/missions/MissionsRef';
 
+import map from 'lodash/map';
+import mapValues from 'lodash/mapValues';
+
+import {
+  helpers
+} from 'react-redux-firebase'
+const { pathToJS } = helpers;
+
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -9,6 +17,7 @@ import { firebaseConnect } from 'react-redux-firebase'
 import { 
   Alert, Button, Jumbotron, Well, Panel
 } from 'react-bootstrap';
+import { EmptyObject, EmptyArray } from 'src/util';
 
 import autoBind from 'react-autobind';
 import {
@@ -17,23 +26,34 @@ import {
 import { LoadOverlay } from 'src/views/components/overlays';
 
 
-@firebaseConnect((props, firebase) => {
-  const paths = [
-    
-  ];
-  UserAdventureRef.addIndexQueries(paths, {
-    user: ['userId4']
-  });
-  return paths;
-})
 @connect(({ firebase }, props) => {
+  const auth = pathToJS(firebase, 'auth');
+  const currentUid = auth && auth.uid;
+
   const userAdventureRef = UserAdventureRef(firebase);
+
   return {
-    indexTest: {
-      user: userAdventureRef.indexRefs.user.val,
-      adventure: userAdventureRef.indexRefs.adventure.val
-    }
+    currentUid,
+    userAdventureRef,
+
+    users: userAdventureRef.refs.user.val,
+    adventures: userAdventureRef.refs.adventure.val,
+    u2aIdx: userAdventureRef.indexRefs.user.val,
+    a2uIdx: userAdventureRef.indexRefs.adventure.val,
   };
+})
+@firebaseConnect((props, firebase) => {
+  const {
+    currentUid,
+    userAdventureRef
+  } = props;
+
+  const paths = [];
+  userAdventureRef.addDataQueries(paths, {
+    user: [currentUid]
+  });
+  console.log(paths);
+  return paths;
 })
 export default class MissionControlPage extends Component {
   static contextTypes = {
@@ -65,7 +85,12 @@ export default class MissionControlPage extends Component {
       <div>
         <Panel header="My Current Adventure!">
           <pre>
-            { JSON.stringify(this.props.indexTest, null, 2) }
+            { JSON.stringify({
+              users: this.props.users,
+              adventures: this.props.adventures,
+              u2aIdx: this.props.u2aIdx,
+              a2uIdx: this.props.a2uIdx
+            }, null, 2) }
           </pre>
         </Panel>
       </div>

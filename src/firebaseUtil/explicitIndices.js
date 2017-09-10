@@ -6,6 +6,8 @@ import isArray from 'lodash/isArray';
 import isEqual from 'lodash/isEqual';
 import isEmpty from 'lodash/isEmpty';
 import pickBy from 'lodash/pickBy';
+import forEach from 'lodash/pickBy';
+import flatten from 'lodash/flatten';
 
 import autoBind from 'src/util/auto-bind';
 
@@ -42,8 +44,8 @@ export function m2mIndex(
   const f = (firebaseRoot, leftEntryRefArgs, rightEntryRefArgs) => {
     const leftEntryRef = LeftEntryRef(firebaseRoot, leftEntryRefArgs);
     const rightEntryRef = RightEntryRef(firebaseRoot, rightEntryRefArgs);
-    return new M2MExplicitIndex(indexName, leftName, rightName,
-      leftEntryRef, rightEntryRef, IndexRef, members);
+    return new M2MExplicitIndex(f, indexName, leftName, rightName,
+      leftEntryRef, rightEntryRef, IndexRef, LeftEntryRef, RightEntryRef, members);
   };
   f.IndexRef = IndexRef;
 
@@ -66,44 +68,45 @@ export function m2mIndex(
     addIndexQueries(queryArr, queryArgs) {
       const leftQueryArgs = queryArgs && queryArgs[leftName];
       const rightQueryArgs = queryArgs && queryArgs[rightName];
+      const hasFilter = !isEmpty(leftQueryArgs) || !isEmpty(rightQueryArgs);
 
       // for now, we just assume that query args are arrays of ids we are interested in
-      if (!isEmpty(leftQueryArgs)) {
-        if (!isArray(leftQueryArgs)) {
-          throw new Error('Currently, only arrays are supported for arguments to `addIndexQueries`');
-        }
+      if (hasFilter) {
+        if (!isEmpty(leftQueryArgs)) {
+          if (!isArray(leftQueryArgs)) {
+            throw new Error('Currently, only arrays are supported for arguments to `addIndexQueries`');
+          }
 
-        leftQueryArgs.forEach(id => 
-          queryArr.push(
-            IndexRef[leftName].leftEntry.makeQuery({leftId: id}),
-            IndexRef[rightName].makeQuery(
-              `orderByChild=${id}`,
-              `equalTo=${1}`
+          leftQueryArgs.forEach(id => 
+            queryArr.push(
+              IndexRef[leftName].leftEntry.makeQuery({leftId: id}),
+              IndexRef[rightName].makeQuery(
+                `orderByChild=${id}`,
+                `equalTo=${1}`
+              )
             )
-          )
-        );
-      }
-      if (!isEmpty(rightQueryArgs)) {
-        if (!isArray(rightQueryArgs)) {
-          throw new Error('Currently, only arrays are supported for arguments to `addIndexQueries`');
+          );
         }
+        if (!isEmpty(rightQueryArgs)) {
+          if (!isArray(rightQueryArgs)) {
+            throw new Error('Currently, only arrays are supported for arguments to `addIndexQueries`');
+          }
 
-        rightQueryArgs.forEach(id => 
-          queryArr.push(
-            IndexRef[rightName].rightEntry.makeQuery({rightId: id}),
-            IndexRef[leftName].makeQuery(
-              `orderByChild=${id}`,
-              `equalTo=${1}`
+          rightQueryArgs.forEach(id => 
+            queryArr.push(
+              IndexRef[rightName].rightEntry.makeQuery({rightId: id}),
+              IndexRef[leftName].makeQuery(
+                `orderByChild=${id}`,
+                `equalTo=${1}`
+              )
             )
-          )
-        );
+          );
+        }
       }
-
-
-      // in case, there are no args, get everything
-      if (isEmpty(leftQueryArgs) && isEmpty(rightQueryArgs)) {
-        queryArr.push(IndexRef[leftName].makeQuery(leftQueryArgs));
-        queryArr.push(IndexRef[rightName].makeQuery(rightQueryArgs));
+      else {
+        // in case, there are no args, get everything
+        queryArr.push(IndexRef[leftName].makeQuery());
+        queryArr.push(IndexRef[rightName].makeQuery());
       }
 
       // const newFilter = { leftId, rightId };
@@ -235,26 +238,27 @@ function addM2MIndexRef(indexName, leftName, rightName) {
  */
 class M2MExplicitIndex {
   constructor(
+      RefWrapperCreator,
       indexName, 
       leftName, rightName, 
       leftEntryRef, rightEntryRef,
+
       IndexRef,
+      LeftEntryRef, RightEntryRef,
 
       members
     ) {
+    this.RefWrapperCreator = RefWrapperCreator;
     this.indexName = indexName;
     this.leftEntryRef = leftEntryRef;
     this.rightEntryRef = rightEntryRef;
+    this.LeftEntryRef = LeftEntryRef;
+    this.RightEntryRef = RightEntryRef;
 
     this.leftName = leftName;
     this.rightName = rightName;
 
     this._firebaseDataRoot = leftEntryRef._firebaseDataRoot;
-
-    this.refs = {
-      [leftName]: leftEntryRef,
-      [rightName]: rightEntryRef
-    };
 
     Object.assign(this, members);
 
@@ -267,6 +271,11 @@ class M2MExplicitIndex {
       [rightName]: this.rightIndexRef
     };
 
+    this.refs = {
+      [leftName]: leftEntryRef,
+      [rightName]: rightEntryRef
+    };
+
     autoBind(this);
 
     this[`get_${leftName}_by_${rightName}`] = this.getLeftEntriesByRightId;
@@ -275,6 +284,78 @@ class M2MExplicitIndex {
     this[`findUnassigned_${leftName}_entries`] = this.findUnassignedLeftEntries;
     this[`findUnassigned_${rightName}_ids`] = this.findUnassignedRightIds;
     this[`findUnassigned_${rightName}_entries`] = this.findUnassignedRightEntries
+  }
+
+  addLeftDataQuery(queryArr, leftIds) {
+    if (isEmpty(leftIds)) {
+      return EmptyArray;
+    }    
+
+
+    const rightIds = this.getRightIdsByLeftId(leftIds);
+    if (rightIds) {
+      const rightIdsArr = flatten(map(Object.values(rightIds), 
+        ids => ids && Object.keys(ids) || EmptyArray));
+      forEach(rightIdsArr, 
+        id => queryArr.push(pathJoin(this.RightEntryRef.pathTemplate, id)));
+      return rightIdsArr;
+    }
+    return EmptyArray;
+  }
+
+  addRightDataQuery(queryArr, rightIds) {
+    if (isEmpty(rightIds)) {
+      return EmptyArray;
+    }
+
+    const leftIds = this.getLeftIdsByRightId(rightIds);
+    if (leftIds) {
+      const leftIdsArr = flatten(map(Object.values(leftIds), 
+        ids => ids && Object.keys(ids) || EmptyArray));
+      forEach(leftIdsArr, 
+        id => queryArr.push(pathJoin(this.LeftEntryRef.pathTemplate, id)));
+      return leftIdsArr;
+    }
+    return EmptyArray;
+  }
+
+  addDataQueries(queryArr, queryArgs) {
+    const { 
+      RefWrapperCreator,
+      leftName,
+      rightName
+    } = this;
+
+    // first: add index query
+    RefWrapperCreator.addIndexQueries(queryArr, queryArgs);
+
+    // then: add actual data query
+    const leftQueryArgs = queryArgs && queryArgs[leftName];
+    const rightQueryArgs = queryArgs && queryArgs[rightName];
+    const hasFilter = !isEmpty(leftQueryArgs) || !isEmpty(rightQueryArgs);
+
+    if (hasFilter) {
+      if (!isEmpty(leftQueryArgs)) {
+        // add queries for all left ids
+        const rightIds = this.addLeftDataQuery(queryArr, leftQueryArgs);
+
+        // also get all related data
+        this.addRightDataQuery(queryArr, rightIds);
+      }
+      if (!isEmpty(rightQueryArgs)) {
+        // add queries for all right ids
+        const leftIds = this.addLeftDataQuery(queryArr, rightQueryArgs);
+
+        // also get all related data
+        this.addLeftDataQuery(queryArr, leftIds);
+      }
+    }
+    else {
+      // unfiltered -> get all data
+      queryArr.push(this.LeftEntryRef.makeQuery());
+      queryArr.push(this.RightEntryRef.makeQuery());
+    }
+
   }
 
   findUnassignedLeftIds() {

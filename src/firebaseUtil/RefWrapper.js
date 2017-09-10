@@ -185,13 +185,14 @@ function logDBAction(pathTemplate, actionName, args) {
 
 
 function _buildQueryFinal(path, args) {
-  if (!args) {
+  if (isEmpty(args)) {
     return path;
   }
   else if (_.isString(args)) {
     return `${path}#${args}`;
   }
   else if (isArray(args)) {
+    args = args.filter(a => !isEmpty(a));
     return ({
       path,
       queryParams: args
@@ -215,7 +216,8 @@ function _makeMakeQuery(getPath, queryString) {
   let queryArgsFunc = queryString instanceof Function && queryString;
   let queryArgsConst = !(queryString instanceof Function) && queryString;
   let getQueryArgs = (...allArgs) => {
-    let res = queryArgsFunc && queryArgsFunc.apply(this, allArgs) || allArgs || queryArgsConst;
+    let res = queryArgsFunc && queryArgsFunc.apply(this, allArgs) || 
+      (!isEmpty(allArgs) ? allArgs : queryArgsConst);
     return res;
   };
 
