@@ -2,10 +2,16 @@ import { applyMiddleware, compose, createStore } from 'redux'
 import thunk from 'redux-thunk'
 import makeRootReducer from './reducers'
 import { browserHistory } from 'react-router'
+import firebase from 'firebase';
 import { reactReduxFirebase, getFirebase } from 'react-redux-firebase'
 import { version } from 'package.json'
 
 export default (firebaseConfig, reduxFirebaseConfig, initialState = {}, history) => {
+  // ======================================================
+  // init firebase
+  // ======================================================
+  firebase.initializeApp(firebaseConfig);
+
   // ======================================================
   // Window Vars Config
   // ======================================================
@@ -39,7 +45,7 @@ export default (firebaseConfig, reduxFirebaseConfig, initialState = {}, history)
     initialState,
     compose(
       applyMiddleware(...middleware),
-      reactReduxFirebase(firebaseConfig, reduxFirebaseConfig),
+      reactReduxFirebase(firebase, reduxFirebaseConfig),
       ...enhancers
     )
   )

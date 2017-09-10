@@ -6,8 +6,7 @@ import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import autoBind from 'react-autobind';
 import { 
-  firebaseConnect, 
-  helpers,
+  firebaseConnect,
   getFirebase
 } from 'react-redux-firebase'
 import Header from './components/header';
@@ -15,8 +14,6 @@ import { FAIcon } from 'src/views/components/util';
 import { lookupLocalized } from 'src/util/localizeUtil';
 
 import { Overlay, LoadOverlay } from 'src/views/components/overlays';
-
-const { pathToJS } = helpers;
 
 @firebaseConnect((props, firebase) => {
   const paths = [
@@ -31,7 +28,7 @@ const { pathToJS } = helpers;
   return paths;
 })
 @connect(({ firebase }, ownProps) => {
-  const auth = pathToJS(firebase, 'auth');
+  const auth = firebase.auth;
   //const dBStatusRef = DBStatusRef(firebase);
 
   const props = {
@@ -89,7 +86,7 @@ export class App extends Component {
     const { currentUserRef } = nextProps;
 
     if (!!currentUserRef) {
-      currentUserRef.ensureUserInitialized();
+      //currentUserRef.ensureUserInitialized();
     }
         
     // TODO: log new visit

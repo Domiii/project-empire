@@ -6,9 +6,12 @@ import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
 import pickBy from 'lodash/pickBy';
 import isArray from 'lodash/isArray';
+import isObject from 'lodash/isObject';
 import isEqual from 'lodash/isEqual';
 import reduce from 'lodash/reduce';
 import extend from 'lodash/extend';
+import isEmpty from 'lodash/isEmpty';
+import isPlainObject from 'lodash/isPlainObject';
 
 import autoBind from 'src/util/auto-bind';
 
@@ -25,7 +28,10 @@ import {
   createPathGetterFromTemplateProps,
   createPathGetterFromTemplateArray,
   createChildVarGetterFromTemplateProps,
-  parseTemplateString
+  parseTemplateString,
+
+  getDataIn,
+  dataToJS
 } from './dataUtil';
 
 import {
@@ -33,8 +39,8 @@ import {
 } from './dataAccessors';
 
 const { 
-  isLoaded, isEmpty, dataToJS, 
-  populatedDataToJS
+  isLoaded,
+  populate
 } = helpers;
 
 const defaultConfig = {
@@ -86,7 +92,7 @@ function _cacheLookup(path, args, newData) {
 }
 
 function _cachedFetchPopulate(firebaseDataRoot, path, queryArgs) {
-  const newData = populatedDataToJS(firebaseDataRoot, path, queryArgs.populates);
+  const newData = populate(firebaseDataRoot, path, queryArgs.populates);
   return _cacheLookup(path, queryArgs, newData);
 }
 
@@ -98,7 +104,7 @@ function _cachedFetchPlain(firebaseDataRoot, path) {
 // return function to get data at given path 
 // from current state in store
 function makeGetDataDefault(firebaseDataRoot, path, queryArgs) {
-  if (_.isPlainObject(queryArgs) && queryArgs.populates) {
+  if (isPlainObject(queryArgs) && queryArgs.populates) {
     return () => _cachedFetchPopulate(firebaseDataRoot, path, queryArgs);
   }
   return () => _cachedFetchPlain(firebaseDataRoot, path);
@@ -153,7 +159,7 @@ export function addChildrenToRefWrapper(parent, children, inheritedSettings, cas
 // TODO: currently unused
 function logDBAction(pathTemplate, actionName, args) {
   try {
-    if (_.isObject(args) && _.has(args, 'updatedAt')) {
+    if (isObject(args) && _.has(args, 'updatedAt')) {
       // TODO: hack-around to get rid of firebase TIMESTAMP placeholder
       args = _.omitBy(args, (v, k) => k === 'updatedAt');
     }
@@ -505,7 +511,7 @@ function createRefWrapperBase() {
         // for groups, get data from all children and merge them together
         val = mapValues(this._childrenGetPaths, getChildPath => {
             const path = getChildPath(...this._childArgs);
-            return this.getDataIn(val, path);
+            return getDataIn(val, path);
           });
         val = pickBy(val, (childVal, childName) => !!childVal);
       }
@@ -518,13 +524,6 @@ function createRefWrapperBase() {
 
     findKey(filter) {
       return this.val && _.findKey(this.val, filter);
-    }
-
-    getDataIn(obj, path, defaultValue = null) {
-      path = path || '';
-      path = path.toString();
-      path = path.replace(/\//g, '.');    // lodash uses dot notation for path access
-      return _.get(obj, path, defaultValue);
     }
 
     /**
@@ -541,7 +540,7 @@ function createRefWrapperBase() {
         return obj === undefined ? defaultValue : obj;
       }
 
-      return this.getDataIn(obj, path, defaultValue);
+      return getDataIn(obj, path, defaultValue);
     }
 
     getAllChildData(pathPrefix, idOrIds, defaultValue = null) {
@@ -775,7 +774,7 @@ function createRefWrapperBase() {
               newVal
               // _.zipObject(
               //   _.keys(childValue), 
-              //   _.map(childValue, (v, k) => this.getDataIn(childValue, k))
+              //   _.map(childValue, (v, k) => getDataIn(childValue, k))
               // )
             , path);
           })

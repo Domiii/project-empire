@@ -5,11 +5,6 @@ import MissionsRef from 'src/core/missions/MissionsRef';
 import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
 
-import {
-  helpers
-} from 'react-redux-firebase'
-const { pathToJS } = helpers;
-
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -27,7 +22,7 @@ import { LoadOverlay } from 'src/views/components/overlays';
 
 
 @connect(({ firebase }, props) => {
-  const auth = pathToJS(firebase, 'auth');
+  const auth = firebase.auth;
   const currentUid = auth && auth.uid;
 
   const userAdventureRef = UserAdventureRef(firebase);
@@ -52,7 +47,7 @@ import { LoadOverlay } from 'src/views/components/overlays';
   userAdventureRef.addDataQueries(paths, {
     user: [currentUid]
   });
-  console.log(paths);
+  //console.log(paths, props.adventures);
   return paths;
 })
 export default class MissionControlPage extends Component {

@@ -1,4 +1,5 @@
 import isPlainObject from 'lodash/isPlainObject';
+import get from 'lodash/get';
 
 export function _makePathVariable(val, variableTransform) {
   if (isPlainObject(val)) {
@@ -121,4 +122,24 @@ export function createChildVarGetterFromTemplateProps(pathTemplate, varNames) {
       return props[varName];
     });
   };
+}
+
+export function getDataIn(obj, path, defaultValue = null) {
+  path = path || '';
+  path = path.toString();
+  path = path.replace(/\//g, '.');    // convert to dot notation for lodash path access
+  path = path.replace(/\.\./g, '.');
+  if (path[0] === '.') {
+    path = path.substring(1);
+  }
+  return get(obj, path, defaultValue);
+}
+
+
+// ###################################################
+// rrf 1.5 → 2.0 migration utility
+// ###################################################
+
+export function dataToJS(firebase, path, defaultValue) {
+  return getDataIn(firebase.data, path, defaultValue);
 }
