@@ -64,46 +64,47 @@ export function m2mIndex(
       }
     },
 
-    // TODO: add limits + other kinds of queries
+    // TODO: Make this work properly, once rrf performance issues are under control
     addIndexQueries(queryArr, queryArgs) {
       const leftQueryArgs = queryArgs && queryArgs[leftName];
       const rightQueryArgs = queryArgs && queryArgs[rightName];
       const hasFilter = !isEmpty(leftQueryArgs) || !isEmpty(rightQueryArgs);
 
       // for now, we just assume that query args are arrays of ids we are interested in
-      if (hasFilter) {
-        if (!isEmpty(leftQueryArgs)) {
-          if (!isArray(leftQueryArgs)) {
-            throw new Error('Currently, only arrays are supported for arguments to `addIndexQueries`');
-          }
+      // if (hasFilter) {
+      //   if (!isEmpty(leftQueryArgs)) {
+      //     if (!isArray(leftQueryArgs)) {
+      //       throw new Error('Currently, only arrays are supported for arguments to `addIndexQueries`');
+      //     }
 
-          leftQueryArgs.forEach(id => 
-            queryArr.push(
-              IndexRef[leftName].leftEntry.makeQuery({leftId: id}),
-              IndexRef[rightName].makeQuery(
-                `orderByChild=${id}`,
-                `equalTo=${1}`
-              )
-            )
-          );
-        }
-        if (!isEmpty(rightQueryArgs)) {
-          if (!isArray(rightQueryArgs)) {
-            throw new Error('Currently, only arrays are supported for arguments to `addIndexQueries`');
-          }
+      //     leftQueryArgs.forEach(id => 
+      //       queryArr.push(
+      //         IndexRef[leftName].leftEntry.makeQuery({leftId: id}),
+      //         IndexRef[rightName].makeQuery(
+      //           `orderByChild=${id}`,
+      //           `equalTo=${1}`
+      //         )
+      //       )
+      //     );
+      //   }
+      //   if (!isEmpty(rightQueryArgs)) {
+      //     if (!isArray(rightQueryArgs)) {
+      //       throw new Error('Currently, only arrays are supported for arguments to `addIndexQueries`');
+      //     }
 
-          rightQueryArgs.forEach(id => 
-            queryArr.push(
-              IndexRef[rightName].rightEntry.makeQuery({rightId: id}),
-              IndexRef[leftName].makeQuery(
-                `orderByChild=${id}`,
-                `equalTo=${1}`
-              )
-            )
-          );
-        }
-      }
-      else {
+      //     rightQueryArgs.forEach(id => 
+      //       queryArr.push(
+      //         IndexRef[rightName].rightEntry.makeQuery({rightId: id}),
+      //         IndexRef[leftName].makeQuery(
+      //           `orderByChild=${id}`,
+      //           `equalTo=${1}`
+      //         )
+      //       )
+      //     );
+      //   }
+      // }
+      // else 
+      {
         // in case, there are no args, get everything
         queryArr.push(IndexRef[leftName].makeQuery());
         queryArr.push(IndexRef[rightName].makeQuery());

@@ -21,11 +21,11 @@ const secretPaths = {
 const appSettings = {
   production: {
     credential: admin.credential.cert(require(secretPaths.production)),
-    databaseURL: "https://super-awesome-buffet.firebaseio.com"
+    databaseURL: "https://project-empire.firebaseio.com"
   },
   test: {
     credential: admin.credential.cert(require(secretPaths.test)),
-    databaseURL: "https://test-self-assessment.firebaseio.com"
+    databaseURL: "TODO"
   }
 };
 

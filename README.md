@@ -1,6 +1,36 @@
 # project-empire
 
 
+TODO (features)
+
+* W2
+  * 每個冒險者可以準備團隊鑑定，然後可以看到　『團隊鑑定準備』 結果
+  * GM 可以看到大家的　『團隊鑑定準備』　的結果
+  * GM 可以開始進行 『團隊鑑定』
+  * GM 可以做 『團隊鑑定』 的紀錄
+  * GM 只能用 text 來紀錄 fame, karma + gold　（隔週才能分配＋看到結果）
+  * GM 可以 end/archive (歸檔)　adventure (『執行任務的過程』)
+  * 冒險者可以看到所有參與過的 adventure
+  * 冒險者可以看到 『團隊鑑定』 的結果
+  * Mission List: 把所有的 mission svg 檔案放上來
+// TODO: [AdventureView] render + allow editing of guardianNotes + gmNotes + partyNotes
+
+* W3
+  * GM 可以分配 fame, karma + gold
+  * 冒險者可以看到各種數值（自己 + 排行板）
+  * 冒險者 + GM 可以看到以前完畢的任務與相關紀錄
+  * 每個冒險者可以看到其他人 ｢團隊鑑定的準備｣ status
+
+* W4-6
+  * 冒險者可以看到　｢live 團隊鑑定｣　的紀錄
+  * 冒險者可以參與團隊鑑定紀錄 (給 feedback，自評，互評等等)
+  * 各種紀錄的 summary
+  * 冒險者可以預約 GM 團隊鑑定
+  * GM 可以分配 卡片
+  * GM 可以進行自己的鑑定 prep SOP (gmSubmitMeetingPrep)
+  * LFG 功能 (mission wishlist) + p2p team creation
+
+
 ### TODO
 
 Important:

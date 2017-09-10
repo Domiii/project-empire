@@ -4,7 +4,8 @@ import map from 'lodash/map';
 import isEmpty from 'lodash/isEmpty';
 import size from 'lodash/size';
 
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
 import Moment from 'react-moment';
 import {
@@ -17,6 +18,7 @@ import AdventureEditTools from './AdventureEditTools';
 import UserList, { UserBadge } from 'src/views/components/users/UserList';
 
 
+// TODO: render + allow editing of guardianNotes + gmNotes + partyNotes
 
 export default class AdventureView extends Component {
   static contextTypes = {
@@ -29,6 +31,8 @@ export default class AdventureView extends Component {
     adventure: PropTypes.object.isRequired,
     users: PropTypes.object,
     adventureGuardian: PropTypes.object,
+    assignedGM: PropTypes.object,
+    canEdit: PropTypes.bool,
 
     deleteAdventure: PropTypes.func
   };
@@ -77,14 +81,15 @@ export default class AdventureView extends Component {
       adventure,
       deleteAdventure,
       users,
-      mission
+      mission,
+      canEdit
     } = this.props;
 
     const usersString = map(users, user => user && user.displayName).join(', ');
     const missionInfo = mission && `${mission.code} - ${mission.title}` || 'mission';
     const adventureInfo = `${missionInfo} (${usersString})`;
 
-    return !this.IsGuardian ? null : (
+    return (!canEdit || !this.IsGuardian) ? null : (
       <div>
         <AdventureEditTools {...{
           adventureId,
@@ -111,6 +116,7 @@ export default class AdventureView extends Component {
       users,
       mission,
       adventureGuardian,
+      assignedGM,
 
       adventureEditor
     } = this.props;
@@ -123,7 +129,7 @@ export default class AdventureView extends Component {
 
     const missionHeader = mission && `${mission.code} - ${mission.title}` || 'mission';
 
-    return (<li className="list-group-item">
+    return (
       <Panel header={missionHeader} bsStyle="info">
         { this.editorHeader() }
         <p>Created: <Moment fromNow>{adventure.createdAt}</Moment></p>
@@ -131,6 +137,11 @@ export default class AdventureView extends Component {
           !adventureGuardian ? 
             <span className="color-gray">no guardian</span> :
             <UserBadge user={adventureGuardian} uid={adventure.guardianUid} />
+        }</p>
+        <p>GM: {
+          !assignedGM ? 
+            <span className="color-gray">no assigned GM</span> :
+            <UserBadge user={assignedGM} uid={adventure.assignedGMUid} />
         }</p>
         <div>
           <span>Adventurers ({ size(users) }):</span> { userEls }
@@ -144,6 +155,6 @@ export default class AdventureView extends Component {
         }
         { !this.IsEditing ? null : adventureEditor }
       </Panel>
-    </li>);
+    );
   }
 }

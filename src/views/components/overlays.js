@@ -1,7 +1,7 @@
-import React, { Component, PropTypes } from 'react';
+import React, { PureComponent, PropTypes } from 'react';
 import { FAIcon } from 'src/views/components/util';
 
-export class Overlay extends Component {
+export class Overlay extends PureComponent {
   static propTypes = {
     contents: PropTypes.element
   };
@@ -20,7 +20,13 @@ export class Overlay extends Component {
   }
 }
 
-export class LoadOverlay extends Component {
+
+// TODO: load symbol -> inline + block
+export class LoadSymbol extends PureComponent {
+
+}
+
+export class LoadOverlay extends PureComponent {
   static propTypes = {
     message: PropTypes.string,
     contents: PropTypes.element

@@ -219,9 +219,7 @@ export default class AdventureList extends Component {
 
       findUnassignedUsers,
       getUsersByAdventure,
-      addUserToAdventure,
-      deleteAdventure,
-      deleteUserFromAdventure
+      deleteAdventure
     } = this.props;
 
     const idList = sortBy(Object.keys(adventures), 
@@ -234,25 +232,26 @@ export default class AdventureList extends Component {
         let existingUsers = getUsersByAdventure(adventureId);
         existingUsers = existingUsers[adventureId] || EmptyObject;
 
-        return (<AdventureView key={adventureId} 
+        return (<li key={adventureId} className="list-group-item">
+          <AdventureView
           {...{
+            canEdit: true,
             adventureId,
             adventure,
+            assignedGM: users && users[adventure.assignedGMUid],
             adventureGuardian: users && users[adventure.guardianUid],
             mission: missions && missions[adventure.missionId],
 
             users: existingUsers,
             //adventuresRef,
 
-            addUserToAdventure,
             deleteAdventure,
-
-            deleteUserFromAdventure,
 
             adventureEditor: this.makeAdventureEditorEl(
               adventureId, adventure,
               existingUsers, addableUsers)
-          }} />);
+          }} />
+        </li>);
       })
     } </ListGroup>);
   }

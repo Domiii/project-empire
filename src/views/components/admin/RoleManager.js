@@ -10,7 +10,8 @@ import { EmptyObject, EmptyArray } from 'src/util';
 import UserInfoRef from 'src/core/users/UserInfoRef';
 import Roles from 'src/core/users/Roles';
 
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { firebaseConnect } from 'react-redux-firebase'
 
