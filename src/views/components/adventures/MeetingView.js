@@ -95,7 +95,7 @@ export class MeetingPrepUserDetailsEditor extends Component {
 
       <Button block bsStyle="danger"
         active={ userPrepStatus !== MeetingPrepStatus.Done }
-        onClick={ setUserPrepStatus(MeetingPrepStatus.Done); }>
+        onClick={ () => setUserPrepStatus(MeetingPrepStatus.Done) }>
         我準備好了！送出去～
       </Button>
     </div>);
@@ -140,7 +140,8 @@ export class MeetingPrepView extends Component {
       </Alert>
       <Button block bsStyle="danger"
         active={ isPreparing }
-        onClick={ setUserPrepStatus(MeetingPrepStatus.Preparing); }>
+        disabled={ isPreparing }
+        onClick={ () => setUserPrepStatus(MeetingPrepStatus.Preparing) }>
         { !isDone ? '開始準備！' : '我雖然已經準備好了，但是想改東西了' }
       </Button>
 

@@ -9,7 +9,7 @@ TODO (features)
   * GM 可以開始進行 『團隊鑑定』
   * GM 可以做 『團隊鑑定』 的紀錄
   * GM 只能用 text 來紀錄 fame, karma + gold　（隔週才能分配＋看到結果）
-  * GM 可以 end/archive (歸檔)　adventure (『執行任務的過程』)
+  * GM 可以 end/finish adventure (『執行任務的過程』)
   * 冒險者可以看到所有參與過的 adventure
   * 冒險者可以看到 『團隊鑑定』 的結果
   * Mission List: 把所有的 mission svg 檔案放上來
@@ -22,6 +22,7 @@ TODO (features)
   * 每個冒險者可以看到其他人 ｢團隊鑑定的準備｣ status
 
 * W4-6
+  * GM 可以 archive (歸檔)　adventure (『執行任務的過程』)
   * 冒險者可以看到　｢live 團隊鑑定｣　的紀錄
   * 冒險者可以參與團隊鑑定紀錄 (給 feedback，自評，互評等等)
   * 各種紀錄的 summary
