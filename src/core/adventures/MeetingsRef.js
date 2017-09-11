@@ -5,7 +5,7 @@ import {
 import { EmptyObject, EmptyArray } from 'src/util';
 
 
-export default const MeetingsRef = {
+export default MeetingsRef = {
   pathTemplate: '/meetings',
   children: {
     meeting: {
@@ -18,11 +18,11 @@ export default const MeetingsRef = {
         finishTime: 'finishTime',
         meetingStatus: 'meetingStatus',
 
-        partyMemberStatus: {
+        preparations: {
           // each party member checks how prepared they are for the meeting
-          pathTemplate: 'partyMemberStatus',
+          pathTemplate: 'preparations',
           children: {
-            preCheckList: {
+            preparation: {
               pathTemplate: '$(uid)',
               children: {
                 prepStatus: 'prepStatus',
@@ -50,8 +50,26 @@ export default const MeetingsRef = {
             concludingNotes: 'concludingNotes',
             rewardNotes: 'rewardNotes'
           }
-        }
+        },
 
+        usersFeedback: {
+          // each party member stores feedback after the meeting
+          pathTemplate: 'usersFeedback',
+          children: {
+            userFeedback: {
+              pathTemplate: '$(uid)',
+              children: {
+                prepStatus: 'feedbackStatus',
+                feedback: {
+                  pathTemplate: 'feedback',
+                  children: {
+                    // TODO: list feedback options
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

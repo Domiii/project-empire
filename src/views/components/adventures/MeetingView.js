@@ -1,3 +1,10 @@
+import MeetingsRef from 'src/core/adventures/MeetingsRef';
+
+import pickBy from 'lodash/pickBy';
+import isEmpty from 'lodash/isEmpty';
+
+import { EmptyObject, EmptyArray } from 'src/util';
+
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -13,6 +20,22 @@ import { FAIcon } from 'src/views/components/util';
 import UserList from 'src/views/components/users/UserList';
 
 
+/*
+// TODO: party prep checklist (with "i'm ready" check)
+// TODO: render individual party member status
+// TODO: renderPrepOverview (must be close to "status")
+// TODO: GM: startMeeting action
+// TODO: GM (go) feedback (and party can see it)
+// TODO: party final feedback
+// TODO: finishMeeting action
+// TODO: finishAdventure action
+// TODO: archive adventure action
+*/
+
+// #################################
+// Meeting core stuff
+// #################################
+
 export const MeetingPrepStatus = {
   NotStarted: 0,
   Preparing: 1,
@@ -25,20 +48,89 @@ export const MeetingStatus = {
   Finished: 2
 };
 
+const activeMeetingQuery = meeting => !!meeting.active;
+const inactiveMeetingQuery = meeting => !meeting.active;
+const defaultActiveMeetings = Object.freeze([{}]);
 
-/*
+export function groupActiveMeetings(allMeetings) {
+  let activeMeetings = pickBy(allMeetings, 
+    activeMeetingQuery);
+  activeMeetings = !isEmpty(activeMeetings) ?
+    activeMeetings :
+    defaultActiveMeetings;
 
-// TODO: startMeeting action
-// TODO: editMeeting / saveMeeting action
-      // support ctrl/command + s for saving meeting record
-// TODO: finishMeeting action
-// TODO: finishAdventure action
-*/
+  const archivedMeetings = pickBy(allMeetings,
+    inactiveMeetingQuery);
+  return [activeMeetings, archivedMeetings];
+}
+
+export function createNewMeeting(meetingsRef) {
+  return meetingsRef.push_meeting({active: 1});
+}
+
+export function ensureMeetingExists(
+  meetingsRef, meetingId) {
+
+  if (!meetingId) {
+    return createNewMeeting(meetingsRef);
+  }
+  return Promise.resolve();
+}
+
+export function updateMeetingPrep(
+  meetingsRef, meetingId, uid, prep) {
+  ensureMeetingExists(meetingsRef, meetingId).
+  then(() => meetingsRef.set_preparation(meetingId, uid, prep));
+}
+
+export function updateMeetingStatus() {
+  
+}
+
+
+// #################################
+// Meeting UI
+// #################################
 
 export class MeetingStatusView extends Component {
+  static contextTypes = {
+    currentUserRef: PropTypes.object.isRequired
+  };
+
+  static propTypes = {
+    meetingId: PropTypes.string.isRequired,
+    meeting: PropTypes.object.isRequired,
+
+    adventureId: PropTypes.string.isRequired,
+    adventure: PropTypes.object.isRequired,
+    users: PropTypes.object,
+    adventureGuardian: PropTypes.object,
+    assignedGM: PropTypes.object
+  };
+
+  constructor() {
+    super();
+
+    autoBind(this);
+  }
+
+  renderPartyMember() {
+    return (<Badge>
+      <img src={user.photoURL} className="user-image-tiny" /> &nbsp;
+      {user.displayName}
+      &nbsp;
+
+    </Badge>);
+  }
+
   renderPartyStatus() {
+    const {
+      users
+    } = this.props;
+
     // TODO: each party member's current status
-    return (<UserList />);
+    return (<UserList users={users}
+      renderUser={this.renderPartyMember} />);
   }
 
   render() {
@@ -49,6 +141,21 @@ export class MeetingStatusView extends Component {
 }
 
 export class MeetingPrepUserDetails extends Component {
+  static contextTypes = {
+    currentUserRef: PropTypes.object.isRequired
+  };
+
+  static propTypes = {
+    meetingId: PropTypes.string.isRequired,
+    meeting: PropTypes.object.isRequired,
+    
+    adventureId: PropTypes.string.isRequired,
+    adventure: PropTypes.object.isRequired,
+    users: PropTypes.object,
+    adventureGuardian: PropTypes.object,
+    assignedGM: PropTypes.object
+  };
+
   render() {
     return (<ol>
       <li>
@@ -71,6 +178,21 @@ export class MeetingPrepUserDetails extends Component {
 }
 
 export class MeetingPrepUserDetailsEditor extends Component {
+  static contextTypes = {
+    currentUserRef: PropTypes.object.isRequired
+  };
+
+  static propTypes = {
+    meetingId: PropTypes.string.isRequired,
+    meeting: PropTypes.object.isRequired,
+    
+    adventureId: PropTypes.string.isRequired,
+    adventure: PropTypes.object.isRequired,
+    users: PropTypes.object,
+    adventureGuardian: PropTypes.object,
+    assignedGM: PropTypes.object
+  };
+
   // TODO: partySubmitMeetingPrep
   // TODO: form
   render() {
@@ -106,6 +228,17 @@ export class MeetingPrepUserDetailsEditor extends Component {
 export class MeetingPrepView extends Component {
   static contextTypes = {
     currentUserRef: PropTypes.object.isRequired
+  };
+
+  static propTypes = {
+    meetingId: PropTypes.string.isRequired,
+    meeting: PropTypes.object.isRequired,
+    
+    adventureId: PropTypes.string.isRequired,
+    adventure: PropTypes.object.isRequired,
+    users: PropTypes.object,
+    adventureGuardian: PropTypes.object,
+    assignedGM: PropTypes.object
   };
 
   get IsAdmin() {
@@ -145,8 +278,10 @@ export class MeetingPrepView extends Component {
         { !isDone ? '開始準備！' : '我雖然已經準備好了，但是想改東西了' }
       </Button>
 
-      { isPreparing && <MeetingPrepUserDetailsEditor /> }
-      { isDone && <MeetingPrepUserDetails /> }
+      { isPreparing && 
+        <MeetingPrepUserDetailsEditor {...this.props} /> }
+      { isDone && 
+        <MeetingPrepUserDetails {...this.props} /> }
     </div>);
   }
 
@@ -163,6 +298,17 @@ export class MeetingGoView extends Component {
     currentUserRef: PropTypes.object.isRequired
   };
 
+  static propTypes = {
+    meetingId: PropTypes.string.isRequired,
+    meeting: PropTypes.object.isRequired,
+    
+    adventureId: PropTypes.string.isRequired,
+    adventure: PropTypes.object.isRequired,
+    users: PropTypes.object,
+    adventureGuardian: PropTypes.object,
+    assignedGM: PropTypes.object
+  };
+
   get IsAdmin() {
     const { currentUserRef } = this.context;
     return currentUserRef && currentUserRef.isAdminDisplayMode() || false;
@@ -170,6 +316,7 @@ export class MeetingGoView extends Component {
 
 
   renderPrepOverview() {
+    // TODO: anyone in the party can also see it!?
     if (!this.IsAdmin) {
       return null;
     }
@@ -220,6 +367,26 @@ export class MeetingGoView extends Component {
 }
 
 export class MeetingResultsView extends Component {
+  static contextTypes = {
+    currentUserRef: PropTypes.object.isRequired
+  };
+
+  static propTypes = {
+    meetingId: PropTypes.string.isRequired,
+    meeting: PropTypes.object.isRequired,
+    
+    adventureId: PropTypes.string.isRequired,
+    adventure: PropTypes.object.isRequired,
+    users: PropTypes.object,
+    adventureGuardian: PropTypes.object,
+    assignedGM: PropTypes.object
+  };
+
+  get IsAdmin() {
+    const { currentUserRef } = this.context;
+    return currentUserRef && currentUserRef.isAdminDisplayMode() || false;
+  }
+
   renderMeetingResults() {
     const meetingStatus = MeetingStatus.InProgress;
 
@@ -243,21 +410,56 @@ export class MeetingArchive extends Component {
     currentUserRef: PropTypes.object.isRequired
   };
 
+  static propTypes = {
+    meetingId: PropTypes.string.isRequired,
+    meeting: PropTypes.object.isRequired,
+    
+    adventureId: PropTypes.string.isRequired,
+    adventure: PropTypes.object.isRequired,
+    users: PropTypes.object,
+    adventureGuardian: PropTypes.object,
+    assignedGM: PropTypes.object,
+
+    archivedMeetings: PropTypes.object
+  };
+
   get IsAdmin() {
     const { currentUserRef } = this.context;
     return currentUserRef && currentUserRef.isAdminDisplayMode() || false;
   }
 
   render() {
-    return (<div>
-        TODO: 顯示之前的團隊鑑定列單在這裡
-      </div>);
+    const {
+      archivedMeetings
+    } = this.props;
+
+    // TODO: render differently from active meetings?
+
+    return (<div>{ map(archivedMeetings || EmptyObject,
+      (meeting, meetingId) =>
+        (<MeetingView {...props}
+          key={meetingId}
+          meetingId={meetingId}
+          meeting={meeting} 
+          />)
+    )}</div>);
   }
 }
 
 export default class MeetingView extends Component {
   static contextTypes = {
     currentUserRef: PropTypes.object.isRequired
+  };
+
+  static propTypes = {
+    meetingId: PropTypes.string.isRequired,
+    meeting: PropTypes.object.isRequired,
+
+    adventureId: PropTypes.string.isRequired,
+    adventure: PropTypes.object.isRequired,
+    users: PropTypes.object,
+    adventureGuardian: PropTypes.object,
+    assignedGM: PropTypes.object
   };
 
   get IsAdmin() {
@@ -270,11 +472,13 @@ export default class MeetingView extends Component {
       // (prep vs. go vs. results)
 
   render() {
+    const props = this.props;
+
     return (<div>
-      <MeetingStatusView />
-      <MeetingPrepView />
-      <MeetingGoView />
-      <MeetingResultsView />
+      <MeetingStatusView {...props} />
+      <MeetingPrepView {...props} />
+      <MeetingGoView {...props} />
+      <MeetingResultsView {...props} />
     </div>);
   }
 }
@@ -283,14 +487,45 @@ export default class MeetingView extends Component {
 /**
  * The panel that renders all meetings belonging to an adventure
  */
+@connect(({ firebase }, prop) => {
+  return {
+    // TODO: provide all data!??!
+  };
+})
 export class AdventureMeetingPanel extends Component {
+  static contextTypes = {
+    currentUserRef: PropTypes.object.isRequired
+  };
+
+  static propTypes = {
+    adventureId: PropTypes.string.isRequired,
+    adventure: PropTypes.object.isRequired,
+    users: PropTypes.object,
+    adventureGuardian: PropTypes.object,
+    assignedGM: PropTypes.object,
+
+    meetings: PropTypes.object
+  };
+
   render() {
+    const props = this.props;
+    const [activeMeetings, archivedMeetings] = 
+      groupActiveMeetings(this.props.meetings);
+
     return (<div>
       <Panel header="團隊鑑定">
-        <MissionView />
+        { map(activeMeetings, (meeting, meetingId) =>
+          (<MeetingView {...props}
+            key={meetingId}
+            meetingId={meetingId}
+            meeting={meeting} 
+            />)
+        )}
       </Panel>
       <Panel header="之前的團隊鑑定">
-        <MeetingArchive />
+        <MeetingArchive {...props}
+          archivedMeetings={archivedMeetings} 
+          />
       </Panel>
     </div>);
   }
