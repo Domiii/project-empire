@@ -152,7 +152,7 @@ export default class MissionControlPage extends Component {
 
     return (
       <div>
-        <Panel header="My Current Adventure!">
+        <Panel header="目前的任務">
           { currentAdventureEl }
           <AdventureMeetingPanel />
         </Panel>

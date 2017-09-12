@@ -102,8 +102,12 @@ export default class AdventureList extends Component {
   }
 
   toggleAdding() {
+    this.setAdding(!this.state.adding);
+  }
+
+  setAdding(adding) {
     this.setState({
-      adding: !this.IsAdding
+      adding
     });
   }
 
@@ -112,6 +116,9 @@ export default class AdventureList extends Component {
     const {
       addAdventure
     } = this.props;
+
+    this.setState({selectedMissionId: null})
+    this.setAdding(false);
 
     return addAdventure({
       missionId: this.state.selectedMissionId,

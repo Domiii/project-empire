@@ -86,7 +86,7 @@ export class App extends Component {
     const { currentUserRef } = nextProps;
 
     if (!!currentUserRef) {
-      //currentUserRef.ensureUserInitialized();
+      currentUserRef.ensureUserInitialized();
     }
         
     // TODO: log new visit

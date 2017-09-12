@@ -29,7 +29,7 @@ export default const MeetingsRef = {
                 checklist: {
                   pathTemplate: 'checklist',
                   children: {
-                    // TODO: list checks
+                    
                   }
                 }
               }

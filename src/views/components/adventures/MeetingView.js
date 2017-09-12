@@ -38,7 +38,7 @@ export const MeetingStatus = {
 export class MeetingStatusView extends Component {
   renderPartyStatus() {
     // TODO: each party member's current status
-    return (<UserList />);
+    //return (<UserList />);
   }
 
   render() {
@@ -194,18 +194,19 @@ export class MeetingGoView extends Component {
         開始進行 團隊鑑定!
       </Button>
 
-      {window.gming && <Panel header="團隊鑑定紀錄">
-        <Panel header="狀況">
-         TODO：　遲到，準備的完整度
-         TODO: 所有 checklist 的 counter-checking?
-        </Panel>
-        <Panel header="最後結果">
-         TODO
-        </Panel>
-        <Panel header="獎勵區">
-         TODO: 用 text 來紀錄 fame, karma + gold　（隔週才能分配＋看到結果）
-        </Panel>
-      </Panel>
+      { window.gming && 
+        (<Panel header="團隊鑑定紀錄">
+          <Panel header="狀況">
+           TODO：　遲到，準備的完整度
+           TODO: 所有 checklist 的 counter-checking?
+          </Panel>
+          <Panel header="最後結果">
+           TODO
+          </Panel>
+          <Panel header="獎勵區">
+           TODO: 用 text 來紀錄 fame, karma + gold　（隔週才能分配＋看到結果）
+          </Panel>
+        </Panel>)
       }
     </Panel>);
   }
@@ -214,7 +215,6 @@ export class MeetingGoView extends Component {
     return (<div>
       { this.renderPrepOverview() }
       { this.renderGMView() }
-    }
     </div>);
   }
 }
@@ -287,9 +287,9 @@ export class AdventureMeetingPanel extends Component {
   render() {
     return (<div>
       <Panel header="團隊鑑定">
-        <MissionView />
+        <MeetingView />
       </Panel>
-      <Panel header="之前的團隊鑑定">
+      <Panel header="團隊鑑定歸檔紀錄">
         <MeetingArchive />
       </Panel>
     </div>);
