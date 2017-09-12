@@ -35,6 +35,15 @@ TODO (features)
   * GM 可以進行自己的鑑定 prep SOP (gmSubmitMeetingPrep)
   * LFG 功能 (mission wishlist) + p2p team creation
 
+* W6-?
+  * system for skills + badges
+    * tags + skill overview
+  * add adventure status
+    * advanced mode for ambitious people: 更多反思、投入度、合作、完整度等等細項
+    * add "adventure prep" as first phase to help the team hit the ground running
+      * 提供相關的資料，包含以前做過這個任務的成果範例
+      * [進階] 反思，彼此了解互相的想法、預測目標、投入度（還有他們歷史？）
+
 
 ### TODO
 

@@ -26,6 +26,17 @@ import AdventureView from 'src/views/components/adventures/AdventureView';
 import { AdventureMeetingPanel } from 'src/views/components/adventures/MeetingView';
 import { UserBadge } from 'src/views/components/users/UserList';
 
+
+const AdventureStatus = {
+  None: 0,
+  Prep: 1,
+  Go: 2,
+  WrapUp: 3,
+  Done: 4
+};
+
+// TODO: add "adventure prep" or "adventure first steps" to help the team hit the ground running
+
 @connect(({ firebase }, props) => {
   const auth = firebase.auth;
   const currentUid = auth && auth.uid;
@@ -117,7 +128,7 @@ export default class MissionControlPage extends Component {
 
     // TODO: 冒險者可以看到自己所有的 adventure
 
-    let currentAdventureEl;
+    let currentAdventureOverview;
 
     if (u2aIdx && a2uIdx) {
       const adventureIds = Object.keys(u2aIdx[this.CurrentUserUid]);
@@ -129,7 +140,7 @@ export default class MissionControlPage extends Component {
         existingUsers = existingUsers[adventureId] || EmptyObject;
 
         console.log(existingUsers);
-        currentAdventureEl = (<AdventureView {...{
+        currentAdventureOverview = (<AdventureView {...{
           adventureId,
           adventure,
           assignedGM: users && users[adventure.assignedGMUid],
@@ -139,21 +150,26 @@ export default class MissionControlPage extends Component {
         }}/>);
       }
       else {
-        currentAdventureEl = (<Alert bsStyle="warning">
+        currentAdventureOverview = (<Alert bsStyle="warning">
           你目前沒有在進行任務。可以選擇任務並且找守門人註冊～
         </Alert>);
       }
     }
     else {
-      currentAdventureEl = (<span className="color-red">
+      currentAdventureOverview = (<span className="color-red">
         <FAIcon name="cog" spinning={true} /> loading...
       </span>);
     }
 
+
+    // TODO: render stuff based on current status
+    const adventureStatus = AdventureStatus.Go;
+
     return (
       <div>
         <Panel header="目前的任務">
-          { currentAdventureEl }
+          { currentAdventureOverview }
+          { /* <AdventurePrepView /> */ }
           <AdventureMeetingPanel />
         </Panel>
         <Panel header="以前做過的任務">
