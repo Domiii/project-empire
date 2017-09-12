@@ -19,6 +19,17 @@ import { FAIcon } from 'src/views/components/util';
 
 import UserList from 'src/views/components/users/UserList';
 
+/*
+緊急 TODO:
+
+1. prep: form input specs
+2. prep: input type renderers
+3. user display in title bar + 身分切換功能 (+ warning)
+4. prep: form
+5. prep: own view
+6. prep: table (all) view
+7. prep: meeting + prep status view
+*/
 
 /*
 // TODO: party prep checklist (with "i'm ready" check)
@@ -87,6 +98,10 @@ export function updateMeetingStatus() {
   
 }
 
+
+// #################################
+// Form UI
+// #################################
 
 // #################################
 // Meeting UI
