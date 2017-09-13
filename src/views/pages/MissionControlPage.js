@@ -137,6 +137,18 @@ export default class MissionControlPage extends Component {
     return currentUserRef && currentUserRef.props.uid;
   }
 
+  renderMeetings(adventureData) {
+    const {
+      meetings
+    } = this.props;
+
+    return (<AdventureMeetingPanel 
+      {...adventureData}
+      partyMembers={adventureData.users}
+      meetings={meetings || {meeting1: {}}}
+    />);
+  }
+
   render() {
     const {
       currentAdventureId,
@@ -144,7 +156,6 @@ export default class MissionControlPage extends Component {
       users,
       adventures,
       missions,
-      meetings,
       u2aIdx,
       a2uIdx,
 
@@ -189,9 +200,7 @@ export default class MissionControlPage extends Component {
       currentAdventureOverview = (<div>
         <AdventureView {...adventureData} />
         { /* <AdventurePrepView /> */ }
-        <AdventureMeetingPanel 
-          {...adventureData}
-          meetings={meetings}/>
+        { this.renderMeetings(adventureData) }
       </div>);
     }
     else {

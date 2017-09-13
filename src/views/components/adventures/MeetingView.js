@@ -65,6 +65,7 @@ export class MeetingStatusView extends Component {
     meetingId: PropTypes.string,
     meeting: PropTypes.object,
 
+    uid: PropTypes.object,
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
     users: PropTypes.object,
@@ -78,7 +79,7 @@ export class MeetingStatusView extends Component {
     autoBind(this);
   }
 
-  renderPartyMember() {
+  renderPartyMember({user, uid}) {
     return (<Badge>
       <img src={user.photoURL} className="user-image-tiny" /> &nbsp;
       {user.displayName}
@@ -113,6 +114,7 @@ export class MeetingPrepUserDetails extends Component {
     meetingId: PropTypes.string,
     meeting: PropTypes.object,
     
+    uid: PropTypes.object,
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
     users: PropTypes.object,
@@ -141,6 +143,16 @@ export class MeetingPrepUserDetails extends Component {
   }
 }
 
+@connect(({ firebase }, { meetingId, uid }) => {
+  const preparationRef =  uid && meetingId && 
+    MeetingsRef.preparation(firebase, {
+      meetingId,
+      uid
+    });
+  return {
+    submitPrep: preparationRef && preparationRef.set
+  };
+})
 export class MeetingPrepUserDetailsEditor extends Component {
   static contextTypes = {
     currentUserRef: PropTypes.object.isRequired
@@ -150,6 +162,7 @@ export class MeetingPrepUserDetailsEditor extends Component {
     meetingId: PropTypes.string,
     meeting: PropTypes.object,
     
+    uid: PropTypes.object,
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
     users: PropTypes.object,
@@ -158,14 +171,20 @@ export class MeetingPrepUserDetailsEditor extends Component {
   };
 
   render() {
+    const {
+      meetingId
+    } = this.props
+
     // TODO: setup context
     // TODO: connect to database
     // TODO: submitPartyMeetingPrep
-    const context = {};
+    const context = this.props;
     const allValues = null;
 
     return (<div>
-      <FormInputView format={meetingPrepItems} 
+      <FormInputView
+        name={'meeting_' + meetingId}
+        format={meetingPrepItems} 
         context={context}
         allValues={allValues} />
     </div>);
@@ -181,7 +200,8 @@ export class MeetingPrepView extends Component {
   static propTypes = {
     meetingId: PropTypes.string,
     meeting: PropTypes.object,
-    
+
+    uid: PropTypes.object,
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
     users: PropTypes.object,
@@ -250,6 +270,7 @@ export class MeetingGoView extends Component {
     meetingId: PropTypes.string,
     meeting: PropTypes.object,
     
+    uid: PropTypes.object,
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
     users: PropTypes.object,
@@ -323,6 +344,7 @@ export class MeetingResultsView extends Component {
     meetingId: PropTypes.string,
     meeting: PropTypes.object,
     
+    uid: PropTypes.object,
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
     users: PropTypes.object,
@@ -362,6 +384,7 @@ export class MeetingArchive extends Component {
     meetingId: PropTypes.string,
     meeting: PropTypes.object,
     
+    uid: PropTypes.object,
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
     users: PropTypes.object,
@@ -385,7 +408,7 @@ export class MeetingArchive extends Component {
 
     return (<div>{ map(archivedMeetings || EmptyObject,
       (meeting, meetingId) =>
-        (<MeetingView {...props}
+        (<MeetingView {...this.props}
           key={meetingId}
           meetingId={meetingId}
           meeting={meeting} 
@@ -403,6 +426,7 @@ export default class MeetingView extends Component {
     meetingId: PropTypes.string,
     meeting: PropTypes.object,
 
+    uid: PropTypes.object,
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
     users: PropTypes.object,
@@ -435,11 +459,6 @@ export default class MeetingView extends Component {
 /**
  * The panel that renders all meetings belonging to an adventure
  */
-@connect(({ firebase }, prop) => {
-  return {
-    // TODO: provide all data!??!
-  };
-})
 export class AdventureMeetingPanel extends Component {
   static contextTypes = {
     currentUserRef: PropTypes.object.isRequired
@@ -457,6 +476,9 @@ export class AdventureMeetingPanel extends Component {
   };
 
   render() {
+    const {
+      currentUserRef
+    } = this.context;
     const props = this.props;
     const [activeMeetings, archivedMeetings] = 
       groupActiveMeetings(this.props.meetings);
@@ -469,6 +491,7 @@ export class AdventureMeetingPanel extends Component {
         { map(activeMeetings, (meeting, meetingId) =>
           (<MeetingView {...props}
             key={meetingId}
+            uid={uid}
             meetingId={meetingId}
             meeting={meeting} 
             />)

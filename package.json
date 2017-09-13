@@ -40,7 +40,7 @@
     "prop-types": "^15.5.10",
     "react": "^15.3.2",
     "react-autobind": "^1.0.6",
-    "react-bootstrap": "^0.30.7",
+    "react-bootstrap": "^0.31.3",
     "react-dom": "^15.3.2",
     "react-flex": "^2.2.8",
     "react-keydown": "^1.9.4",

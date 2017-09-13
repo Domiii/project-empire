@@ -1,16 +1,19 @@
 import isPlainObject from 'lodash/isPlainObject';
 import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
-import isFunction from 'lodash/isString';
+import isFunction from 'lodash/isFunction';
 import map from 'lodash/map';
+import filter from 'lodash/filter';
 import uniqBy from 'lodash/uniqBy';
 
+import { EmptyObject, EmptyArray } from 'src/util';
 
 
-export function getOptions(value, allValues, context, item) {
+
+export function getOptions(allValues, context, item) {
   let options = item.options;
   if (isFunction(options)) {
-    options = options(context, value, item);
+    options = options(allValues, context, item);
   }
 
   if (isPlainObject(options)) {
@@ -19,6 +22,9 @@ export function getOptions(value, allValues, context, item) {
   }
   if (isArray(options)) {
     return map(options, v => isPlainObject(v) ? v : ({label: v, value: v}));
+  }
+  if (!options) {
+    return EmptyArray;
   }
   throw new Error('invalid options: ' + JSON.stringify(options) + 
     ' (in item definition: ' + JSON.stringify(item) + ')');
@@ -37,12 +43,12 @@ export const formItemSpecs = {
   }
 };
 
-export function isItemReadonly(value, allValues, context, item) {
+export function isItemReadonly(allValues, context, item) {
   const typeSpec = formItemSpecs[item.type];
   return item.readonly || (typeSpec && typeSpec.readonly);
 }
 
-export function validateAndSanitizeFormat(value, allValues, context, items) {
+export function validateAndSanitizeFormat(allValues, context, items) {
   if (!isArray(items)) {
     throw new Error('form format must be an array of items: ' + JSON.stringify(items, null, 2));
   }
@@ -53,12 +59,12 @@ export function validateAndSanitizeFormat(value, allValues, context, items) {
     // make sure, each item has a valid type
     const typeSpec = formItemSpecs[item.type];
     if (!typeSpec) {
-      throw new Error('invalid form item type `' + item.type + '` on item: ' + JSON.stringify(item));
+      throw new Error('invalid form item type `' + item.type + '` on item: ' + JSON.stringify(item) + ' - ' + JSON.stringify(items, null, 2));
     }
 
     // make sure, each item has a unique id
     if (!item.id) {
-      if (isItemReadonly(item)) {
+      if (!isItemReadonly(allValues, context, item)) {
         throw new Error('invalid form item: `' + JSON.stringify(item) + '` must have an "id" property');
       }
     }
@@ -71,7 +77,7 @@ export function validateAndSanitizeFormat(value, allValues, context, items) {
     }
   });
 
-  return filter(items, item => !item.if || !!item.if(values, context, items));
+  return filter(items, item => !item.if || !!item.if(allValues || EmptyObject, context, items));
 }
 
 
