@@ -23,6 +23,16 @@
       }
     },
 
+    "meetings": {
+      ".read": "auth !== null",
+
+      "$meetingId": {
+        ".indexOn": ["adventureId"],
+        ".write": "auth !== null",
+        "TODO": "FIX access control!!!"
+      }
+    },
+
     "groups": {
       ".read": "auth !== null",
 

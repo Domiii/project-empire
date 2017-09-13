@@ -4,9 +4,13 @@ import first from 'lodash/first';
 import tail from 'lodash/tail';
 import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
+import has from 'lodash/has';
 import pickBy from 'lodash/pickBy';
+import omitBy from 'lodash/omitBy';
 import isArray from 'lodash/isArray';
+import isString from 'lodash/isString';
 import isObject from 'lodash/isObject';
+import isFunction from 'lodash/isFunction';
 import isEqual from 'lodash/isEqual';
 import reduce from 'lodash/reduce';
 import extend from 'lodash/extend';
@@ -159,9 +163,9 @@ export function addChildrenToRefWrapper(parent, children, inheritedSettings, cas
 // TODO: currently unused
 function logDBAction(pathTemplate, actionName, args) {
   try {
-    if (isObject(args) && _.has(args, 'updatedAt')) {
+    if (isObject(args) && has(args, 'updatedAt')) {
       // TODO: hack-around to get rid of firebase TIMESTAMP placeholder
-      args = _.omitBy(args, (v, k) => k === 'updatedAt');
+      args = omitBy(args, (v, k) => k === 'updatedAt');
     }
     const argsString = JSON.stringify(args);
     console.debug(`[LOG] Action: ${actionName}("${pathTemplate}", ${argsString})`);
@@ -194,17 +198,23 @@ function _buildQueryFinal(path, args) {
   if (isEmpty(args)) {
     return path;
   }
-  else if (_.isString(args)) {
+  else if (isString(args)) {
     return `${path}#${args}`;
   }
   else if (isArray(args)) {
-    args = args.filter(a => !isEmpty(a));
+    args = args.filter(arg => !isEmpty(arg));
+    args.forEach(arg => {
+      if (!isString(arg)) {
+        throw new Error('invalid argument - must be string: ' + arg + 
+          ' - ' + JSON.stringify(args) : '');
+      }
+    });
     return ({
       path,
       queryParams: args
     });
   }
-  else if (_.isPlainObject(args)) {
+  else if (isPlainObject(args)) {
     return ({
       path,
       ...args
@@ -272,7 +282,7 @@ function _makeAddQuery(makeQuery, groupBy, childrenWrappers) {
 
 function _makeRefWrapper(parent, inheritedSettings, cfgOrPath) {
   let cfg;
-  if (_.isString(cfgOrPath)) {
+  if (isString(cfgOrPath)) {
     cfg = { pathTemplate: cfgOrPath };
   }
   else {
@@ -351,13 +361,13 @@ function _makeRefWrapper(parent, inheritedSettings, cfgOrPath) {
   WrapperClass.prototype.indices = indices;
 
   // add pushedAt + updatedAt to prototype
-  // if (_.isFunction(inheritedSettings.pushedAt)) {
+  // if (isFunction(inheritedSettings.pushedAt)) {
   //   WrapperClass.prototype._decoratePushedAt = inheritedSettings.pushedAt;
   // }
-  if (_.isFunction(updatedAt)) {
+  if (isFunction(updatedAt)) {
     WrapperClass.prototype._decorateUpdatedAt = updatedAt;
   }
-  else if (_.isString(updatedAt)) {
+  else if (isString(updatedAt)) {
     WrapperClass.prototype._decorateUpdatedAt = makeUpdatedAt(updatedAt);
   }
 

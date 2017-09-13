@@ -2,19 +2,31 @@ import map from 'lodash/map';
 import filter from 'lodash/filter';
 import omit from 'lodash/omit';
 
+import { Component } from 'react';
+import PropTypes from 'prop-types';
 
-import { validateAndSanitizeFormat } from './FormDef';
+
+import { 
+  validateAndSanitizeFormat,
+  isItemReadonly,
+  getOptions
+} from './FormDef';
 
 
 
-export function renderOptions(value, options) {
-
+export function renderOptions(options) {
+  return (map(options, (option, i) => {
+      return (<ToggleButton key={i}
+          value={option.value} block>
+        {option.label}
+      </ToggleButton>);
+    }));
 }
 
-
+// TODO: wrap in redux-form
 
 export const formTypeInputComponents = {
-  section: ({value, allValues, context, item}) {
+  section: ({ input: { value, onChange }, allValues, context, item }) => {
     return (<div>
       <h2>{item.title}</h2>
         { item.items && 
@@ -26,37 +38,24 @@ export const formTypeInputComponents = {
         }
     </div>);
   },
- TODO: () => {
-  return (<span>
-    <Button bsStyle="success" bsSize="small">
-     all <i className="fa fa-check" />
-    </Button>
-    <Button bsStyle="warning" bsSize="small">
-     some <i className="fa fa-cube" />
-    </Button>
-    <Button bsStyle="danger" bsSize="small">
-     none <i className="fa fa-remove" />
-    </Button>
-   </span>);
- },
- text: () => {
-  return (<textarea style={{width: '100%'}} rows="3" />);
- },
- radio: () => {
-  return (<ButtonToolbar>
-    <ToggleButtonGroup type="radio" name="options" defaultValue={1}>
-      <ToggleButton value={1} block>
-        Radio 1 (pre-checked)
-      </ToggleButton>
-      <ToggleButton value={2} block>Radio 2</ToggleButton>
-
-      <ToggleButton value={3} block>Radio 3</ToggleButton>
-    </ToggleButtonGroup>
-  </ButtonToolbar>));
- },
- checkbox: () => {
-
- }
+  text: ({ input: { value, onChange }, allValues, context, item }) => {
+    return (<textarea style={{width: '100%'}} 
+      rows="3" onChange={onChange}
+      value={value} />);
+  },
+  radio: ({ input: { value, onChange }, allValues, context, item }) => {
+    const options = getOptions(value, allValues, context, item);
+    return (<ToggleButtonGroup type="radio" onChange={onChange}>
+        { renderOptions(options) }
+      </ToggleButtonGroup>);
+  },
+  checkbox: ({ input: { value, onChange }, allValues, context, item }) => {
+    const isReadonly = isItemReadonly(value, allValues, context, item);
+    const options = getOptions(value, allValues, context, item);
+    return (<ToggleButtonGroup type="checkbox" onChange={onChange}>
+        { renderOptions(options) }
+      </ToggleButtonGroup>);
+  }
 };
 
 export function registerCustomTypeComponent(typeName, Comp) {
@@ -65,16 +64,17 @@ export function registerCustomTypeComponent(typeName, Comp) {
 
 function createInputs(allValues, context, items) {
   return (
-    map(items, item => {
+    map(items, (item, i) => {
+      const isReadonly = isItemReadonly(value, allValues, context, item);
       const Comp = formTypeInputComponents[item.type];
-      return (<Comp {...
-          key: ,
-          value: ,
-          allValues: ,
-          context,
-          item
-        }/>);
-    });
+      return (<Field key={item.id} name={item.id} id={item.id} component={
+          <Comp {...{
+            allValues,
+            context,
+            item
+          }}/>
+        } />);
+    })
   );
 }
 
@@ -124,7 +124,6 @@ export default class FormInputView extends Component {
     } = this.props;
 
     const itemsProps = omit(this.props, 'submit');
-
     return (<div>
       <FormItemsInput {...{itemsProps}} />
     </div>);

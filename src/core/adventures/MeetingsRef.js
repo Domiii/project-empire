@@ -1,4 +1,6 @@
 import map from 'lodash/map';
+import pickBy from 'lodash/pickBy';
+import isEmpty from 'lodash/isEmpty';
 
 import { 
   makeRefWrapper
@@ -6,6 +8,58 @@ import {
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
+
+export const MeetingPrepStatus = {
+  NotStarted: 0,
+  Preparing: 1,
+  Done: 2
+};
+
+
+export const MeetingStatus = {
+  NotStarted: 0,
+  InProgress: 1,
+  Finished: 2
+};
+
+const activeMeetingQuery = meeting => !!meeting.active;
+const inactiveMeetingQuery = meeting => !meeting.active;
+const defaultActiveMeetings = Object.freeze({});
+
+export function groupActiveMeetings(allMeetings) {
+  let activeMeetings = pickBy(allMeetings, 
+    activeMeetingQuery);
+  activeMeetings = !isEmpty(activeMeetings) ?
+    activeMeetings :
+    defaultActiveMeetings;
+
+  const archivedMeetings = pickBy(allMeetings,
+    inactiveMeetingQuery);
+  return [activeMeetings, archivedMeetings];
+}
+
+export function createNewMeeting(meetingsRef) {
+  return meetingsRef.push_meeting({active: 1});
+}
+
+export function ensureMeetingExists(
+  meetingsRef, meetingId) {
+
+  if (!meetingId) {
+    return createNewMeeting(meetingsRef);
+  }
+  return Promise.resolve();
+}
+
+export function updateMeetingPrep(
+  meetingsRef, meetingId, uid, prep) {
+  ensureMeetingExists(meetingsRef, meetingId).
+  then(() => meetingsRef.set_preparation(meetingId, uid, prep));
+}
+
+export function updateMeetingStatus() {
+  
+}
 
 // 鑑定表： https://docs.google.com/forms/d/11Xo3VffvTtliMl4MDSY1dk3jtgGbY75doTqiRzME0Gc/edit
 
@@ -154,8 +208,18 @@ export const gmMeetingGoCheckItems = {
 
 
 
-export default MeetingsRef = {
+export default makeRefWrapper({
   pathTemplate: '/meetings',
+
+  indices: {
+    adventureId: ['adventureId']
+  },
+
+  queryString({adventureId}) {
+    // get all responses by given adventureId
+    return this.indices.where({adventureId});
+  },
+
   children: {
     meeting: {
       pathTemplate: '$(meetingId)',
@@ -208,7 +272,7 @@ export default MeetingsRef = {
             userFeedback: {
               pathTemplate: '$(uid)',
               children: {
-                prepStatus: 'feedbackStatus',
+                feedbackStatus: 'feedbackStatus',
                 feedback: {
                   pathTemplate: 'feedback',
                   children: {
@@ -222,4 +286,4 @@ export default MeetingsRef = {
       }
     }
   }
-};
+});

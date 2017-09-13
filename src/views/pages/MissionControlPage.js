@@ -1,6 +1,7 @@
 import AdventuresRef, { UserAdventureRef } from 'src/core/adventures/AdventuresRef';
 import UserInfoRef from 'src/core/users/UserInfoRef';
 import MissionsRef from 'src/core/missions/MissionsRef';
+import MeetingsRef from 'src/core/adventures/MeetingsRef';
 
 import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
@@ -42,16 +43,33 @@ const AdventureStatus = {
   const currentUid = auth && auth.uid;
 
   const userAdventureRef = UserAdventureRef(firebase);
-  const missionsRef = MissionsRef(firebase);
+
+  const u2aIdx = userAdventureRef.indexRefs.user.val;
+  let currentAdventureId, meetingsRef, missionsRef;
+  if (!!u2aIdx) {
+    const adventureIds = Object.keys(u2aIdx[currentUid]);
+
+    currentAdventureId = adventureIds && adventureIds[0];
+
+    if (currentAdventureId) {
+      // get ready for adventure-related data
+      missionsRef = MissionsRef(firebase);
+      meetingsRef = MeetingsRef(firebase);
+    }
+  }
 
   return {
     currentUid,
+    currentAdventureId,
     userAdventureRef,
 
     users: userAdventureRef.refs.user.val,
     adventures: userAdventureRef.refs.adventure.val,
-    missions: missionsRef.val,
-    u2aIdx: userAdventureRef.indexRefs.user.val,
+    
+    missions: missionsRef && missionsRef.val,
+    meetings: meetingsRef && meetingsRef.val,
+    
+    u2aIdx,
     a2uIdx: userAdventureRef.indexRefs.adventure.val,
 
     getUsersByAdventure: userAdventureRef.get_user_by_adventure
@@ -60,15 +78,25 @@ const AdventureStatus = {
 @firebaseConnect((props, firebase) => {
   const {
     currentUid,
-    userAdventureRef
+    currentAdventureId,
+    userAdventureRef,
+    u2aIdx
   } = props;
 
   if (!!currentUid) {
     const paths = [
       UserInfoRef.userList.makeQuery(),
-      AdventuresRef.makeQuery(),
-      MissionsRef.makeQuery()
+      AdventuresRef.makeQuery()
     ];
+
+    if (!!currentAdventureId) {
+      // get adventure-related data
+      paths.push(
+        MissionsRef.makeQuery(),
+        MeetingsRef.makeQuery({adventureId: currentAdventureId})
+      );
+    }
+
     UserAdventureRef.addIndexQueries(paths, {
       user: [currentUid]
     });
@@ -111,10 +139,12 @@ export default class MissionControlPage extends Component {
 
   render() {
     const {
+      currentAdventureId,
       children,
       users,
       adventures,
       missions,
+      meetings,
       u2aIdx,
       a2uIdx,
 
@@ -131,23 +161,32 @@ export default class MissionControlPage extends Component {
     let currentAdventureOverview;
 
     if (u2aIdx && a2uIdx) {
-      const adventureIds = Object.keys(u2aIdx[this.CurrentUserUid]);
-      const adventureId = adventureIds && adventureIds[0];
-      if (adventureId) {
-        const adventure = adventures[adventureId];
+      if (currentAdventureId) {
+        const adventure = adventures[currentAdventureId];
 
-        let existingUsers = getUsersByAdventure(adventureId);
-        existingUsers = existingUsers[adventureId] || EmptyObject;
+        let existingUsers = getUsersByAdventure(currentAdventureId);
+        existingUsers = existingUsers[currentAdventureId] || EmptyObject;
 
-        console.log(existingUsers);
-        currentAdventureOverview = (<AdventureView {...{
-          adventureId,
+
+        // TODO: render stuff based on current status
+        const adventureStatus = AdventureStatus.Go;
+        const adventureData = {
+          adventureId: currentAdventureId,
           adventure,
+          users: existingUsers,
           assignedGM: users && users[adventure.assignedGMUid],
           adventureGuardian: users && users[adventure.guardianUid],
-          mission: missions && missions[adventure.missionId],
-          users: existingUsers,
-        }}/>);
+
+          mission: missions && missions[adventure.missionId]
+        };
+
+        currentAdventureOverview = (<div>
+          <AdventureView {...adventureData} />
+          { /* <AdventurePrepView /> */ }
+          <AdventureMeetingPanel 
+            {...adventureData}
+            meetings={meetings}/>
+        </div>);
       }
       else {
         currentAdventureOverview = (<Alert bsStyle="warning">
@@ -162,15 +201,10 @@ export default class MissionControlPage extends Component {
     }
 
 
-    // TODO: render stuff based on current status
-    const adventureStatus = AdventureStatus.Go;
-
     return (
       <div>
         <Panel header="目前的任務">
           { currentAdventureOverview }
-          { /* <AdventurePrepView /> */ }
-          <AdventureMeetingPanel />
         </Panel>
         <Panel header="以前做過的任務">
           TODO: adventure archive

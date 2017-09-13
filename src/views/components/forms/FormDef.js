@@ -7,10 +7,10 @@ import uniqBy from 'lodash/uniqBy';
 
 
 
-export function getOptions(context, value, itemTemplate) {
-  let options = itemTemplate.options;
+export function getOptions(value, allValues, context, item) {
+  let options = item.options;
   if (isFunction(options)) {
-    options = options(context, value, itemTemplate);
+    options = options(context, value, item);
   }
 
   if (isPlainObject(options)) {
@@ -21,7 +21,7 @@ export function getOptions(context, value, itemTemplate) {
     return map(options, v => isPlainObject(v) ? v : ({label: v, value: v}));
   }
   throw new Error('invalid options: ' + JSON.stringify(options) + 
-    ' (in template: ' + JSON.stringify(itemFormat) + ')');
+    ' (in item definition: ' + JSON.stringify(item) + ')');
 }
 
 export const formItemSpecs = {
@@ -37,12 +37,12 @@ export const formItemSpecs = {
   }
 };
 
-export function isItemReadonly(item) {
+export function isItemReadonly(value, allValues, context, item) {
   const typeSpec = formItemSpecs[item.type];
   return item.readonly || (typeSpec && typeSpec.readonly);
 }
 
-export function validateAndSanitizeFormat(value, context, items) {
+export function validateAndSanitizeFormat(value, allValues, context, items) {
   if (!isArray(items)) {
     throw new Error('form format must be an array of items: ' + JSON.stringify(items, null, 2));
   }

@@ -1,5 +1,11 @@
-import MeetingsRef from 'src/core/adventures/MeetingsRef';
+import MeetingsRef, {
+  meetingPrepItems,
+  MeetingPrepStatus, 
+  MeetingStatus,
+  groupActiveMeetings,
+} from 'src/core/adventures/MeetingsRef';
 
+import map from 'lodash/map';
 import pickBy from 'lodash/pickBy';
 import isEmpty from 'lodash/isEmpty';
 
@@ -18,6 +24,8 @@ import {
 import { FAIcon } from 'src/views/components/util';
 
 import UserList from 'src/views/components/users/UserList';
+
+import FormInputView from 'src/views/components/forms/FormInputView';
 
 /*
 緊急 TODO:
@@ -43,65 +51,6 @@ import UserList from 'src/views/components/users/UserList';
 // TODO: archive adventure action
 */
 
-// #################################
-// Meeting core stuff
-// #################################
-
-export const MeetingPrepStatus = {
-  NotStarted: 0,
-  Preparing: 1,
-  Done: 2
-};
-
-export const MeetingStatus = {
-  NotStarted: 0,
-  InProgress: 1,
-  Finished: 2
-};
-
-const activeMeetingQuery = meeting => !!meeting.active;
-const inactiveMeetingQuery = meeting => !meeting.active;
-const defaultActiveMeetings = Object.freeze([{}]);
-
-export function groupActiveMeetings(allMeetings) {
-  let activeMeetings = pickBy(allMeetings, 
-    activeMeetingQuery);
-  activeMeetings = !isEmpty(activeMeetings) ?
-    activeMeetings :
-    defaultActiveMeetings;
-
-  const archivedMeetings = pickBy(allMeetings,
-    inactiveMeetingQuery);
-  return [activeMeetings, archivedMeetings];
-}
-
-export function createNewMeeting(meetingsRef) {
-  return meetingsRef.push_meeting({active: 1});
-}
-
-export function ensureMeetingExists(
-  meetingsRef, meetingId) {
-
-  if (!meetingId) {
-    return createNewMeeting(meetingsRef);
-  }
-  return Promise.resolve();
-}
-
-export function updateMeetingPrep(
-  meetingsRef, meetingId, uid, prep) {
-  ensureMeetingExists(meetingsRef, meetingId).
-  then(() => meetingsRef.set_preparation(meetingId, uid, prep));
-}
-
-export function updateMeetingStatus() {
-  
-}
-
-
-// #################################
-// Form UI
-// #################################
 
 // #################################
 // Meeting UI
@@ -113,8 +62,8 @@ export class MeetingStatusView extends Component {
   };
 
   static propTypes = {
-    meetingId: PropTypes.string.isRequired,
-    meeting: PropTypes.object.isRequired,
+    meetingId: PropTypes.string,
+    meeting: PropTypes.object,
 
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
@@ -161,8 +110,8 @@ export class MeetingPrepUserDetails extends Component {
   };
 
   static propTypes = {
-    meetingId: PropTypes.string.isRequired,
-    meeting: PropTypes.object.isRequired,
+    meetingId: PropTypes.string,
+    meeting: PropTypes.object,
     
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
@@ -198,8 +147,8 @@ export class MeetingPrepUserDetailsEditor extends Component {
   };
 
   static propTypes = {
-    meetingId: PropTypes.string.isRequired,
-    meeting: PropTypes.object.isRequired,
+    meetingId: PropTypes.string,
+    meeting: PropTypes.object,
     
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
@@ -208,33 +157,17 @@ export class MeetingPrepUserDetailsEditor extends Component {
     assignedGM: PropTypes.object
   };
 
-  // TODO: partySubmitMeetingPrep
-  // TODO: form
   render() {
-    return (<div>
-      <ol>
-        <li>
-          <Panel header="作品 checklist">
-          TODO
-          </Panel>
-        </li>
-        <li>
-          <Panel header="簡報 checklist">
-          TODO
-          </Panel>
-        </li>
-        <li>
-          <Panel header="團隊鑑定 checklist">
-          TODO
-          </Panel>
-        </li>
-      </ol>
+    // TODO: setup context
+    // TODO: connect to database
+    // TODO: submitPartyMeetingPrep
+    const context = {};
+    const allValues = null;
 
-      <Button block bsStyle="danger"
-        active={ userPrepStatus !== MeetingPrepStatus.Done }
-        onClick={ () => setUserPrepStatus(MeetingPrepStatus.Done) }>
-        我準備好了！送出去～
-      </Button>
+    return (<div>
+      <FormInputView format={meetingPrepItems} 
+        context={context}
+        allValues={allValues} />
     </div>);
   }
 }
@@ -246,8 +179,8 @@ export class MeetingPrepView extends Component {
   };
 
   static propTypes = {
-    meetingId: PropTypes.string.isRequired,
-    meeting: PropTypes.object.isRequired,
+    meetingId: PropTypes.string,
+    meeting: PropTypes.object,
     
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
@@ -277,7 +210,7 @@ export class MeetingPrepView extends Component {
       return null;
     }
 
-    const userPrepStatus = MeetingPrepStatus.preparing;
+    const userPrepStatus = MeetingPrepStatus.Preparing;
     const userPrepData = null;
     const isPreparing = userPrepStatus === MeetingPrepStatus.Preparing;
     const isDone = userPrepStatus === MeetingPrepStatus.Done;
@@ -314,8 +247,8 @@ export class MeetingGoView extends Component {
   };
 
   static propTypes = {
-    meetingId: PropTypes.string.isRequired,
-    meeting: PropTypes.object.isRequired,
+    meetingId: PropTypes.string,
+    meeting: PropTypes.object,
     
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
@@ -387,8 +320,8 @@ export class MeetingResultsView extends Component {
   };
 
   static propTypes = {
-    meetingId: PropTypes.string.isRequired,
-    meeting: PropTypes.object.isRequired,
+    meetingId: PropTypes.string,
+    meeting: PropTypes.object,
     
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
@@ -426,8 +359,8 @@ export class MeetingArchive extends Component {
   };
 
   static propTypes = {
-    meetingId: PropTypes.string.isRequired,
-    meeting: PropTypes.object.isRequired,
+    meetingId: PropTypes.string,
+    meeting: PropTypes.object,
     
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
@@ -467,8 +400,8 @@ export default class MeetingView extends Component {
   };
 
   static propTypes = {
-    meetingId: PropTypes.string.isRequired,
-    meeting: PropTypes.object.isRequired,
+    meetingId: PropTypes.string,
+    meeting: PropTypes.object,
 
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
@@ -519,6 +452,7 @@ export class AdventureMeetingPanel extends Component {
     adventureGuardian: PropTypes.object,
     assignedGM: PropTypes.object,
 
+    mission: PropTypes.object,
     meetings: PropTypes.object
   };
 
@@ -526,6 +460,9 @@ export class AdventureMeetingPanel extends Component {
     const props = this.props;
     const [activeMeetings, archivedMeetings] = 
       groupActiveMeetings(this.props.meetings);
+
+
+    // TODO: handle case when there is no meeting!
 
     return (<div>
       <Panel header="團隊鑑定">

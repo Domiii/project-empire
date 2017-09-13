@@ -5,6 +5,8 @@ import {
 } from 'react-bootstrap';
 import { Field } from 'redux-form';
 
+export SimpleGrid from './SimpleGrid';
+
 // Online demo: https://codepen.io/Domiii/pen/mOaGWG?editors=0010
 export class FAIcon extends PureComponent {
   static propTypes = {
@@ -25,8 +27,6 @@ export class FAIcon extends PureComponent {
     </i>);
   }
 }
-
-export SimpleGrid from './SimpleGrid';
 
 // <FieldArray name="members" component={members =>
 
