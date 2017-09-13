@@ -1,6 +1,6 @@
 import map from 'lodash/map';
 import filter from 'lodash/filter';
-import omit from 'lodash/omit';
+import pick from 'lodash/pick';
 
 import { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -65,7 +65,8 @@ export function registerCustomTypeComponent(typeName, Comp) {
 function createInputs(allValues, context, items) {
   return (
     map(items, (item, i) => {
-      const isReadonly = isItemReadonly(value, allValues, context, item);
+      // TODO: handle isReadonly correctly
+      // const isReadonly = isItemReadonly(value, allValues, context, item);
       const Comp = formTypeInputComponents[item.type];
       return (<Field key={item.id} name={item.id} id={item.id} component={
           <Comp {...{
@@ -104,28 +105,39 @@ export class FormItemsInput extends Component {
 /**
  * Let user edit form input
  */
-export default class FormInputView extends Component {
+class _FormInputView extends Component {
   static propTypes = {
     format: PropTypes.object.isRequired,
     context: PropTypes.object.isRequired,
-    submit: PropTypes.func.isRequired,
-
     allValues: PropTypes.object
   };
 
 
   render() {
-    const {
-      format,
-      context,
-      allValues,
+    const itemsProps = pick(this.props, 
+      'format', 'context', 'allValues');
 
-      submit
-    } = this.props;
-
-    const itemsProps = omit(this.props, 'submit');
     return (<div>
       <FormItemsInput {...{itemsProps}} />
     </div>);
   }
 }
+
+_FormInputView = reduxForm({ enableReinitialize: true })(_FormInputView);
+
+
+
+// TODO: prevent problems/data resets caused by connection loss 
+
+const FormInputView = connect(
+  (state, { name, format, context, allValues }) => {
+    return ({
+      form: name,
+      initialValues: {
+        format, context, allValues
+      },
+    });
+  }
+)(_FormInputView);
+
+export default FormInputView;

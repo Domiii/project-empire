@@ -158,46 +158,46 @@ export default class MissionControlPage extends Component {
 
     // TODO: 冒險者可以看到自己所有的 adventure
 
-    let currentAdventureOverview;
-
-    if (u2aIdx && a2uIdx) {
-      if (currentAdventureId) {
-        const adventure = adventures[currentAdventureId];
-
-        let existingUsers = getUsersByAdventure(currentAdventureId);
-        existingUsers = existingUsers[currentAdventureId] || EmptyObject;
-
-
-        // TODO: render stuff based on current status
-        const adventureStatus = AdventureStatus.Go;
-        const adventureData = {
-          adventureId: currentAdventureId,
-          adventure,
-          users: existingUsers,
-          assignedGM: users && users[adventure.assignedGMUid],
-          adventureGuardian: users && users[adventure.guardianUid],
-
-          mission: missions && missions[adventure.missionId]
-        };
-
-        currentAdventureOverview = (<div>
-          <AdventureView {...adventureData} />
-          { /* <AdventurePrepView /> */ }
-          <AdventureMeetingPanel 
-            {...adventureData}
-            meetings={meetings}/>
-        </div>);
-      }
-      else {
-        currentAdventureOverview = (<Alert bsStyle="warning">
-          你目前沒有在進行任務。可以選擇任務並且找守門人註冊～
-        </Alert>);
-      }
-    }
-    else {
-      currentAdventureOverview = (<span className="color-red">
+    if (!u2aIdx) {
+      return (<span className="color-red">
         <FAIcon name="cog" spinning={true} /> loading...
       </span>);
+    }
+
+
+    let currentAdventureOverview;
+    
+    if (currentAdventureId) {
+      const adventure = adventures[currentAdventureId];
+
+      let existingUsers = getUsersByAdventure(currentAdventureId);
+      existingUsers = existingUsers[currentAdventureId] || EmptyObject;
+
+
+      // TODO: render stuff based on current status
+      const adventureStatus = AdventureStatus.Go;
+      const adventureData = {
+        adventureId: currentAdventureId,
+        adventure,
+        users: existingUsers,
+        assignedGM: users && users[adventure.assignedGMUid],
+        adventureGuardian: users && users[adventure.guardianUid],
+
+        mission: missions && missions[adventure.missionId]
+      };
+
+      currentAdventureOverview = (<div>
+        <AdventureView {...adventureData} />
+        { /* <AdventurePrepView /> */ }
+        <AdventureMeetingPanel 
+          {...adventureData}
+          meetings={meetings}/>
+      </div>);
+    }
+    else {
+      currentAdventureOverview = (<Alert bsStyle="warning">
+        你目前沒有在進行任務。可以選擇任務並且找守門人註冊～
+      </Alert>);
     }
 
 
