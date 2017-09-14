@@ -225,6 +225,43 @@ button:active { outline:none !important; }
 
 /**
  * #######################################################
+ * Forms
+ * #######################################################
+ */
+
+.formItemsInput > div {
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: center;
+  margin: 10px 5px;
+}
+
+.formItemsInput > div > label {
+  flex: 1;
+  width: 100%;
+}
+
+.formItemsInput > div > div {
+  flex-flow: column nowrap;
+  position: relative;
+  flex: 1;
+  width: 100%;
+}
+
+.formSection {
+  flex-flow: column nowrap !important;
+}
+.formSection > * {
+}
+
+.formInputOption {
+  flex: 1;
+  width: 100%;
+  font-weight: normal !important;
+}
+
+/**
+ * #######################################################
  * Useful classes for content embedding
  * #######################################################
  */

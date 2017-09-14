@@ -15,25 +15,47 @@ import {
 
 import { 
   validateAndSanitizeFormat,
+  getOptions,
   isItemReadonly,
-  getOptions
+  isItemInput
 } from './FormDef';
 
 
 
 export function renderOptions(item, options) {
+  const optionType = item.type; // checkbox or radio
   return (map(options, (option, i) => {
-      return (<ToggleButton key={i}
-          name={item.id} id={item.id}
-          value={option.value} block>
+    const fieldId = `${item.id}.${option.value}`;
+    const name = (
+      item.type === 'radio' ?
+        item.id :
+        fieldId
+      );
+    return (
+      <label key={option.value || i} 
+        htmlFor={fieldId}
+        className="formInputOption">
+        <Field
+          id={fieldId}
+          name={name}
+          component="input"
+          type={optionType}
+          value={option.value}
+        />{' '}
         {option.label}
-      </ToggleButton>);
+      </label>
+    );
+      // return (<ToggleButton key={i}
+      //     name={item.id} id={item.id}
+      //     value={option.value} block>
+      //   {option.label}
+      // </ToggleButton>);
     }));
 }
 
 export const formTypeInputComponents = {
   section: ({ allValues, context, item }) => {
-    return (<div>
+    return (<div className="formSection">
       <h2>{item.title}</h2>
         { item.items && 
           <FormItemsInput {...{
@@ -44,27 +66,35 @@ export const formTypeInputComponents = {
         }
     </div>);
   },
-  text: ({ input: { value, onChange }, allValues, context, item }) => {
-    return (<textarea style={{width: '100%'}} 
-      rows="3" onChange={onChange}
-      value={value} />);
+  text: (props) => {
+    return (<div>
+      <Field 
+        {...props}
+        component="textarea"
+        style={{width: '100%'}} 
+        rows="3" />
+    </div>);
   },
-  radio: ({ input: { value, onChange }, allValues, context, item }) => {
-    const options = getOptions(allValues, context, item);
-    return (<ToggleButtonGroup 
-        name={item.id} id={item.id}
-        type="radio" onChange={onChange}>
-        { renderOptions(item, options) }
-      </ToggleButtonGroup>);
-  },
-  checkbox: ({ input: { value, onChange }, allValues, context, item }) => {
+  radio: ({ allValues, context, item }) => {
     const isReadonly = isItemReadonly(allValues, context, item);
     const options = getOptions(allValues, context, item);
-    return (<ToggleButtonGroup 
-        name={item.id} id={item.id}
-        type="checkbox" onChange={onChange}>
-        { renderOptions(item, options) }
-      </ToggleButtonGroup>);
+
+    return (<div>
+      { renderOptions(item, options) }
+    </div>);
+    // return (<ToggleButtonGroup 
+    //     name={item.id} id={item.id}
+    //     type="radio" onChange={onChange}>
+    //     { renderOptions(item, options) }
+    //   </ToggleButtonGroup>);
+  },
+  checkbox: ({allValues, context, item }) => {
+    const isReadonly = isItemReadonly(allValues, context, item);
+    const options = getOptions(allValues, context, item);
+
+    return (<div>
+      { renderOptions(item, options) }
+    </div>);
   }
 };
 
@@ -77,10 +107,11 @@ function createInputs(allValues, context, items) {
     map(items, (item, i) => {
       // TODO: handle isReadonly correctly
       const value = item.id && allValues[item.id];
-      const isReadonly = isItemReadonly(allValues, context, item);
+      //const isReadonly = isItemReadonly(allValues, context, item);
       const Comp = formTypeInputComponents[item.type];
+      const key = item.id || i;
       const childProps = {
-        key: item.id || i,
+        key,
         name: item.id || i,
         id: item.id || i,
         allValues,
@@ -88,15 +119,16 @@ function createInputs(allValues, context, items) {
         item
       };
 
-      if (isReadonly) {
-        // no field necessary
-        return <Comp {...childProps}/>;
+      const el = (<Comp {...childProps}/>);
+
+      if (!isItemInput(allValues, context, item)) {
+        return el;
       }
 
-      return (<Field 
-          {...childProps}
-          component={Comp}
-        />);
+      return (<div key={key}>
+          <label>{ item.title || item.id }</label>
+          { el }
+        </div>);
     })
   );
 }
@@ -108,7 +140,6 @@ export class FormItemsInput extends Component {
     allValues: PropTypes.object
   };
 
-
   render() {
     const {
       format,
@@ -118,7 +149,7 @@ export class FormItemsInput extends Component {
 
     const items = validateAndSanitizeFormat(allValues, context, format);
     const itemEls = createInputs(allValues || EmptyObject, context, items);
-    return (<div>
+    return (<div className="formItemsInput">
       { itemEls }
     </div>);
   }
@@ -131,7 +162,8 @@ class _FormInputView extends Component {
   static propTypes = {
     format: PropTypes.array.isRequired,
     context: PropTypes.object.isRequired,
-    allValues: PropTypes.object
+    allValues: PropTypes.object,
+    name: PropTypes.string
   };
 
 
@@ -139,9 +171,9 @@ class _FormInputView extends Component {
     const itemsProps = pick(this.props, 
       'format', 'context', 'allValues');
 
-    return (<div>
+    return (<form name={this.props.name}>
       <FormItemsInput {...itemsProps} />
-    </div>);
+    </form>);
   }
 }
 
@@ -155,9 +187,17 @@ const FormInputView = connect(
   (state, { name, format, context, allValues }) => {
     return ({
       form: name,
+
+      name: name,
+      format,
+      context,
+
       initialValues: {
-        format, context, allValues
-      },
+        ...allValues,
+        name, 
+        format,
+        context
+      }
     });
   }
 )(_FormInputView);

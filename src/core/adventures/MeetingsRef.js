@@ -85,7 +85,7 @@ export const meetingPrepItems = [
         id: 'isFinished',
         title: '你認為：任務有沒有完成？',
         type: 'radio',
-        options: [ '有！', '還沒，只是到達一個 milestone 而已' ]
+        options: [ '有！', '還沒～' ]
       },
       {
         id: 'checkedCollaborationStatus',
@@ -99,7 +99,6 @@ export const meetingPrepItems = [
         description: '如果GM們認可，則你對該團員的欣賞，將會化為具體鼓勵，額外增加你的團員 Karma 值！',
         type: 'checkbox',
         options: (allValues, context) => {
-          console.log(context.partyMembers);
           return mapValues(context.partyMembers, user => user.displayName);
         }
       },

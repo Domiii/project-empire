@@ -175,18 +175,22 @@ export class MeetingPrepUserDetailsEditor extends Component {
       meetingId
     } = this.props
 
-    // TODO: setup context
     // TODO: connect to database
-    // TODO: submitPartyMeetingPrep
+    // TODO: submitPartyMeetingPrep action
+    // TODO: meeting status + adventure view "prep toggle"
+
     const context = this.props;
     const allValues = null;
+    const onSubmit = ???;
 
     return (<div>
       <FormInputView
+        className="meetingPrepForm"
         name={'meeting_' + meetingId}
         format={meetingPrepItems} 
         context={context}
         allValues={allValues} />
+      <pre>{JSON.stringify(allValues, null, 2)}</pre>
     </div>);
   }
 }

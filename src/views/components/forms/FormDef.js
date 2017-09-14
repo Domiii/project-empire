@@ -32,7 +32,7 @@ export function getOptions(allValues, context, item) {
 
 export const formItemSpecs = {
   section: {
-   readonly: true
+    isNotInput: true,
   },
   text: {
     
@@ -43,9 +43,18 @@ export const formItemSpecs = {
   }
 };
 
+export function isItemInput(allValues, context, item) {
+  const typeSpec = formItemSpecs[item.type];
+  return !item.isNotInput && 
+    (!typeSpec || !typeSpec.isNotInput);
+}
+
 export function isItemReadonly(allValues, context, item) {
   const typeSpec = formItemSpecs[item.type];
-  return item.readonly || (typeSpec && typeSpec.readonly);
+  return !isItemInput(allValues, context, item) || (
+      item.readonly || 
+      (typeSpec && typeSpec.readonly)
+    );
 }
 
 export function validateAndSanitizeFormat(allValues, context, items) {
@@ -64,7 +73,7 @@ export function validateAndSanitizeFormat(allValues, context, items) {
 
     // make sure, each item has a unique id
     if (!item.id) {
-      if (!isItemReadonly(allValues, context, item)) {
+      if (isItemInput(allValues, context, item)) {
         throw new Error('invalid form item: `' + JSON.stringify(item) + '` must have an "id" property');
       }
     }
