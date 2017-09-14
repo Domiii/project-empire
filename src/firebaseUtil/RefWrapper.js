@@ -42,6 +42,9 @@ import {
   createDataAccessors
 } from './dataAccessors';
 
+
+const DEBUG_WRITES = false;
+
 const { 
   isLoaded,
   populate
@@ -592,7 +595,9 @@ function createRefWrapperBase() {
     }
 
     onFinalizeWrite(ref, val) {
-      console.log('Writing to path: ' + ref);
+      if (DEBUG_WRITES) {
+        console.log('Writing to path: ' + ref);
+      }
       if (_.isObject(val) && this.indices) {
         this.indices.updateIndices(val);
       }

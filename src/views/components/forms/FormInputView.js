@@ -12,7 +12,8 @@ import {
   reduxForm,
   formValueSelector,
   Field,
-  FormSection } from 'redux-form';
+  FormSection
+} from 'redux-form';
 import {
   Button,
   ToggleButton, ToggleButtonGroup
@@ -27,7 +28,8 @@ import {
   validateAndSanitizeFormat,
   getOptions,
   isItemReadonly,
-  isItemInput
+  isItemInput,
+  filterDisabledValues
 } from './FormDef';
 
 
@@ -64,30 +66,31 @@ export function renderOptions(item, options) {
 }
 
 export const formTypeInputComponents = {
-  section: ({ allValues, context, item }) => {
+  section: ({ getValue, context, item }) => {
     return (<div className="formSection">
       <h2>{item.title}</h2>
         { item.items && 
           <FormItemsInput {...{
             format: item.items,
             context,
-            allValues
+            getValue
           }} />
         }
     </div>);
   },
-  text: (props) => {
+  text: ({ getValue, context, item }) => {
     return (<div>
-      <Field 
-        {...props}
+      <Field
+        id={item.id}
+        name={item.id}
         component="textarea"
         style={{width: '100%'}} 
         rows="3" />
     </div>);
   },
-  radio: ({ allValues, context, item }) => {
-    const isReadonly = isItemReadonly(allValues, context, item);
-    const options = getOptions(allValues, context, item);
+  radio: ({ getValue, context, item }) => {
+    const isReadonly = isItemReadonly(getValue, context, item);
+    const options = getOptions(getValue, context, item);
 
     return (<div>
       { renderOptions(item, options) }
@@ -98,9 +101,9 @@ export const formTypeInputComponents = {
     //     { renderOptions(item, options) }
     //   </ToggleButtonGroup>);
   },
-  checkbox: ({allValues, context, item }) => {
-    const isReadonly = isItemReadonly(allValues, context, item);
-    const options = getOptions(allValues, context, item);
+  checkbox: ({getValue, context, item }) => {
+    const isReadonly = isItemReadonly(getValue, context, item);
+    const options = getOptions(getValue, context, item);
 
     return (<div>
       { renderOptions(item, options) }
@@ -112,26 +115,26 @@ export function registerCustomTypeComponent(typeName, Comp) {
   formTypeInputComponents[typeName] = Comp;
 }
 
-function createInputs(allValues, context, items) {
+function createInputs(getValue, context, items) {
   return (
     map(items, (item, i) => {
       // TODO: handle isReadonly correctly
-      const value = item.id && allValues[item.id];
-      //const isReadonly = isItemReadonly(allValues, context, item);
+      const value = item.id && getValue(item.id);
+      //const isReadonly = isItemReadonly(getValue, context, item);
       const Comp = formTypeInputComponents[item.type];
       const key = item.id || i;
       const childProps = {
         key,
         name: item.id || i,
         id: item.id || i,
-        allValues,
+        getValue,
         context,
         item
       };
 
       const el = (<Comp {...childProps}/>);
 
-      if (!isItemInput(allValues, context, item)) {
+      if (!isItemInput(getValue, context, item)) {
         return el;
       }
 
@@ -147,18 +150,18 @@ export class FormItemsInput extends Component {
   static propTypes = {
     format: PropTypes.array.isRequired,
     context: PropTypes.object.isRequired,
-    allValues: PropTypes.object
+    getValue: PropTypes.func.isRequired
   };
 
   render() {
     const {
       format,
       context,
-      allValues
+      getValue
     } = this.props;
 
-    const items = validateAndSanitizeFormat(allValues, context, format);
-    const itemEls = createInputs(allValues || EmptyObject, context, items);
+    const items = validateAndSanitizeFormat(getValue, context, format);
+    const itemEls = createInputs(getValue, context, items);
     return (<div className="formItemsInput">
       { itemEls }
     </div>);
@@ -168,20 +171,19 @@ export class FormItemsInput extends Component {
 /**
  * Let user edit form input
  */
-// @connect(({form}, {name, allValues}) => {
-//   //const selector = formValueSelector(name);
-//   const liveValues = form[name];
-//   console.log(liveValues);
+@connect((state, {name}) => {
+  const selector = formValueSelector(name);
+  const getValue = prop => selector(state, prop);
 
-//   return {
-//     //liveValues: liveValues
-//   };
-// })
+  return {
+    getValue
+  };
+})
 class _FormInputView extends Component {
   static propTypes = {
     format: PropTypes.array.isRequired,
     context: PropTypes.object.isRequired,
-    allValues: PropTypes.object,
+    getValue: PropTypes.func.isRequired,
     name: PropTypes.string
   };
 
@@ -190,16 +192,22 @@ class _FormInputView extends Component {
     autoBind(this);
   }
 
-  _doHandleSubmit(allValues) {
+  // save everything!
+  _doHandleSubmit(newValues) {
     const {
+      getValue, context, format,
+
       onSubmit
     } = this.props;
-    onSubmit(allValues);
+
+    // filter disabled items
+    newValues = filterDisabledValues(newValues, getValue, context, format);
+    onSubmit(newValues);
   }
 
   render() {
     const itemsProps = pick(this.props, 
-      'format', 'context', 'allValues');
+      'format', 'context', 'getValue');
 
     const {
       pristine,
@@ -217,14 +225,12 @@ class _FormInputView extends Component {
       <div>
         <Button type="submit" disabled={pristine || submitting}>
           <span>
-            <FAIcon name="upload" className="color-green" />
-              save
+            <FAIcon name="upload" className="color-green" /> save
           </span>
         </Button>
         <Button disabled={pristine || submitting} onClick={reset}>
           <span>
-            <FAIcon name="gear" className="color-red" />
-              reset
+            <FAIcon name="gear" className="color-red" /> reset
           </span>
         </Button>
       </div>
@@ -232,19 +238,18 @@ class _FormInputView extends Component {
   }
 }
 
-_FormInputView = reduxForm({ enableReinitialize: false })(_FormInputView);
+_FormInputView = reduxForm({ enableReinitialize: true })(_FormInputView);
 
 
 
 // TODO: prevent problems/data resets caused by connection loss 
 const FormInputView = connect(
-  (state, { name, format, context, allValues }) => {
+  (state, { form, name, format, context, allValues }) => {
     return ({
       form: name,
       name: name,
       format,
       context,
-      allValues,
 
       initialValues: allValues
     });

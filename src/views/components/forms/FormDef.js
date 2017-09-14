@@ -10,10 +10,10 @@ import { EmptyObject, EmptyArray } from 'src/util';
 
 
 
-export function getOptions(allValues, context, item) {
+export function getOptions(getValue, context, item) {
   let options = item.options;
   if (isFunction(options)) {
-    options = options(allValues, context, item);
+    options = options(getValue, context, item);
   }
 
   if (isPlainObject(options)) {
@@ -43,21 +43,21 @@ export const formItemSpecs = {
   }
 };
 
-export function isItemInput(allValues, context, item) {
+export function isItemInput(getValue, context, item) {
   const typeSpec = formItemSpecs[item.type];
   return !item.isNotInput && 
     (!typeSpec || !typeSpec.isNotInput);
 }
 
-export function isItemReadonly(allValues, context, item) {
+export function isItemReadonly(getValue, context, item) {
   const typeSpec = formItemSpecs[item.type];
-  return !isItemInput(allValues, context, item) || (
+  return !isItemInput(getValue, context, item) || (
       item.readonly || 
       (typeSpec && typeSpec.readonly)
     );
 }
 
-export function validateAndSanitizeFormat(allValues, context, items) {
+export function validateAndSanitizeFormat(getValue, context, items) {
   if (!isArray(items)) {
     throw new Error('form format must be an array of items: ' + JSON.stringify(items, null, 2));
   }
@@ -73,7 +73,7 @@ export function validateAndSanitizeFormat(allValues, context, items) {
 
     // make sure, each item has a unique id
     if (!item.id) {
-      if (isItemInput(allValues, context, item)) {
+      if (isItemInput(getValue, context, item)) {
         throw new Error('invalid form item: `' + JSON.stringify(item) + '` must have an "id" property');
       }
     }
@@ -86,20 +86,31 @@ export function validateAndSanitizeFormat(allValues, context, items) {
     }
   });
 
-  return filter(items, item => !item.if || !!item.if(allValues || EmptyObject, context, items));
+  return filter(items, item => isItemEnabled(item, getValue, context, items));
 }
 
+export function isItemEnabled(item, getValue, context, items) {
+  return !item.if || !!item.if(getValue, context, items);
+}
 
-export function getValue(val, selectFrom, selectFromContext, context) {
- if (!selectFrom && !selectFromContext) {
-  return val;
- }
- else if (!!selectFromContext) {
-  const container = context[selectFrom];
-  return container && container[val];
- }
- else {
-  const result = selectFrom[val];
-  return result && (isPlainObject(result) ? result.value : result);
- }
+export function forEachItem(items, cb) {
+  items.forEach(item => {
+    if (!item) return;
+
+    cb(item);
+    if (item.items) {
+      forEachItem(item.items, cb);
+    }
+  });
+}
+
+export function filterDisabledValues(values, getValue, context, items) {
+  if (values) {
+    forEachItem(items, item => {
+      if (!!item.id && !isItemEnabled(item, getValue, context, items)) {
+        delete values[item.id];
+      }
+    });
+  }
+  return values;
 }

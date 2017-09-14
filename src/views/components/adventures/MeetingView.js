@@ -162,11 +162,10 @@ export class MeetingPrepUserDetails extends Component {
 
   //console.log(Object.keys(firebase.data), firebase.data.meetings)
 
-  const submit = allValues => 
-    setMeetingPrep(meetingsRef, adventureId, meetingId, uid, allValues);
+  const submit = newValues => 
+    setMeetingPrep(meetingsRef, adventureId, meetingId, uid, newValues);
 
   return {
-    //allValues: preparationRef && preparationRef.val,
     allValues: meeting.preparations && meeting.preparations[uid],
     submit
     //submit: vals => console.log(vals)

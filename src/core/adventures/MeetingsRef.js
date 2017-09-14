@@ -105,13 +105,13 @@ export const meetingPrepItems = [
         title: '請講出說：你覺得哪一個團員在執行任務之中值得你欣賞的表現？',
         description: '如果GM們認可，則你對該團員的欣賞，將會化為具體鼓勵，額外增加你的團員 Karma 值！',
         type: 'checkbox',
-        options: (allValues, context) => {
+        options: (getValue, context) => {
           return mapValues(context.partyMembers, user => user.displayName);
         }
       },
       {
         id: 'goodUserReason',
-        if: ({goodUserUid}) => !!goodUserUid,
+        if: (getValue) => !!getValue('goodUserUid'),
         title: '請具體地說明原因：這個人在哪裡表現得很棒？',
         type: 'text'
       },
@@ -120,11 +120,13 @@ export const meetingPrepItems = [
         title: '請講出說：你覺得哪一個團員在執行任務之中造成整組的困難還是特別不願意幫忙合作？',
         description: '如果GM們也十分認同你的反映，則將會化為具體提醒，額外扣除你的團員1個Karma值！',
         type: 'checkbox',
-        options: (allValues, context) => mapValues(context.partyMembers, user => user.displayName)
+        options: (getValue, context) => {
+          return mapValues(context.partyMembers, user => user.displayName);
+        } 
       },
       {
         id: 'badUserReason',
-        if: ({badUserUid}) => !!badUserUid,
+        if: (getValue) => !!getValue('badUserUid'),
         title: '請具體地說明原因：這個人在哪裡表現得很不棒？',
         type: 'text'
       },
