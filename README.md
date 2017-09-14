@@ -9,24 +9,37 @@ TODO (features)
 
 * W2-W3
   * delete `explicitIndex` data when deleting related entries!!!
+  * 個人鑑定表：
+    * 加 『我準備好了』項目 （填完所有 isRequired 項目後才顯示）
   * GM 可以切換自己的身分
   * GM 可以 assign Adventure 的 reviewer
   * Properly organize the steps in Mission Control GUI
     * Adventure Overview + Status
-    1. Register
-    1. [Advanced] Prepare for mission
-    1. Repeat:
+    1. Start
+      1. Register
+      1. [Advanced] Prepare for mission
+    1. Go:
       1. Go on mission (stateless?)
       1. Party meeting prep
       1. GM meeting prep
       1. Run meeting
+        * 有沒有做完任務的基本要求？
+        * 有沒有特色？超過任務的要求？令人驚訝的特點？
+        * 整體投入度？
+        * 合作 ＋ 溝通方式？
+        * 有沒有 carry + 每個人的 *貢獻* 大概多少?
+        * 他們填表有沒有認真填？有什麼看不懂的 or 誤會的 or 不贊同的？
+        * 他們對我們整體過程的感覺有沒有意見？
       1. [Advanced] Post-meeting reflection + plan next steps
     1. Mission Finished
+  * Properly manage, update + compute adventure status
+    * 
   * Reviewer 可以看到自己被 assigned 的 Adventure
   * Reviewer 可以看到大家的　『團隊鑑定準備』　的結果
   * Reviewer 可以開始進行 『團隊鑑定』
   * Reviewer 可以做 『團隊鑑定』 的紀錄
   * Reviewer 只能用 text 來紀錄 fame, karma + gold　（隔週才能分配＋看到結果）
+    * 也要記錄團隊要的分配比例
   * Reviewer 可以 end/finish adventure (『執行任務的過程』)
   * 冒險者可以看到 『團隊鑑定』 的結果
   * 冒險者可以看到各種數值（自己）
@@ -34,8 +47,10 @@ TODO (features)
   * Mission List: 把所有的 mission svg 檔案放上來
 
 * W3-W4
-  * [AdventureView] render + allow editing of guardianNotes + gmNotes + partyNotes
+  * checklist meta level: 
+    * 『覺得沒價值』 ＋  『不知道／不懂項目』 的選項
   * 冒險者可以看到自己以前所有 archivedAdventures
+  * [AdventureView] render + allow editing of guardianNotes + gmNotes + partyNotes
   * GM 可以分配 fame, karma + gold
   * 冒險者可以看到各種數值（排行板）
   * GM 可以準備團隊鑑定
@@ -54,8 +69,8 @@ TODO (features)
 * W6-?
   * system for skills + badges
     * tags + skill overview
-  * add adventure status
-    * advanced mode for ambitious people: 更多反思、投入度、合作、完整度等等細項
+  * add adventure steps + details for ambitious people
+    * 更多非必要的項目： 更多反思、投入度、合作、完整度等等細項
     * add "adventure prep" as first phase to help the team hit the ground running
       * 提供相關的資料，包含以前做過這個任務的成果範例
       * [進階] 反思，彼此了解互相的想法、預測目標、投入度（還有他們歷史？）
