@@ -425,6 +425,47 @@ function _makeRefWrapper(parent, inheritedSettings, cfgOrPath) {
 // }
 
 
+
+// TODO: wrapper cache not working o_X
+// const _wrapperCache = {};
+
+// function _cacheGetWrapper(path, firebaseDataRoot, ...moreArgs) {
+//   const entries = _wrapperCache[path];
+//   if (entries) {
+//     for (let i = 0; i < entries.length; ++i) {
+//       const entry = entries[i];
+//       if (firebaseDataRoot.data === firebaseDataRoot.data &&
+//         isEqual(entry.moreArgs, moreArgs)) {
+//         //console.log('retrieved cached wrapper at path: ' + path);
+//       console.log(path, entry.obj.val, ' -- ', entry.oldVal);
+//         return entry.obj;
+//       }
+//     }
+//   }
+//   //console.log('no cached wrapper at path: ' + path);
+//   return null;
+// }
+
+// function _cacheSetWrapper(obj, path, firebaseDataRoot, ...moreArgs) {
+//   let entries = _wrapperCache[path];
+//   if (!entries) {
+//     _wrapperCache[path] = entries = [];
+//   }
+//   else if (entries.length > 10) {
+//     // keep a tap on cache size
+//     entries.splice(0, 1);
+//   }
+
+//   _cacheGetWrapper(path, firebaseDataRoot, ...moreArgs);
+
+//   entries.push({
+//     obj,
+//     firebaseDataRoot,
+//     moreArgs,
+//     oldVal: obj.val
+//   });
+// }
+
 function createWrapperFunc(parent, WrapperClass, getPath, groupBy, getChildVars) {
   const f = function wrapper(firebaseDataRoot, props, pathArgs, ...makeQueryArgs) {
     pathArgs = pathArgs || props || EmptyObject;
@@ -468,15 +509,27 @@ function createWrapperFunc(parent, WrapperClass, getPath, groupBy, getChildVars)
     let getData;
     getData = makeGetDataDefault(firebaseDataRoot, path, queryArgs);
 
-    // finally, create refWrapper object
     const db = props.db || getFirebase().database();
     const ref = db.ref(path);
+
+    // // check if something is in cache
+    // const cached = _cacheGetWrapper(
+    //   path, firebaseDataRoot, props, childArgs, queryArgs);
+    // if (cached) {
+    //   return cached;
+    // }
+
+    // finally, create refWrapper object
     const refWrapper = new WrapperClass(
       parent, path, firebaseDataRoot, 
       relativePathTemplate,
       db, getData, groupBy, childArgs,
       childrenGetPaths, childrenGetPushPaths, ref, props
     );
+
+    // _cacheSetWrapper(refWrapper, 
+    //   path, firebaseDataRoot, props, childArgs, queryArgs);
+
     return refWrapper;
   };
   return f;

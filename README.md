@@ -1,52 +1,51 @@
 # project-empire
 
 
+* Users can group up and go on adventures (after picking from a vast list of missions)
+* Each adventure is completed in one or more sprints
+  * ![sprint](http://www.dgc.co.uk/wp-content/uploads/2012/11/agile-sprint.jpg)
+* At the end of each sprint, there is a "Demo & Feedback" meeting 『團隊鑑定』
+
 * 準備/上課 SOP: https://docs.google.com/presentation/d/1PEDof6WXYTD4ejQWoBBlglemhnPD9OAx_4yTjyRLcBw/edit#slide=id.g1feab3d031_0_9
 * 團隊鑑定 SOP + Karma 值算法： https://docs.google.com/spreadsheets/d/1JebRfwpLtFrlJBeuXrlGCvpzy5l8G_k5iha_WghgGsU/edit#gid=845971887
   * https://docs.google.com/presentation/d/1PEDof6WXYTD4ejQWoBBlglemhnPD9OAx_4yTjyRLcBw/edit#slide=id.g1ff0478143_0_7
 
-TODO (features)
 
 * W2-W3
-  * delete `explicitIndex` data when deleting related entries!!!
-  * 個人鑑定表：
-    * 加 『我準備好了』項目 （填完所有 isRequired 項目後才顯示）
-  * GM 可以切換自己的身分
-  * GM 可以 assign Adventure 的 reviewer
   * Properly organize the steps in Mission Control GUI
     * Adventure Overview + Status
-    1. Start
-      1. Register
-      1. [Advanced] Prepare for mission
-    1. Go:
+    1. [Advanced] Prepare for mission
+    1. Sprint(i):
       1. Go on mission (stateless?)
       1. Party meeting prep
       1. GM meeting prep
       1. Run meeting
-        * 有沒有做完任務的基本要求？
-        * 有沒有特色？超過任務的要求？令人驚訝的特點？
-        * 整體投入度？
-        * 合作 ＋ 溝通方式？
-        * 有沒有 carry + 每個人的 *貢獻* 大概多少?
-        * 他們填表有沒有認真填？有什麼看不懂的 or 誤會的 or 不贊同的？
-        * 他們對我們整體過程的感覺有沒有意見？
+        * checklist: 『團隊鑑定標準』
       1. [Advanced] Post-meeting reflection + plan next steps
     1. Mission Finished
-  * Properly manage, update + compute adventure status
-    * 
-  * Reviewer 可以看到自己被 assigned 的 Adventure
-  * Reviewer 可以看到大家的　『團隊鑑定準備』　的結果
-  * Reviewer 可以開始進行 『團隊鑑定』
-  * Reviewer 可以做 『團隊鑑定』 的紀錄
-  * Reviewer 只能用 text 來紀錄 fame, karma + gold　（隔週才能分配＋看到結果）
-    * 也要記錄團隊要的分配比例
-  * Reviewer 可以 end/finish adventure (『執行任務的過程』)
-  * 冒險者可以看到 『團隊鑑定』 的結果
-  * 冒險者可以看到各種數值（自己）
-  * 每個冒險者可以看到自己團隊所有人的 ｢團隊鑑定的準備｣ status
-  * Mission List: 把所有的 mission svg 檔案放上來
+
+  * [Weekend]
+    * 冒險者可以看到各種數值（自己）
+    * GM 可以切換自己的身分
+    * GM 可以 assign Adventure 的 reviewer
+    * 個人鑑定表：
+      * 每個冒險者可以看到自己團隊所有人的 ｢團隊鑑定的準備｣ status
+      * 加 『我準備好了』項目 （填完所有 isRequired 項目後才顯示）
+    * Reviewer 可以看到自己被 assigned 的 Adventure
+    * Reviewer 可以開始進行 『團隊鑑定』
+    * Reviewer 可以 end/finish adventure (『執行任務的過程』)
+    * Properly manage, update + compute adventure status
+
+  * [Mon]
+    * Reviewer 可以看到大家的　『團隊鑑定準備』　的結果 table
+    * Reviewer 可以做 『團隊鑑定』 的紀錄
+      * Reviewer 只能用 text 來紀錄 fame, karma + gold　（隔週才能分配＋看到結果）
+      * 也要記錄團隊想要的數值分配比例
+    * delete `explicitIndex` data when deleting related entries!!!
 
 * W3-W4
+  * 紀錄使用者的所有 login (看到的資訊？)
+  * 紀錄使用者的所有 重要事件
   * checklist meta level: 
     * 『覺得沒價值』 ＋  『不知道／不懂項目』 的選項
   * 冒險者可以看到自己以前所有 archivedAdventures
@@ -67,6 +66,7 @@ TODO (features)
   * LFG 功能 (mission wishlist) + p2p team creation
 
 * W6-?
+  * 團隊一開始可以設定 "離開 penalty" (扣多少金幣要給留下來的團員)
   * system for skills + badges
     * tags + skill overview
   * add adventure steps + details for ambitious people

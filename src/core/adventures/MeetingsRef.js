@@ -235,13 +235,9 @@ const MeetingsRef = makeRefWrapper({
     meeting: {
       pathTemplate: '$(meetingId)',
       children: {
-        active: 'active',
         adventureId: 'adventureId',
         reviewerId: 'reviewerId',
-        reviewerNotes: 'reviewerNotes',
         startTime: 'startTime',
-        finishTime: 'finishTime',
-        meetingStatus: 'meetingStatus',
 
         preparations: {
           // each party member checks how prepared they are for the meeting

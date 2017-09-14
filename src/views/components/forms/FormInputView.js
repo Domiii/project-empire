@@ -69,6 +69,7 @@ export const formTypeInputComponents = {
   section: ({ getValue, context, item }) => {
     return (<div className="formSection">
       <h2>{item.title}</h2>
+      <hr />
         { item.items && 
           <FormItemsInput {...{
             format: item.items,
