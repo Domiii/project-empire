@@ -3,6 +3,8 @@ import MeetingsRef, {
   MeetingPrepStatus, 
   MeetingStatus,
   groupActiveMeetings,
+
+  setMeetingPrep
 } from 'src/core/adventures/MeetingsRef';
 
 import map from 'lodash/map';
@@ -65,7 +67,7 @@ export class MeetingStatusView extends Component {
     meetingId: PropTypes.string,
     meeting: PropTypes.object,
 
-    uid: PropTypes.object,
+    uid: PropTypes.string.isRequired,
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
     users: PropTypes.object,
@@ -114,7 +116,7 @@ export class MeetingPrepUserDetails extends Component {
     meetingId: PropTypes.string,
     meeting: PropTypes.object,
     
-    uid: PropTypes.object,
+    uid: PropTypes.string.isRequired,
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
     users: PropTypes.object,
@@ -143,14 +145,31 @@ export class MeetingPrepUserDetails extends Component {
   }
 }
 
-@connect(({ firebase }, { meetingId, uid }) => {
-  const preparationRef =  uid && meetingId && 
-    MeetingsRef.preparation(firebase, {
-      meetingId,
-      uid
-    });
+// @firebaseConnect(({ meetingId, uid, adventureId }, firebase) => {
+//   const meetingPrepPath = MeetingsRef.meeting.makeQuery({
+//         meetingId
+//       }, {
+//         adventureId
+//       });
+//   console.log(meetingPrepPath);
+//   return [
+//     meetingPrepPath
+//   ];
+// })
+@firebaseConnect(() => {})
+@connect(({ firebase }, { adventureId, meetingId, meeting, uid }) => {
+  const meetingsRef =  MeetingsRef(firebase);
+
+  //console.log(Object.keys(firebase.data), firebase.data.meetings)
+
+  const submit = allValues => 
+    setMeetingPrep(meetingsRef, adventureId, meetingId, uid, allValues);
+
   return {
-    submitPrep: preparationRef && preparationRef.set
+    //allValues: preparationRef && preparationRef.val,
+    allValues: meeting.preparations && meeting.preparations[uid],
+    submit
+    //submit: vals => console.log(vals)
   };
 })
 export class MeetingPrepUserDetailsEditor extends Component {
@@ -162,17 +181,22 @@ export class MeetingPrepUserDetailsEditor extends Component {
     meetingId: PropTypes.string,
     meeting: PropTypes.object,
     
-    uid: PropTypes.object,
+    uid: PropTypes.string.isRequired,
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
     users: PropTypes.object,
     adventureGuardian: PropTypes.object,
-    assignedGM: PropTypes.object
+    assignedGM: PropTypes.object,
+
+    allValues: PropTypes.object,
+    submit: PropTypes.func.isRequired
   };
 
   render() {
     const {
-      meetingId
+      meetingId,
+      allValues,
+      submit
     } = this.props
 
     // TODO: connect to database
@@ -180,8 +204,6 @@ export class MeetingPrepUserDetailsEditor extends Component {
     // TODO: meeting status + adventure view "prep toggle"
 
     const context = this.props;
-    const allValues = null;
-    const onSubmit = ???;
 
     return (<div>
       <FormInputView
@@ -189,7 +211,8 @@ export class MeetingPrepUserDetailsEditor extends Component {
         name={'meeting_' + meetingId}
         format={meetingPrepItems} 
         context={context}
-        allValues={allValues} />
+        allValues={allValues} 
+        onSubmit={submit}/>
       <pre>{JSON.stringify(allValues, null, 2)}</pre>
     </div>);
   }
@@ -205,7 +228,7 @@ export class MeetingPrepView extends Component {
     meetingId: PropTypes.string,
     meeting: PropTypes.object,
 
-    uid: PropTypes.object,
+    uid: PropTypes.string.isRequired,
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
     users: PropTypes.object,
@@ -250,8 +273,10 @@ export class MeetingPrepView extends Component {
         { !isDone ? '開始準備！' : '我雖然已經準備好了，但是想改東西了' }
       </Button>
 
-      { isPreparing && 
-        <MeetingPrepUserDetailsEditor {...this.props} /> }
+      { isPreparing && <MeetingPrepUserDetailsEditor 
+          {...this.props} 
+
+      /> }
       { isDone && 
         <MeetingPrepUserDetails {...this.props} /> }
     </div>);
@@ -274,7 +299,7 @@ export class MeetingGoView extends Component {
     meetingId: PropTypes.string,
     meeting: PropTypes.object,
     
-    uid: PropTypes.object,
+    uid: PropTypes.string.isRequired,
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
     users: PropTypes.object,
@@ -348,7 +373,7 @@ export class MeetingResultsView extends Component {
     meetingId: PropTypes.string,
     meeting: PropTypes.object,
     
-    uid: PropTypes.object,
+    uid: PropTypes.string.isRequired,
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
     users: PropTypes.object,
@@ -388,7 +413,7 @@ export class MeetingArchive extends Component {
     meetingId: PropTypes.string,
     meeting: PropTypes.object,
     
-    uid: PropTypes.object,
+    uid: PropTypes.string.isRequired,
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
     users: PropTypes.object,
@@ -427,10 +452,10 @@ export default class MeetingView extends Component {
   };
 
   static propTypes = {
-    meetingId: PropTypes.string,
-    meeting: PropTypes.object,
+    meetingId: PropTypes.string.isRequired,
+    meeting: PropTypes.object.isRequired,
 
-    uid: PropTypes.object,
+    uid: PropTypes.string.isRequired,
     adventureId: PropTypes.string.isRequired,
     adventure: PropTypes.object.isRequired,
     users: PropTypes.object,
@@ -487,6 +512,9 @@ export class AdventureMeetingPanel extends Component {
     const [activeMeetings, archivedMeetings] = 
       groupActiveMeetings(this.props.meetings);
 
+    const uid = currentUserRef && currentUserRef.props.uid;
+
+
 
     // TODO: handle case when there is no meeting!
 
@@ -503,6 +531,7 @@ export class AdventureMeetingPanel extends Component {
       </Panel>
       <Panel header="團隊鑑定歸檔紀錄">
         <MeetingArchive {...props}
+          uid={uid}
           archivedMeetings={archivedMeetings} 
           />
       </Panel>

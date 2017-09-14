@@ -25,11 +25,15 @@
 
     "meetings": {
       ".read": "auth !== null",
+      ".indexOn": ["adventureId"],
 
       "$meetingId": {
-        ".indexOn": ["adventureId"],
         ".write": "auth !== null",
-        "TODO": "FIX access control!!!"
+        "preparations": {
+          "$uid": {
+            
+          }
+        }
       }
     },
 

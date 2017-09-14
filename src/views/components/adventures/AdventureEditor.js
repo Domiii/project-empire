@@ -20,7 +20,8 @@ import {
 } from 'redux-form';
 
 import { 
-  FormInputField, FormInputFieldArray, FAIcon
+  FormInputField,
+  FAIcon
 } from 'src/views/components/util';
 
 
@@ -44,7 +45,8 @@ class _AdventureInfoFormContent extends Component {
       submitting 
     } = this.props;
 
-    return (<form className="form-horizontal" onSubmit={handleSubmit}>
+    return (<form className="form-horizontal" 
+        onSubmit={handleSubmit}>
       <Field name="adventureId" value={adventureId} component="input" type="hidden" />
       <FormSection name="adventure">
         <FormInputField name="guardianNotes" label="Guardian Notes"

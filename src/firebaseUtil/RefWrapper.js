@@ -587,18 +587,19 @@ function createRefWrapperBase() {
       return path && this._ref.child(path) || this._ref;
     }
 
-    onBeforeWrite(val) {
+    onBeforeWrite(ref, val) {
       return true;
     }
 
-    onFinalizeWrite(val) {
+    onFinalizeWrite(ref, val) {
+      console.log('Writing to path: ' + ref);
       if (_.isObject(val) && this.indices) {
         this.indices.updateIndices(val);
       }
       return true;
     }
 
-    onAfterWrite(actionName, val) {
+    onAfterWrite(ref, actionName, val) {
       return this.onAfterWritePath(actionName, val, '');
     }
 
@@ -606,14 +607,14 @@ function createRefWrapperBase() {
       //logDBAction(pathJoin(this.pathTemplate, relPath), actionName, val);
     }
 
-    onPush(val) {
+    onPush(ref, val) {
       if (_.isObject(val) && _.isFunction(this._decorateUpdatedAt)) {
         this._decorateUpdatedAt(val);
       }
       return true;
     }
 
-    onUpdate(val) {
+    onUpdate(ref, val) {
       if (_.isObject(val) && _.isFunction(this._decorateUpdatedAt)) {
         this._decorateUpdatedAt(val);
       }
@@ -632,8 +633,8 @@ function createRefWrapperBase() {
     _doPush(ref, newChild) {
       try {
         const pushCheck = this.onBeforeWrite() && 
-          this.onPush(newChild) &&
-          this.onFinalizeWrite(newChild);
+          this.onPush(ref, newChild) &&
+          this.onFinalizeWrite(ref, newChild);
 
         if (pushCheck) {
           const newRef = ref.push(newChild);
@@ -681,9 +682,9 @@ function createRefWrapperBase() {
       const ref = this._ref;
       try {
         return (
-          this.onBeforeWrite(val) &&
-          this.onUpdate(val) &&
-          this.onFinalizeWrite(val) &&
+          this.onBeforeWrite(ref, val) &&
+          this.onUpdate(ref, val) &&
+          this.onFinalizeWrite(ref, val) &&
 
           ref.set(val)
             .then(() => this.onAfterWrite('set', this.val))
@@ -717,9 +718,9 @@ function createRefWrapperBase() {
       const ref = this.getRef(path);
       try {
         return (
-          this.onBeforeWrite(childValue) &&
-          this.onUpdate(childValue) &&
-          this.onFinalizeWrite(childValue) &&
+          this.onBeforeWrite(ref, childValue) &&
+          this.onUpdate(ref, childValue) &&
+          this.onFinalizeWrite(ref, childValue) &&
           ref.set(childValue)
           .then(() => {
             this.onAfterWritePath('set', childValue, path);
@@ -736,9 +737,9 @@ function createRefWrapperBase() {
       const ref = this._ref;
       try {
         return (
-          this.onBeforeWrite(val) &&
-          this.onUpdate(val) &&
-          this.onFinalizeWrite(val) &&
+          this.onBeforeWrite(ref, val) &&
+          this.onUpdate(ref, val) &&
+          this.onFinalizeWrite(ref, val) &&
 
           ref.update(val)
           .then(() => {
@@ -773,9 +774,9 @@ function createRefWrapperBase() {
       const ref = this.getRef(path);
       try {
         return (
-          this.onBeforeWrite(childValue) &&
-          this.onUpdate(childValue) &&
-          this.onFinalizeWrite(childValue) &&
+          this.onBeforeWrite(ref, childValue) &&
+          this.onUpdate(ref, childValue) &&
+          this.onFinalizeWrite(ref, childValue) &&
 
           ref.update(childValue)
           .then(() => {

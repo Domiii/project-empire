@@ -3,6 +3,8 @@ import pickBy from 'lodash/pickBy';
 import isEmpty from 'lodash/isEmpty';
 import mapValues from 'lodash/mapValues';
 
+import { getFirebase } from 'react-redux-firebase';
+
 import { 
   makeRefWrapper
 } from 'src/firebaseUtil';
@@ -25,7 +27,7 @@ export const MeetingStatus = {
 
 const activeMeetingQuery = meeting => !!meeting.active;
 const inactiveMeetingQuery = meeting => !meeting.active;
-const defaultActiveMeetings = Object.freeze({});
+const defaultActiveMeetings = Object.freeze({'': {}});
 
 export function groupActiveMeetings(allMeetings) {
   let activeMeetings = pickBy(allMeetings, 
@@ -39,23 +41,28 @@ export function groupActiveMeetings(allMeetings) {
   return [activeMeetings, archivedMeetings];
 }
 
-export function createNewMeeting(meetingsRef) {
-  return meetingsRef.push_meeting({active: 1});
+export function createNewMeeting(meetingsRef, adventureId) {
+  return meetingsRef.push_meeting({
+    startTime: getFirebase().database.ServerValue.TIMESTAMP,
+    meetingStatus: MeetingStatus.NotStarted,
+    adventureId,
+    active: 1
+  });
 }
 
 export function ensureMeetingExists(
-  meetingsRef, meetingId) {
-
+  meetingsRef, adventureId, meetingId) {
   if (!meetingId) {
-    return createNewMeeting(meetingsRef);
+    const newEntry = createNewMeeting(meetingsRef, adventureId);
+    return newEntry.then(() => newEntry.key);
   }
-  return Promise.resolve();
+  return Promise.resolve(meetingId);
 }
 
-export function updateMeetingPrep(
-  meetingsRef, meetingId, uid, prep) {
-  ensureMeetingExists(meetingsRef, meetingId).
-  then(() => meetingsRef.set_preparation(meetingId, uid, prep));
+export function setMeetingPrep(
+  meetingsRef, adventureId, meetingId, uid, prep) {
+  return ensureMeetingExists(meetingsRef, adventureId, meetingId).
+    then((_meetingId) => meetingsRef.set_preparation(_meetingId, uid, prep));
 }
 
 export function updateMeetingStatus() {
@@ -210,7 +217,7 @@ export const gmMeetingGoCheckItems = {
 
 
 
-export default makeRefWrapper({
+const MeetingsRef = makeRefWrapper({
   pathTemplate: '/meetings',
 
   indices: {
@@ -226,6 +233,7 @@ export default makeRefWrapper({
     meeting: {
       pathTemplate: '$(meetingId)',
       children: {
+        active: 'active',
         adventureId: 'adventureId',
         reviewerId: 'reviewerId',
         reviewerNotes: 'reviewerNotes',
@@ -238,16 +246,7 @@ export default makeRefWrapper({
           pathTemplate: 'preparations',
           children: {
             preparation: {
-              pathTemplate: '$(uid)',
-              children: {
-                prepStatus: 'prepStatus',
-                checklist: {
-                  pathTemplate: 'checklist',
-                  children: {
-                    
-                  }
-                }
-              }
+              pathTemplate: '$(uid)'
             }
           }
         },
@@ -289,3 +288,4 @@ export default makeRefWrapper({
     }
   }
 });
+export default MeetingsRef;

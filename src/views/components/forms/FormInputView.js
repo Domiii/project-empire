@@ -5,12 +5,22 @@ import pick from 'lodash/pick';
 import { EmptyObject, EmptyArray } from 'src/util';
 
 import React, { Component } from 'react';
+import autoBind from 'react-autobind';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { reduxForm, Field } from 'redux-form';
+import { 
+  reduxForm,
+  formValueSelector,
+  Field,
+  FormSection } from 'redux-form';
 import {
+  Button,
   ToggleButton, ToggleButtonGroup
 } from 'react-bootstrap';
+
+import { 
+  FAIcon
+} from 'src/views/components/util';
 
 
 import { 
@@ -158,6 +168,15 @@ export class FormItemsInput extends Component {
 /**
  * Let user edit form input
  */
+// @connect(({form}, {name, allValues}) => {
+//   //const selector = formValueSelector(name);
+//   const liveValues = form[name];
+//   console.log(liveValues);
+
+//   return {
+//     //liveValues: liveValues
+//   };
+// })
 class _FormInputView extends Component {
   static propTypes = {
     format: PropTypes.array.isRequired,
@@ -166,38 +185,68 @@ class _FormInputView extends Component {
     name: PropTypes.string
   };
 
+  constructor() {
+    super();
+    autoBind(this);
+  }
+
+  _doHandleSubmit(allValues) {
+    const {
+      onSubmit
+    } = this.props;
+    onSubmit(allValues);
+  }
 
   render() {
     const itemsProps = pick(this.props, 
       'format', 'context', 'allValues');
 
-    return (<form name={this.props.name}>
+    const {
+      pristine,
+      reset, 
+      submitting,
+      handleSubmit 
+    } = this.props;
+
+    // TODO: get live values
+
+    return (<form name={this.props.name} 
+        onSubmit={handleSubmit(this._doHandleSubmit)}>
       <FormItemsInput {...itemsProps} />
+
+      <div>
+        <Button type="submit" disabled={pristine || submitting}>
+          <span>
+            <FAIcon name="upload" className="color-green" />
+              save
+          </span>
+        </Button>
+        <Button disabled={pristine || submitting} onClick={reset}>
+          <span>
+            <FAIcon name="gear" className="color-red" />
+              reset
+          </span>
+        </Button>
+      </div>
     </form>);
   }
 }
 
-_FormInputView = reduxForm({ enableReinitialize: true })(_FormInputView);
+_FormInputView = reduxForm({ enableReinitialize: false })(_FormInputView);
 
 
 
 // TODO: prevent problems/data resets caused by connection loss 
-
 const FormInputView = connect(
   (state, { name, format, context, allValues }) => {
     return ({
       form: name,
-
       name: name,
       format,
       context,
+      allValues,
 
-      initialValues: {
-        ...allValues,
-        name, 
-        format,
-        context
-      }
+      initialValues: allValues
     });
   }
 )(_FormInputView);

@@ -145,7 +145,7 @@ export default class MissionControlPage extends Component {
     return (<AdventureMeetingPanel 
       {...adventureData}
       partyMembers={adventureData.users}
-      meetings={meetings || {meeting1: {}}}
+      meetings={meetings}
     />);
   }
 
