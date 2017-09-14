@@ -6,6 +6,7 @@ import isFunction from 'lodash/isFunction';
 const Roles = {
   User: 1,
   Adventurer: 1,
+  Reviewer: 2,
 
   Guardian: 5,
 
@@ -15,6 +16,29 @@ const Roles = {
 export default Roles;
 
 //export const NamesByRoles = zipObject(Object.values(Roles), Object.keys(Roles));
+
+// gets numeric value of role, role name, or user object
+export function getDisplayRole(roleObj) {
+  if (!roleObj) return null;
+  if (isString(roleObj)) {
+    if (!Roles[roleObj]) {
+      throw new Error('invalid role name: ' + roleObj);
+    }
+    return Roles[roleObj];
+  }
+  if (Number.isInteger(roleObj)) {
+    return roleObj;
+  }
+  if (isObject(roleObj)) {
+    let role = roleObj.displayRole;
+    if (isFunction(role)) {
+      role = role();
+    }
+    return role || 0;
+  }
+
+  throw new Error('invalid role query: ' + roleObj);
+}
 
 // gets numeric value of role, role name, or user object
 export function getRole(roleObj) {
@@ -39,18 +63,18 @@ export function getRole(roleObj) {
   throw new Error('invalid role query: ' + roleObj);
 }
 
-export function hasLevel(a, b) {
-  return getRole(a) >= getRole(b);
+export function hasDisplayRole(a, b) {
+  return getDisplayRole(a) >= getDisplayRole(b);
 }
 
 export function isGM(roleObj) {
-  return getRole(roleObj) >= Role.GM;
+  return getDisplayRole(roleObj) >= Role.GM;
 }
 
 export function isGuardian(roleObj) {
-  return getRole(roleObj) >= Role.Guardian;
+  return getDisplayRole(roleObj) >= Role.Guardian;
 }
 
 export function isAdventurer(roleObj) {
-  return getRole(roleObj) >= Role.Adventurer;
+  return getDisplayRole(roleObj) >= Role.Adventurer;
 }

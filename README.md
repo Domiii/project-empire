@@ -7,23 +7,39 @@
 
 TODO (features)
 
-* W2
-  * 每個冒險者可以準備團隊鑑定，然後可以看到　『團隊鑑定準備』 結果
-  * GM 可以看到大家的　『團隊鑑定準備』　的結果
-  * GM 可以開始進行 『團隊鑑定』
-  * GM 可以做 『團隊鑑定』 的紀錄
-  * GM 只能用 text 來紀錄 fame, karma + gold　（隔週才能分配＋看到結果）
-  * GM 可以 end/finish adventure (『執行任務的過程』)
-  * 冒險者可以看到所有參與過的 adventure
+* W2-W3
+  * delete `explicitIndex` data when deleting related entries!!!
+  * GM 可以切換自己的身分
+  * GM 可以 assign Adventure 的 reviewer
+  * Properly organize the steps in Mission Control GUI
+    * Adventure Overview + Status
+    1. Register
+    1. [Advanced] Prepare for mission
+    1. Repeat:
+      1. Go on mission (stateless?)
+      1. Party meeting prep
+      1. GM meeting prep
+      1. Run meeting
+      1. [Advanced] Post-meeting reflection + plan next steps
+    1. Mission Finished
+  * Reviewer 可以看到自己被 assigned 的 Adventure
+  * Reviewer 可以看到大家的　『團隊鑑定準備』　的結果
+  * Reviewer 可以開始進行 『團隊鑑定』
+  * Reviewer 可以做 『團隊鑑定』 的紀錄
+  * Reviewer 只能用 text 來紀錄 fame, karma + gold　（隔週才能分配＋看到結果）
+  * Reviewer 可以 end/finish adventure (『執行任務的過程』)
   * 冒險者可以看到 『團隊鑑定』 的結果
+  * 冒險者可以看到各種數值（自己）
+  * 每個冒險者可以看到自己團隊所有人的 ｢團隊鑑定的準備｣ status
   * Mission List: 把所有的 mission svg 檔案放上來
-// TODO: [AdventureView] render + allow editing of guardianNotes + gmNotes + partyNotes
 
-* W3
+* W3-W4
+  * [AdventureView] render + allow editing of guardianNotes + gmNotes + partyNotes
+  * 冒險者可以看到自己以前所有 archivedAdventures
   * GM 可以分配 fame, karma + gold
-  * 冒險者可以看到各種數值（自己 + 排行板）
-  * 冒險者 + GM 可以看到以前完畢的任務與相關紀錄
-  * 每個冒險者可以看到其他人 ｢團隊鑑定的準備｣ status
+  * 冒險者可以看到各種數值（排行板）
+  * GM 可以準備團隊鑑定
+  * GM 可以看到所有人的 archivedAdventures
 
 * W4-6
   * GM 可以 archive (歸檔)　adventure (『執行任務的過程』)

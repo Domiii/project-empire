@@ -47,7 +47,7 @@ const AdventureStatus = {
   const u2aIdx = userAdventureRef.indexRefs.user.val;
   let currentAdventureId, meetingsRef, missionsRef;
   if (!!u2aIdx) {
-    const adventureIds = Object.keys(u2aIdx[currentUid]);
+    const adventureIds = u2aIdx[currentUid] && Object.keys(u2aIdx[currentUid]);
 
     currentAdventureId = adventureIds && adventureIds[0];
 
@@ -159,6 +159,7 @@ export default class MissionControlPage extends Component {
       u2aIdx,
       a2uIdx,
 
+      userAdventureRef,
       getUsersByAdventure
     } = this.props;
 
@@ -169,7 +170,7 @@ export default class MissionControlPage extends Component {
 
     // TODO: 冒險者可以看到自己所有的 adventure
 
-    if (!u2aIdx) {
+    if (!userAdventureRef.indexRefs.user.isLoaded) {
       return (<span className="color-red">
         <FAIcon name="cog" spinning={true} /> loading...
       </span>);
@@ -178,9 +179,8 @@ export default class MissionControlPage extends Component {
 
     let currentAdventureOverview;
     
-    if (currentAdventureId) {
-      const adventure = adventures[currentAdventureId];
-
+    const adventure = adventures && adventures[currentAdventureId];
+    if (adventure) {
       let existingUsers = getUsersByAdventure(currentAdventureId);
       existingUsers = existingUsers[currentAdventureId] || EmptyObject;
 

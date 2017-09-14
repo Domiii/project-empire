@@ -1,4 +1,4 @@
-import { hasLevel } from 'src/core/users/Roles';
+import { hasDisplayRole } from 'src/core/users/Roles';
 
 import autoBind from 'react-autobind';
 import React, { PureComponent, PropTypes } from 'react';

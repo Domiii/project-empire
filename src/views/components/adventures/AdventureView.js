@@ -1,4 +1,4 @@
-import { hasLevel } from 'src/core/users/Roles';
+import { hasDisplayRole } from 'src/core/users/Roles';
 
 import map from 'lodash/map';
 import isEmpty from 'lodash/isEmpty';
@@ -54,7 +54,7 @@ export default class AdventureView extends Component {
 
   get IsGuardian() {
     const { currentUserRef } = this.context;
-    return hasLevel(currentUserRef, 'Guardian');
+    return hasDisplayRole(currentUserRef, 'Guardian');
   }
 
   get EmptyEl() {

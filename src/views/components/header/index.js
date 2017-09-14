@@ -1,7 +1,10 @@
+import Roles, { hasDisplayRole } from 'src/core/users/Roles';
+
 import React, { PropTypes, PureComponent } from 'react';
 import { connect } from 'redux';
 import autoBind from 'react-autobind';
 import { Link } from 'react-router';
+
 
 import {
   Navbar, Nav, NavItem, NavDropdown, MenuItem, Button, ButtonGroup, Alert
@@ -11,8 +14,6 @@ import {
 } from 'react-router-bootstrap';
 
 import { FAIcon } from 'src/views/components/util';
-
-import Roles from 'src/core/users/Roles';
 
 export default class Header extends PureComponent {
   static contextTypes = {
@@ -70,7 +71,7 @@ export default class Header extends PureComponent {
     const { signOut } = this.props;
 
     const isAdminView = currentUserRef && currentUserRef.isAdminDisplayMode();
-    const isGuardian = currentUserRef && currentUserRef.role() >= Roles.Guardian;
+    const isGuardian = hasDisplayRole(currentUserRef, Roles.Guardian);
     const isLoading = !currentUserRef || !currentUserRef.isLoaded;
     const userData = currentUserRef && currentUserRef.data();
     const lang = currentUserRef && currentUserRef.locale() || 'en';

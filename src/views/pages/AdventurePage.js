@@ -2,7 +2,7 @@ import AdventuresRef, { UserAdventureRef } from 'src/core/adventures/AdventuresR
 import UserInfoRef from 'src/core/users/UserInfoRef';
 import MissionsRef from 'src/core/missions/MissionsRef';
 
-import { hasLevel } from 'src/core/users/Roles';
+import { hasDisplayRole } from 'src/core/users/Roles';
 
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
@@ -61,7 +61,7 @@ export default class AdventurePage extends Component {
 
   get IsGuardian() {
     const { currentUserRef } = this.context;
-    return hasLevel(currentUserRef, 'Guardian');
+    return hasDisplayRole(currentUserRef, 'Guardian');
   }
 
   makeGuardianEl() {

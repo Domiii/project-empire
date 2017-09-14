@@ -1,6 +1,6 @@
 import AdventuresRef, { UserAdventureRef } from 'src/core/adventures/AdventuresRef';
 import MissionsRef from 'src/core/missions/MissionsRef';
-import { hasLevel } from 'src/core/users/Roles';
+import { hasDisplayRole } from 'src/core/users/Roles';
 
 import isEmpty from 'lodash/isEmpty';
 import map from 'lodash/map';
@@ -94,7 +94,7 @@ export default class AdventureList extends Component {
 
   get IsGuardian() {
     const { currentUserRef } = this.context;
-    return hasLevel(currentUserRef, 'Guardian');
+    return hasDisplayRole(currentUserRef, 'Guardian');
   }
 
   get IsAdding() {
