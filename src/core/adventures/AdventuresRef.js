@@ -12,59 +12,116 @@ import { EmptyObject, EmptyArray } from 'src/util';
 
 import UserInfoRef from 'src/core/users/UserInfoRef';
 
-/*
-    1. [Advanced] Prepare for mission
-    1. Sprint(i):
-      1. Go on mission (stateless?)
-      1. Party meeting prep
-      1. GM meeting prep
-      1. Run meeting
-        * checklist: 『團隊鑑定標準』
-      1. [Advanced] Post-meeting reflection + plan next steps
-    1. Mission Finished
-*/
+// TODO: special "Views"
+//    * specialized data records (e.g. store fame/karma/gold)
 
-const renderers = {
+// TODO: (advanced) communication system with context linkage
+//    * one "checklist" (or notes) per individual (e.g. individual feedback by reviewer)
 
-};
-
-const StepViews = {
+const Views = {
 
 };
 
 const Checklists = {
+  // TODO
+  partyPrepareMeeting: {},
+  reviewerPrepareMeeting: {}
+};
 
+const StakeHolders = {
+  none: 0,
+  party: 1,
+  partyMember: 2,
+  reviewer: 3,
+  gm: 4,
+  all: 5
+};
+
+const DefaultPrivs = {
+  statusRead: ['all'],  // see status of "writers" (whether writers have written or not)
+  //summaryRead: ['all'], // see summary + anonymous visualizations
+  read: ['party'],      // see detailed contents
+  write: ['reviewer']   // fill out checklist (write data)
 };
 
 const Steps = [
   {
-    // TODO: how to prepare for a collaborative mission properly?
     id: 'prepare',
-    title: '開始執行之前的暖身開會',
-    requiredLevel: 2 // advanced option, only for those who consider themselves advanced
+    title: '[進階] 開始執行之前的暖身開會',
+    level: 2, // advanced option, only for those who want to be serious about stuff
+    checklists: [
+      // TODO: how to prepare for a collaborative mission properly?
+    ]
   },
   {
-    id: 'sprints',
-    title: 'Sprints',
+    id: 'sprint',
+    canRepeat: true,
     children: [
       {
-        id: 'sprint',
-        children: [
-          {
-            id: 'execution',
-            title: '執行階段',
-            views: {
-              //GM: 
-            }
-          },
-          {
-            id: 'prepareMeeting',
-            title: '準備團隊鑑定',
-
+        id: 'execution',
+        title: '執行階段',
+        description: '就做一做吧～',
+      },
+      {
+        id: 'partyPrepareMeeting',
+        title: '團隊鑑定的準備（團隊）',
+        checklists: [
+          'partyPrepareMeeting': {
+            read: ['reviewer'],
+            write: ['party']
           }
+        ]
+      },
+      {
+        id: 'reviewerPrepareMeeting',
+        title: '團隊鑑定的準備（支持者）',
+        checklists: [
+          'reviewerPrepareMeeting': {
+            read: ['reviewer'],
+            write: ['reviewer']
+          }
+        ]
+      },
+      {
+        id: 'holdMeeting',
+        title: '團隊鑑定',
+        checklists: [
+          'reviewerMeetingRecords': {
+            read: ['reviewer'],
+            write: ['reviewer']
+          },
+          'partyMeetingRecords': {
+            write: ['party']
+          }
+        ]
+      },
+      {
+        id: 'postSprintReflection',
+        title: '[進階] 團隊鑑定過後',
+        level: 2,
+        checklists: [
+          'reviewerPostSpringReflection': {
+            read: ['all'],
+            write: ['reviewer']
+          },
+          'partyPostSpringReflection': {
+            write: ['party']
+          }
+        ]
+      },
+      {
+        // type: 'stepChoice',
+        // decisionMaker: 'reviewer', // TODO: party voting?
+        next: [
+          'sprint',
+          'finish'
         ]
       }
     ]
+  },
+  {
+    id: 'finish'
+    // TODO
   }
 ];
 
