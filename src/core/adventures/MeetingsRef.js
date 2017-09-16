@@ -179,42 +179,11 @@ export const meetingPrepItems = [
           '否，因此無法完成分工內容'
         ]
       },
-
-
-
-
-      // TODO: 你覺得到下次自己的表現要變嗎？改變成怎麼樣的表現？
-      // TODO: 你們的作品有沒有令人驚訝的特點？
-
-      /**
-
- 合作 自評 + 互評:
-    "Contributed to achieve the group task?"
-    "Has listened to others?"
-    "Was a positive influence on team moral?"
-    "Had a positive expaerience?"
-    "Has proactively reminded others of important deadlines?"
-    "Helped extrapolated salient points from muddled contributions?"
-    "Enabled shy members to contribute?"
-    "Applied a technique for dealing with unproductive disharmony within the group?"
-    "Has empowered others by clearing hurdles and making it easier for them to contribute?"
-    "Has been fair to everyone and treated everyone as respectfully as possible?"
-    "Is overall a good communicator?"
-  擁抱失敗:
-    "遇到困難的時候想辦法解決還是　分心　＋　想放棄？"
-    "最後結果不佳的狀況下把過程當成學習機會還是崩潰？"
-    "你們過程中願意多面對哪一些風險？"
-  */
     ]
   }
 ];
 
 export const gmMeetingGoCheckItems = {
-/**
-  整組的遲到狀況？
-  團隊鑑定前準備了該要準備的多少 %　（團隊分工表、個人鑑定表、鑑定簡報）？
-  有沒有好好把握時間（沒有在鬧）？
- */
 };
 
 

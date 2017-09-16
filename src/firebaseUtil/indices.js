@@ -95,17 +95,17 @@ const IndexUtils = {
 
   encodeValue(val, forceSimple) {
     if (_.isFunction(val) || _.isElement(val) || _.isError(val)) {
-      throw new Error("[ERROR] Cannot encode element or function values - " + val);
+      throw new Error('[ERROR] Cannot encode element or function values - ' + val);
     }
     if (_.isString(val) || _.isBoolean(val) || _.isNumber(val) || _.isNull(val)) {
-      return val + "";
+      return val + '';
     }
     if (forceSimple) {
       if (_.isArrayLike(val)) {
         return _.join(val, '\uFFFF');
       }
       else if (_.isDate(val)) {
-        return val.getTime() + "";
+        return val.getTime() + '';
       }
       else if (_.isPlainObject(val)) {
         // object should already have be converted to a sorted array
@@ -218,9 +218,9 @@ class IndexSet {
     }
 
     const indexName = this.getIndexNameByKeys(keys);
-    const settings = this.getCfg(indexName)
+    const settings = this.getCfg(indexName);
 
-    if (keys.length == 1) {
+    if (keys.length === 1) {
       return IndexUtils.encodeValueDeep(val[keys[0]], settings.forceSimpleEncoding);
     }
     const values = _.map(keys, key => val[key]);

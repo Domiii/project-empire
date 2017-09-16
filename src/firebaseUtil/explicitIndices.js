@@ -6,8 +6,9 @@ import isArray from 'lodash/isArray';
 import isEqual from 'lodash/isEqual';
 import isEmpty from 'lodash/isEmpty';
 import pickBy from 'lodash/pickBy';
-import forEach from 'lodash/pickBy';
+import forEach from 'lodash/forEach';
 import flatten from 'lodash/flatten';
+import uniq from 'lodash/uniq';
 
 import autoBind from 'src/util/auto-bind';
 
@@ -259,13 +260,13 @@ class M2MExplicitIndex {
     this.leftName = leftName;
     this.rightName = rightName;
 
-    this._firebaseDataRoot = leftEntryRef._firebaseDataRoot;
+    this._firebaseState = leftEntryRef._firebaseState;
 
     Object.assign(this, members);
 
     this.IndexRef = IndexRef;
-    this.leftIndexRef = IndexRef[leftName](this._firebaseDataRoot);
-    this.rightIndexRef = IndexRef[rightName](this._firebaseDataRoot);
+    this.leftIndexRef = IndexRef[leftName](this._firebaseState);
+    this.rightIndexRef = IndexRef[rightName](this._firebaseState);
 
     this.indexRefs = {
       [leftName]: this.leftIndexRef,
@@ -284,7 +285,7 @@ class M2MExplicitIndex {
     this[`findUnassigned_${leftName}_ids`] = this.findUnassignedLeftIds;
     this[`findUnassigned_${leftName}_entries`] = this.findUnassignedLeftEntries;
     this[`findUnassigned_${rightName}_ids`] = this.findUnassignedRightIds;
-    this[`findUnassigned_${rightName}_entries`] = this.findUnassignedRightEntries
+    this[`findUnassigned_${rightName}_entries`] = this.findUnassignedRightEntries;
   }
 
   addLeftDataQuery(queryArr, leftIds) {
@@ -297,7 +298,7 @@ class M2MExplicitIndex {
     if (rightIds) {
       const rightIdsArr = flatten(map(Object.values(rightIds), 
         ids => ids && Object.keys(ids) || EmptyArray));
-      forEach(rightIdsArr, 
+      forEach(uniq(rightIdsArr), 
         id => queryArr.push(pathJoin(this.RightEntryRef.pathTemplate, id)));
       return rightIdsArr;
     }
@@ -313,7 +314,7 @@ class M2MExplicitIndex {
     if (leftIds) {
       const leftIdsArr = flatten(map(Object.values(leftIds), 
         ids => ids && Object.keys(ids) || EmptyArray));
-      forEach(leftIdsArr, 
+      forEach(uniq(leftIdsArr), 
         id => queryArr.push(pathJoin(this.LeftEntryRef.pathTemplate, id)));
       return leftIdsArr;
     }
@@ -437,26 +438,39 @@ class M2MExplicitIndex {
     return this.leftIndexRef.getAllData(leftIds);
   }
 
-  getLeftEntriesByRightId(rightIds) {
-    const leftIds = this.getLeftIdsByRightId(rightIds);
-    const result = mapValues(
-      pickBy(leftIds, v => !!v), 
-      v => this.leftEntryRef.getAllData(Object.keys(pickBy(v, leftId => !!leftId)))
-    );
+  _getCleanKeys(v) {
+    return Object.keys(pickBy(v, id => !!id));
+  }
 
-    if (isEmpty(result)) {
-      return EmptyObject;
+  _getEntryOrEntries(idOrIds, result) {
+    if (!isArray(idOrIds)) {
+      // only one id was given -> return result
+      return result[idOrIds] || EmptyObject;
     }
     return result;
   }
 
+  getLeftEntriesByRightId(rightIds) {
+    const leftIds = this.getLeftIdsByRightId(rightIds);
+
+    // structure: { rightId_i: {leftId_i: 1 ...} ...}, where leftId_i might be null
+
+    const result = mapValues(leftIds,
+      v => this.leftEntryRef.getAllData(this._getCleanKeys(v))
+    );
+
+    // structure: { rightId_i: {leftId_i: leftEntry_i ...} ...}
+
+    return this._getEntryOrEntries(rightIds, result);
+  }
+
   getRightEntriesByLeftId(leftIds) {
     const rightIds = this.getRightIdsByLeftId(leftIds);
-    const rightValues = Object.values(rightIds).filter(v => !!v);
-    if (isEmpty(rightValues)) {
+    const result = Object.values(rightIds).filter(v => !!v);
+    if (isEmpty(result)) {
       return EmptyObject;
     }
-    return this.rightEntryRef.getAllData(rightValues);
+    return this.rightEntryRef.getAllData(result);
   }
 
   addEntry(entry) {

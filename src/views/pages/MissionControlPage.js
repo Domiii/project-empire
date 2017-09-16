@@ -11,7 +11,7 @@ import { EmptyObject, EmptyArray } from 'src/util';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { firebaseConnect } from 'react-redux-firebase'
+import { helpers, firebaseConnect } from 'react-redux-firebase';
 import { 
   Alert, Button, Jumbotron, Well, Panel, Badge
 } from 'react-bootstrap';
@@ -27,6 +27,10 @@ import AdventureView from 'src/views/components/adventures/AdventureView';
 import { AdventureMeetingPanel } from 'src/views/components/adventures/MeetingView';
 import { UserBadge } from 'src/views/components/users/UserList';
 
+const {
+  isLoaded
+} = helpers;
+
 
 const AdventureStatus = {
   None: 0,
@@ -37,6 +41,7 @@ const AdventureStatus = {
 };
 
 // TODO: add "adventure prep" or "adventure first steps" to help the team hit the ground running
+
 
 @connect(({ firebase }, props) => {
   const auth = firebase.auth;
@@ -49,7 +54,7 @@ const AdventureStatus = {
   if (!!u2aIdx) {
     const adventureIds = u2aIdx[currentUid] && Object.keys(u2aIdx[currentUid]);
 
-    currentAdventureId = adventureIds && adventureIds[0];
+    currentAdventureId = adventureIds && adventureIds[0] || null;
 
     if (currentAdventureId) {
       // get ready for adventure-related data
@@ -58,13 +63,18 @@ const AdventureStatus = {
     }
   }
 
+  const adventuresRef = userAdventureRef.refs.adventure;
+  const isReady = userAdventureRef.indexRefs.user.isLoaded &&
+                    isLoaded(currentAdventureId);
+
   return {
     currentUid,
     currentAdventureId,
-    userAdventureRef,
+    
+    isReady,
 
     users: userAdventureRef.refs.user.val,
-    adventures: userAdventureRef.refs.adventure.val,
+    adventures: adventuresRef.val,
     
     missions: missionsRef && missionsRef.val,
     meetings: meetingsRef && meetingsRef.val,
@@ -78,9 +88,7 @@ const AdventureStatus = {
 @firebaseConnect((props, firebase) => {
   const {
     currentUid,
-    currentAdventureId,
-    userAdventureRef,
-    u2aIdx
+    currentAdventureId
   } = props;
 
   if (!!currentUid) {
@@ -127,11 +135,6 @@ export default class MissionControlPage extends Component {
     return currentUserRef && currentUserRef.isAdminDisplayMode() || false;
   }
 
-  get IsNotLoadedYet() {
-    const { currentUserRef } = this.context;
-    return !currentUserRef || !currentUserRef.isLoaded;
-  }
-
   get CurrentUserUid() {
     const { currentUserRef } = this.context;
     return currentUserRef && currentUserRef.props.uid;
@@ -146,11 +149,12 @@ export default class MissionControlPage extends Component {
       {...adventureData}
       partyMembers={adventureData.users}
       meetings={meetings}
-    />);
+            />);
   }
 
   render() {
     const {
+      isReady,
       currentAdventureId,
       children,
       users,
@@ -163,18 +167,12 @@ export default class MissionControlPage extends Component {
       getUsersByAdventure
     } = this.props;
 
-    if (this.IsNotLoadedYet) {
+    if (!isReady) {
       // still loading
       return (<LoadOverlay />);
     }
 
     // TODO: 冒險者可以看到自己所有的 adventure
-
-    if (!userAdventureRef.indexRefs.user.isLoaded) {
-      return (<span className="color-red">
-        <FAIcon name="cog" spinning={true} /> loading...
-      </span>);
-    }
 
 
     let currentAdventureOverview;
@@ -182,7 +180,6 @@ export default class MissionControlPage extends Component {
     const adventure = adventures && adventures[currentAdventureId];
     if (adventure) {
       let existingUsers = getUsersByAdventure(currentAdventureId);
-      existingUsers = existingUsers[currentAdventureId] || EmptyObject;
 
 
       // TODO: render stuff based on current status

@@ -24,11 +24,10 @@ import { pathJoin } from 'src/util/pathUtil';
 
 import { helpers, getFirebase } from 'react-redux-firebase';
 import { EmptyObject } from 'src/util';
-import Immutable from 'immutable';
 
 
 import { makeIndices } from './indices';
-import { 
+import {
   createPathGetterFromTemplateProps,
   createPathGetterFromTemplateArray,
   createChildVarGetterFromTemplateProps,
@@ -45,7 +44,7 @@ import {
 
 const DEBUG_WRITES = false;
 
-const { 
+const {
   isLoaded,
   populate
 } = helpers;
@@ -98,23 +97,23 @@ function _cacheLookup(path, args, newData) {
   return oldData;
 }
 
-function _cachedFetchPopulate(firebaseDataRoot, path, queryArgs) {
-  const newData = populate(firebaseDataRoot, path, queryArgs.populates);
+function _cachedFetchPopulate(firebaseState, path, queryArgs) {
+  const newData = populate(firebaseState, path, queryArgs.populates);
   return _cacheLookup(path, queryArgs, newData);
 }
 
-function _cachedFetchPlain(firebaseDataRoot, path) {
-  const newData = dataToJS(firebaseDataRoot, path);
+function _cachedFetchPlain(firebaseState, path) {
+  const newData = dataToJS(firebaseState, path);
   return _cacheLookup(path, null, newData);
 }
 
 // return function to get data at given path 
 // from current state in store
-function makeGetDataDefault(firebaseDataRoot, path, queryArgs) {
+function makeGetDataDefault(firebaseState, path, queryArgs) {
   if (isPlainObject(queryArgs) && queryArgs.populates) {
-    return () => _cachedFetchPopulate(firebaseDataRoot, path, queryArgs);
+    return () => _cachedFetchPopulate(firebaseState, path, queryArgs);
   }
-  return () => _cachedFetchPlain(firebaseDataRoot, path);
+  return () => _cachedFetchPlain(firebaseState, path);
 };
 
 /**
@@ -135,7 +134,7 @@ function makeGetDataDefault(firebaseDataRoot, path, queryArgs) {
  * @param {object} [cfgOrPath.inheritedMethods] These methods will be assigned to self and all children.
  * @param {object} [cfgOrPath.cascadingMethods] These methods will be assigned to self and all parents, but parameters will be filled from props, according to all variables in full path.
  * 
- * returns a new ref wrapper function (firebaseDataRoot, props) with the following properties:
+ * returns a new ref wrapper function (firebaseState, props) with the following properties:
  *  parent, getPath, and all corresponding child wrapper functions
  *
  * TODO: Use reselect + internal caching so we can reduce re-creation of wrappers
@@ -150,7 +149,7 @@ export function addChildrenToRefWrapper(parent, children, inheritedSettings, cas
 
   for (let wrapperName in children) {
     const childCfg = children[wrapperName];
-    const childWrapper = parent[wrapperName] = 
+    const childWrapper = parent[wrapperName] =
       _makeRefWrapper(parent, inheritedSettings, childCfg);
 
     if (cascadingMethods && childCfg.cascadingMethods) {
@@ -208,7 +207,7 @@ function _buildQueryFinal(path, args) {
     args = args.filter(arg => !isEmpty(arg));
     args.forEach(arg => {
       if (!isString(arg)) {
-        throw new Error('invalid argument - must be string: ' + arg + 
+        throw new Error('invalid argument - must be string: ' + arg +
           ' - ' + JSON.stringify(args) : '');
       }
     });
@@ -235,7 +234,7 @@ function _makeMakeQuery(getPath, queryString) {
   let queryArgsFunc = queryString instanceof Function && queryString;
   let queryArgsConst = !(queryString instanceof Function) && queryString;
   let getQueryArgs = (...allArgs) => {
-    let res = queryArgsFunc && queryArgsFunc.apply(this, allArgs) || 
+    let res = queryArgsFunc && queryArgsFunc.apply(this, allArgs) ||
       (!isEmpty(allArgs) ? allArgs : queryArgsConst);
     return res;
   };
@@ -252,8 +251,8 @@ function _makeMakeQuery(getPath, queryString) {
     return _buildQueryFinal(path, queryArgs);
   }
 
-  return getPath.hasVariables && 
-    _defaultMakeQueryWithVariables || 
+  return getPath.hasVariables &&
+    _defaultMakeQueryWithVariables ||
     _defaultMakeQueryNoVariables;
 }
 
@@ -263,9 +262,9 @@ function _addQueries(makeQuery, paths, ...args) {
     paths.push.apply(paths, newPaths);
   }
   else {
-    paths.push(newPaths)
+    paths.push(newPaths);
   }
-};
+}
 
 // if this level is group, add queries of children
 function _makeAddQuery(makeQuery, groupBy, childrenWrappers) {
@@ -299,7 +298,7 @@ function _makeRefWrapper(parent, inheritedSettings, cfgOrPath) {
   //inheritedSettings.groupBy = groupBy;
 
   // some configuration parameters only affect the current config node
-  let { 
+  let {
     pathTemplate, pushPathTemplate, children,
     // static, // cannot get static here because it's a reserved keyword
     methods, inheritedMethods, cascadingMethods,
@@ -307,7 +306,7 @@ function _makeRefWrapper(parent, inheritedSettings, cfgOrPath) {
   } = cfg;
 
   // some configuration parameters are inherited down the chain
-  let { 
+  let {
     indices,
     updatedAt,
     queryString,
@@ -315,8 +314,8 @@ function _makeRefWrapper(parent, inheritedSettings, cfgOrPath) {
   } = inheritedSettings;
 
   const relativePathTemplate = pathTemplate || '';
-  pathTemplate = parent && 
-    pathJoin(parent.pathTemplate, relativePathTemplate) || 
+  pathTemplate = parent &&
+    pathJoin(parent.pathTemplate, relativePathTemplate) ||
     relativePathTemplate;
 
   pushPathTemplate = pushPathTemplate || pathTemplate;
@@ -386,11 +385,11 @@ function _makeRefWrapper(parent, inheritedSettings, cfgOrPath) {
 
   // add cascadingMethods
   const varNames = parseTemplateString(pathTemplate).varNames;
-  cascadingMethods = _.mapValues(cascadingMethods, function(method, name) {
+  cascadingMethods = _.mapValues(cascadingMethods, function (method, name) {
     // all arguments of cascading methods, are:
     //  1. the arguments already stored in wrapper props
     //  2. run-time supplied arguments
-    return function (...args2) {
+    return (...args2) => {
       const props = this.props;
       const args1 = varNames.map(varName => props[varName]);
       return method.call(this, ...args1.concat(args2));
@@ -427,54 +426,54 @@ function _makeRefWrapper(parent, inheritedSettings, cfgOrPath) {
 
 
 // TODO: wrapper cache not working o_X
-// const _wrapperCache = {};
+const _wrapperCache = {};
 
-// function _cacheGetWrapper(path, firebaseDataRoot, ...moreArgs) {
-//   const entries = _wrapperCache[path];
-//   if (entries) {
-//     for (let i = 0; i < entries.length; ++i) {
-//       const entry = entries[i];
-//       if (firebaseDataRoot.data === firebaseDataRoot.data &&
-//         isEqual(entry.moreArgs, moreArgs)) {
-//         //console.log('retrieved cached wrapper at path: ' + path);
-//       console.log(path, entry.obj.val, ' -- ', entry.oldVal);
-//         return entry.obj;
-//       }
-//     }
-//   }
-//   //console.log('no cached wrapper at path: ' + path);
-//   return null;
-// }
+function _cacheGetWrapper(path, firebaseState, ...moreArgs) {
+  const entries = _wrapperCache[path];
+  if (entries) {
+    for (let i = 0; i < entries.length; ++i) {
+      const entry = entries[i];
+      if (firebaseState.data === firebaseState.data &&
+        isEqual(entry.moreArgs, moreArgs)) {
+        //console.log('retrieved cached wrapper at path: ' + path);
+        console.log(path, entry.obj.val, ' -- ', entry.oldVal);
+        return entry.obj;
+      }
+    }
+  }
+  //console.log('no cached wrapper at path: ' + path);
+  return null;
+}
 
-// function _cacheSetWrapper(obj, path, firebaseDataRoot, ...moreArgs) {
-//   let entries = _wrapperCache[path];
-//   if (!entries) {
-//     _wrapperCache[path] = entries = [];
-//   }
-//   else if (entries.length > 10) {
-//     // keep a tap on cache size
-//     entries.splice(0, 1);
-//   }
+function _cacheSetWrapper(obj, path, firebaseState, ...moreArgs) {
+  let entries = _wrapperCache[path];
+  if (!entries) {
+    _wrapperCache[path] = entries = [];
+  }
+  else if (entries.length > 10) {
+    // keep a tap on cache size
+    entries.splice(0, 1);
+  }
 
-//   _cacheGetWrapper(path, firebaseDataRoot, ...moreArgs);
+  _cacheGetWrapper(path, firebaseState, ...moreArgs);
 
-//   entries.push({
-//     obj,
-//     firebaseDataRoot,
-//     moreArgs,
-//     oldVal: obj.val
-//   });
-// }
+  entries.push({
+    obj,
+    firebaseState,
+    moreArgs,
+    oldVal: obj.val
+  });
+}
 
 function createWrapperFunc(parent, WrapperClass, getPath, groupBy, getChildVars) {
-  const f = function wrapper(firebaseDataRoot, props, pathArgs, ...makeQueryArgs) {
+  const f = (firebaseState, props, pathArgs, ...makeQueryArgs) => {
     pathArgs = pathArgs || props || EmptyObject;
     props = props || EmptyObject;
-    
-    let path = getPath(pathArgs);
-    path = path.endsWith('/') ? path.substring(0, path.length-1) : path;
 
-    if (!firebaseDataRoot) {
+    let path = getPath(pathArgs);
+    path = path.endsWith('/') ? path.substring(0, path.length - 1) : path;
+
+    if (!firebaseState) {
       throw new Error('invalid ref wrapper initialization, missing `firebase` data root: ' + path);
     }
 
@@ -488,7 +487,7 @@ function createWrapperFunc(parent, WrapperClass, getPath, groupBy, getChildVars)
     const queryArgs = makeQueryArgs.length && makeQuery(...makeQueryArgs) || null;
 
     // for groups, make sure, we get instance to chidren
-    let childArgs, childrenWrappers, 
+    let childArgs, childrenWrappers,
       childrenGetPaths, childrenGetPushPaths;
 
     if (groupBy) {
@@ -502,33 +501,35 @@ function createWrapperFunc(parent, WrapperClass, getPath, groupBy, getChildVars)
       });
 
       // childrenGetPaths = childrenWrappers.map(childF => {
-      //   return childF(firebaseDataRoot, props, pathArgs, ...makeQueryArgs);
+      //   return childF(firebaseState, props, pathArgs, ...makeQueryArgs);
       // });
     }
 
     let getData;
-    getData = makeGetDataDefault(firebaseDataRoot, path, queryArgs);
+    getData = makeGetDataDefault(firebaseState, path, queryArgs);
 
     const db = props.db || getFirebase().database();
     const ref = db.ref(path);
 
-    // // check if something is in cache
-    // const cached = _cacheGetWrapper(
-    //   path, firebaseDataRoot, props, childArgs, queryArgs);
-    // if (cached) {
-    //   return cached;
-    // }
+    // check if something is in cache
+    // let refWrapper = _cacheGetWrapper(
+    //   path, firebaseState, props, childArgs, queryArgs);
+    // if (!refWrapper) {
+    // create refWrapper object, if none is cached
+    const refWrapper = new WrapperClass();
+    //}
 
-    // finally, create refWrapper object
-    const refWrapper = new WrapperClass(
-      parent, path, firebaseDataRoot, 
+    // update arguments
+    refWrapper._init(
+      parent, path, firebaseState,
       relativePathTemplate,
       db, getData, groupBy, childArgs,
       childrenGetPaths, childrenGetPushPaths, ref, props
     );
 
+    // // update cache
     // _cacheSetWrapper(refWrapper, 
-    //   path, firebaseDataRoot, props, childArgs, queryArgs);
+    //   path, firebaseState, props, childArgs, queryArgs);
 
     return refWrapper;
   };
@@ -537,24 +538,27 @@ function createWrapperFunc(parent, WrapperClass, getPath, groupBy, getChildVars)
 
 function createRefWrapperBase() {
   class RefWrapperBase {
-    constructor(parent, path, firebaseDataRoot,
-      relativePathTemplate, db, 
-      getData, groupBy, childArgs, 
-      childrenGetPaths, childrenGetPushPaths, 
+    constructor() {
+    }
+
+    _init(parent, path, firebaseState,
+      relativePathTemplate, db,
+      getData, groupBy, childArgs,
+      childrenGetPaths, childrenGetPushPaths,
       ref, props) {
 
       this.parent = parent;
       this.path = path;
+      this._firebaseState = firebaseState;
 
       //this._clazz = clazz;
-      this._firebaseDataRoot = firebaseDataRoot;
       this._db = db;
       //this._ref = ref;
 
       this._ref = ref;
 
       // getData(path) function returns data at given database path
-      this._getData = getData;
+      this._getData = getData.bind(this);
 
       this._groupBy = groupBy;
       this._childrenGetPaths = childrenGetPaths;
@@ -567,7 +571,6 @@ function createRefWrapperBase() {
       else {
         this.props = props;
       }
-
       autoBind(this);
     }
 
@@ -576,9 +579,9 @@ function createRefWrapperBase() {
       if (isLoaded(val) && this._groupBy) {
         // for groups, get data from all children and merge them together
         val = mapValues(this._childrenGetPaths, getChildPath => {
-            const path = getChildPath(...this._childArgs);
-            return getDataIn(val, path);
-          });
+          const path = getChildPath(...this._childArgs);
+          return getDataIn(val, path);
+        });
         val = pickBy(val, (childVal, childName) => !!childVal);
       }
       return val;
@@ -612,7 +615,7 @@ function createRefWrapperBase() {
     getAllChildData(pathPrefix, idOrIds, defaultValue = null) {
       const ids = isArray(idOrIds) ? idOrIds : [idOrIds];
 
-      const paths = ids.map(id => 
+      const paths = ids.map(id =>
         pathJoin(pathPrefix, id)
       );
 
@@ -620,14 +623,14 @@ function createRefWrapperBase() {
     }
 
     getAllData(pathOrPaths, defaultValue = null) {
-      const paths = isArray(pathOrPaths) ? 
+      const paths = isArray(pathOrPaths) ?
         pathOrPaths : (!!pathOrPaths ? [pathOrPaths] : []);
 
       // TODO: getData not quite working here?
 
       // create object where paths as keys and data as values
-      const result = reduce(paths, 
-        (returnObj, path) => 
+      const result = reduce(paths,
+        (returnObj, path) =>
           extend(returnObj, {
             [path]: this.getData(path)
           }), {});
@@ -690,7 +693,7 @@ function createRefWrapperBase() {
 
     _doPush(ref, newChild) {
       try {
-        const pushCheck = this.onBeforeWrite() && 
+        const pushCheck = this.onBeforeWrite() &&
           this.onPush(ref, newChild) &&
           this.onFinalizeWrite(ref, newChild);
 
@@ -699,7 +702,7 @@ function createRefWrapperBase() {
           //newRef.then(() => this.onAfterWrite('push', newChild));
           return newRef;
         }
-        return newRef;
+        return Promise.reject();
       }
       catch (err) {
         this._onError('push', ref, err);
@@ -712,12 +715,12 @@ function createRefWrapperBase() {
         const firstEntry = first(childrenPathsArr);
         const otherEntries = tail(childrenPathsArr);
 
-        return this._doPushChild(newChild, ...firstEntry).
-          then(childRef => {
+        return this._doPushChild(newChild, ...firstEntry)
+          .then(childRef => {
             // TODO: Handle more complex grouping scenarios
             const newId = childRef.key;
-            const otherChildren = 
-              otherEntries.map(([childName, childPath]) => 
+            const otherChildren =
+              otherEntries.map(([childName, childPath]) =>
                 this[`set_${childName}`](newChild[childName])
               );
             return Promise.all([
@@ -755,10 +758,10 @@ function createRefWrapperBase() {
 
     set(val) {
       if (this._groupBy) {
-        return Promise.all(map(this._childrenGetPushPaths, 
-          (childPath, childName) => 
+        return Promise.all(map(this._childrenGetPushPaths,
+          (childPath, childName) =>
             val[childName] && this[`set_${childName}`](val[childName])
-          ).filter(promise => !!promise)
+        ).filter(promise => !!promise)
         );
       }
       else {
@@ -780,10 +783,10 @@ function createRefWrapperBase() {
           this.onUpdate(ref, childValue) &&
           this.onFinalizeWrite(ref, childValue) &&
           ref.set(childValue)
-          .then(() => {
-            this.onAfterWritePath('set', childValue, path);
-            //console.log(`setChild: ${ref} = ${childValue}`);
-          })
+            .then(() => {
+              this.onAfterWritePath('set', childValue, path);
+              //console.log(`setChild: ${ref} = ${childValue}`);
+            })
         );
       }
       catch (err) {
@@ -800,15 +803,15 @@ function createRefWrapperBase() {
           this.onFinalizeWrite(ref, val) &&
 
           ref.update(val)
-          .then(() => {
-            // TODO: sadly, value is not yet updated in local repository
-            const newVal = val;
-            return this.onAfterWrite('update', 
-              newVal
-              //_.zipObject(_.keys(val), _.map(val, (v,k) => _.get(newVal, k)))
-            );
-          })
-        ); 
+            .then(() => {
+              // TODO: sadly, value is not yet updated in local repository
+              const newVal = val;
+              return this.onAfterWrite('update',
+                newVal
+                //_.zipObject(_.keys(val), _.map(val, (v,k) => _.get(newVal, k)))
+              );
+            })
+        );
       }
       catch (err) {
         this._onError('update', ref, err);
@@ -817,8 +820,8 @@ function createRefWrapperBase() {
 
     update(val) {
       if (this._groupBy) {
-        return Promise.all(map(this._childrenGetPushPaths, 
-          (childPath, childName) => 
+        return Promise.all(map(this._childrenGetPushPaths,
+          (childPath, childName) =>
             val[childName] && this[`update_${childName}`](val[childName])
         ).filter(promise => !!promise));
       }
@@ -837,16 +840,16 @@ function createRefWrapperBase() {
           this.onFinalizeWrite(ref, childValue) &&
 
           ref.update(childValue)
-          .then(() => {
-            const newVal = childValue;
-            return this.onAfterWritePath('update', 
-              newVal
-              // _.zipObject(
-              //   _.keys(childValue), 
-              //   _.map(childValue, (v, k) => getDataIn(childValue, k))
-              // )
-            , path);
-          })
+            .then(() => {
+              const newVal = childValue;
+              return this.onAfterWritePath('update',
+                newVal
+                // _.zipObject(
+                //   _.keys(childValue), 
+                //   _.map(childValue, (v, k) => getDataIn(childValue, k))
+                // )
+                , path);
+            })
         );
       }
       catch (err) {
@@ -855,35 +858,35 @@ function createRefWrapperBase() {
     }
 
     // see: https://firebase.google.com/docs/reference/js/firebase.database.Reference#transaction
-    transactionChild(cb) {
-      // TODO: add write hooks!!!
-      const ref = this._ref;
-      try {
-        return (
-          this.onBeforeWrite() && 
-          ref.transaction(cb)
-          .then(() => this.onAfterWrite('transaction', '?'))
-        );
-      }
-      catch (err) {
-        this._onError('transactionChild', ref, err);
-      }
-    }
+    // transactionChild(cb) {
+    //   // TODO: add write hooks!!!
+    //   const ref = this._ref;
+    //   try {
+    //     return (
+    //       this.onBeforeWrite() &&
+    //       ref.transaction(cb)
+    //         .then(() => this.onAfterWrite('transaction', '?'))
+    //     );
+    //   }
+    //   catch (err) {
+    //     this._onError('transactionChild', ref, err);
+    //   }
+    // }
 
-    transactionChild(path, cb) {
-      // TODO: add write hooks!!!
-      const ref = this.getRef(path);
-      try {
-        return (
-          this.onBeforeWrite() && 
-          ref.transaction(cb)
-          .then(() => this.onAfterWritePath('transaction', '?', path))
-        );
-      }
-      catch (err) {
-        this._onError('transactionChild', ref, err);
-      }
-    }
+    // transactionChild(path, cb) {
+    //   // TODO: add write hooks!!!
+    //   const ref = this.getRef(path);
+    //   try {
+    //     return (
+    //       this.onBeforeWrite() &&
+    //       ref.transaction(cb)
+    //         .then(() => this.onAfterWritePath('transaction', '?', path))
+    //     );
+    //   }
+    //   catch (err) {
+    //     this._onError('transactionChild', ref, err);
+    //   }
+    // }
   }
 
   return RefWrapperBase;

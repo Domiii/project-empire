@@ -16,7 +16,7 @@ import { EmptyObject, EmptyArray } from 'src/util';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { firebaseConnect } from 'react-redux-firebase'
+import { firebaseConnect } from 'react-redux-firebase';
 import autoBind from 'react-autobind';
 
 import {
@@ -97,7 +97,8 @@ export class MeetingStatusView extends Component {
 
     // TODO: each party member's current status
     return (<UserList users={users}
-      renderUser={this.renderPartyMember} />);
+      renderUser={this.renderPartyMember} 
+            />);
   }
 
   render() {
@@ -158,15 +159,18 @@ export class MeetingPrepUserDetails extends Component {
 // })
 @firebaseConnect(() => {})
 @connect(({ firebase }, { adventureId, meetingId, meeting, uid }) => {
-  const meetingsRef =  MeetingsRef(firebase);
+  const meetingsRef = MeetingsRef(firebase);
 
   //console.log(Object.keys(firebase.data), firebase.data.meetings)
 
   const submit = newValues => 
     setMeetingPrep(meetingsRef, adventureId, meetingId, uid, newValues);
 
+  const allValues = meeting.preparations && 
+    meeting.preparations[uid];
+
   return {
-    allValues: meeting.preparations && meeting.preparations[uid],
+    allValues,
     submit
     //submit: vals => console.log(vals)
   };
@@ -196,7 +200,7 @@ export class MeetingPrepUserDetailsEditor extends Component {
       meetingId,
       allValues,
       submit
-    } = this.props
+    } = this.props;
 
     // TODO: connect to database
     // TODO: submitPartyMeetingPrep action

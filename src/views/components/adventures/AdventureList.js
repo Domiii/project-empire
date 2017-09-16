@@ -35,6 +35,7 @@ import AdventureEditor from './AdventureEditor';
 
   return {
     // userInfoRef: UserInfoRef(firebase),
+    isLoaded: adventuresRef.isLoaded,
     adventures: adventuresRef.val,
     missions,
     missionOptions: map(missions, (mission, missionId) => ({
@@ -211,10 +212,15 @@ export default class AdventureList extends Component {
   }
 
   makeEmptyAdventuresEl() {
+    const { isLoaded } = this.props;
     return (
-      <Alert bsStyle="warning">
-        <span>there are no adventures</span>
-      </Alert>
+      isLoaded ?
+        (<Alert bsStyle="warning">
+          <span>there are no adventures</span>
+        </Alert>) :
+        (<Alert bsStyle="warning">
+          <span>there are no adventures</span>
+        </Alert>)
     );
   }
 
@@ -237,7 +243,6 @@ export default class AdventureList extends Component {
       map(idList, (adventureId) => {
         const adventure = adventures[adventureId];
         let existingUsers = getUsersByAdventure(adventureId);
-        existingUsers = existingUsers[adventureId] || EmptyObject;
 
         return (<li key={adventureId} className="list-group-item">
           <AdventureView

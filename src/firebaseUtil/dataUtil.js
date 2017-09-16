@@ -19,7 +19,7 @@ export function createPathGetterFromTemplateProps(pathTemplate, variableTransfor
     }
 
     return _makePathVariable(props[varName], variableTransform);
-  }
+  };
 
   const getPathWithVariables = function getPathWithVariables(props) {
     return getPathWithVariables.pathInfo.nodes.map(node => node(props)).join('');
@@ -85,7 +85,7 @@ export function parseTemplateString(text, varLookup) {
   const varNames = [];
   let lastIndex = 0;
   let match;
-  while ((match = varRe.exec(text)) != null) {
+  while ((match = varRe.exec(text)) !== null) {
     const matchStart = match.index, matchEnd = varRe.lastIndex;
     let prevText = text.substring(lastIndex, matchStart);
     let varName = match[1];

@@ -158,7 +158,6 @@ export default class GroupList extends Component {
       map(idList, (groupId) => {
         const group = groups[groupId];
         let existingUsers = getUsersByGroup(groupId);
-        existingUsers = existingUsers[groupId] || EmptyObject;
 
         return (<GroupView key={groupId} 
           {...{
