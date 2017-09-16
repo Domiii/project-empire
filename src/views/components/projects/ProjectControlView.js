@@ -105,10 +105,11 @@ StageStatusIcon.propTypes = {
   status: PropTypes.number.isRequired
 };
 
-function StageContributorIcon({user, status}) {
+function StageContributorIcon({user, status, groupName}) {
   // TODO: party member vs. reviewer
+  const classes = 'project-contributor project-contributor-' + groupName;
   return (
-    <div className="project-contributor" style={{backgroundImage: 'url(' + user.photoURL + ')'}}>
+    <div className={classes} style={{backgroundImage: 'url(' + user.photoURL + ')'}}>
       { status && 
         <StageStatusIcon status={status} 
           className=".project-contributor-status-icon" />
@@ -117,6 +118,7 @@ function StageContributorIcon({user, status}) {
   );
 }
 StageContributorIcon.propTypes = {
+  groupName: PropTypes.string.isRequired,
   status: PropTypes.number,
   user: PropTypes.object.isRequired
 };
@@ -127,9 +129,10 @@ function StageStatusBar({stage}) {
   //return (<StageStatusIcon status={status} />);
   return (<div>
     { map(stageContributors, user =>
-      <StageContributorIcon user={user} status={
-        getStageContributorStatus(user, stage)
-      } /> )
+      <StageContributorIcon 
+        user={user}
+        status={getStageContributorStatus(user, stage)}
+      /> )
     }
   </div>);
 }
