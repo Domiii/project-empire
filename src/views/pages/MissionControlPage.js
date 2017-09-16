@@ -88,7 +88,8 @@ const AdventureStatus = {
 @firebaseConnect((props, firebase) => {
   const {
     currentUid,
-    currentAdventureId
+    currentAdventureId,
+    adventures
   } = props;
 
   if (!!currentUid) {
@@ -97,10 +98,11 @@ const AdventureStatus = {
       AdventuresRef.makeQuery()
     ];
 
-    if (!!currentAdventureId) {
+    const currentAdventure = adventures && adventures[currentAdventureId];
+    if (!!currentAdventure) {
       // get adventure-related data
       paths.push(
-        MissionsRef.makeQuery(),
+        MissionsRef.makeQuery(currentAdventure.missionId),
         MeetingsRef.makeQuery({adventureId: currentAdventureId})
       );
     }

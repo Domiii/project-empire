@@ -96,7 +96,8 @@ export class MeetingStatusView extends Component {
     } = this.props;
 
     // TODO: each party member's current status
-    return (<UserList users={users}
+    return (<UserList 
+      users={users}
       renderUser={this.renderPartyMember} 
             />);
   }
@@ -215,7 +216,8 @@ export class MeetingPrepUserDetailsEditor extends Component {
         format={meetingPrepItems} 
         context={context}
         allValues={allValues} 
-        onSubmit={submit}/>
+        onSubmit={submit}
+      />
       <pre>{JSON.stringify(allValues, null, 2)}</pre>
     </div>);
   }
