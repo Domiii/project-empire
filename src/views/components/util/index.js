@@ -1,4 +1,5 @@
-import React, { Component, PureComponent, PropTypes } from 'react';
+import React, { Component, PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import { 
   Grid, Row, Col,
   Form, FormGroup, FormControl, ControlLabel, FieldArray
@@ -7,26 +8,7 @@ import { Field } from 'redux-form';
 
 export SimpleGrid from './SimpleGrid';
 
-// Online demo: https://codepen.io/Domiii/pen/mOaGWG?editors=0010
-export class FAIcon extends PureComponent {
-  static propTypes = {
-    name: PropTypes.string.isRequired,
-    className: PropTypes.string,
-    spinning: PropTypes.bool,
-    childProps: PropTypes.object
-  };
-
-  render() {
-    let classes = "fa fa-" + this.props.name + (!!this.props.className && (' ' + this.props.className) || '');
-    if (this.props.spinning) {
-      classes += ' fa-spin';
-    }
-    return (
-    <i className={classes} aria-hidden="true" {...this.props.childProps}>
-      {this.props.children}
-    </i>);
-  }
-}
+export FAIcon from './FAIcon';
 
 // <FieldArray name="members" component={members =>
 

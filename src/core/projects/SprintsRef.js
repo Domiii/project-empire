@@ -1,6 +1,6 @@
 /**
  * Sprints
- * One adventure is executed in one or more sprints.
+ * One project is executed in one or more sprints.
  *
  * Q: What is a sprint? A: https://www.google.com.tw/search?q=project+management+sprint&rlz=&source=lnms&tbm=isch
  */
@@ -22,8 +22,8 @@ const SprintsRef = makeRefWrapper({
   },
 
   children: {
-    byAdventure: {
-      pathTemplate: 'adventureId',
+    byProject: {
+      pathTemplate: 'projectId',
       children: {
         sprint: {
           pathTemplate: '$(sprintId)',

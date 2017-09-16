@@ -1,4 +1,4 @@
-import AdventuresRef, { UserAdventureRef } from 'src/core/adventures/AdventuresRef';
+import ProjectsRef, { UserProjectRef } from 'src/core/projects/ProjectsRef';
 import UserInfoRef from 'src/core/users/UserInfoRef';
 import MissionsRef from 'src/core/missions/MissionsRef';
 
@@ -7,7 +7,7 @@ import { hasDisplayRole } from 'src/core/users/Roles';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { firebaseConnect } from 'react-redux-firebase'
+import { firebaseConnect } from 'react-redux-firebase';
 import { 
   Alert, Button, Jumbotron, Well, Panel
 } from 'react-bootstrap';
@@ -18,34 +18,34 @@ import {
 } from 'react-router-bootstrap';
 import { LoadOverlay } from 'src/views/components/overlays';
 
-import AdventureList from 'src/views/components/adventures/AdventureList';
+import ProjectList from 'src/views/components/projects/ProjectList';
 
 
 @firebaseConnect((props, firebase) => {
   const paths = [
-    AdventuresRef.makeQuery(),
+    ProjectsRef.makeQuery(),
     UserInfoRef.userList.makeQuery(),
     MissionsRef.makeQuery()
   ];
-  UserAdventureRef.addIndexQueries(paths);
+  UserProjectRef.addIndexQueries(paths);
   return paths;
 })
 @connect(({ firebase }, props) => {
-  const userAdventureRef = UserAdventureRef(firebase);
+  const userProjectRef = UserProjectRef(firebase);
   return {
-    adventuresRef: userAdventureRef.refs.adventure,
-    userInfoRef: userAdventureRef.refs.user,
-    userAdventureRef
+    projectsRef: userProjectRef.refs.project,
+    userInfoRef: userProjectRef.refs.user,
+    userProjectRef
   };
 })
-export default class AdventurePage extends Component {
+export default class ProjectPage extends Component {
   static contextTypes = {
     currentUserRef: PropTypes.object.isRequired
   };
 
   static propTypes = {
     userInfoRef: PropTypes.object.isRequired,
-    adventuresRef: PropTypes.object.isRequired
+    projectsRef: PropTypes.object.isRequired
   };
 
   constructor(...args) {
@@ -70,10 +70,10 @@ export default class AdventurePage extends Component {
 
   render() {
     const {
-      children
+      projectsRef
     } = this.props;
 
-    if (this.IsNotLoadedYet) {
+    if (!projectsRef.isLoaded) {
       // still loading
       return (<LoadOverlay />);
     }
@@ -83,7 +83,7 @@ export default class AdventurePage extends Component {
         //{ this.IsGuardian && this.makeGuardianEl() }
     return (
       <div>
-        <AdventureList adventures={this.props.adventuresRef.val} />
+        <ProjectList projects={projectsRef.val} />
       </div>
     );
   }

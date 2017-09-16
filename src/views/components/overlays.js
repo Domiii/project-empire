@@ -10,7 +10,7 @@ export class Overlay extends PureComponent {
 
   render() {
     const { contents, className } = this.props;
-    const screenClasses = 'overlay-screen max-height ' + (className || '');
+    const screenClasses = 'overlay-screen full-height ' + (className || '');
 
     return (
       <div className="overlay color-gray">

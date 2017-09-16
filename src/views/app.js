@@ -128,13 +128,13 @@ export class App extends Component {
     // }
 
     return (
-      <div className="app container max-height">
+      <div className="app container full-height">
         <Header
           currentUser={currentUserRef && currentUserRef.val}
           signOut={this.signOut}
         />
 
-        <main className="app-main max-height">
+        <main className="app-main full-height">
           { children }
         </main>
       </div>

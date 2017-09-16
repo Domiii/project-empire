@@ -4,7 +4,7 @@ export const routeNames = {
   USER_PROFILE: 'user',
   MISSION_CONTROL: 'mymissions',
   GM: 'gm',
-  ADVENTURES: 'adventures',
+  PROJECTS: 'projects',
   GROUPS: 'groups',
 
   TEST: 'test'
@@ -16,7 +16,7 @@ export const routePaths = {
   USER_PROFILE: `/${routeNames.USER_PROFILE}`,
   MISSION_CONTROL: `/${routeNames.MISSION_CONTROL}`,
   GM: `/${routeNames.GM}`,
-  ADVENTURES: `/${routeNames.ADVENTURES}`,
+  PROJECTS: `/${routeNames.PROJECTS}`,
   GROUPS: `/${routeNames.GROUPS}`,
 
   TEST: `/${routeNames.TEST}`
@@ -28,7 +28,7 @@ export const routeTemplates = {
   USER_PROFILE: `${routeNames.USER_PROFILE}`,
   MISSION_CONTROL: `${routeNames.MISSION_CONTROL}`,
   GM: `${routeNames.GM}`,
-  ADVENTURES: `${routeNames.ADVENTURES}`,
+  PROJECTS: `${routeNames.PROJECTS}`,
   GROUPS: `${routeNames.GROUPS}`,
 
   TEST: `${routeNames.TEST}`

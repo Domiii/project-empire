@@ -41,27 +41,27 @@ export function groupActiveMeetings(allMeetings) {
   return [activeMeetings, archivedMeetings];
 }
 
-export function createNewMeeting(meetingsRef, adventureId) {
+export function createNewMeeting(meetingsRef, projectId) {
   return meetingsRef.push_meeting({
     startTime: getFirebase().database.ServerValue.TIMESTAMP,
     meetingStatus: MeetingStatus.NotStarted,
-    adventureId,
+    projectId,
     active: 1
   });
 }
 
 export function ensureMeetingExists(
-  meetingsRef, adventureId, meetingId) {
+  meetingsRef, projectId, meetingId) {
   if (!meetingId) {
-    const newEntry = createNewMeeting(meetingsRef, adventureId);
+    const newEntry = createNewMeeting(meetingsRef, projectId);
     return newEntry.then(() => newEntry.key);
   }
   return Promise.resolve(meetingId);
 }
 
 export function setMeetingPrep(
-  meetingsRef, adventureId, meetingId, uid, prep) {
-  return ensureMeetingExists(meetingsRef, adventureId, meetingId).
+  meetingsRef, projectId, meetingId, uid, prep) {
+  return ensureMeetingExists(meetingsRef, projectId, meetingId).
     then((_meetingId) => meetingsRef.set_preparation(_meetingId, uid, prep));
 }
 
@@ -192,19 +192,19 @@ const MeetingsRef = makeRefWrapper({
   pathTemplate: '/meetings',
 
   indices: {
-    adventureId: ['adventureId']
+    projectId: ['projectId']
   },
 
-  queryString({adventureId}) {
-    // get all responses by given adventureId
-    return this.indices.where({adventureId});
+  queryString({projectId}) {
+    // get all responses by given projectId
+    return this.indices.where({projectId});
   },
 
   children: {
     meeting: {
       pathTemplate: '$(meetingId)',
       children: {
-        adventureId: 'adventureId',
+        projectId: 'projectId',
         reviewerId: 'reviewerId',
         startTime: 'startTime',
 

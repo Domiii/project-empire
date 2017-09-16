@@ -5,7 +5,7 @@ import MeetingsRef, {
   groupActiveMeetings,
 
   setMeetingPrep
-} from 'src/core/adventures/MeetingsRef';
+} from 'src/core/projects/MeetingsRef';
 
 import map from 'lodash/map';
 import pickBy from 'lodash/pickBy';
@@ -49,8 +49,8 @@ import FormInputView from 'src/views/components/forms/FormInputView';
 // TODO: GM (go) feedback (and party can see it)
 // TODO: party final feedback
 // TODO: finishMeeting action
-// TODO: finishAdventure action
-// TODO: archive adventure action
+// TODO: finishProject action
+// TODO: archive project action
 */
 
 
@@ -68,10 +68,10 @@ export class MeetingStatusView extends Component {
     meeting: PropTypes.object,
 
     uid: PropTypes.string.isRequired,
-    adventureId: PropTypes.string.isRequired,
-    adventure: PropTypes.object.isRequired,
+    projectId: PropTypes.string.isRequired,
+    project: PropTypes.object.isRequired,
     users: PropTypes.object,
-    adventureGuardian: PropTypes.object,
+    projectGuardian: PropTypes.object,
     assignedGM: PropTypes.object
   };
 
@@ -119,10 +119,10 @@ export class MeetingPrepUserDetails extends Component {
     meeting: PropTypes.object,
     
     uid: PropTypes.string.isRequired,
-    adventureId: PropTypes.string.isRequired,
-    adventure: PropTypes.object.isRequired,
+    projectId: PropTypes.string.isRequired,
+    project: PropTypes.object.isRequired,
     users: PropTypes.object,
-    adventureGuardian: PropTypes.object,
+    projectGuardian: PropTypes.object,
     assignedGM: PropTypes.object
   };
 
@@ -147,11 +147,11 @@ export class MeetingPrepUserDetails extends Component {
   }
 }
 
-// @firebaseConnect(({ meetingId, uid, adventureId }, firebase) => {
+// @firebaseConnect(({ meetingId, uid, projectId }, firebase) => {
 //   const meetingPrepPath = MeetingsRef.meeting.makeQuery({
 //         meetingId
 //       }, {
-//         adventureId
+//         projectId
 //       });
 //   console.log(meetingPrepPath);
 //   return [
@@ -159,13 +159,13 @@ export class MeetingPrepUserDetails extends Component {
 //   ];
 // })
 @firebaseConnect(() => {})
-@connect(({ firebase }, { adventureId, meetingId, meeting, uid }) => {
+@connect(({ firebase }, { projectId, meetingId, meeting, uid }) => {
   const meetingsRef = MeetingsRef(firebase);
 
   //console.log(Object.keys(firebase.data), firebase.data.meetings)
 
   const submit = newValues => 
-    setMeetingPrep(meetingsRef, adventureId, meetingId, uid, newValues);
+    setMeetingPrep(meetingsRef, projectId, meetingId, uid, newValues);
 
   const allValues = meeting.preparations && 
     meeting.preparations[uid];
@@ -186,10 +186,10 @@ export class MeetingPrepUserDetailsEditor extends Component {
     meeting: PropTypes.object,
     
     uid: PropTypes.string.isRequired,
-    adventureId: PropTypes.string.isRequired,
-    adventure: PropTypes.object.isRequired,
+    projectId: PropTypes.string.isRequired,
+    project: PropTypes.object.isRequired,
     users: PropTypes.object,
-    adventureGuardian: PropTypes.object,
+    projectGuardian: PropTypes.object,
     assignedGM: PropTypes.object,
 
     allValues: PropTypes.object,
@@ -205,7 +205,7 @@ export class MeetingPrepUserDetailsEditor extends Component {
 
     // TODO: connect to database
     // TODO: submitPartyMeetingPrep action
-    // TODO: meeting status + adventure view "prep toggle"
+    // TODO: meeting status + project view "prep toggle"
 
     const context = this.props;
 
@@ -234,10 +234,10 @@ export class MeetingPrepView extends Component {
     meeting: PropTypes.object,
 
     uid: PropTypes.string.isRequired,
-    adventureId: PropTypes.string.isRequired,
-    adventure: PropTypes.object.isRequired,
+    projectId: PropTypes.string.isRequired,
+    project: PropTypes.object.isRequired,
     users: PropTypes.object,
-    adventureGuardian: PropTypes.object,
+    projectGuardian: PropTypes.object,
     assignedGM: PropTypes.object
   };
 
@@ -305,10 +305,10 @@ export class MeetingGoView extends Component {
     meeting: PropTypes.object,
     
     uid: PropTypes.string.isRequired,
-    adventureId: PropTypes.string.isRequired,
-    adventure: PropTypes.object.isRequired,
+    projectId: PropTypes.string.isRequired,
+    project: PropTypes.object.isRequired,
     users: PropTypes.object,
-    adventureGuardian: PropTypes.object,
+    projectGuardian: PropTypes.object,
     assignedGM: PropTypes.object
   };
 
@@ -379,10 +379,10 @@ export class MeetingResultsView extends Component {
     meeting: PropTypes.object,
     
     uid: PropTypes.string.isRequired,
-    adventureId: PropTypes.string.isRequired,
-    adventure: PropTypes.object.isRequired,
+    projectId: PropTypes.string.isRequired,
+    project: PropTypes.object.isRequired,
     users: PropTypes.object,
-    adventureGuardian: PropTypes.object,
+    projectGuardian: PropTypes.object,
     assignedGM: PropTypes.object
   };
 
@@ -419,10 +419,10 @@ export class MeetingArchive extends Component {
     meeting: PropTypes.object,
     
     uid: PropTypes.string.isRequired,
-    adventureId: PropTypes.string.isRequired,
-    adventure: PropTypes.object.isRequired,
+    projectId: PropTypes.string.isRequired,
+    project: PropTypes.object.isRequired,
     users: PropTypes.object,
-    adventureGuardian: PropTypes.object,
+    projectGuardian: PropTypes.object,
     assignedGM: PropTypes.object,
 
     archivedMeetings: PropTypes.object
@@ -461,10 +461,10 @@ export default class MeetingView extends Component {
     meeting: PropTypes.object.isRequired,
 
     uid: PropTypes.string.isRequired,
-    adventureId: PropTypes.string.isRequired,
-    adventure: PropTypes.object.isRequired,
+    projectId: PropTypes.string.isRequired,
+    project: PropTypes.object.isRequired,
     users: PropTypes.object,
-    adventureGuardian: PropTypes.object,
+    projectGuardian: PropTypes.object,
     assignedGM: PropTypes.object
   };
 
@@ -491,18 +491,18 @@ export default class MeetingView extends Component {
 
 
 /**
- * The panel that renders all meetings belonging to an adventure
+ * The panel that renders all meetings belonging to an project
  */
-export class AdventureMeetingPanel extends Component {
+export class ProjectMeetingPanel extends Component {
   static contextTypes = {
     currentUserRef: PropTypes.object.isRequired
   };
 
   static propTypes = {
-    adventureId: PropTypes.string.isRequired,
-    adventure: PropTypes.object.isRequired,
+    projectId: PropTypes.string.isRequired,
+    project: PropTypes.object.isRequired,
     users: PropTypes.object,
-    adventureGuardian: PropTypes.object,
+    projectGuardian: PropTypes.object,
     assignedGM: PropTypes.object,
 
     mission: PropTypes.object,

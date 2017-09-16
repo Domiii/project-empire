@@ -1,4 +1,4 @@
-import AdventuresRef, { UserAdventureRef } from 'src/core/adventures/AdventuresRef';
+import ProjectsRef, { UserProjectRef } from 'src/core/projects/ProjectsRef';
 import MissionsRef from 'src/core/missions/MissionsRef';
 import { hasDisplayRole } from 'src/core/users/Roles';
 
@@ -22,60 +22,59 @@ import Select from 'react-select';
 
 import { FAIcon } from 'src/views/components/util';
 
-import AdventureView from './AdventureView';
-import AdventureEditor from './AdventureEditor';
+import ProjectView from './ProjectView';
+import ProjectEditor from './ProjectEditor';
 
 
 @connect(({ firebase }, props) => {
-  const userAdventureRef = UserAdventureRef(firebase);
-  const userRef = userAdventureRef.refs.user;
-  const adventuresRef = userAdventureRef.refs.adventure;
+  const userProjectRef = UserProjectRef(firebase);
+  const userRef = userProjectRef.refs.user;
+  const projectsRef = userProjectRef.refs.project;
   const missionsRef = MissionsRef(firebase);
   const missions = missionsRef.val || EmptyObject;
 
   return {
     // userInfoRef: UserInfoRef(firebase),
-    isLoaded: adventuresRef.isLoaded,
-    adventures: adventuresRef.val,
+    projects: projectsRef.val,
     missions,
     missionOptions: map(missions, (mission, missionId) => ({
       value: missionId,
       label: `${mission.code} - ${mission.title}`
     })),
     users: userRef.val,
-    //userAdventureRef,
+    //userProjectRef,
     
-    addAdventure: adventure => {
-      adventure.createdAt = getFirebase().database.ServerValue.TIMESTAMP;
-      return adventuresRef.push_adventure(adventure);
+    addProject: project => {
+      project.createdAt = getFirebase().database.ServerValue.TIMESTAMP;
+      return projectsRef.push_project(project);
     },
-    setAdventure: adventuresRef.set_adventure,
-    deleteAdventure: adventuresRef.delete_adventure,
+    setProject: projectsRef.set_project,
+    deleteProject: projectsRef.delete_project,
 
-    getUsersByAdventure: userAdventureRef.get_user_by_adventure,
-    findUnassignedUsers: userAdventureRef.findUnassigned_user_entries,
-    addUserToAdventure: userAdventureRef.addEntry,
-    deleteUserFromAdventure: userAdventureRef.deleteEntry
+    getUsersByProject: userProjectRef.get_user_by_project,
+    findUnassignedUsers: userProjectRef.findUnassigned_user_entries,
+    addUserToProject: userProjectRef.addEntry,
+    deleteUserFromProject: userProjectRef.deleteEntry
   };
 })
-export default class AdventureList extends Component {
+export default class ProjectList extends Component {
   static contextTypes = {
     currentUserRef: PropTypes.object
   };
 
   static propTypes = {
-    adventures: PropTypes.object,
+    projects: PropTypes.object,
     missions: PropTypes.object.isRequired,
     users: PropTypes.object,
 
-    addAdventure: PropTypes.func.isRequired,
-    setAdventure: PropTypes.func.isRequired,
-    deleteAdventure: PropTypes.func.isRequired,
+    addProject: PropTypes.func.isRequired,
+    setProject: PropTypes.func.isRequired,
+    deleteProject: PropTypes.func.isRequired,
 
-    getUsersByAdventure: PropTypes.func.isRequired,
+    getUsersByProject: PropTypes.func.isRequired,
     findUnassignedUsers: PropTypes.func.isRequired,
-    addUserToAdventure: PropTypes.func.isRequired,
-    deleteUserFromAdventure: PropTypes.func.isRequired
+    addUserToProject: PropTypes.func.isRequired,
+    deleteUserFromProject: PropTypes.func.isRequired
   };
 
   constructor() {
@@ -112,16 +111,16 @@ export default class AdventureList extends Component {
     });
   }
 
-  addNewAdventure() {
+  addNewProject() {
     const { currentUserRef } = this.context;
     const {
-      addAdventure
+      addProject
     } = this.props;
 
-    this.setState({selectedMissionId: null})
+    this.setState({selectedMissionId: null});
     this.setAdding(false);
 
-    return addAdventure({
+    return addProject({
       missionId: this.state.selectedMissionId,
       guardianUid: currentUserRef.props.uid
     });
@@ -137,7 +136,7 @@ export default class AdventureList extends Component {
     if (!missions[missionId]) {
       missionId = null;
     }
-    this.setState({selectedMissionId: missionId})
+    this.setState({selectedMissionId: missionId});
   }
 
   makeMissionSelectEl() {
@@ -162,7 +161,7 @@ export default class AdventureList extends Component {
           bsStyle="success" bsSize="small"
           disabled={isEmpty(missions)}
           onClick={this.toggleAdding}>
-          <FAIcon name="plus" className="color-green" /> add new adventure
+          <FAIcon name="plus" className="color-green" /> add new project
         </Button>
 
         { this.IsAdding && <span>
@@ -174,8 +173,8 @@ export default class AdventureList extends Component {
                 <Button block
                   bsStyle="success"
                   disabled={!this.state.selectedMissionId}
-                  onClick={this.addNewAdventure}>
-                  <FAIcon name="save" className="color-green" /> save new adventure
+                  onClick={this.addNewProject}>
+                  <FAIcon name="save" className="color-green" /> save new project
                 </Button>
               </Item>
             </Flex>
@@ -185,82 +184,77 @@ export default class AdventureList extends Component {
     );
   }
 
-  makeAdventureEditorEl(adventureId, adventure, existingUsers, addableUsers) {
+  makeProjectEditorEl(projectId, project, existingUsers, addableUsers) {
     if (!this.IsGuardian) {
       return null;
     }
 
     const {
-        setAdventure,
-        addUserToAdventure,
-        deleteUserFromAdventure
+        setProject,
+        addUserToProject,
+        deleteUserFromProject
       } = this.props;
 
-    return (<AdventureEditor {...{
-      adventureId,
-      adventure,
+    return (<ProjectEditor {...{
+      projectId,
+      project,
       existingUsers,
       addableUsers,
 
-      setAdventure: ({adventureId, adventure}) => {
-        console.log(adventureId, adventure);
-        return setAdventure(adventureId, adventure);
+      setProject: ({projectId, project}) => {
+        console.log(projectId, project);
+        return setProject(projectId, project);
       },
-      addUserToAdventure,
-      deleteUserFromAdventure
+      addUserToProject,
+      deleteUserFromProject
     }} />);
   }
 
-  makeEmptyAdventuresEl() {
-    const { isLoaded } = this.props;
+  makeEmptyProjectsEl() {
     return (
-      isLoaded ?
         (<Alert bsStyle="warning">
-          <span>there are no adventures</span>
-        </Alert>) :
-        (<Alert bsStyle="warning">
-          <span>there are no adventures</span>
+          <span>there are no projects</span>
         </Alert>)
     );
   }
 
-  makeAdventuresList() {
+  makeProjectsList() {
     const { 
-      adventures,
+      projects,
       users,
       missions,
 
       findUnassignedUsers,
-      getUsersByAdventure,
-      deleteAdventure
+      getUsersByProject,
+      deleteProject
     } = this.props;
 
-    const idList = sortBy(Object.keys(adventures), 
-      adventureId => -adventures[adventureId].updatedAt);
+    const idList = sortBy(Object.keys(projects), 
+      projectId => -projects[projectId].updatedAt);
     const addableUsers = findUnassignedUsers();
 
     return (<ListGroup> {
-      map(idList, (adventureId) => {
-        const adventure = adventures[adventureId];
-        let existingUsers = getUsersByAdventure(adventureId);
+      map(idList, (projectId) => {
+        const project = projects[projectId];
+        let existingUsers = getUsersByProject(projectId);
 
-        return (<li key={adventureId} className="list-group-item">
-          <AdventureView
+        return (<li key={projectId} className="list-group-item">
+          <ProjectView
           {...{
             canEdit: true,
-            adventureId,
-            adventure,
-            assignedGM: users && users[adventure.assignedGMUid],
-            adventureGuardian: users && users[adventure.guardianUid],
-            mission: missions && missions[adventure.missionId],
+            projectId,
+            project,
+            assignedGM: users && users[project.assignedGMUid],
+            projectGuardian: users && users[project.guardianUid],
+            mission: missions && missions[project.missionId],
 
             users: existingUsers,
-            //adventuresRef,
+            //projectsRef,
 
-            deleteAdventure,
+            deleteProject,
 
-            adventureEditor: this.makeAdventureEditorEl(
-              adventureId, adventure,
+            projectEditor: this.makeProjectEditorEl(
+              projectId, project,
               existingUsers, addableUsers)
           }} />
         </li>);
@@ -270,32 +264,32 @@ export default class AdventureList extends Component {
 
   render() {
     const { 
-      adventures,
+      projects,
 
       //userInfoRef,
-      //adventuresRef,
+      //projectsRef,
 
-      setAdventure,
-      deleteAdventure,
+      setProject,
+      deleteProject,
 
-      getUsersByAdventure,
+      getUsersByProject,
 
-      addUserToAdventure,
-      deleteUserFromAdventure
+      addUserToProject,
+      deleteUserFromProject
     } = this.props;
 
 
-    let adventureListEl;
-    if (isEmpty(adventures)) {
-      adventureListEl = this.makeEmptyAdventuresEl();
+    let projectListEl;
+    if (isEmpty(projects)) {
+      projectListEl = this.makeEmptyProjectsEl();
     }
     else {
-      adventureListEl = this.makeAdventuresList();
+      projectListEl = this.makeProjectsList();
     }
 
     return (<div>
       { this.makeEditorHeader() }
-      { adventureListEl }
+      { projectListEl }
     </div>);
   }
 }

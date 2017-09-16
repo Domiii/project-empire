@@ -10,7 +10,7 @@ import UserProfilePage from './pages/UserProfilePage';
 import LandingPage from './pages/LandingPage';
 import MissionControlPage from './pages/MissionControlPage';
 import GMPage from './pages/GMPage';
-import AdventurePage from './pages/AdventurePage';
+import ProjectPage from './pages/ProjectPage';
 import GroupPage from './pages/GroupPage';
 //import TestPage from './pages/TestPage';
 
@@ -68,10 +68,10 @@ export const getRoutes = getState => {
         }
       },
       {
-        name: routeNames.ADVENTURES,
-        path: routeTemplates.ADVENTURES,
+        name: routeNames.PROJECTS,
+        path: routeTemplates.PROJECTS,
         indexRoute: {
-          component: AdventurePage,
+          component: ProjectPage,
           onEnter: requireAuth(getState)
         }
       },

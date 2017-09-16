@@ -141,7 +141,7 @@ const UserInfoRef = makeRefWrapper({
                 };
               }
 
-              console.log("Writing user data: " + JSON.stringify(userData));
+              console.log('Writing user data: ' + JSON.stringify(userData));
               return this.setUserData(userData);
             }
           });

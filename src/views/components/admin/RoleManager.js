@@ -27,7 +27,7 @@ import UserList from 'src/views/components/users/UserList';
 
 
 const userListNames = [
-  'Adventurer',
+  'Projectr',
   'Guardian',
   'GM'
 ];

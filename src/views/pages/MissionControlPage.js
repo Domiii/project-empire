@@ -1,7 +1,7 @@
-import AdventuresRef, { UserAdventureRef } from 'src/core/adventures/AdventuresRef';
+import ProjectsRef, { UserProjectRef } from 'src/core/projects/ProjectsRef';
 import UserInfoRef from 'src/core/users/UserInfoRef';
 import MissionsRef from 'src/core/missions/MissionsRef';
-import MeetingsRef from 'src/core/adventures/MeetingsRef';
+import MeetingsRef from 'src/core/projects/MeetingsRef';
 
 import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
@@ -23,8 +23,9 @@ import {
 import { LoadOverlay } from 'src/views/components/overlays';
 import { FAIcon } from 'src/views/components/util';
 
-import AdventureView from 'src/views/components/adventures/AdventureView';
-import { AdventureMeetingPanel } from 'src/views/components/adventures/MeetingView';
+import ProjectView from 'src/views/components/projects/ProjectView';
+import ProjectControlView from 'src/views/components/projects/ProjectControlView';
+import { ProjectMeetingPanel } from 'src/views/components/projects/MeetingView';
 import { UserBadge } from 'src/views/components/users/UserList';
 
 const {
@@ -32,7 +33,7 @@ const {
 } = helpers;
 
 
-const AdventureStatus = {
+const ProjectStatus = {
   None: 0,
   Prep: 1,
   Go: 2,
@@ -40,77 +41,76 @@ const AdventureStatus = {
   Done: 4
 };
 
-// TODO: add "adventure prep" or "adventure first steps" to help the team hit the ground running
+// TODO: add "project prep" or "project first steps" to help the team hit the ground running
 
 
 @connect(({ firebase }, props) => {
   const auth = firebase.auth;
   const currentUid = auth && auth.uid;
 
-  const userAdventureRef = UserAdventureRef(firebase);
+  const userProjectRef = UserProjectRef(firebase);
 
-  const u2aIdx = userAdventureRef.indexRefs.user.val;
-  let currentAdventureId, meetingsRef, missionsRef;
+  const u2aIdx = userProjectRef.indexRefs.user.val;
+  let currentProjectId, meetingsRef, missionsRef;
   if (!!u2aIdx) {
-    const adventureIds = u2aIdx[currentUid] && Object.keys(u2aIdx[currentUid]);
+    const projectIds = u2aIdx[currentUid] && Object.keys(u2aIdx[currentUid]);
 
-    currentAdventureId = adventureIds && adventureIds[0] || null;
+    currentProjectId = projectIds && projectIds[0] || null;
 
-    if (currentAdventureId) {
-      // get ready for adventure-related data
+    if (currentProjectId) {
+      // get ready for project-related data
       missionsRef = MissionsRef(firebase);
       meetingsRef = MeetingsRef(firebase);
     }
   }
 
-  const adventuresRef = userAdventureRef.refs.adventure;
-  const isReady = userAdventureRef.indexRefs.user.isLoaded &&
-                    isLoaded(currentAdventureId);
+  const projectsRef = userProjectRef.refs.project;
+  const isReady = currentUid && userProjectRef.indexRefs.user.isLoaded;
 
   return {
     currentUid,
-    currentAdventureId,
+    currentProjectId,
     
     isReady,
 
-    users: userAdventureRef.refs.user.val,
-    adventures: adventuresRef.val,
+    users: userProjectRef.refs.user.val,
+    projects: projectsRef.val,
     
     missions: missionsRef && missionsRef.val,
     meetings: meetingsRef && meetingsRef.val,
     
     u2aIdx,
-    a2uIdx: userAdventureRef.indexRefs.adventure.val,
+    a2uIdx: userProjectRef.indexRefs.project.val,
 
-    getUsersByAdventure: userAdventureRef.get_user_by_adventure
+    getUsersByProject: userProjectRef.get_user_by_project
   };
 })
 @firebaseConnect((props, firebase) => {
   const {
     currentUid,
-    currentAdventureId,
-    adventures
+    currentProjectId,
+    projects
   } = props;
 
   if (!!currentUid) {
     const paths = [
       UserInfoRef.userList.makeQuery(),
-      AdventuresRef.makeQuery()
+      ProjectsRef.makeQuery()
     ];
 
-    const currentAdventure = adventures && adventures[currentAdventureId];
-    if (!!currentAdventure) {
-      // get adventure-related data
+    const currentProject = projects && projects[currentProjectId];
+    if (!!currentProject) {
+      // get project-related data
       paths.push(
-        MissionsRef.makeQuery(currentAdventure.missionId),
-        MeetingsRef.makeQuery({adventureId: currentAdventureId})
+        MissionsRef.makeQuery(currentProject.missionId),
+        MeetingsRef.makeQuery({projectId: currentProjectId})
       );
     }
 
-    UserAdventureRef.addIndexQueries(paths, {
+    UserProjectRef.addIndexQueries(paths, {
       user: [currentUid]
     });
-    //console.log(paths, props.adventures);
+    //console.log(paths, props.projects);
     return paths;
   }
   else {
@@ -142,14 +142,14 @@ export default class MissionControlPage extends Component {
     return currentUserRef && currentUserRef.props.uid;
   }
 
-  renderMeetings(adventureData) {
+  renderMeetings(projectData) {
     const {
       meetings
     } = this.props;
 
-    return (<AdventureMeetingPanel 
-      {...adventureData}
-      partyMembers={adventureData.users}
+    return (<ProjectMeetingPanel 
+      {...projectData}
+      partyMembers={projectData.users}
       meetings={meetings}
             />);
   }
@@ -157,16 +157,16 @@ export default class MissionControlPage extends Component {
   render() {
     const {
       isReady,
-      currentAdventureId,
+      currentProjectId,
       children,
       users,
-      adventures,
+      projects,
       missions,
       u2aIdx,
       a2uIdx,
 
-      userAdventureRef,
-      getUsersByAdventure
+      userProjectRef,
+      getUsersByProject
     } = this.props;
 
     if (!isReady) {
@@ -174,37 +174,37 @@ export default class MissionControlPage extends Component {
       return (<LoadOverlay />);
     }
 
-    // TODO: 冒險者可以看到自己所有的 adventure
+    // TODO: 冒險者可以看到自己所有的 project
 
 
-    let currentAdventureOverview;
+    let currentProjectOverview;
     
-    const adventure = adventures && adventures[currentAdventureId];
-    if (adventure) {
-      let existingUsers = getUsersByAdventure(currentAdventureId);
+    const project = projects && projects[currentProjectId];
+    if (project) {
+      let existingUsers = getUsersByProject(currentProjectId);
 
 
       // TODO: render stuff based on current status
-      const adventureStatus = AdventureStatus.Go;
-      const adventureData = {
-        adventureId: currentAdventureId,
-        adventure,
+      const projectStatus = ProjectStatus.Go;
+      const projectData = {
+        projectId: currentProjectId,
+        project,
         users: existingUsers,
-        assignedGM: users && users[adventure.assignedGMUid],
-        adventureGuardian: users && users[adventure.guardianUid],
+        assignedGM: users && users[project.assignedGMUid],
+        projectGuardian: users && users[project.guardianUid],
 
-        mission: missions && missions[adventure.missionId]
+        mission: missions && missions[project.missionId]
       };
 
-      currentAdventureOverview = (<div>
-        <AdventureView {...adventureData} />
-        { /* <AdventurePrepView /> */ }
-        { this.renderMeetings(adventureData) }
+      currentProjectOverview = (<div>
+        <ProjectView {...projectData} />
+        { <ProjectControlView /> }
+        { /* this.renderMeetings(projectData) */ }
       </div>);
     }
     else {
-      currentAdventureOverview = (<Alert bsStyle="warning">
-        你目前沒有在進行任務。可以選擇任務並且找守門人註冊～
+      currentProjectOverview = (<Alert bsStyle="warning">
+        你目前沒有在進行專案。推薦選擇任務並且找守門人註冊新的～
       </Alert>);
     }
 
@@ -212,10 +212,10 @@ export default class MissionControlPage extends Component {
     return (
       <div>
         <Panel header="目前的任務">
-          { currentAdventureOverview }
+          { currentProjectOverview }
         </Panel>
         <Panel header="以前做過的任務">
-          TODO: adventure archive
+          TODO: project archive
         </Panel>
       </div>
     );

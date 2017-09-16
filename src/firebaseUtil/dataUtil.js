@@ -124,7 +124,7 @@ export function createChildVarGetterFromTemplateProps(pathTemplate, varNames) {
   };
 }
 
-export function getDataIn(obj, path, defaultValue = null) {
+export function getDataIn(obj, path, defaultValue = undefined) {
   path = path || '';
   path = path.toString();
   path = path.replace(/\//g, '.');    // convert to dot notation for lodash path access

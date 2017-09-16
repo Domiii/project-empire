@@ -3,7 +3,7 @@ import { hasDisplayRole } from 'src/core/users/Roles';
 import autoBind from 'react-autobind';
 import React, { PureComponent, PropTypes } from 'react';
 import { 
-  ButtonAdventure, Button
+  ButtonProject, Button
 } from 'react-bootstrap';
 
 import { FAIcon } from 'src/views/components/util';
@@ -12,13 +12,13 @@ import ConfirmModal, {
   DefaultButtonCreator
 } from 'src/views/components/util/ConfirmModal';
 
-export default class AdventureEditTools extends PureComponent {
+export default class ProjectEditTools extends PureComponent {
   static contextTypes = {
     currentUserRef: PropTypes.object
   };
 
   static propTypes = {
-    adventureId: PropTypes.string.isRequired,
+    projectId: PropTypes.string.isRequired,
     entryInfo: PropTypes.string,
 
     changeOrder: PropTypes.func,
@@ -45,22 +45,22 @@ export default class AdventureEditTools extends PureComponent {
   }
 
   changeOrderUp() {
-    const { adventureId, changeOrder } = this.props;
+    const { projectId, changeOrder } = this.props;
 
-    changeOrder(adventureId, -1);
+    changeOrder(projectId, -1);
   }
 
   changeOrderDown() {
-    const { adventureId, changeOrder } = this.props;
+    const { projectId, changeOrder } = this.props;
 
-    changeOrder(adventureId, 1);
+    changeOrder(projectId, 1);
   }
 
   get ChangeOrderButtons() {
     const { changeOrder } = this.props;
     if (!changeOrder) return null;
 
-    return (<ButtonAdventure>
+    return (<ButtonProject>
       <Button onClick={this.changeOrderUp}
         className="" bsSize="small" >
         <FAIcon name="caret-square-o-left" />
@@ -69,7 +69,7 @@ export default class AdventureEditTools extends PureComponent {
         className="" bsSize="small" >
         <FAIcon name="caret-square-o-right" />
       </Button>
-    </ButtonAdventure>);
+    </ButtonProject>);
   }
 
   get EditButton() {
@@ -84,17 +84,17 @@ export default class AdventureEditTools extends PureComponent {
 
   get DeleteButton() {
     const { 
-      adventureId,
+      projectId,
       entryInfo, 
       deleteEntry
     } = this.props;
 
     const modalProps = {
-      header: 'Delete Adventure?',
+      header: 'Delete Project?',
       body: entryInfo,
       ButtonCreator: DefaultButtonCreator,
       onConfirm: deleteEntry,
-      confirmArgs: adventureId
+      confirmArgs: projectId
     };
 
     return (

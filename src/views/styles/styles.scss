@@ -19,11 +19,11 @@ button:active { outline:none !important; }
   display: none !important;
 }
 
-.max-height {
+.full-height {
   height: 100%;
 }
 
-.max-width {
+.full-width {
   width: 100%;
 }
 
@@ -144,6 +144,16 @@ button:active { outline:none !important; }
   color: darkred;
 }
 
+.color-blue {
+  color: blue;
+}
+.color-lightblue {
+  color: lightblue;
+}
+.color-darkblue {
+  color: darkblue;
+}
+
 .background-red {
   background-color: red;
   background-image: none;
@@ -179,6 +189,12 @@ button:active { outline:none !important; }
  * #######################################################
  */
 
+.header {
+  // place on top of load overlays
+  position: relative;
+  z-index: 100;
+}
+
 .header-gavel-button {
 }
 
@@ -209,15 +225,38 @@ button:active { outline:none !important; }
  * #######################################################
  */
 
- .user-image-tiny {
+.user-image-tiny {
   width: 1em;
  }
 
- .user-tag {
-  /*display: flex;
-  align-items: center; /* align vertical */
- }
+//  .user-tag {
+//   /*display: flex;
+//   align-items: center; /* align vertical */
+//  }
 
+/**
+ * #######################################################
+ * App-specific classes: Project, Project, Mission + Sprints
+ * #######################################################
+ */
+
+.project-contributor {
+  max-width: 2em;
+  height: 2em;
+  position: relative;
+}
+
+.project-contributor-status-icon {
+  max-width: 1em;
+  height: 1em;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}
+
+.project-stage-arrow {
+  font-size: 5em;
+}
 
 /**
  * #######################################################

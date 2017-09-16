@@ -15,17 +15,17 @@
       }
     },
 
-    "adventures": {
+    "projects": {
       ".read": "auth !== null",
 
-      "$adventureId": {
+      "$projectId": {
         ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
       }
     },
 
     "meetings": {
       ".read": "auth !== null",
-      ".indexOn": ["adventureId"],
+      ".indexOn": ["projectId"],
 
       "$meetingId": {
         ".write": "auth !== null",
@@ -118,12 +118,12 @@
           ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
         }
       },
-      "adventureUsers": {
+      "projectUsers": {
         "user": {
           ".read": "auth !== null",
           ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
         },
-        "adventure": {
+        "project": {
           ".read": "auth !== null",
           ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
         }

@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import _ from 'lodash';
 import forEach from 'lodash/forEach';
 import first from 'lodash/first';
 import tail from 'lodash/tail';
@@ -114,7 +114,7 @@ function makeGetDataDefault(firebaseState, path, queryArgs) {
     return () => _cachedFetchPopulate(firebaseState, path, queryArgs);
   }
   return () => _cachedFetchPlain(firebaseState, path);
-};
+}
 
 /**
  * Provide path, relative to parent (root) path, given user-provided props object.
@@ -208,7 +208,7 @@ function _buildQueryFinal(path, args) {
     args.forEach(arg => {
       if (!isString(arg)) {
         throw new Error('invalid argument - must be string: ' + arg +
-          ' - ' + JSON.stringify(args) : '');
+          ' (' + arg && JSON.stringify(arg) + ')');
       }
     });
     return ({
@@ -623,12 +623,13 @@ function createRefWrapperBase() {
     }
 
     getAllData(pathOrPaths, defaultValue = null) {
-      const paths = isArray(pathOrPaths) ?
-        pathOrPaths : (!!pathOrPaths ? [pathOrPaths] : []);
+      const paths = 
+        isArray(pathOrPaths) ?
+          pathOrPaths : (
+            !!pathOrPaths ? [pathOrPaths] : []
+          );
 
-      // TODO: getData not quite working here?
-
-      // create object where paths as keys and data as values
+      // create object with paths as keys and data as values
       const result = reduce(paths,
         (returnObj, path) =>
           extend(returnObj, {
@@ -711,21 +712,24 @@ function createRefWrapperBase() {
 
     push(newChild) {
       if (this._groupBy) {
+        // TODO: this is still untested.
+        // this is a group with data split over multiple paths:
+        // push to first path, get id, and then use new id to set other paths
         const childrenPathsArr = Object.entries(this._childrenGetPushPaths);
-        const firstEntry = first(childrenPathsArr);
-        const otherEntries = tail(childrenPathsArr);
+        const firstPath = first(childrenPathsArr);
+        const otherPaths = tail(childrenPathsArr);
 
-        return this._doPushChild(newChild, ...firstEntry)
-          .then(childRef => {
+        return this._doPushChild(newChild, ...firstPath[1])
+          .then(firstNewRef => {
             // TODO: Handle more complex grouping scenarios
-            const newId = childRef.key;
-            const otherChildren =
-              otherEntries.map(([childName, childPath]) =>
-                this[`set_${childName}`](newChild[childName])
+            const newId = firstNewRef.key;
+            const otherNewRefs =
+              otherPaths.map(([childName, childPath]) =>
+                this[`set_${childName}`](newId, newChild[childName])
               );
             return Promise.all([
-              childRef,
-              ...otherChildren
+              firstNewRef,
+              ...otherNewRefs
             ]);
           });
       }

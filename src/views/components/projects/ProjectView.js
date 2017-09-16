@@ -14,28 +14,28 @@ import {
 } from 'react-bootstrap';
 
 
-import AdventureEditTools from './AdventureEditTools';
+import ProjectEditTools from './ProjectEditTools';
 import UserList, { UserBadge } from 'src/views/components/users/UserList';
 import Loading from 'src/views/components/util/loading';
 
 
 // TODO: render + allow editing of guardianNotes + gmNotes + partyNotes
 
-export default class AdventureView extends Component {
+export default class ProjectView extends Component {
   static contextTypes = {
     currentUserRef: PropTypes.object,
     lookupLocalized: PropTypes.func.isRequired
   };
 
   static propTypes = {
-    adventureId: PropTypes.string.isRequired,
-    adventure: PropTypes.object.isRequired,
+    projectId: PropTypes.string.isRequired,
+    project: PropTypes.object.isRequired,
     users: PropTypes.object,
-    adventureGuardian: PropTypes.object,
+    projectGuardian: PropTypes.object,
     assignedGM: PropTypes.object,
     canEdit: PropTypes.bool,
 
-    deleteAdventure: PropTypes.func
+    deleteProject: PropTypes.func
   };
 
   constructor() {
@@ -61,7 +61,7 @@ export default class AdventureView extends Component {
   get EmptyEl() {
     return (
       <Alert bsStyle="warning" style={{display: 'inline'}} className="no-padding">
-        <span>no adventurers have been added yet</span>
+        <span>no projects have been added yet</span>
       </Alert>
     );
   }
@@ -78,9 +78,9 @@ export default class AdventureView extends Component {
 
   editorHeader() {
     const { 
-      adventureId,
-      adventure,
-      deleteAdventure,
+      projectId,
+      project,
+      deleteProject,
       users,
       mission,
       canEdit
@@ -88,20 +88,20 @@ export default class AdventureView extends Component {
 
     const usersString = map(users, user => user && user.displayName).join(', ');
     const missionInfo = mission && `${mission.code} - ${mission.title}` || 'mission';
-    const adventureInfo = `${missionInfo} (${usersString})`;
+    const projectInfo = `${missionInfo} (${usersString})`;
 
     return (!canEdit || !this.IsGuardian) ? null : (
       <div>
-        <AdventureEditTools {...{
-          adventureId,
-          entryInfo: adventureInfo,
+        <ProjectEditTools {...{
+          projectId,
+          entryInfo: projectInfo,
 
           //changeOrder: 
 
           editing: this.IsEditing,
           toggleEdit: this.toggleEdit,
 
-          deleteEntry: deleteAdventure
+          deleteEntry: deleteProject
         }}/>
       </div>
     );
@@ -109,13 +109,13 @@ export default class AdventureView extends Component {
 
   render() {
     const {
-      adventure,
+      project,
       users,
       mission,
-      adventureGuardian,
+      projectGuardian,
       assignedGM,
 
-      adventureEditor
+      projectEditor
     } = this.props;
 
     const userEls = isEmpty(users) ? 
@@ -127,24 +127,25 @@ export default class AdventureView extends Component {
     const missionHeader = mission && `${mission.code} - ${mission.title}` ||
       <Loading />;
 
-    return (
-      <Panel header={missionHeader} bsStyle="info">
+    return (<div>
+      <h1>{missionHeader}</h1>
+      <Panel header={null} bsStyle="info">
         { 
           mission && (<div>
             { this.editorHeader() }
-            <p>Created: <Moment fromNow>{adventure.createdAt}</Moment></p>
+            <p>Created: <Moment fromNow>{project.createdAt}</Moment></p>
             <p>Guardian: {
-              !adventureGuardian ? 
+              !projectGuardian ? 
                 <span className="color-gray">no guardian</span> :
-                <UserBadge user={adventureGuardian} uid={adventure.guardianUid} />
+                <UserBadge user={projectGuardian} uid={project.guardianUid} />
             }</p>
             <p>GM: {
               !assignedGM ? 
                 <span className="color-gray">no assigned GM</span> :
-                <UserBadge user={assignedGM} uid={adventure.assignedGMUid} />
+                <UserBadge user={assignedGM} uid={project.assignedGMUid} />
             }</p>
             <div>
-              <span>Adventurers ({ size(users) }):</span> { userEls }
+              <span>Projects ({ size(users) }):</span> { userEls }
             </div>
             <div className="margin-half" />
             <Well>
@@ -152,10 +153,10 @@ export default class AdventureView extends Component {
 
               TODO: render complete mission preview
             </Well>
-            { !this.IsEditing ? null : adventureEditor })
+            { !this.IsEditing ? null : projectEditor }
           </div>)
          }
       </Panel>
-    );
+    </div>);
   }
 }

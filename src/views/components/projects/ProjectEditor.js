@@ -25,19 +25,19 @@ import {
 } from 'src/views/components/util';
 
 
-class _AdventureInfoFormContent extends Component {
+class _ProjectInfoFormContent extends Component {
   static contextTypes = {
     currentUserRef: PropTypes.object
   };
 
   static propTypes = {
-    adventureId: PropTypes.string.isRequired
+    projectId: PropTypes.string.isRequired
   };
 
   render() {
     const { currentUserRef } = this.context;
     const {
-      adventureId,
+      projectId,
 
       handleSubmit,
       pristine,
@@ -47,8 +47,8 @@ class _AdventureInfoFormContent extends Component {
 
     return (<form className="form-horizontal" 
         onSubmit={handleSubmit}>
-      <Field name="adventureId" value={adventureId} component="input" type="hidden" />
-      <FormSection name="adventure">
+      <Field name="projectId" value={projectId} component="input" type="hidden" />
+      <FormSection name="project">
         <FormInputField name="guardianNotes" label="Guardian Notes"
           component="textarea"
           inputProps={{
@@ -70,19 +70,19 @@ class _AdventureInfoFormContent extends Component {
   }
 }
 
-const _AdventureInfoForm = reduxForm({ enableReinitialize: true })(_AdventureInfoFormContent);
+const _ProjectInfoForm = reduxForm({ enableReinitialize: true })(_ProjectInfoFormContent);
 
-export const AdventureInfoForm = connect(
-  (state, { adventure, adventureId }) => {
+export const ProjectInfoForm = connect(
+  (state, { project, projectId }) => {
     return ({
-      form: 'adventure_' + adventureId,
+      form: 'project_' + projectId,
       initialValues: {
-        adventure,
-        adventureId
+        project,
+        projectId
       },
     });
   }
-)(_AdventureInfoForm);
+)(_ProjectInfoForm);
 
 function DeleteUserButton({open}) {
   return (<Button onClick={open} bsSize="small"
@@ -90,16 +90,16 @@ function DeleteUserButton({open}) {
     <FAIcon name="trash" />
   </Button>);
 }
-function makeExistingUserEl(deleteUserFromAdventure) {
+function makeExistingUserEl(deleteUserFromProject) {
   return ({user, uid}) => (<Badge>
     <span className="user-tag">
       <img src={user.photoURL} className="user-image-tiny" /> &nbsp;
       {user.displayName} &nbsp;
       <ConfirmModal
-        header="Delete user from adventure?"
+        header="Delete user from project?"
         body={(<span>{user.displayName}</span>)}
         ButtonCreator={DeleteUserButton}
-        onConfirm={deleteUserFromAdventure}
+        onConfirm={deleteUserFromProject}
         confirmArgs={uid}
       />
     </span>
@@ -114,54 +114,54 @@ function AddUserButton({open}) {
     <FAIcon name="plus" />
   </Button>);
 }
-function makeAddUserEl(addUserToAdventure) {
+function makeAddUserEl(addUserToProject) {
   return ({user, uid}) => (<Badge>
     <span className="user-tag">
       <img src={user.photoURL} className="user-image-tiny" /> &nbsp;
       {user.displayName} &nbsp;
 
       <ConfirmModal
-        header="Add user to adventure?"
+        header="Add user to project?"
         body={(<span>{user.displayName}</span>)}
         ButtonCreator={AddUserButton}
-        onConfirm={addUserToAdventure}
+        onConfirm={addUserToProject}
         confirmArgs={uid}
       />
     </span>
   </Badge>);
 }
 
-export function AdventureUserEditor({
+export function ProjectUserEditor({
   existingUsers,
   addableUsers,
 
-  deleteUserFromAdventure,
-  addUserToAdventure
+  deleteUserFromProject,
+  addUserToProject
 }) {
   return (<Flex row={true} alignItems="start">
     <Item>
       <UserList users={existingUsers} 
-          renderUser={makeExistingUserEl(deleteUserFromAdventure)} />
+          renderUser={makeExistingUserEl(deleteUserFromProject)} />
     </Item>
     <Item>
       <UserList users={addableUsers} 
-          renderUser={makeAddUserEl(addUserToAdventure)} />
+          renderUser={makeAddUserEl(addUserToProject)} />
     </Item>
   </Flex>);
 }
 
 
 
-export default class AdventureEditor extends Component {
+export default class ProjectEditor extends Component {
   static propTypes = {
-    adventureId: PropTypes.string.isRequired,
-    adventure: PropTypes.object.isRequired,
+    projectId: PropTypes.string.isRequired,
+    project: PropTypes.object.isRequired,
     existingUsers: PropTypes.object.isRequired,
     addableUsers: PropTypes.object.isRequired,
 
-    setAdventure: PropTypes.func.isRequired,
-    addUserToAdventure: PropTypes.func.isRequired,
-    deleteUserFromAdventure: PropTypes.func.isRequired
+    setProject: PropTypes.func.isRequired,
+    addUserToProject: PropTypes.func.isRequired,
+    deleteUserFromProject: PropTypes.func.isRequired
   };
 
   constructor() {
@@ -171,54 +171,54 @@ export default class AdventureEditor extends Component {
   }
 
 
-  addUserToAdventure(uid) {
+  addUserToProject(uid) {
     const {
-      adventureId,
-      addUserToAdventure
+      projectId,
+      addUserToProject
     } = this.props;
 
-    return addUserToAdventure({
+    return addUserToProject({
       user: uid,
-      adventure: adventureId
+      project: projectId
     });
   }
 
-  deleteUserFromAdventure(uid) {
+  deleteUserFromProject(uid) {
     const {
-      adventureId,
-      deleteUserFromAdventure
+      projectId,
+      deleteUserFromProject
     } = this.props;
 
-    return deleteUserFromAdventure({
+    return deleteUserFromProject({
       user: uid,
-      adventure: adventureId
+      project: projectId
     });
   }
 
   render() {
     const {
-      adventureId,
-      adventure,
+      projectId,
+      project,
       existingUsers,
       addableUsers,
 
-      setAdventure
+      setProject
     } = this.props;
 
 
     return (
       <div>
-        <AdventureInfoForm 
-          onSubmit={ setAdventure }
-          {...{ adventure, adventureId }}
+        <ProjectInfoForm 
+          onSubmit={ setProject }
+          {...{ project, projectId }}
         />
 
-        <AdventureUserEditor {...{
+        <ProjectUserEditor {...{
           existingUsers,
           addableUsers,
 
-          addUserToAdventure: this.addUserToAdventure,
-          deleteUserFromAdventure: this.deleteUserFromAdventure
+          addUserToProject: this.addUserToProject,
+          deleteUserFromProject: this.deleteUserFromProject
         }} />
       </div>
     );

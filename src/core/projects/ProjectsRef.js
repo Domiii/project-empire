@@ -1,5 +1,5 @@
 /**
- * Adventures
+ * Projects
  */
 
 
@@ -44,7 +44,15 @@ const DefaultPrivs = {
   write: ['reviewer']   // fill out checklist (write data)
 };
 
-const Steps = [
+export const StageStatus = {
+  None: 0,
+  NotStarted: 1,
+  Started: 2,
+  Finished: 3,
+  Failed: 4
+};
+
+export const ProjectStages = [
   {
     id: 'prepare',
     title: '[進階] 開始執行之前的暖身開會',
@@ -55,18 +63,21 @@ const Steps = [
   },
   {
     id: 'sprint',
+    title: 'Sprint',
     canRepeat: true,
     children: [
       {
         id: 'execution',
         title: '執行階段',
-        description: '就做一做吧～',
+        description: '就做一做～',
+        noStatus: true
       },
       {
         id: 'partyPrepareMeeting',
-        title: '團隊鑑定的準備（團隊）',
+        title: '團隊 準備 團隊鑑定',
         checklists: [
-          'partyPrepareMeeting': {
+          {
+            id: 'partyPrepareMeeting',
             read: ['reviewer'],
             write: ['party']
           }
@@ -74,9 +85,10 @@ const Steps = [
       },
       {
         id: 'reviewerPrepareMeeting',
-        title: '團隊鑑定的準備（支持者）',
+        title: '支持者 準備 團隊鑑定',
         checklists: [
-          'reviewerPrepareMeeting': {
+          {
+            id: 'reviewerPrepareMeeting',
             read: ['reviewer'],
             write: ['reviewer']
           }
@@ -86,11 +98,13 @@ const Steps = [
         id: 'holdMeeting',
         title: '團隊鑑定',
         checklists: [
-          'reviewerMeetingRecords': {
+          {
+            id: 'reviewerMeetingRecords',
             read: ['reviewer'],
             write: ['reviewer']
           },
-          'partyMeetingRecords': {
+          {
+            id: 'partyMeetingRecords',
             write: ['party']
           }
         ]
@@ -100,11 +114,13 @@ const Steps = [
         title: '[進階] 團隊鑑定過後',
         level: 2,
         checklists: [
-          'reviewerPostSpringReflection': {
+          {
+            id: 'reviewerPostSpringReflection',
             read: ['all'],
             write: ['reviewer']
           },
-          'partyPostSpringReflection': {
+          {
+            id: 'partyPostSpringReflection',
             write: ['party']
           }
         ]
@@ -114,33 +130,33 @@ const Steps = [
         // decisionMaker: 'reviewer', // TODO: party voting?
         next: [
           'sprint',
-          'finish'
+          'wrapup'
         ]
       }
     ]
   },
   {
-    id: 'finish'
-    // TODO
+    id: 'wrapup',
+    title: '專案總點：一起思考過程喜歡與不喜歡的～'
   }
 ];
 
-const AdventuresRef = makeRefWrapper({
-  pathTemplate: '/adventures',
+const ProjectsRef = makeRefWrapper({
+  pathTemplate: '/projects',
 
   methods: {
 
   },
 
   children: {
-    adventure: {
-      pathTemplate: '$(adventureId)',
+    project: {
+      pathTemplate: '$(projectId)',
 
       children: {
         assignedGMUid: 'assignedGMUid',
         missionId: 'missionId',
         guardianUid: 'guardianUid',
-        adventureStatus: 'adventureStatus',
+        projectStatus: 'projectStatus',
 
         gmNotes: 'gmNotes',
         guardianNotes: 'guardianNotes',
@@ -150,14 +166,14 @@ const AdventuresRef = makeRefWrapper({
   }
 });
 
-export default AdventuresRef;
+export default ProjectsRef;
 
-export const UserAdventureRef = m2mIndex(
-  'adventureUsers',
+export const UserProjectRef = m2mIndex(
+  'projectUsers',
 
   'user',
-  'adventure',
+  'project',
   
   UserInfoRef.userList,
-  AdventuresRef
+  ProjectsRef
 );

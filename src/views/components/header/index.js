@@ -47,7 +47,7 @@ export default class Header extends PureComponent {
 
   openInNewTab(evt, url) {
     evt.preventDefault();
-    window.open(url,'_blank');
+    window.open(url, '_blank');
   }
 
   switchToEn() {
@@ -82,7 +82,7 @@ export default class Header extends PureComponent {
         <Button onClick={this.toggleAdminView} bsStyle={isAdminView && 'success' || 'danger'}
           className="header-gavel-button"
           active={isAdminView}>
-          <FAIcon name="gavel"/>
+          <FAIcon name="gavel" />
         </Button>
         <span className="padding-half" />
       </NavItem>
@@ -129,20 +129,20 @@ export default class Header extends PureComponent {
     return (<div>
       { warningEl }
       <header className="header">
-        <Navbar inverse collapseOnSelect className="no-margin">
+        <Navbar inverse collapseOnSelect className=" no-margin">
           <Navbar.Header>
             <Navbar.Brand>
-              <Link to='/' onlyActiveOnIndex={true}><span>Home</span></Link>
+              <Link to="/" onlyActiveOnIndex={true}><span>Home</span></Link>
             </Navbar.Brand>
             <Navbar.Toggle />
           </Navbar.Header>
           <Navbar.Collapse>
             <Nav>
-              <LinkContainer to='/mymissions'>
-                <NavItem eventKey={2}>Mission Control</NavItem>
+              <LinkContainer to="/mymissions">
+                <NavItem eventKey={2}>My Projects</NavItem>
               </LinkContainer>
-              <LinkContainer to='/adventures'>
-                <NavItem eventKey={3}>Adventures</NavItem>
+              <LinkContainer to="/projects">
+                <NavItem eventKey={3}>All Projects</NavItem>
               </LinkContainer>
               { isAdminView &&
                 <LinkContainer to='/gm'>
@@ -163,7 +163,7 @@ export default class Header extends PureComponent {
                 </MenuItem>
                 { !!userData && <MenuItem divider /> }
                 { !!userData && (
-                  <MenuItem eventKey="user-drop-logout" onClick={signOut}>
+                  <MenuItem eventKey="user-drop-logout" onClick={ signOut }>
                     <FAIcon name="close" className="color-red" /> Sign Out
                   </MenuItem>)
                 }
@@ -174,4 +174,4 @@ export default class Header extends PureComponent {
       </header>
     </div>);
   }
-};
+}
