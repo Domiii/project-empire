@@ -18,8 +18,9 @@ import isArray from 'lodash/isArray';
 import isEmpty from 'lodash/isEmpty';
 import map from 'lodash/map';
 import noop from 'lodash/noop';
+import includes from 'lodash/includes';
 
-// use `stageId` to encode position in graph
+// use `stageId` to encode position in tree
 
 export function decodeStageId(idStr, allStages) {
   const pairs = idStr.split(',');
@@ -41,76 +42,127 @@ export function asArray(elOrArray) {
 }
 
 class StageDefNode {
+  stageTree;
+  parent;
+  stageDef;
   isLoop;
-  nDepth;
-  nOrder;
+  depth;
+  order;
+
+  /**
+   * Previous sibling in line
+   */
   previous;
+  
+  /**
+   * Next sibling in line
+   */
   next;
 
+  /**
+   * First child node (if node has children)
+   */
+  firstChild;
+
+  constructor(stageTree, parent, stageDef, depth, order) {
+    this.stageTree = stageTree;
+    this.parent = parent;
+    this.stageDef = stageDef;
+    this.isLoop = stageDef.isLoop || false;
+    this.depth = depth;
+    this.order = order;
+  }
+  
   get IsRoot() {
-    return isEmpty(this.previous);
+    return !this.previous && !this.parent;
   }
 
-  get HasNext() {
-    return !isEmpty(this.next);
+  get IsLeaf() {
+    return !this.next;
   }
 
-  constructor(stageDef, nDepth, nOrder, previousDefOrDefs) {
-    this.isLoop = stageDef.isLoop;
-    this.nDepth = nDepth;
-    this.nOrder = nOrder;
-    this.previous = asArray(previousDefOrDefs);
-    this.next = [];
+  mapDFS(cb) {
+    cb = cb || noop;
+    const arr = [];
+    this.forEachDFS(node => arr.push(cb(node)));
+    return arr;
   }
+  
 
   /**
-   * Run callback on all nodes in sub graph.
+   * Run callback on all nodes in sub tree.
    * Returns set of all visited nodes.
    */
-  forEachNodeDFS(cb) {
-    cb = cb || noop;
-    let node = this;
+  forEachDFS(cb) {
+    const { next, firstChild } = this;
 
-    // Note: we need to remember the set of all visited nodes to prevent infinite loops
-    const visited = new Set();
-    do {
-      cb(this);
-      visited.add(this);
+    cb && cb(this);
 
-      this.next.forEach(nextNode => {
-        // make sure, we don't go back up and don't visit any node twice
-        if (nextNode.nDepth >= this.nDepth && !visited.has(nextNode)) {
-          cb(nextNode);
-          visited.add(nextNode);
+    // go down
+    firstChild && firstChild.forEachDFS(cb);
 
-          nextNode.forEachNodeDFS(cb);
-        }
-      });
-    } while (!!node);
-    return visited;
+    // go to next sibling
+    next && next.forEachDFS(cb);
+  }
+
+  // iterate over this node and all it's siblings (in order)
+  forEachInLine(cb) {
+    if (!cb) return;
+
+    // call cb on first child
+    cb(this);
+
+    // keep going...
+    this.forEachSiblingAfterThis(cb);
+  }
+
+  // iterate over following siblings
+  forEachSiblingAfterThis(cb) {
+    const { next } = this;
+    next && cb && next.forEachInLine(cb);
+  }
+
+  mapLine(cb) {
+    const arr = [];
+    this.forEachInLine(node => arr.push(cb(node)));
+    return arr;
   }
 
   /**
-   * Return all leafs of subgraph
+   * Return the last sibling, following this node
    */
-  getLeafs() {
-    const leafs = [];
-    this.forEachNodeDFS(node => {
-      if (!node.HasNext) {
-        leafs.push(node);
-      }
-    });
-    return leafs;
+  getLastSibling() {
+    let node = this;
+    let { next } = node;
+
+    while (next) {
+      node = next;
+      next = node.next;
+    }
+
+    return node;
   }
 }
 
-// StageDefGraph + StagePath are the main data structures for navigating the stagegraph
-class StageDefGraph {
+// StageDefTree + StagePath are the main data structures for navigating the stagetree
+class StageDefTree {
   root;
 
   constructor(stageDefs) {
     this._validateAndSanitizeStages(stageDefs);
-    this.root = this._createSubGraph(stageDefs);
+    this.root = this._createSubTree(stageDefs);
+  }
+
+  hasEdge(from, to) {
+    
+  }
+
+  mapDFS(...args) {
+    return this.root.mapDFS(...args);
+  }
+  
+  forEachDFS(...args) {
+    return this.root.forEachDFS(...args);
   }
 
   _validateAndSanitizeStages(stageDefs) {
@@ -119,51 +171,39 @@ class StageDefGraph {
     // });
   }
 
-  _createSubGraph(stageDefs, parentNode = null, nDepth = 0) {
+  _createSubTree(stageDefs, parentNode = null, depth = 0) {
     console.assert(isArray(stageDefs));
 
     if (!stageDefs) {
       return null;
     }
 
-    let previousNode = parentNode;
+    let previousNode = null;
     let firstNode = null;
     for (let i = 0; i < stageDefs.length; ++i) {
       const stageDef = stageDefs[i];
-      const { children } = stageDef;
-      const node = new StageDefNode(stageDefs[i], nDepth, i, previousNode);
+      const node = new StageDefNode(this, parentNode, stageDef, depth, i);
 
       // remember first node, so we can return it at the end
       firstNode = firstNode || node;
 
       if (previousNode) {
-        // add edge from previous to current node
-        previousNode.next.push(node);
+        // add linkage beetween siblings
+        previousNode.next = node;
+        node.previous = previousNode;
       }
       
-      // create child nodes:
-      //let firstChildNode = children && this._createSubGraph(children, node, nDepth+1) || null;
-      let firstChildNode = null;
-      
-      if (stageDef.isLoop) {
-        // "loop nodes" have an extra edge back from the last child
-        // NOTE: `getLeafs` only works now. Last child will link back to loop node.
-        const leafs = firstChildNode && firstChildNode.getLeafs() || null;
-        node.previous.push(leafs || node);
-        
-        // in case, "loop node" has no children, 
-        //  it has a "self-loop" or "edge connected to itself"
-        firstChildNode = firstChildNode || node;
-      }
+      // create child nodes
+      const { children } = stageDef;
+      children && this._createSubTree(children, node, depth+1) || null;
 
-      firstChildNode && node.next.push(firstChildNode);
+      // move to next
       previousNode = node;
     }
+    if (!!parentNode) {
+      parentNode.firstChild = firstNode;
+    }
     return firstNode;
-  }
-
-  hasEdge(from, to) {
-    
   }
 }
 
@@ -210,7 +250,7 @@ class StagePath {
 }
 
 export function makeStageId(stageDef, previousStageId, previousStage) {
-  // TODO: How to handle going up or down one level in the stage definition graph?
+  // TODO: How to handle going up or down one level in the stage definition tree?
   let pairs = [];
   let current = stageDef;
   while (!!current) {
@@ -300,7 +340,7 @@ export const StageStatus = {
   Failed: 4
 };
 
-export const ProjectStages = new StageDefGraph([
+export const ProjectStageTree = new StageDefTree([
   {
     id: 'prepare',
     title: '[進階] 開始執行之前的暖身開會',

@@ -1,5 +1,5 @@
 import {
-  ProjectStages,
+  ProjectStageTree,
   StageStatus
 } from 'src/core/projects/ProjectStagesRef';
 
@@ -19,6 +19,7 @@ import {
 
 import FAIcon from 'src/views/components/util/FAIcon';
 
+
 // ####################################################
 // Getters + Enums
 // ####################################################
@@ -27,7 +28,7 @@ function getStageStatus(stage) {
   if (stage.noStatus) {
     return StageStatus.None;
   }
-  if (stage.id === 'prepare') {
+  if (stage.stageDef.id === 'prepare') {
     return StageStatus.Finished;
   }
   return StageStatus.None;
@@ -42,6 +43,7 @@ function getStageContributorStatus(user, stage) {
   // TODO: How to update or determine the stage status of any contributor?
   return 1;
 }
+
 
 // ####################################################
 // Renderers
@@ -106,7 +108,7 @@ StageStatusIcon.propTypes = {
 };
 
 function StageContributorIcon({user, status, groupName}) {
-  // TODO: party member vs. reviewer
+  // TODO: groupName classes
   const classes = 'project-contributor project-contributor-' + groupName;
   return (
     <div className={classes} style={{backgroundImage: 'url(' + user.photoURL + ')'}}>
@@ -124,20 +126,21 @@ StageContributorIcon.propTypes = {
 };
 
 // Render icon + status of all responsible contributors for given stage
-function StageStatusBar({stage}) {
-  const stageContributors = getStageContributors(stage);
+function StageStatusBar({stageNode}) {
+  const stageContributors = getStageContributors(stageNode);
   //return (<StageStatusIcon status={status} />);
   return (<div>
     { map(stageContributors, user =>
       <StageContributorIcon 
+        groupName={'???'}
         user={user}
-        status={getStageContributorStatus(user, stage)}
+        status={getStageContributorStatus(user, stageNode)}
       /> )
     }
   </div>);
 }
 StageStatusBar.propTypes = {
-  stage: PropTypes.object.isRequired
+  stageNode: PropTypes.object.isRequired
 };
 
 
@@ -165,79 +168,78 @@ function interject(arr, cb) {
 
 
 // ####################################################
-// Project graph + stage logic
+// Project tree + stage logic
 // ####################################################
 
-export function ProjectStageView({node}) {
-  const title = stage.title;
-  const status = getStageStatus(stage);
+export function ProjectStageView({stageNode}) {
+  const stageDef = stageNode.stageDef;
+  const title = stageDef.title;
+
+  const order = stageNode.order;
+  const status = getStageStatus(stageNode);
   const bsStyle = statusBsStyles[status];
-  const otherEls = stage.children && (<div>
-    <Well>{stage.description}</Well>
-    <ProjectStagesList stages={stage.children} />
-  </div>);
 
   const header = (
     <Flex row justifyContent="space-between" alignItems="center">
       <Item>
-        <span>{`${i+1}. ${title}`}</span>
+        <span>{`${order+1}. ${title}`}</span>
       </Item>
       <Item>
-        <StageStatusBar stage={stage} />
+        <StageStatusBar stageNode={stageNode} />
       </Item>
     </Flex>
   );
 
-
-// TODO: render actual view for stage
-
   return (<div>
-    <Panel header={header} className="no-margin"
+    <Panel header={header} className="no-margin no-shadow no-border project-stage-panel"
       bsStyle={bsStyle}>
-      {otherEls}
+      { stageNode.firstChild && (<div>
+        <ProjectStagesView stageNode={stageNode.firstChild} />
+       </div>) }
     </Panel>
   </div>);
 }
 ProjectStageView.propTypes = {
-  node: PropTypes.object.isRequired
+  stageNode: PropTypes.object.isRequired
 };
 
-function ProjectStageArrow({previousStage}) {
-  const status = getStageStatus(previousStage);
+function ProjectStageArrow({previousNode}) {
+  const status = getStageStatus(previousNode);
   const style = statusStyles[status];
   return (<FAIcon name="arrow-down" size="4em" style={style} />);
 }
 ProjectStageArrow.propTypes = {
-  previousStage: PropTypes.object.isRequired
+  previousNode: PropTypes.object.isRequired
 };
 
-export function ProjectStagesList({stages}) {
-  // interject stages with arrows
-  stages = filter(stages, stage => !!stage.id);
-  let els = map(stages, (stage, i) => {
-    const nextStage = (i < stages.length-1) && stages[i+1];
-    return (<div key={i} className="full-width">
-      <Item className="full-width">
-        <ProjectStageView i={i} 
-          stage={stage} stages={stages}
-        />
-      </Item>
-      { !!nextStage && 
-        <Item style={{display: 'flex'}} justifyContent="center" flex="1" >
-          <ProjectStageArrow previousStage={stage} />
-        </Item>
-      }
-    </div>);
-  });
-
+export function ProjectStagesView({stageNode}) {
+  // interject node views with arrows
   return (
     <Flex column justifyContent="center" alignItems="center">
-      { els }
+      { 
+        stageNode.mapLine(node => {
+          const order = node.order;
+          return (<div key={order} className="full-width">
+            {
+              <Item className="full-width">
+                <ProjectStageView
+                  stageNode={node}
+                />
+              </Item>
+            }
+            { !!node.next && 
+              <Item style={{display: 'flex'}} justifyContent="center" flex="1" >
+                <ProjectStageArrow previousNode={node} />
+              </Item>
+            }
+          </div>);
+        })
+      }
     </Flex>
   );
 }
-ProjectStagesList.propTypes = {
-  stages: PropTypes.array.isRequired
+ProjectStagesView.propTypes = {
+  stageNode: PropTypes.object.isRequired
 };
 
 // ####################################################
@@ -246,6 +248,6 @@ ProjectStagesList.propTypes = {
 
 export default function ProjectControlView() {
   return (
-    <ProjectStagesList stages={ProjectStages} />
+    <ProjectStagesView stageNode={ProjectStageTree.root} />
   );
 }

@@ -93,7 +93,7 @@ button:active { outline:none !important; }
 .no-border {
   border: 0 !important;
 }
-.no-box-shadow {
+.no-shadow {
   box-shadow: none !important;
 }
 
@@ -354,4 +354,14 @@ button:active { outline:none !important; }
   display: flex;
   align-items: stretch;
   justify-content: space-around;
+}
+
+
+
+.panel .panel .panel {
+  margin-left: 65px !important;
+}
+
+.project-stage-panel > .panel-body {
+  padding: 0 !important;
 }
