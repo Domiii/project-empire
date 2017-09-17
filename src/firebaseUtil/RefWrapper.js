@@ -471,7 +471,6 @@ function createWrapperFunc(parent, WrapperClass, getPath, groupBy, getChildVars)
     props = props || EmptyObject;
 
     let path = getPath(pathArgs);
-    path = path.endsWith('/') ? path.substring(0, path.length - 1) : path;
 
     if (!firebaseState) {
       throw new Error('invalid ref wrapper initialization, missing `firebase` data root: ' + path);

@@ -14,7 +14,7 @@ export default class Loading extends PureComponent {
   }
 
   render() {
-    let { 
+    let {
       message,
       block
      } = this.props;

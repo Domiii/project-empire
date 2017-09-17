@@ -13,6 +13,7 @@ import {
   LinkContainer
 } from 'react-router-bootstrap';
 
+import Loading from 'src/views/components/util/loading';
 import { FAIcon } from 'src/views/components/util';
 
 export default class Header extends PureComponent {
@@ -78,7 +79,7 @@ export default class Header extends PureComponent {
 
     // elements
     const adminToolsEL = (!currentUserRef || !currentUserRef.isAdmin()) ? null : (
-      <NavItem className='header-right'>
+      <NavItem className="header-right">
         <Button onClick={this.toggleAdminView} bsStyle={isAdminView && 'success' || 'danger'}
           className="header-gavel-button"
           active={isAdminView}>
@@ -88,18 +89,24 @@ export default class Header extends PureComponent {
       </NavItem>
     );
 
-    const userToolsEl = (!currentUserRef || !currentUserRef.val) ? null : (
-      <NavItem className='header-right'>
-        <ButtonGroup>
-          <Button active={lang === 'en'} onClick={this.switchToEn} bsSize="small">
-            EN
-          </Button>
-          <Button active={lang === 'zh'} onClick={this.switchToZh} bsSize="small">
-            中文
-          </Button>
-        </ButtonGroup>
-      </NavItem>
-    );
+    let userToolsEl;
+    if (isLoading) {
+      userToolsEl = (<NavItem className="header-right"><Loading /></NavItem>);
+    }
+    else {
+      userToolsEl = !currentUserRef.val ? null : (
+        <NavItem className="header-right">
+          <ButtonGroup>
+            <Button active={lang === 'en'} onClick={this.switchToEn} bsSize="small">
+              EN
+            </Button>
+            <Button active={lang === 'zh'} onClick={this.switchToZh} bsSize="small">
+              中文
+            </Button>
+          </ButtonGroup>
+        </NavItem>
+      );
+    }
 
     const profileEl = (userData && 
       <MenuItem eventKey="user-drop-profile" onClick={this.gotoProfile}>
@@ -153,13 +160,12 @@ export default class Header extends PureComponent {
             <Nav pullRight className="header-right-container">
               { adminToolsEL }
               { userToolsEl }
-              <NavDropdown eventKey="more-drop" id="user-dropdown" title={
-                   <FAIcon name="cog" />
-                }>
+              <NavDropdown eventKey="more-drop" 
+                id="user-dropdown" title={<FAIcon name="bars" />}>
                 { profileEl }
                 { !!userData && <MenuItem divider /> }
                 <MenuItem eventKey="more-drop-sand" onClick={ this.gotoGit }>
-                 <FAIcon name="github" /> View Source Code
+                  <FAIcon name="github" /> View Source Code
                 </MenuItem>
                 { !!userData && <MenuItem divider /> }
                 { !!userData && (

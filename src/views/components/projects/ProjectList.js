@@ -22,7 +22,7 @@ import Select from 'react-select';
 
 import { FAIcon } from 'src/views/components/util';
 
-import ProjectView from './ProjectView';
+import ProjectPreview from './ProjectPreview';
 import ProjectEditor from './ProjectEditor';
 
 
@@ -239,7 +239,7 @@ export default class ProjectList extends Component {
         let existingUsers = getUsersByProject(projectId);
 
         return (<li key={projectId} className="list-group-item">
-          <ProjectView
+          <ProjectPreview
           {...{
             canEdit: true,
             projectId,

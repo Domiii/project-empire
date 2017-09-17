@@ -2,18 +2,22 @@ import DBStatusRef from 'src/core/DBStatusRef';
 import { UserInfoRef } from 'src/core/users';
 import { createSelector } from 'reselect';
 
+import isEqual from 'lodash/isEqual';
+
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import autoBind from 'react-autobind';
 import { 
   firebaseConnect,
   getFirebase
-} from 'react-redux-firebase'
+} from 'react-redux-firebase';
 import Header from './components/header';
 import { FAIcon } from 'src/views/components/util';
 import { lookupLocalized } from 'src/util/localizeUtil';
 
 import { Overlay, LoadOverlay } from 'src/views/components/overlays';
+
+
 
 @firebaseConnect((props, firebase) => {
   const paths = [

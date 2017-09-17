@@ -204,6 +204,7 @@ button:active { outline:none !important; }
 .header-right-container {
   height: 100%;
   display: flex;
+  flex-direction: row nowrap;
   justify-content: center;
   align-items: center;
 }
@@ -354,6 +355,10 @@ button:active { outline:none !important; }
   display: flex;
   align-items: stretch;
   justify-content: space-around;
+}
+
+.space {
+  margin: 0.5em;
 }
 
 

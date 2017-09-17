@@ -180,7 +180,7 @@ rules:
   no-unneeded-ternary: 0
   no-unreachable: 2
   no-unsafe-finally: 0
-  no-unused-expressions: 2
+  no-unused-expressions: [2, { "allowShortCircuit": true }]
   no-unused-labels: 2
   no-unused-vars: [1, {vars: "all", args: "after-used"}]
   no-use-before-define: 0

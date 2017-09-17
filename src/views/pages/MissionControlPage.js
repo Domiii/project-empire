@@ -1,7 +1,6 @@
 import ProjectsRef, { UserProjectRef } from 'src/core/projects/ProjectsRef';
 import UserInfoRef from 'src/core/users/UserInfoRef';
 import MissionsRef from 'src/core/missions/MissionsRef';
-import MeetingsRef from 'src/core/projects/MeetingsRef';
 
 import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
@@ -23,9 +22,9 @@ import {
 import { LoadOverlay } from 'src/views/components/overlays';
 import { FAIcon } from 'src/views/components/util';
 
-import ProjectView from 'src/views/components/projects/ProjectView';
+import ProjectPreview from 'src/views/components/projects/ProjectPreview';
 import ProjectControlView from 'src/views/components/projects/ProjectControlView';
-import { ProjectMeetingPanel } from 'src/views/components/projects/MeetingView';
+//import { ProjectMeetingPanel } from 'src/views/components/projects/MeetingView';
 import { UserBadge } from 'src/views/components/users/UserList';
 
 const {
@@ -51,7 +50,7 @@ const ProjectStatus = {
   const userProjectRef = UserProjectRef(firebase);
 
   const u2aIdx = userProjectRef.indexRefs.user.val;
-  let currentProjectId, meetingsRef, missionsRef;
+  let currentProjectId, missionsRef;
   if (!!u2aIdx) {
     const projectIds = u2aIdx[currentUid] && Object.keys(u2aIdx[currentUid]);
 
@@ -60,7 +59,6 @@ const ProjectStatus = {
     if (currentProjectId) {
       // get ready for project-related data
       missionsRef = MissionsRef(firebase);
-      meetingsRef = MeetingsRef(firebase);
     }
   }
 
@@ -68,52 +66,52 @@ const ProjectStatus = {
   const isReady = currentUid && userProjectRef.indexRefs.user.isLoaded;
 
   return {
-    currentUid,
-    currentProjectId,
+    isReady: true
+    // currentUid,
+    // currentProjectId,
     
-    isReady,
+    // isReady,
 
-    users: userProjectRef.refs.user.val,
-    projects: projectsRef.val,
+    // users: userProjectRef.refs.user.val,
+    // projects: projectsRef.val,
     
-    missions: missionsRef && missionsRef.val,
-    meetings: meetingsRef && meetingsRef.val,
+    // missions: missionsRef && missionsRef.val,
     
-    u2aIdx,
-    a2uIdx: userProjectRef.indexRefs.project.val,
+    // u2aIdx,
+    // a2uIdx: userProjectRef.indexRefs.project.val,
 
-    getUsersByProject: userProjectRef.get_user_by_project
+    // getUsersByProject: userProjectRef.get_user_by_project
   };
 })
 @firebaseConnect((props, firebase) => {
-  const {
-    currentUid,
-    currentProjectId,
-    projects
-  } = props;
+  // const {
+  //   currentUid,
+  //   currentProjectId,
+  //   projects
+  // } = props;
 
-  if (!!currentUid) {
-    const paths = [
-      UserInfoRef.userList.makeQuery(),
-      ProjectsRef.makeQuery()
-    ];
+  // if (!!currentUid) {
+  //   const paths = [
+  //     UserInfoRef.userList.makeQuery(),
+  //     ProjectsRef.makeQuery()
+  //   ];
 
-    const currentProject = projects && projects[currentProjectId];
-    if (!!currentProject) {
-      // get project-related data
-      paths.push(
-        MissionsRef.makeQuery(currentProject.missionId),
-        MeetingsRef.makeQuery({projectId: currentProjectId})
-      );
-    }
+  //   const currentProject = projects && projects[currentProjectId];
+  //   if (!!currentProject) {
+  //     // get project-related data
+  //     paths.push(
+  //       MissionsRef.makeQuery(currentProject.missionId)
+  //     );
+  //   }
 
-    UserProjectRef.addIndexQueries(paths, {
-      user: [currentUid]
-    });
-    //console.log(paths, props.projects);
-    return paths;
-  }
-  else {
+  //   UserProjectRef.addIndexQueries(paths, {
+  //     user: [currentUid]
+  //   });
+  //   //console.log(paths, props.projects);
+  //   return paths;
+  // }
+  // else 
+  {
     return EmptyArray;
   }
 })
@@ -197,15 +195,18 @@ export default class MissionControlPage extends Component {
       };
 
       currentProjectOverview = (<div>
-        <ProjectView {...projectData} />
-        { <ProjectControlView /> }
+        <ProjectPreview {...projectData} />
+        <ProjectControlView />
         { /* this.renderMeetings(projectData) */ }
       </div>);
     }
     else {
-      currentProjectOverview = (<Alert bsStyle="warning">
-        你目前沒有在進行專案。推薦選擇任務並且找守門人註冊新的～
-      </Alert>);
+      currentProjectOverview = (<div>
+        <Alert bsStyle="warning">
+          你目前沒有在進行專案。推薦選擇任務並且找守門人註冊新的～
+        </Alert>
+        <ProjectControlView />
+      </div>);
     }
 
 

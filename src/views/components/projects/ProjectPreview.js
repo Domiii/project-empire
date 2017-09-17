@@ -21,7 +21,7 @@ import Loading from 'src/views/components/util/loading';
 
 // TODO: render + allow editing of guardianNotes + gmNotes + partyNotes
 
-export default class ProjectView extends Component {
+export default class ProjectPreview extends Component {
   static contextTypes = {
     currentUserRef: PropTypes.object,
     lookupLocalized: PropTypes.func.isRequired
@@ -30,10 +30,13 @@ export default class ProjectView extends Component {
   static propTypes = {
     projectId: PropTypes.string.isRequired,
     project: PropTypes.object.isRequired,
+    mission: PropTypes.object,
+    
     users: PropTypes.object,
     projectGuardian: PropTypes.object,
     assignedGM: PropTypes.object,
-    canEdit: PropTypes.bool,
+
+    projectEditor: PropTypes.object,
 
     deleteProject: PropTypes.func
   };
@@ -83,12 +86,13 @@ export default class ProjectView extends Component {
       deleteProject,
       users,
       mission,
-      canEdit
+      projectEditor
     } = this.props;
 
     const usersString = map(users, user => user && user.displayName).join(', ');
     const missionInfo = mission && `${mission.code} - ${mission.title}` || 'mission';
     const projectInfo = `${missionInfo} (${usersString})`;
+    const canEdit = !!projectEditor;
 
     return (!canEdit || !this.IsGuardian) ? null : (
       <div>
@@ -102,7 +106,7 @@ export default class ProjectView extends Component {
           toggleEdit: this.toggleEdit,
 
           deleteEntry: deleteProject
-        }}/>
+        }} />
       </div>
     );
   }
@@ -124,7 +128,8 @@ export default class ProjectView extends Component {
 
       //console.log(size(users), users);
 
-    const missionHeader = mission && `${mission.code} - ${mission.title}` ||
+    const missionHeader = mission && 
+      `${mission.code} - ${mission.title}` ||
       <Loading />;
 
     return (<div>

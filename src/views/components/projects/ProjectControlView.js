@@ -1,7 +1,7 @@
 import {
   ProjectStageTree,
   StageStatus
-} from 'src/core/projects/ProjectStagesRef';
+} from 'src/core/projects/ProjectDef';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
@@ -10,9 +10,11 @@ import mapValues from 'lodash/mapValues';
 import filter from 'lodash/filter';
 import flatMap from 'lodash/flatMap';
 
-import React from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import { Flex, Item } from 'react-flex';
+import { firebaseConnect } from 'react-redux-firebase';
 import { 
   Panel, Button, Alert, Well
 } from 'react-bootstrap';
@@ -171,6 +173,10 @@ function interject(arr, cb) {
 // Project tree + stage logic
 // ####################################################
 
+
+// TODO: Hook up to db
+// TODO: ProjectsRef, ProjectStagesRef, MissionsRef, UserInfoRef
+
 export function ProjectStageView({stageNode}) {
   const stageDef = stageNode.stageDef;
   const title = stageDef.title;
@@ -193,9 +199,11 @@ export function ProjectStageView({stageNode}) {
   return (<div>
     <Panel header={header} className="no-margin no-shadow no-border project-stage-panel"
       bsStyle={bsStyle}>
-      { stageNode.firstChild && (<div>
-        <ProjectStagesView stageNode={stageNode.firstChild} />
-       </div>) }
+      { stageNode.firstChild && (
+        <div>
+          <ProjectStagesView stageNode={stageNode.firstChild} />
+        </div>
+      )}
     </Panel>
   </div>);
 }
@@ -242,12 +250,23 @@ ProjectStagesView.propTypes = {
   stageNode: PropTypes.object.isRequired
 };
 
+
 // ####################################################
 // ProjectControlView
 // ####################################################
 
-export default function ProjectControlView() {
-  return (
-    <ProjectStagesView stageNode={ProjectStageTree.root} />
-  );
+@firebaseConnect((props, firebase) => {
+  
+})
+@connect(({ firebase }, props) => {
+  return {
+  }; 
+})
+export default class ProjectControlView extends Component {
+  render() {
+    console.log('ProjectControlView.render');
+    return (
+      <ProjectStagesView stageNode={ProjectStageTree.root} />
+    );
+  }
 }
