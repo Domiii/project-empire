@@ -1,7 +1,7 @@
 import {
   ProjectStages,
   StageStatus
-} from 'src/core/projects/ProjectsRef';
+} from 'src/core/projects/ProjectStagesRef';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
@@ -168,7 +168,7 @@ function interject(arr, cb) {
 // Project graph + stage logic
 // ####################################################
 
-export function ProjectStageView({i, stage, stages}) {
+export function ProjectStageView({node}) {
   const title = stage.title;
   const status = getStageStatus(stage);
   const bsStyle = statusBsStyles[status];
@@ -199,9 +199,7 @@ export function ProjectStageView({i, stage, stages}) {
   </div>);
 }
 ProjectStageView.propTypes = {
-  i: PropTypes.number.isRequired,
-  stage: PropTypes.object.isRequired,
-  stages: PropTypes.array.isRequired
+  node: PropTypes.object.isRequired
 };
 
 function ProjectStageArrow({previousStage}) {
