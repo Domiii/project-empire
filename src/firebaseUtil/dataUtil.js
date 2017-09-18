@@ -1,10 +1,11 @@
 import isPlainObject from 'lodash/isPlainObject';
 import get from 'lodash/get';
+import set from 'lodash/set';
 
-export function _makePathVariable(val, variableTransform) {
+export function _makePathVariable(val, varName, variableTransform) {
   if (isPlainObject(val)) {
     // use index transformation for variable
-    return variableTransform(val);
+    return variableTransform(val, varName);
   }
   return val;
 }
@@ -18,7 +19,7 @@ export function createPathGetterFromTemplateProps(pathTemplate, variableTransfor
       throw new Error(`invalid arguments: ${varName} was not provided for path ${pathTemplate}`);
     }
 
-    return _makePathVariable(props[varName], variableTransform);
+    return _makePathVariable(props[varName], varName, variableTransform);
   };
 
   const getPathWithVariables = function getPathWithVariables(props) {
@@ -36,7 +37,7 @@ export function createPathGetterFromTemplateArray(pathTemplate, variableTransfor
       throw new Error(`invalid arguments: ${varName} was not provided for path ${pathTemplate}`);
     }
 
-    return _makePathVariable(args[iArg], variableTransform);
+    return _makePathVariable(args[iArg], varName, variableTransform);
   };
   const getPathWithVariables = function getPathWithVariables(...args) {
     return getPathWithVariables.pathInfo.nodes.map(node => node(args)).join('');
@@ -124,15 +125,25 @@ export function createChildVarGetterFromTemplateProps(pathTemplate, varNames) {
   };
 }
 
-export function getDataIn(obj, path, defaultValue = undefined) {
+// convert to dot notation for lodash path access
+function _convertPathToObjNotation(path) {
   path = path || '';
   path = path.toString();
-  path = path.replace(/\//g, '.');    // convert to dot notation for lodash path access
+  path = path.replace(/\//g, '.');
   path = path.replace(/\.\./g, '.');
   if (path[0] === '.') {
     path = path.substring(1);
   }
+  return path;
+}
+
+export function getDataIn(obj, path, defaultValue = undefined) {
+  path = _convertPathToObjNotation(path);
   return get(obj, path, defaultValue);
+}
+export function setDataIn(obj, path, val) {
+  path = _convertPathToObjNotation(path);
+  return set(obj, path, val);
 }
 
 

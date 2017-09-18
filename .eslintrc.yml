@@ -286,5 +286,5 @@ rules:
   react/require-optimization: 0
   react/require-render-return: 2
   react/self-closing-comp: 0
-  react/sort-comp: 1
-  react/sort-prop-types: 1
+  react/sort-comp: 0
+  react/sort-prop-types: 0
