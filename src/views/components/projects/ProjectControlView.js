@@ -319,12 +319,51 @@ import {
 // TODO: E.g. `currentProject` is a mapping from inputs to outputs (e.g. `currentProjectId` becoming `projectId` for pathLookup.project)
 // TODO: pathLookup only relevant in a subtree
 
-class FirebaseDataProvider {
+class DataProviderBase {
   activePaths = {};
-  firebaseCache = {};
   listeners = new Set();
 
+  registerListener(path, dataAccess) {
+    if (!this.activePaths[path]) {
+      this.listeners.add(dataAccess);
+      
+      console.log('registered path: ', path);
+
+      this.onNewListener(path, dataAccess);
+    }
+    this.activePaths[path] = (this.activePaths[path] || 0) + 1;
+  }
+  
+  unregisterListener(path, dataAccess) {
+    console.assert(this.activePaths[path] > 0);
+    this.listeners.delete(dataAccess);
+
+    this.activePaths[path] = this.activePaths[path] - 1;
+
+    this.onListenerRemove();
+  }
+
+  // Any DataProvider needs to implement the following three methods:
+
+  onListenerAdd(path, dataAccess) {
+    throw new Error('DataProvider did not implement `onNewAdd` method');
+  }
+
+  onListenerRemove(path, dataAccess) {
+    throw new Error('DataProvider did not implement `onListenerRemove` method');
+  }
+
+  getData() {
+    throw new Error('DataProvider did not implement `getData` method');
+  }
+}
+
+class FirebaseDataProvider extends DataProviderBase {
+  firebaseCache = {};
+
   constructor() {
+    super();
+
     autoBind(this);
   }
 
@@ -336,23 +375,12 @@ class FirebaseDataProvider {
     listeners.forEach(listener => listener.onNewData(path, val));
   }
   
-  registerListener(path, dataAccess) {
-    if (!this.activePaths[path]) {
-      this.listeners.add(dataAccess);
-      
-      console.log('registered path: ', path);
-
-      const fb = getFirebase();
-      fb.database().ref(path).on('value', this._onNewData, err => console.error(err.stack));
-    }
-    this.activePaths[path] = (this.activePaths[path] || 0) + 1;
+  onListenerAdd(path, dataAccess) {
+    const fb = getFirebase();
+    fb.database().ref(path).on('value', this._onNewData, err => console.error(err.stack));
   }
 
-  unregisterListener(path, dataAccess) {
-    console.assert(this.activePaths[path] > 0);
-    this.listeners.delete(dataAccess);
-
-    this.activePaths[path] = this.activePaths[path] - 1;
+  onListenerRemove(path, dataAccess) {
     const fb = getFirebase();
     fb.database().ref(path).off('value');
   }
@@ -366,8 +394,8 @@ const defaultDataProvider = new FirebaseDataProvider();
 
 class DataAccess {
   dataProvider;
+  pathDescriptorSet;
   dataAccessors;
-  props;
   ownPaths = new Set();
 
   constructor(dataProvider, props) {
@@ -395,6 +423,7 @@ class DataAccess {
 
   registerPathDescriptors(pathDescriptorSet) {
     // return data at path of given path getter function, assuming that context props are already given
+    this.pathDescriptorSet = pathDescriptorSet;
     this.dataAccessors = new Proxy(
       mapValues(pathDescriptorSet.pathGetters, getPath => this.createDataGetter(getPath)), 
       {
@@ -417,21 +446,21 @@ class DataAccess {
     this.ownPaths.forEach(path => this.dataProvider.unregisterListener(path, this));
   }
 
-  getData(alias) {
-    const getPath = this.pathLookup[alias];
+  getData(pathDescriptorName, args) {
+    const getPath = this.pathDescriptorSet.getPath(pathDescriptorName, args);
 
     if (getPath) {
       const { varNames } = getPath.pathInfo;
-
+      // TODO!!!!!
     }
     else {
-      console.error('data alias not recognized: ' + alias);
+      console.error('pathDescriptorName is not registered: ' + pathDescriptorName);
     }
   }
 }
 
 /**
- * `varContextMap` example: { currentUid: someFunction() {...} }
+ * `varContextMap` example: { currentUid: currentUid_pathDescriptor }
  */
 class PathDescriptor {
   _pathTemplate;
@@ -486,6 +515,9 @@ class PathDescriptorSet {
     this.pathGetters = Object.assign(pathGetters, parent && parent.pathGetters || EmptyObject);
   }
 
+  getPath(pathDescriptorName, args) {
+
+  }
 }
 
 // TODO: get DataAccess ready
@@ -511,11 +543,17 @@ const pathLookup = {
 
 
 // TODO: need a way to figure out if data is still loading?
+const dataBindScopeNamespace = '_dataBind_context';
+const dataBindAccessName = '_dataAccess';
 
-function DataBind({name, ...args}) {
-  // TODO: Get dataAccess object from context
+function _getDataAccess(context) {
+  const scope = context [dataBindScopeNamespace];
+  return scope && scope[dataBindAccessName];
+}
+
+function DataBind({name, ...args}, context) {
   // TODO: what to do with custom args?
-  const dataAccess = ???;
+  const dataAccess = _getDataAccess(context);
   return dataAccess.dataAccess[name];
 }
 
@@ -533,13 +571,6 @@ const dataBind = (pathLookup, dataProvider) => WrappedComponent => {
 // TODO: call forceUpdate when new data arrived
 
     componentWillMount() {
-      // TODO: get parent path descriptors from context? (but cannot get in constructor)
-      const parentPathDescriptorSet = ???;
-
-      this.pathDescriptorSet = new PathDescriptorSet(pathLookup, parentPathDescriptorSet);
-
-      this.dataAccess = new DataAccess(dataProvider);
-      this.dataAccess.registerPathDescriptors(this.pathDescriptorSet);
     }
 
     componentWillUpdate() {
@@ -555,11 +586,18 @@ const dataBind = (pathLookup, dataProvider) => WrappedComponent => {
     }
 
     shouldComponentUpdate() {
-      // TODO:
+      // TODO: should it update?
+      return true;
     }
 
     componentDidMount() {
-      //this.newProps = transformationFunc(this.props);
+      const parentDataSet = _getDataAccess(this.context);
+      const parentPathDescriptorSet = parentDataSet.pathDescriptorSet;
+
+      this.pathDescriptorSet = new PathDescriptorSet(pathLookup, parentPathDescriptorSet);
+
+      this.dataAccess = new DataAccess(dataProvider);
+      this.dataAccess.registerPathDescriptors(this.pathDescriptorSet);
     }
 
     componentWillUnmount() {
