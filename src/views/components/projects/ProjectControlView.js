@@ -15,11 +15,11 @@ import React, { Component, Children } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Flex, Item } from 'react-flex';
-import { 
+import {
   firebaseConnect,
   getFirebase
 } from 'react-redux-firebase';
-import { 
+import {
   Panel, Button, Alert, Well
 } from 'react-bootstrap';
 
@@ -113,13 +113,13 @@ StageStatusIcon.propTypes = {
   status: PropTypes.number.isRequired
 };
 
-function StageContributorIcon({user, status, groupName}) {
+function StageContributorIcon({ user, status, groupName }) {
   // TODO: groupName classes
   const classes = 'project-contributor project-contributor-' + groupName;
   return (
-    <div className={classes} style={{backgroundImage: 'url(' + user.photoURL + ')'}}>
-      { status && 
-        <StageStatusIcon status={status} 
+    <div className={classes} style={{ backgroundImage: 'url(' + user.photoURL + ')' }}>
+      {status &&
+        <StageStatusIcon status={status}
           className=".project-contributor-status-icon" />
       }
     </div>
@@ -132,16 +132,16 @@ StageContributorIcon.propTypes = {
 };
 
 // Render icon + status of all responsible contributors for given stage
-function StageStatusBar({stageNode}) {
+function StageStatusBar({ stageNode }) {
   const stageContributors = getStageContributors(stageNode);
   //return (<StageStatusIcon status={status} />);
   return (<div>
-    { map(stageContributors, user =>
-      <StageContributorIcon 
+    {map(stageContributors, user =>
+      <StageContributorIcon
         groupName={'???'}
         user={user}
         status={getStageContributorStatus(user, stageNode)}
-      /> )
+      />)
     }
   </div>);
 }
@@ -162,9 +162,9 @@ StageStatusBar.propTypes = {
  */
 function interject(arr, cb) {
   return flatMap(arr, (value, index, array) =>
-    array.length -1 !== index  // insert new object only if not already at the end
-    ? [value, cb(value, arr[index+1], index)]
-    : value
+    array.length - 1 !== index  // insert new object only if not already at the end
+      ? [value, cb(value, arr[index + 1], index)]
+      : value
   );
 }
 
@@ -181,7 +181,7 @@ function interject(arr, cb) {
 // TODO: Hook up to db
 // TODO: ProjectsRef, ProjectStagesRef, MissionsRef, UserInfoRef
 
-export function ProjectStageView({stageNode}) {
+export function ProjectStageView({ stageNode }) {
   const stageDef = stageNode.stageDef;
   const title = stageDef.title;
 
@@ -192,7 +192,7 @@ export function ProjectStageView({stageNode}) {
   const header = (
     <Flex row justifyContent="space-between" alignItems="center">
       <Item>
-        <span>{`${order+1}. ${title}`}</span>
+        <span>{`${order + 1}. ${title}`}</span>
       </Item>
       <Item>
         <StageStatusBar stageNode={stageNode} />
@@ -203,7 +203,7 @@ export function ProjectStageView({stageNode}) {
   return (<div>
     <Panel header={header} className="no-margin no-shadow no-border project-stage-panel"
       bsStyle={bsStyle}>
-      { stageNode.firstChild && (
+      {stageNode.firstChild && (
         <div>
           <ProjectStagesView stageNode={stageNode.firstChild} />
         </div>
@@ -215,7 +215,7 @@ ProjectStageView.propTypes = {
   stageNode: PropTypes.object.isRequired
 };
 
-function ProjectStageArrow({previousNode}) {
+function ProjectStageArrow({ previousNode }) {
   const status = getStageStatus(previousNode);
   const style = statusStyles[status];
   return (<FAIcon name="arrow-down" size="4em" style={style} />);
@@ -224,11 +224,11 @@ ProjectStageArrow.propTypes = {
   previousNode: PropTypes.object.isRequired
 };
 
-export function ProjectStagesView({stageNode}) {
+export function ProjectStagesView({ stageNode }) {
   // interject node views with arrows
   return (
     <Flex column justifyContent="center" alignItems="center">
-      { 
+      {
         stageNode.mapLine(node => {
           const order = node.order;
           return (<div key={order} className="full-width">
@@ -239,8 +239,8 @@ export function ProjectStagesView({stageNode}) {
                 />
               </Item>
             }
-            { !!node.next && 
-              <Item style={{display: 'flex'}} justifyContent="center" flex="1" >
+            {!!node.next &&
+              <Item style={{ display: 'flex' }} justifyContent="center" flex="1" >
                 <ProjectStageArrow previousNode={node} />
               </Item>
             }
@@ -293,7 +293,7 @@ ProjectStagesView.propTypes = {
 
 
 
-import { 
+import {
   createPathGetterFromTemplateProps,
   createPathGetterFromTemplateArray,
 
@@ -320,27 +320,29 @@ import {
 // TODO: pathLookup only relevant in a subtree
 
 class DataProviderBase {
-  activePaths = {};
-  listeners = new Set();
+  listenersByPath = {};
 
-  registerListener(path, dataAccess) {
-    if (!this.activePaths[path]) {
-      this.listeners.add(dataAccess);
-      
+  registerListener(path, listener) {
+    const listeners = this.listenersByPath[path];
+    if (!listeners) {
+      // first time, anyone is showing interest in this path
+      listeners = new Set();
       console.log('registered path: ', path);
-
-      this.onNewListener(path, dataAccess);
     }
-    this.activePaths[path] = (this.activePaths[path] || 0) + 1;
+    if (!listeners.has(listener)) {
+      // add listener to set
+      listeners.add(listener);
+      this.onListenerAdd(path, listener);
+    }
   }
-  
-  unregisterListener(path, dataAccess) {
-    console.assert(this.activePaths[path] > 0);
-    this.listeners.delete(dataAccess);
 
-    this.activePaths[path] = this.activePaths[path] - 1;
+  unregisterListener(path, listener) {
+    const listeners = this.listenersByPath[path];
+    console.assert(listeners);
 
-    this.onListenerRemove();
+    listeners.delete(listener);
+
+    this.onListenerRemove(path, listener);
   }
 
   // Any DataProvider needs to implement the following three methods:
@@ -369,28 +371,38 @@ class FirebaseDataProvider extends DataProviderBase {
 
   _onNewData(snap) {
     const val = snap.val();
-    console.log(path, ': ', val);
+    console.log('R[', path, '] ', val);
     setDataIn(this.firebaseCache, path, val);
 
     listeners.forEach(listener => listener.onNewData(path, val));
   }
-  
+
+  _onError(err){
+    console.error(err.stack);
+  }
+
   onListenerAdd(path, dataAccess) {
     const fb = getFirebase();
-    fb.database().ref(path).on('value', this._onNewData, err => console.error(err.stack));
+    fb.database().ref(path).on('value', this._onNewData, this._onError);
   }
 
   onListenerRemove(path, dataAccess) {
     const fb = getFirebase();
     fb.database().ref(path).off('value');
   }
-  
+
   getData(path) {
     return getDataIn(this.firebaseCache, path);
   }
 }
 const defaultDataProvider = new FirebaseDataProvider();
 
+
+// TODO: Work on ContextDataProvider
+// TODO: Define ContextDataProvider details through the PathDescriptorSet definition
+// TODO: How to access different dataProviders?
+
+// TODO: Use the same concept to also create a WebCacheDataProvider.
 
 class DataAccess {
   dataProvider;
@@ -402,35 +414,68 @@ class DataAccess {
     this.dataProvider = dataProvider;
     this.props = props;
   }
-  
-  createDataGetter(getPath) {
-    return (...args) => this.getData(getPath(...args));
+
+  /**
+   * Read data at given descriptor.
+   * No side-effects.
+   * 
+   * @param {*} pathDescriptorName 
+   * @param {*} args 
+   */
+  getData(pathDescriptorName, args) {
+    const getPath = this.pathDescriptorSet.getPath(pathDescriptorName, args);
+    //const { varNames } = getPath.pathInfo;
+
+    if (getPath) {
+      // whenever we access data, make sure, the path is registered
+      const path = getPath(args);
+      return this.dataProvider.getData(path);
+    }
   }
 
-  getData(path) {
-    // whenever we get data, make sure, the path is registered
-    this.registerPath(path);
+  /**
+   * Read data at given descriptor.
+   * Also registers the listener for path, so changes to data at given path will stay in sync.
+   * 
+   * @param {string} pathDescriptorName 
+   * @param {*} args 
+   */
+  accessData(pathDescriptorName, args) {
+    const descriptor = this.pathDescriptorSet.getDescriptor(pathDescriptorName);
+    //const { varNames } = getPath.pathInfo;
+
+    if (descriptor) {
+      return this.accessDescriptorData(descriptor, args);
+    }
+  }
+
+  accessDescriptorData(descriptor, args) {
+    // whenever we access data, make sure, the path is registered
+    const getPath = descriptor.getPath(args);
+    const path = getPath(args);
+    this._registerPathListener(path);
     return this.dataProvider.getData(path);
   }
   
-  registerPath(path) {
-    if (this.ownPaths.has(path)) {
-      return;
-    }
-    this.ownPaths.add(path);
-    this.dataProvider.registerListener(path);
+  _createDataGetter(descriptor) {
+    return (args) => this.accessDescriptorData(descriptor.getPath(args));
   }
 
-  registerPathDescriptors(pathDescriptorSet) {
+  /**
+   * Path descriptors provide the interface for accessing any backend data.
+   * 
+   * @param {*} pathDescriptorSet 
+   */
+  createDataProxy(pathDescriptorSet) {
     // return data at path of given path getter function, assuming that context props are already given
     this.pathDescriptorSet = pathDescriptorSet;
-    this.dataAccessors = new Proxy(
-      mapValues(pathDescriptorSet.pathGetters, getPath => this.createDataGetter(getPath)), 
+    return this.dataAccessors = new Proxy(
+      mapValues(pathDescriptorSet.pathDescriptors, descriptor => this._createDataGetter(descriptor)),
       {
         get: (target, name) => {
-          const f = target[name];
+          const descriptor = target[name];
           if (!f) {
-            console.warning('invalid data name does not exist: ' + name);
+            console.warning('invalid pathDescriptor is not registered: ' + name);
             return null;
           }
           else {
@@ -442,41 +487,43 @@ class DataAccess {
     );
   }
 
-  unmount() {
-    this.ownPaths.forEach(path => this.dataProvider.unregisterListener(path, this));
+  _registerPathListener(path) {
+    if (this.ownPaths.has(path)) {
+      return;
+    }
+    this.ownPaths.add(path);
+
+    // TODO: connect to listener callback from `dataBound` component
+
+    this.dataProvider.registerListener(path, this);
   }
 
-  getData(pathDescriptorName, args) {
-    const getPath = this.pathDescriptorSet.getPath(pathDescriptorName, args);
-
-    if (getPath) {
-      const { varNames } = getPath.pathInfo;
-      // TODO!!!!!
-    }
-    else {
-      console.error('pathDescriptorName is not registered: ' + pathDescriptorName);
-    }
+  /**
+   * Internally used method when the component owning this data accessor is unmounted.
+   */
+  _unmount() {
+    this.ownPaths.forEach(path => this.dataProvider.unregisterListener(path, this));
   }
 }
 
 /**
- * `varContextMap` example: { currentUid: currentUid_pathDescriptor }
+ * 
  */
 class PathDescriptor {
   _pathTemplate;
   _pathGetter;
-  _varContextMap;
+  _dataProxy;
 
-  constructor(pathTemplate, varContextMap) {
+  constructor(pathTemplate, dataProxy) {
     this._pathTemplate = pathTemplate;
-    this._varContextMap = varContextMap;
+    this._dataProxy = dataProxy;
     // this._pathGetter = createPathGetterFromTemplateProps(pathTemplate, _varContextMap && 
     //   this._varTransform.bind(this) || 
     //   null);
 
     const lookupPath = createPathGetterFromTemplateProps(pathTemplate);
 
-    if (varContextMap) {
+    if (dataProxy) {
       // lookup variables
       this._pathGetter = args => lookupPath(this._mapVars(args));
     }
@@ -492,35 +539,52 @@ class PathDescriptor {
   }
 
   _mapVars(args) {
-    // lookup data from varContextMap
-    return Object.assign({}, mapValues(this.varContextMap, getData => getData()), args);
+    // lookup data from dataProxy
+    if (args === undefined) {
+      // minor optimization: Don't create new object if no args given
+      return this._dataProxy;
+    }
+    return Object.assign({}, this._dataProxy, args);
   }
 
   _mapVar(inputName) {
-    return this._varContextMap[inputName]();
+    return this._dataProxy[inputName]();
   }
 }
 
 /**
  * Used to maintain a hierarchical set of path descriptors (aliases).
+ * TODO: Better separation of concerns: Don't feed data proxy back into PathDescriptorSet.
  */
 class PathDescriptorSet {
   parent;
   pathDescriptors;
-  pathGetters;
 
-  constructor(pathLookup, parent) {
-    // TODO
-    const pathGetters = ??;
-    this.pathGetters = Object.assign(pathGetters, parent && parent.pathGetters || EmptyObject);
+  constructor(pathDescriptors, parent) {
+    this.parent = parent;
+
+    const parentDescriptors = parent && parent.pathDescriptors || EmptyObject;
+    this.pathDescriptors = Object.assign(pathDescriptors, parentDescriptors);
+  }
+
+  getDescriptor(pathDescriptorName) {
+    return this.pathDescriptors[pathDescriptorName];
   }
 
   getPath(pathDescriptorName, args) {
-
+    const descriptor = this.pathDescriptors[pathDescriptorName];
+    if (!!descriptor) {
+      return descriptor.getPath(args);
+    }
+    else {
+      console.error('unknown pathDescriptorName: ' + pathDescriptorName);
+      return null;
+    }
   }
 }
 
-// TODO: get DataAccess ready
+// TODO: be able to access the different providers somehow
+// TODO: Especially the default db + the local context providers
 
 // create path getter functions
 const pathLookup = {
@@ -547,11 +611,11 @@ const dataBindScopeNamespace = '_dataBind_context';
 const dataBindAccessName = '_dataAccess';
 
 function _getDataAccess(context) {
-  const scope = context [dataBindScopeNamespace];
+  const scope = context[dataBindScopeNamespace];
   return scope && scope[dataBindAccessName];
 }
 
-function DataBind({name, ...args}, context) {
+function DataBind({ name, ...args }, context) {
   // TODO: what to do with custom args?
   const dataAccess = _getDataAccess(context);
   return dataAccess.dataAccess[name];
@@ -559,7 +623,7 @@ function DataBind({name, ...args}, context) {
 
 const dataBind = (pathLookup, dataProvider) => WrappedComponent => {
   dataProvider = dataProvider || defaultDataProvider;
-  
+
   class WrapperComponent extends Component {
     dataAccess;
     pathDescriptorSet;
@@ -567,8 +631,8 @@ const dataBind = (pathLookup, dataProvider) => WrappedComponent => {
     constructor(...args) {
       super(...args);
     }
-    
-// TODO: call forceUpdate when new data arrived
+
+    // TODO: call forceUpdate when new data arrived
 
     componentWillMount() {
     }
@@ -580,7 +644,7 @@ const dataBind = (pathLookup, dataProvider) => WrappedComponent => {
     get data() {
       return this.dataAccess.dataAccessors;
     }
-    
+
     render() {
       return (<WrappedComponent {...this.props} />);
     }
@@ -591,13 +655,15 @@ const dataBind = (pathLookup, dataProvider) => WrappedComponent => {
     }
 
     componentDidMount() {
+      // TODO make correct use of context. Define childContextBlablas...
+
       const parentDataSet = _getDataAccess(this.context);
       const parentPathDescriptorSet = parentDataSet.pathDescriptorSet;
 
       this.pathDescriptorSet = new PathDescriptorSet(pathLookup, parentPathDescriptorSet);
 
       this.dataAccess = new DataAccess(dataProvider);
-      this.dataAccess.registerPathDescriptors(this.pathDescriptorSet);
+      this.dataAccess.createDataProxy(this.pathDescriptorSet);
     }
 
     componentWillUnmount() {
@@ -615,7 +681,7 @@ const dataBind = (pathLookup, dataProvider) => WrappedComponent => {
 
 
 // TODO: provide data to all
-function DataProviderRoot({children}) {
+function DataProviderRoot({ children }) {
   return Children.only(children);
 }
 
