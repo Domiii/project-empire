@@ -55,13 +55,13 @@ export function createPathGetterFromTemplate(pathTemplate, varLookup, getPathWit
     // template substitution from array
     getPath = getPathWithVariables;
     getPath.hasVariables = true;
-    getPath.pathInfo = pathInfo;
   }
   else {
     // no variable substitution necessary
     getPath = function getPath() { return pathTemplate; };
     getPath.hasVariables = false;
   }
+  getPath.pathInfo = pathInfo;
   getPath.pathTemplate = pathTemplate;
   return getPath;
 }

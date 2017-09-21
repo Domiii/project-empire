@@ -72,7 +72,7 @@ export class App extends Component {
     return {
       currentUserRef: this.props.currentUserRef,
       lookupLocalized: this.lookupLocalized
-    }
+    };
   }
 
   constructor(...args) {

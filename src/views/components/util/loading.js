@@ -10,7 +10,7 @@ export default class Loading extends PureComponent {
   };
 
   get DefaultMessage() {
-    return 'loading...';
+    return '';
   }
 
   render() {
@@ -22,9 +22,10 @@ export default class Loading extends PureComponent {
     if (message === undefined) {
       message = this.DefaultMessage;
     }
-    const classNames = 'loading' + (block && ' loading-block');
-    return (<div className={classNames}>
-      <span>{ message }</span>&nbsp;<FAIcon name="cog" spinning={true} />
-    </div>);
+    const classNames = 'loading' + (block && ' loading-block' || '');
+    return (<span className={classNames}>
+      { message && (<span>{ message }&nbsp;</span>) || '' }
+      <FAIcon name="cog" spinning />
+    </span>);
   }
 }

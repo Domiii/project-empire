@@ -7,7 +7,9 @@ import autoBind from 'src/util/auto-bind';
 import { EmptyObject, EmptyArray } from 'src/util';
 
 import map from 'lodash/map';
+import isString from 'lodash/isString';
 import isFunction from 'lodash/isFunction';
+import isEmpty from 'lodash/isEmpty';
 import isObject from 'lodash/isObject';
 import mapValues from 'lodash/mapValues';
 import filter from 'lodash/filter';
@@ -27,6 +29,7 @@ import {
 } from 'react-bootstrap';
 
 import FAIcon from 'src/views/components/util/FAIcon';
+import Loading from 'src/views/components/util/loading';
 
 
 // ####################################################
@@ -297,7 +300,6 @@ ProjectStagesView.propTypes = {
 
 import {
   createPathGetterFromTemplateProps,
-  createPathGetterFromTemplateArray,
 
   getDataIn,
   setDataIn
@@ -313,52 +315,75 @@ import {
 
 class DataProviderBase {
   listenersByPath = {};
+  listenerData = new Map();
 
   getListeners(path) {
     return this.listenersByPath[path];
   }
 
   registerListener(path, listener) {
+    console.assert(!!listener.onNewData, '[INTERNAL ERROR] listener has no `onNewData` callback.');
+
     let listeners = this.getListeners(path);
-    console.assert(!!listener.onNewData);
 
     if (!listeners) {
       // first time, anyone is showing interest in this path
       this.listenersByPath[path] = listeners = new Set();
-      console.log('registered path: ', path);
     }
     if (!listeners.has(listener)) {
       // add listener to set
       listeners.add(listener);
-      this.onListenerAdd(path, listener);
+      this.listenerData[listener] = {
+        byPath: {}
+      };
+    }
+
+    if (!this.listenerData[listener].byPath[path]) {
+      // register new listener for this path
+      console.warn('registered path: ', path);
+      const customData = this.onListenerAdd(path, listener);
+      this.listenerData[listener].byPath[path] = {
+        customData
+      };
     }
   }
 
-  unregisterListener(path, listener) {
+  unregisterListener(listener) {
+    const listenerData = this.listenerData[listener];
+    if (!!listenerData) {
+      const byPath = listenerData.byPath;
+      byPath.forEach((_, path) => this.unregisterListenerPath(path, listener));
+    }
+  }
+
+  unregisterListenerPath(path, listener) {
+    console.log('unregister path: ' + path);
+
     const listeners = this.getListeners(path);
-    console.assert(listeners);
+    console.assert(listeners, '[INTERNAL ERROR] listener not registered at path: ' + path);
 
     listeners.delete(listener);
+    this.listenerData.delete(listener);
 
     this.onListenerRemove(path, listener);
   }
 
   // Any DataProvider needs to implement the following three methods:
 
-  onListenerAdd(path, dataAccess) {
-    throw new Error('DataProvider did not implement `onNewAdd` method');
+  onListenerAdd(path, listener) {
+    throw new Error('DataProvider did not implement `onListenerAdd` method');
   }
 
-  onListenerRemove(path, dataAccess) {
+  onListenerRemove(path, listener) {
     throw new Error('DataProvider did not implement `onListenerRemove` method');
   }
 
   notifyNewData(path, val) {
-    const listeners = this.getListeners(path);
+    const listeners = this.getListeners(path) || EmptyArray;
     listeners.forEach(listener => listener.onNewData(path, val));
   }
 
-  getData() {
+  getData(path) {
     throw new Error('DataProvider did not implement `getData` method');
   }
 }
@@ -374,30 +399,37 @@ class FirebaseDataProvider extends DataProviderBase {
 
   _onNewData(path, snap) {
     const val = snap.val();
-    console.log('R[', path, '] ', val);
+    console.log('R [', path, '] ', val);
     setDataIn(this.firebaseCache, path, val);
 
-    this.notifyNewData(path, val);
+    setTimeout(() => this.notifyNewData(path, val));
   }
 
   _onError(err) {
     console.error(`[${this.constructor.name}] ${err.stack}`);
   }
 
-  onListenerAdd(path, dataAccess) {
+  onListenerAdd(path, listener) {
     const fb = getFirebase();
+    const hook = snap => this._onNewData(path, snap);
     fb.database().ref(path).on('value', 
-      snap => this._onNewData(path, snap),
+      hook,
       this._onError);
+    return hook;
   }
 
-  onListenerRemove(path, dataAccess) {
+  onListenerRemove(path, listener, hook) {
     const fb = getFirebase();
-    fb.database().ref(path).off('value');
+    fb.database().ref(path).off('value', hook);
+    this.pathListeners[path] = null;
+  }
+
+  isDataLoaded(path) {
+    return this.getData(path) !== undefined;
   }
 
   getData(path) {
-    return getDataIn(this.firebaseCache, path);
+    return getDataIn(this.firebaseCache, path, undefined);
   }
 }
 const defaultDataProvider = new FirebaseDataProvider();
@@ -413,53 +445,88 @@ class DataAccess {
   dataProvider;
   pathDescriptorSet;
   dataProxy;
-  ownPaths = new Set();
 
   constructor(dataProvider, onNewData) {
     this.dataProvider = dataProvider;
     this.onNewData = onNewData;
+
     this._dataGetters = {};
+    this._isDataLoadedGetters = {};
     
-    this.dataProxy = new Proxy(this._dataGetters,
-      {
-        get: (target, name) => {
-          const f = target[name];
-          if (!f) {
-            console.warn('invalid pathDescriptor is not registered: ' + name);
-            return null;
-          }
-          else {
-            // TODO: custom args?
-            return f();
-          }
+    this.isDataLoadedProxy = new Proxy(this._isDataLoadedGetters, {
+      get: (target, name) => {
+        const f = target[name];
+        if (!f) {
+          console.warn('Invalid data access. Name is not registered: ' + name);
+          return null;
+        }
+        else {
+          // TODO: custom args?
+          return f();
         }
       }
-    );
+    });
+    
+    this.dataProxy = new Proxy(this._dataGetters, {
+      get: (target, name) => {
+        const f = target[name];
+        if (!f) {
+          console.warn('Invalid data access. Name is not registered: ' + name);
+          return null;
+        }
+        else {
+          // TODO: custom args?
+          return f();
+        }
+      }
+    });
 
     autoBind(this);
   }
 
   /**
-   * TODO: check if is data loaded?
+   * Check if all dependencies are loaded
+   * 
+   * @param {*} pathDescriptorName
+   * @param {*} args
+   */
+  areDependenciesLoaded(descriptor, args) {
+    if (isString(descriptor)) {
+      descriptor = this.pathDescriptorSet.getDescriptor(descriptor);
+      if (!descriptor) {
+        return false;
+      }
+    }
+    const { varNames } = descriptor.pathInfo;
+    if (!isEmpty(varNames)) {
+      if (some(
+        varNames,
+        argName => !this.isDataLoaded(argName, args))
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Check if data is loaded
    * 
    * @param {*} pathDescriptorName
    * @param {*} args
    */
   isDataLoaded(pathDescriptorName, args) {
-    const getPath = this.pathDescriptorSet.getPath(pathDescriptorName, args);
-    if (getPath) {
-      const { varNames } = getPath.pathInfo;
+    // 1) check if all dependencies are loaded
+    if (!this.areDependenciesLoaded(pathDescriptorName, args)) {
+      return false;
+    }
 
-      const isNotLoaded = varName => {
-        const arg = args[varName];
-        if (!arg) {
-          
-        }
-        return arg;
-      };
-
-      // check if there is not one piece of data is not loaded
-      return !some(varNames, isNotLoaded);
+    // 2) check if actual target is also loaded
+    const descriptor = this.pathDescriptorSet.getDescriptor(pathDescriptorName);
+    if (descriptor) {  
+      const path = descriptor.getPath(args);
+      return this.dataProvider.isDataLoaded(path);
     }
     return false;
   }
@@ -472,11 +539,23 @@ class DataAccess {
    * @param {*} args 
    */
   getData(pathDescriptorName, args) {
-    const getPath = this.pathDescriptorSet.getPath(pathDescriptorName, args);
-    if (getPath) {      
-      const path = getPath(args);
-      return this.dataProvider.getData(path);
+    // 1) check if all dependencies are loaded
+    if (!this.areDependenciesLoaded(pathDescriptorName, args)) {
+      return null;
     }
+
+    // 2) try getting the data
+    const path = this.pathDescriptorSet.getPath(pathDescriptorName, args);
+    return this.dataProvider.getData(path);
+  }
+
+  accessDescriptorData(descriptor, args) {
+    const path = descriptor.getPath(args);
+
+    // whenever we access data, make sure, the path is registered
+    this._registerPathListener(path);
+    
+    return this.dataProvider.getData(path, args);
   }
 
   /**
@@ -494,16 +573,15 @@ class DataAccess {
       return this.accessDescriptorData(descriptor, args);
     }
   }
+  
+  listenToPath(descriptorName, args) {
+    if (!this.areDependenciesLoaded(descriptorName, args)) {
+      // only start listening to a path when it's dependencies are fully resolved
+      return;
+    }
 
-  accessDescriptorData(descriptor, args) {
-    // whenever we access data, make sure, the path is registered
-    const path = descriptor.getPath(args);
+    const path = this.pathDescriptorSet.getPath(descriptorName, args);
     this._registerPathListener(path);
-    return this.dataProvider.getData(path, args);
-  }
-
-  _createDataGetter(descriptor) {
-    return (args) => this.accessDescriptorData(descriptor, args);
   }
 
   /**
@@ -514,28 +592,37 @@ class DataAccess {
   addPathDefinitions(pathDescriptorSet) {
     // return data at path of given path getter function, assuming that context props are already given
     this.pathDescriptorSet = pathDescriptorSet;
+    Object.assign(this._isDataLoadedGetters,
+      mapValues(
+        pathDescriptorSet.pathDefinitions,
+        this._createDataLoadedGetter
+      )
+    );
     Object.assign(this._dataGetters, 
       mapValues(
-        pathDescriptorSet.pathDescriptors, 
+        pathDescriptorSet.pathDescriptors,
         this._createDataGetter
       )
     );
   }
+  
+  _createDataLoadedGetter(descriptor, pathDescriptorName) {
+    return (args) => this.isDataLoaded(pathDescriptorName, args);
+  }
+  
+  _createDataGetter(descriptor) {
+    return (args) => this.accessDescriptorData(descriptor, args);
+  }
 
   _registerPathListener(path) {
-    if (this.ownPaths.has(path)) {
-      return;
-    }
-    this.ownPaths.add(path);
-
     this.dataProvider.registerListener(path, this);
   }
 
   /**
    * Internally used method when the component owning this data accessor is unmounted.
    */
-  _unmount() {
-    this.ownPaths.forEach(path => this.dataProvider.unregisterListener(path, this));
+  unmount() {
+    this.dataProvider.unregisterListener(this);
   }
 }
 
@@ -546,6 +633,7 @@ class PathDescriptor {
   _pathTemplate;
   _pathGetter;
   _dataProxy;
+  _pathInfo;
 
   constructor(pathTemplate, dataProxy) {
     this._pathTemplate = pathTemplate;
@@ -555,11 +643,16 @@ class PathDescriptor {
     //   null);
 
     const lookupPath = createPathGetterFromTemplateProps(pathTemplate);
+    this._pathInfo = lookupPath.pathInfo;
 
     // lookup variables
     this._pathGetter = args => lookupPath(this._mapArgs(args));
 
     autoBind(this);
+  }
+
+  get pathInfo() {
+    return this._pathInfo;
   }
 
   getPath(args) {
@@ -585,8 +678,13 @@ class PathDescriptor {
 
 
 function _makePathDescriptors(pathDefinitions, dataProxy) {
-  return mapValues(pathDefinitions, 
+  const descriptors = mapValues(
+    pathDefinitions,
     def => new PathDescriptor(def, dataProxy));
+
+  // TODO: make sure there are no cycles in dependency graph to avoid infinite loops
+
+  return descriptors;
 }
 
 /**
@@ -601,7 +699,6 @@ class PathDescriptorSet {
     this.parent = parent;
 
     const pathDescriptors = _makePathDescriptors(pathDefinitions, dataProxy);
-
     const parentDescriptors = parent && parent.pathDescriptors || EmptyObject;
     this.pathDescriptors = Object.assign(pathDescriptors, parentDescriptors);
   }
@@ -717,26 +814,55 @@ const dataBind = (projectPathsOrFun) => WrappedComponent => {
 
 
 
-// TODO: do we need this to provide data to all?
 function DataProviderRoot({ children }) {
   return Children.only(children);
 }
 
 
-function DataBind({ name, ...args }, context) {
+function DataBind({ name, loading, args }, context) {
   // TODO: what to do with custom args?
   const dataAccess = _getDataAccessFromContext(context);
-  let val = dataAccess && dataAccess.dataProxy[name];
+  
+  console.log('DataBind: ' + name);
+
+  if (!dataAccess || !dataAccess.isDataLoaded(name, args)) {
+    const Loading = loading;
+    dataAccess && dataAccess.listenToPath(name, args);
+    return (<Loading />);
+  }
+
+  let val = dataAccess.dataProxy[name];
   if (isObject(val)) {
     val = JSON.stringify(val, null, 2);
   }
-  console.log('DataBind: ' + name, val);
-  return <span>{val}</span>;
+  return (<span>{val}</span>);
 }
 DataBind.propTypes = {
-  name: PropTypes.string.isRequired
+  name: PropTypes.string.isRequired,
+  args: PropTypes.object,
+  loading: PropTypes.func
 };
 DataBind.contextTypes = dataBindContextStructure;
+
+function IfDataLoaded({name, args, loading, loaded, loadingArgs, loadedArgs}, context) {
+  const dataAccess = _getDataAccessFromContext(context);
+  
+  if (!dataAccess || !dataAccess.isDataLoaded(name, args)) {
+    const Loading = loading;
+    return <Loading {...loadingArgs} />;
+  }
+  const Loaded = loaded;
+  return <Loaded {...loadedArgs} />;
+}
+IfDataLoaded.propTypes = {
+  name: PropTypes.string.isRequired,
+  args: PropTypes.object,
+  loading: PropTypes.func,
+  loaded: PropTypes.func,
+  loadingArgs: PropTypes.object,
+  loadedArgs: PropTypes.object
+};
+IfDataLoaded.contextTypes = dataBindContextStructure;
 
 
 // TODO: handle multiple data providers nice and gracefully!
@@ -761,17 +887,16 @@ const projectPaths = {
   currentProject: '/projects/list/$(currentProjectId)'
 };
 
-
-const Test = dataBind(projectPaths)(() => {
-  return (<div>hi <DataBind name="currentProject" /></div>);
+const ProjectControlView = dataBind(projectPaths)(() => {
+  console.log('ProjectControlView.render');
+  //<ProjectStagesView stageNode={ProjectStageTree.root} />
+  return (<div>
+    <p>
+      currentProjectId: <DataBind name="currentProjectId" loading={Loading} />
+    </p>
+    <p>
+      currentProject: <DataBind name="currentProject" loading={Loading} />
+    </p>
+  </div>);
 });
-
-export default class ProjectControlView extends Component {
-  render() {
-    console.log('ProjectControlView.render');
-    return (
-      //<ProjectStagesView stageNode={ProjectStageTree.root} />
-      <Test />
-    );
-  }
-}
+export default ProjectControlView;
