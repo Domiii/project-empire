@@ -297,8 +297,6 @@ ProjectStagesView.propTypes = {
 // }
 
 
-
-
 import {
   createPathGetterFromTemplateProps,
 
@@ -306,13 +304,6 @@ import {
   setDataIn
 } from 'src/firebaseUtil/dataUtil';
 
-
-// TODO: "context-sensitive path aliases" (such as currentProjectId)
-// TODO: Automatically registering paths for "context-sensitive path aliases"
-// TODO: E.g. `currentProject` is a mapping from inputs to outputs (e.g. `currentProjectId` becoming `projectId` for pathLookup.project)
-// TODO: pathLookup only relevant in a subtree
-// TODO: All kinds of "aside" data (like "partyMembers") does not need to be real-time updated (for now)
-//    -> Consider a priority flag to indicate whether data should always be real-time, or whether some data can be outdated
 
 class DataProviderBase {
   listenersByPath = {};
@@ -435,11 +426,14 @@ class FirebaseDataProvider extends DataProviderBase {
 const defaultDataProvider = new FirebaseDataProvider();
 
 
-// TODO: Work on ContextDataProvider
-// TODO: Define ContextDataProvider details through the PathDescriptorSet definition
 // TODO: How to access different dataProviders?
+// TODO: Add ContextDataProvider
+// TODO: Add WebCacheDataProvider
+// TODO: minimize re-rendering
 
-// TODO: Use the same concept to also create a WebCacheDataProvider.
+// TODO: All kinds of "aside" data (like "partyMembers") does not need to be real-time updated (for now)
+//    -> Consider a priority flag to indicate whether data should always be real-time, or whether some data can be outdated
+
 
 class DataAccess {
   dataProvider;
