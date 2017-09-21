@@ -19,7 +19,7 @@
       ".read": "auth !== null",
 
       "$projectId": {
-        ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
+        ".write": "auth !== null"
       }
     },
 

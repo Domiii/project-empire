@@ -10,16 +10,17 @@ export function _makePathVariable(val, varName, variableTransform) {
   return val;
 }
 
+
 // creates a function that plugs in path variables 
 //  from a single plain object argument that names variables explicitely
 export function createPathGetterFromTemplateProps(pathTemplate, variableTransform) {
   const varLookup = (props, varName, iArg) => {
-    if (!props || props[varName] === undefined) {
-        debugger;
-      throw new Error(`invalid arguments: ${varName} was not provided for path ${pathTemplate}`);
+    const prop = props && props[varName];
+    if (prop === undefined) {
+      console.error(`invalid arguments: ${varName} was not provided for path ${pathTemplate}`);
     }
 
-    return _makePathVariable(props[varName], varName, variableTransform);
+    return _makePathVariable(prop, varName, variableTransform);
   };
 
   const getPathWithVariables = function getPathWithVariables(props) {
@@ -29,18 +30,19 @@ export function createPathGetterFromTemplateProps(pathTemplate, variableTransfor
   return createPathGetterFromTemplate(pathTemplate, varLookup, getPathWithVariables);
 }
 
+
 // creates a function that plugs in path variables from the function's arguments
 export function createPathGetterFromTemplateArray(pathTemplate, variableTransform) {
   const varLookup = (args, varName, iArg) => {
     if (!args || iArg >= args.length) {
-        debugger;
+      //debugger;
       throw new Error(`invalid arguments: ${varName} was not provided for path ${pathTemplate}`);
     }
 
     return _makePathVariable(args[iArg], varName, variableTransform);
   };
   const getPathWithVariables = function getPathWithVariables(...args) {
-    return getPathWithVariables.pathInfo.nodes.map(node => node(args)).join('');
+    return getPathWithVariables.pathInfo.nodes.map(node => node(...args)).join('');
   };
   return createPathGetterFromTemplate(pathTemplate, varLookup, getPathWithVariables);
 }
@@ -117,7 +119,7 @@ export function createChildVarGetterFromTemplateProps(pathTemplate, varNames) {
   return props => {
     return varNames.map(varName => {
       if (!props || props[varName] === undefined) {
-        debugger;
+        //debugger;
         throw new Error(`invalid arguments: ${varName} was not provided for path ${pathTemplate}`);
       }
       return props[varName];

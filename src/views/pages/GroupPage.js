@@ -4,7 +4,7 @@ import UserInfoRef from 'src/core/users/UserInfoRef';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { firebaseConnect } from 'react-redux-firebase'
+import { firebaseConnect } from 'react-redux-firebase';
 import { 
   Alert, Button, Jumbotron, Well
 } from 'react-bootstrap';
