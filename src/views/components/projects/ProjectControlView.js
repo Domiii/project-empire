@@ -7,6 +7,7 @@ import autoBind from 'src/util/auto-bind';
 import { EmptyObject, EmptyArray } from 'src/util';
 
 import map from 'lodash/map';
+import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
 import isFunction from 'lodash/isFunction';
 import isEmpty from 'lodash/isEmpty';
@@ -352,7 +353,7 @@ class DataProviderBase {
     const listenerData = this.listenerData[listener];
     if (!!listenerData) {
       const byPath = listenerData.byPath;
-      byPath.forEach((_, path) => this.unregisterListenerPath(path, listener));
+      forEach(byPath, (_, path) => this.unregisterListenerPath(path, listener));
     }
   }
 
@@ -421,7 +422,6 @@ class FirebaseDataProvider extends DataProviderBase {
   onListenerRemove(path, listener, hook) {
     const fb = getFirebase();
     fb.database().ref(path).off('value', hook);
-    this.pathListeners[path] = null;
   }
 
   isDataLoaded(path) {
@@ -789,6 +789,8 @@ const dataBind = (projectPathsOrFun) => WrappedComponent => {
         projectPaths, parentPathDescriptorSet, this.dataAccess.dataProxy);
 
       this.dataAccess.addPathDefinitions(this.pathDescriptorSet);
+
+      this.forceUpdate();
     }
 
     componentWillUnmount() {
