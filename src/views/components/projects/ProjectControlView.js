@@ -139,8 +139,8 @@ StageContributorIcon.propTypes = {
 };
 
 // Render icon + status of all responsible contributors for given stage
-function StageStatusBar({ stageNode }) {
-  const stageContributors = getStageContributors(stageNode);
+
+const StageStatusBar = dataBind(({ stageNode, stageContributors }) => {
   //return (<StageStatusIcon status={status} />);
   return (<div>
     {map(stageContributors, user =>
@@ -151,7 +151,7 @@ function StageStatusBar({ stageNode }) {
       />)
     }
   </div>);
-}
+});
 StageStatusBar.propTypes = {
   stageNode: PropTypes.object.isRequired
 };
@@ -467,11 +467,20 @@ const DataProviders = {
 };
 
 
-// TODO: How to access different dataProviders?
+// TODO: How to organize different dataProviders? 
+//    A: By injecting each as it's own proxy into data-bound render methods
+
+// TODO: Improve dependency injection for data getters + path getters
+// TODO: Add support for data transformation functions as "data descriptors"
+// TODO: Write data descriptor (transformation functions) for:
+//    "uid" -> "currentProjectIndices" -> "currentProjects" -> "currentProject" -> "projectStages" -> "stakeHolders" + "stakeHolderStatus"
+
+// TODO: Use reselect for caching results
+// TODO: Add write operations
 // TODO: Add ContextDataProvider
 // TODO: Add WebCacheDataProvider
-// TODO: minimize re-rendering
 
+// TODO: minimize re-rendering
 // TODO: All kinds of "aside" data (like "partyMembers") does not need to be real-time updated (for now)
 //    -> Consider a priority flag to indicate whether data should always be real-time, or whether some data can be outdated
 
@@ -770,8 +779,7 @@ function _getDataBindContextScope(context) {
 
 
 // TODO: Include dataProviderName in accessWrapper query
-// TODO: Only require explicit dataProviderName, in case of naming ambiguity
-// TODO: Identify the dataProvider of a variable in pathTemplate?
+// TODO: Only require explicit dataProviderName when there is a naming ambiguity?!
 
 // Future TODO: some dataProviders should be hierarchical (e.g. Cache in front of DB)
 //      Should dataProvider hierarchy be configurable or hardcoded?
@@ -788,7 +796,23 @@ function _buildDataAccessContext(accessWrappers) {
   };
 }
 
-const dataBind = (dataAccessCfgOrFunc) => WrappedComponent => {
+function injectRenderArgs(Comp, argsOrFunc) {
+  const render = isFunction(Comp) ? Comp : Comp.prototype.render;
+  function renderWrapper() {
+    const args = isFunction(argsOrFunc) ? argsOrFunc() : argsOrFunc;
+    render(...args);
+  }
+
+  if (isFunction(Comp)) {
+    return renderWrapper;
+  }
+  Comp.prototype.render = renderWrapper;
+  return Comp;
+}
+
+
+// TODO: Inject (dataProxy, props) into render method
+const dataBind = (dataAccessCfgOrFunc) => _WrappedComponent => {
   class WrapperComponent extends Component {
     static contextTypes = dataBindContextStructure;
     static childContextTypes = dataBindChildContextStructure;
@@ -810,6 +834,7 @@ const dataBind = (dataAccessCfgOrFunc) => WrappedComponent => {
 
       this.dataAccessWrappers = {};
 
+      // TODO: Fix this total mess........
       forEach(accessCfg, (
         { provider: providerName, pathDefinitions }, 
         accessName
@@ -839,6 +864,9 @@ const dataBind = (dataAccessCfgOrFunc) => WrappedComponent => {
 
         dataAccessWrapper.addPathDefinitions(this.pathDescriptorSet);
       });
+      
+      // TODO: we need a single dataProxy per data bound component?
+      this.WrappedComponent = injectRenderArgs(_WrappedComponent, () => [this.dataProxy, this.props]);
     }
 
     getChildContext() {
@@ -875,9 +903,11 @@ const dataBind = (dataAccessCfgOrFunc) => WrappedComponent => {
 
     render() {
       this.shouldUpdate = false;
-      return (<WrappedComponent data={this.data} />);
+      const { WrappedComponent } = this;
+      return (<WrappedComponent {...this.props} data={this.data} />);
     }
   }
+
   return WrapperComponent;
 };
 
@@ -966,8 +996,8 @@ const dataAccessCfg = {
 
 const ProjectControlView = dataBind(dataAccessCfg)(() => {
   console.log('ProjectControlView.render');
-  //<ProjectStagesView stageNode={ProjectStageTree.root} />
   return (<div>
+    <ProjectStagesView stageNode={ProjectStageTree.root} />)
     <p>
       uid:
       <DataBind name="uid" loading={Loading} />
@@ -981,7 +1011,7 @@ const ProjectControlView = dataBind(dataAccessCfg)(() => {
       { 
         map(get('projects'), 
           (project, projectId) => 
-        );
+        )
       }
       <DataBind name="project" loading={Loading} />
     </p>
