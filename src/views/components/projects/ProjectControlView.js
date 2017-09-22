@@ -363,16 +363,16 @@ class DataProviderBase {
   // Any DataProvider needs to implement the following three methods:
 
   onListenerAdd(path, listener) {
-    throw new Error('DataProvider did not implement `onListenerAdd` method');
+    //throw new Error('DataProvider did not implement `onListenerAdd` method');
   }
 
   onListenerRemove(path, listener) {
-    throw new Error('DataProvider did not implement `onListenerRemove` method');
+    //throw new Error('DataProvider did not implement `onListenerRemove` method');
   }
 
   notifyNewData(path, val) {
     const listeners = this.getListeners(path) || EmptyArray;
-    listeners.forEach(listener => listener.onNewData(path, val));
+    setTimeout(() => listeners.forEach(listener => listener.onNewData(path, val)));
   }
 
   getData(path) {
@@ -394,7 +394,7 @@ class FirebaseDataProvider extends DataProviderBase {
     console.log('R [', path, '] ', val);
     setDataIn(this.firebaseCache, path, val);
 
-    setTimeout(() => this.notifyNewData(path, val));
+    this.notifyNewData(path, val);
   }
 
   _onError(err) {
@@ -404,7 +404,7 @@ class FirebaseDataProvider extends DataProviderBase {
   onListenerAdd(path, listener) {
     const fb = getFirebase();
     const hook = snap => this._onNewData(path, snap);
-    fb.database().ref(path).on('value', 
+    fb.database().ref(path).on('value',
       hook,
       this._onError);
     return hook;
@@ -423,7 +423,48 @@ class FirebaseDataProvider extends DataProviderBase {
     return getDataIn(this.firebaseCache, path, undefined);
   }
 }
-const defaultDataProvider = new FirebaseDataProvider();
+
+class FirebaseAuthProvider extends DataProviderBase {
+  firebaseAuthData = undefined;
+
+  constructor() {
+    super();
+
+    autoBind(this);
+
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (user) {
+        // User is signed in.
+        this.firebaseAuthData = user;
+      }
+      else {
+        // No user is signed in.
+        this.firebaseAuthData = null;
+      }
+
+      this.notifyNewData('', user);
+    });
+  }
+
+  _onError(err) {
+    console.error(`[${this.constructor.name}] ${err.stack}`);
+  }
+
+  isDataLoaded(path) {
+    return this.firebaseAuthData !== undefined;
+  }
+
+  getData(path) {
+    return getDataIn(this.firebaseAuthData, path, undefined);
+  }
+}
+
+const DataProviders = {
+  firebase: new FirebaseDataProvider(),
+  firebaseAuth: new FirebaseAuthProvider(),
+  //temp: new ...(),
+  //webCache: ...
+};
 
 
 // TODO: How to access different dataProviders?
@@ -435,7 +476,7 @@ const defaultDataProvider = new FirebaseDataProvider();
 //    -> Consider a priority flag to indicate whether data should always be real-time, or whether some data can be outdated
 
 
-class DataAccess {
+class DataAccessWrapper {
   dataProvider;
   pathDescriptorSet;
   dataProxy;
@@ -446,7 +487,7 @@ class DataAccess {
 
     this._dataGetters = {};
     this._isDataLoadedGetters = {};
-    
+
     this.isDataLoadedProxy = new Proxy(this._isDataLoadedGetters, {
       get: (target, name) => {
         const f = target[name];
@@ -460,7 +501,7 @@ class DataAccess {
         }
       }
     });
-    
+
     this.dataProxy = new Proxy(this._dataGetters, {
       get: (target, name) => {
         const f = target[name];
@@ -518,7 +559,7 @@ class DataAccess {
 
     // 2) check if actual target is also loaded
     const descriptor = this.pathDescriptorSet.getDescriptor(pathDescriptorName);
-    if (descriptor) {  
+    if (descriptor) {
       const path = descriptor.getPath(args);
       return this.dataProvider.isDataLoaded(path);
     }
@@ -548,7 +589,7 @@ class DataAccess {
 
     // whenever we access data, make sure, the path is registered
     this._registerPathListener(path);
-    
+
     return this.dataProvider.getData(path, args);
   }
 
@@ -567,7 +608,7 @@ class DataAccess {
       return this.accessDescriptorData(descriptor, args);
     }
   }
-  
+
   listenToPath(descriptorName, args) {
     if (!this.areDependenciesLoaded(descriptorName, args)) {
       // only start listening to a path when it's dependencies are fully resolved
@@ -592,18 +633,18 @@ class DataAccess {
         this._createDataLoadedGetter
       )
     );
-    Object.assign(this._dataGetters, 
+    Object.assign(this._dataGetters,
       mapValues(
         pathDescriptorSet.pathDescriptors,
         this._createDataGetter
       )
     );
   }
-  
+
   _createDataLoadedGetter(descriptor, pathDescriptorName) {
     return (args) => this.isDataLoaded(pathDescriptorName, args);
   }
-  
+
   _createDataGetter(descriptor) {
     return (args) => this.accessDescriptorData(descriptor, args);
   }
@@ -715,7 +756,7 @@ class PathDescriptorSet {
 
 
 const dataBindScopeNamespace = '_dataBind_context';
-const dataAccessName = '_dataAccess';
+const dataAccessNamespace = '_dataAccess';
 const dataBindContextStructure = {
   [dataBindScopeNamespace]: PropTypes.object
 };
@@ -727,38 +768,82 @@ function _getDataBindContextScope(context) {
   return context[dataBindScopeNamespace];
 }
 
-function _getDataAccessFromContext(context) {
+
+// TODO: Include dataProviderName in accessWrapper query
+// TODO: Only require explicit dataProviderName, in case of naming ambiguity
+// TODO: Identify the dataProvider of a variable in pathTemplate?
+
+// Future TODO: some dataProviders should be hierarchical (e.g. Cache in front of DB)
+//      Should dataProvider hierarchy be configurable or hardcoded?
+function _getDataAccessWrappersFromContext(context) {
   const scope = _getDataBindContextScope(context);
-  return scope && scope[dataAccessName];
+  return scope && scope[dataAccessNamespace];
 }
 
-function _buildDataAccessContext(dataAccess) {
+function _buildDataAccessContext(accessWrappers) {
   return {
-    [dataBindScopeNamespace]: { 
-      [dataAccessName]: dataAccess
+    [dataBindScopeNamespace]: {
+      [dataAccessNamespace]: accessWrappers
     }
   };
 }
 
-const dataBind = (projectPathsOrFun) => WrappedComponent => {
-  const dataProvider = defaultDataProvider;
-
+const dataBind = (dataAccessCfgOrFunc) => WrappedComponent => {
   class WrapperComponent extends Component {
     static contextTypes = dataBindContextStructure;
     static childContextTypes = dataBindChildContextStructure;
 
-    dataAccess;
+    shouldUpdate;
+    dataAccessWrappers;
     pathDescriptorSet;
 
-    constructor(...args) {
-      super(...args);
-      
+    constructor(props, context) {
+      super(props, context);
+
+      this.shouldUpdate = false;
       autoBind(this);
+
+      // TODO: support multiple dataAccess objects?
+      const accessCfg = isFunction(dataAccessCfgOrFunc) ||
+        dataAccessCfgOrFunc(props, context) ||
+        dataAccessCfgOrFunc;
+
+      this.dataAccessWrappers = {};
+
+      forEach(accessCfg, (
+        { provider: providerName, pathDefinitions }, 
+        accessName
+      ) => {
+
+        const dataProvider = DataProviders[providerName];
+        if (!dataProvider) {
+          throw new Error('invalid data provider name: ' + providerName);
+        }
+
+        accessName = accessName || providerName;
+
+        // register new DataAccessWrapper
+        const dataAccessWrapper = 
+          this.dataAccessWrappers[accessName] = 
+          new DataAccessWrapper(dataProvider, this._onNewData);
+
+        const parentDataSet = _getDataAccessWrappersFromContext(context);
+        const parentPathDescriptorSet = parentDataSet && 
+          parentDataSet.pathDescriptorSet;
+
+        this.pathDescriptorSet = new PathDescriptorSet(
+          pathDefinitions, 
+          parentPathDescriptorSet, 
+          dataAccessWrapper.dataProxy
+        );
+
+        dataAccessWrapper.addPathDefinitions(this.pathDescriptorSet);
+      });
     }
 
     getChildContext() {
       //console.log('getChildContext');
-      return _buildDataAccessContext(this.dataAccess);
+      return _buildDataAccessContext(this.dataAccessWrappers);
     }
 
     componentWillUpdate() {
@@ -772,31 +857,24 @@ const dataBind = (projectPathsOrFun) => WrappedComponent => {
 
     componentDidMount() {
       console.log('componentDidMount');
-      this.dataAccess = new DataAccess(dataProvider, this._onNewData);
-
-      const parentDataSet = _getDataAccessFromContext(this.context);
-      const parentPathDescriptorSet = parentDataSet && parentDataSet.pathDescriptorSet;
-      const projectPaths = isFunction(projectPathsOrFun) ||
-        projectPathsOrFun || 
-        EmptyObject;
-      this.pathDescriptorSet = new PathDescriptorSet(
-        projectPaths, parentPathDescriptorSet, this.dataAccess.dataProxy);
-
-      this.dataAccess.addPathDefinitions(this.pathDescriptorSet);
-
+      
+      this.shouldUpdate = true;
       this.forceUpdate();
     }
 
     componentWillUnmount() {
-      this.dataAccess && this.dataAccess.unmount();
+      this.shouldUpdate = true;
+      forEach(this.dataAccessWrappers, wrapper => wrapper.unmount());
     }
 
     _onNewData(path, val) {
+      this.shouldUpdate = true;
       this.forceUpdate();
       this.setState(EmptyObject);
     }
 
     render() {
+      this.shouldUpdate = false;
       return (<WrappedComponent data={this.data} />);
     }
   }
@@ -815,19 +893,19 @@ function DataProviderRoot({ children }) {
 }
 
 
+// TODO: what to do with custom args?
 function DataBind({ name, loading, args }, context) {
-  // TODO: what to do with custom args?
-  const dataAccess = _getDataAccessFromContext(context);
-  
-  console.log('DataBind: ' + name);
+  const accessWrapper = _getDataAccessWrappersFromContext(context);
 
-  if (!dataAccess || !dataAccess.isDataLoaded(name, args)) {
+  console.log('DataBind.render: ' + name);
+
+  if (!accessWrapper || !accessWrapper.isDataLoaded(name, args)) {
     const Loading = loading;
-    dataAccess && dataAccess.listenToPath(name, args);
+    accessWrapper && accessWrapper.listenToPath(name, args);
     return (<Loading />);
   }
 
-  let val = dataAccess.dataProxy[name];
+  let val = accessWrapper.dataProxy[name];
   if (isObject(val)) {
     val = JSON.stringify(val, null, 2);
   }
@@ -840,9 +918,9 @@ DataBind.propTypes = {
 };
 DataBind.contextTypes = dataBindContextStructure;
 
-function IfDataLoaded({name, args, loading, loaded, loadingArgs, loadedArgs}, context) {
-  const dataAccess = _getDataAccessFromContext(context);
-  
+function IfDataLoaded({ name, args, loading, loaded, loadingArgs, loadedArgs }, context) {
+  const dataAccess = _getDataAccessWrappersFromContext(context);
+
   if (!dataAccess || !dataAccess.isDataLoaded(name, args)) {
     const Loading = loading;
     return <Loading {...loadingArgs} />;
@@ -861,37 +939,51 @@ IfDataLoaded.propTypes = {
 IfDataLoaded.contextTypes = dataBindContextStructure;
 
 
-// TODO: handle multiple data providers nice and gracefully!
-// TODO: need a way to figure out if data is still loading?
 
-// create path getter functions
-const projectPaths = {
-  // // TODO: use explicit index system to create paths for this
-  // // TODO: somehow provide the currentUserId as argument
-  // currentUserProjectIds: ,
-  
-  // // TODO: Use currentUserProjectIds as input feed for this
-  // currentUserProjects: ???,
 
-  // // TODO: easy enough
-  // currentProjectStages: ???,
+// TODO: Handle list data types properly
+// TODO: Map list of ids to list of objects (e.g. for explicit indexing)
+// TODO: Allow for arguments
 
-  // TODO: this is only relevant to children created from set of stages
-  currentProjectId: '/projects/currentProjectId',
-
-  //project: createPathGetterFromTemplateArray('/project/$(projectId)')
-  currentProject: '/projects/list/$(currentProjectId)'
+const dataAccessCfg = {
+  currentUser: {
+    provider: 'firebaseAuth',
+    paths: {
+      currentUser: '',
+      uid: 'uid'
+    }
+  },
+  db: {
+    provider: 'firebase',
+    paths: {
+      userProjects: '/_index/projectUsers/project/$(projectId)',
+      projectUsers: '/_index/projectUsers/user/$(uid)',
+      projects: '/projects/list',
+      project: '/projects/list/$(projectId)'
+    }
+  }
 };
 
-const ProjectControlView = dataBind(projectPaths)(() => {
+const ProjectControlView = dataBind(dataAccessCfg)(() => {
   console.log('ProjectControlView.render');
   //<ProjectStagesView stageNode={ProjectStageTree.root} />
   return (<div>
     <p>
-      currentProjectId: <DataBind name="currentProjectId" loading={Loading} />
+      uid:
+      <DataBind name="uid" loading={Loading} />
     </p>
     <p>
-      currentProject: <DataBind name="currentProject" loading={Loading} />
+      currentProjectId:
+      <DataBind name="projectId" loading={Loading} />
+    </p>
+    <p>
+      currentProject:
+      { 
+        map(get('projects'), 
+          (project, projectId) => 
+        );
+      }
+      <DataBind name="project" loading={Loading} />
     </p>
   </div>);
 });
