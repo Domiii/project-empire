@@ -141,10 +141,24 @@ function _convertPathToObjNotation(path) {
 
 export function getDataIn(obj, path, defaultValue = undefined) {
   path = _convertPathToObjNotation(path);
+
+  if (!path) {
+    // handle empty path separately
+    // see: https://github.com/lodash/lodash/issues/3386
+    if (obj === undefined) return defaultValue;
+    return obj;
+  }
   return get(obj, path, defaultValue);
 }
 export function setDataIn(obj, path, val) {
   path = _convertPathToObjNotation(path);
+  if (!path) {
+    // handle empty path separately
+    // see: https://github.com/lodash/lodash/issues/3386
+    if (obj !== undefined) {
+      Object.assign(obj, val);
+    }
+  }
   return set(obj, path, val);
 }
 

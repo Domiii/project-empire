@@ -1,3 +1,5 @@
+import Roles from 'src/core/users/Roles';
+
 import {
   ProjectStageTree,
   StageStatus
@@ -12,10 +14,11 @@ import isString from 'lodash/isString';
 import isFunction from 'lodash/isFunction';
 import isEmpty from 'lodash/isEmpty';
 import isObject from 'lodash/isObject';
+import some from 'lodash/some';
 import mapValues from 'lodash/mapValues';
 import filter from 'lodash/filter';
 import flatMap from 'lodash/flatMap';
-import some from 'lodash/some';
+import find from 'lodash/find';
 
 import React, { Component, Children } from 'react';
 import PropTypes from 'prop-types';
@@ -30,7 +33,7 @@ import {
 } from 'react-bootstrap';
 
 import FAIcon from 'src/views/components/util/FAIcon';
-import Loading from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/loading';
 
 
 // ####################################################
@@ -140,7 +143,8 @@ StageContributorIcon.propTypes = {
 
 // Render icon + status of all responsible contributors for given stage
 
-const StageStatusBar = dataBind(({ stageNode, stageContributors }) => {
+const StageStatusBar = //dataBind(
+  ({ stageNode, stageContributors }) => {
   //return (<StageStatusIcon status={status} />);
   return (<div>
     {map(stageContributors, user =>
@@ -151,7 +155,8 @@ const StageStatusBar = dataBind(({ stageNode, stageContributors }) => {
       />)
     }
   </div>);
-});
+};
+//);
 StageStatusBar.propTypes = {
   stageNode: PropTypes.object.isRequired
 };
@@ -305,7 +310,7 @@ import {
 } from 'src/firebaseUtil/dataUtil';
 
 
-class DataProviderBase {
+class DataSourceBase {
   listenersByPath = {};
   listenerData = new Map();
 
@@ -360,14 +365,14 @@ class DataProviderBase {
     this.onListenerRemove(path, listener);
   }
 
-  // Any DataProvider needs to implement the following three methods:
+  // Any DataSource needs to implement the following three methods:
 
   onListenerAdd(path, listener) {
-    //throw new Error('DataProvider did not implement `onListenerAdd` method');
+    //throw new Error('DataSource did not implement `onListenerAdd` method');
   }
 
   onListenerRemove(path, listener) {
-    //throw new Error('DataProvider did not implement `onListenerRemove` method');
+    //throw new Error('DataSource did not implement `onListenerRemove` method');
   }
 
   notifyNewData(path, val) {
@@ -376,11 +381,11 @@ class DataProviderBase {
   }
 
   getData(path) {
-    throw new Error('DataProvider did not implement `getData` method');
+    throw new Error('DataSource did not implement `getData` method');
   }
 }
 
-class FirebaseDataProvider extends DataProviderBase {
+class FirebaseDataSource extends DataSourceBase {
   firebaseCache = {};
 
   constructor() {
@@ -424,7 +429,7 @@ class FirebaseDataProvider extends DataProviderBase {
   }
 }
 
-class FirebaseAuthProvider extends DataProviderBase {
+class FirebaseAuthSource extends DataSourceBase {
   firebaseAuthData = undefined;
 
   constructor() {
@@ -432,7 +437,7 @@ class FirebaseAuthProvider extends DataProviderBase {
 
     autoBind(this);
 
-    firebase.auth().onAuthStateChanged(function(user) {
+    getFirebase().auth().onAuthStateChanged((user) => {
       if (user) {
         // User is signed in.
         this.firebaseAuthData = user;
@@ -459,57 +464,30 @@ class FirebaseAuthProvider extends DataProviderBase {
   }
 }
 
-const DataProviders = {
-  firebase: new FirebaseDataProvider(),
-  firebaseAuth: new FirebaseAuthProvider(),
-  //temp: new ...(),
-  //webCache: ...
-};
+// const DataSources = {
+//   firebase: new FirebaseDataSource(),
+//   firebaseAuth: new FirebaseAuthSource(),
+//   //temp: new ...(),
+//   //webCache: ...
+// };
 
 
-// TODO: How to organize different dataProviders? 
-//    A: By injecting each as it's own proxy into data-bound render methods
 
-// TODO: Improve dependency injection for data getters + path getters
-// TODO: Add support for data transformation functions as "data descriptors"
-// TODO: Write data descriptor (transformation functions) for:
-//    "uid" -> "currentProjectIndices" -> "currentProjects" -> "currentProject" -> "projectStages" -> "stakeHolders" + "stakeHolderStatus"
-
-// TODO: Use reselect for caching results
-// TODO: Add write operations
-// TODO: Add ContextDataProvider
-// TODO: Add WebCacheDataProvider
-
-// TODO: minimize re-rendering
-// TODO: All kinds of "aside" data (like "partyMembers") does not need to be real-time updated (for now)
-//    -> Consider a priority flag to indicate whether data should always be real-time, or whether some data can be outdated
-
-
+/**
+ * Data access wrapped properly.
+ * 
+ * Possible data sources: 
+ */
 class DataAccessWrapper {
-  dataProvider;
+  dataSource;
   pathDescriptorSet;
   dataProxy;
 
-  constructor(dataProvider, onNewData) {
-    this.dataProvider = dataProvider;
+  constructor(dataSource, onNewData) {
+    this.dataSource = dataSource;
     this.onNewData = onNewData;
 
     this._dataGetters = {};
-    this._isDataLoadedGetters = {};
-
-    this.isDataLoadedProxy = new Proxy(this._isDataLoadedGetters, {
-      get: (target, name) => {
-        const f = target[name];
-        if (!f) {
-          console.warn('Invalid data access. Name is not registered: ' + name);
-          return null;
-        }
-        else {
-          // TODO: custom args?
-          return f();
-        }
-      }
-    });
 
     this.dataProxy = new Proxy(this._dataGetters, {
       get: (target, name) => {
@@ -519,7 +497,6 @@ class DataAccessWrapper {
           return null;
         }
         else {
-          // TODO: custom args?
           return f();
         }
       }
@@ -531,16 +508,21 @@ class DataAccessWrapper {
   /**
    * Check if all dependencies are loaded
    * 
-   * @param {*} pathDescriptorName
+   * @param {*} descriptorOrName
    * @param {*} args
    */
-  areDependenciesLoaded(descriptor, args) {
-    if (isString(descriptor)) {
-      descriptor = this.pathDescriptorSet.getDescriptor(descriptor);
+  areDependenciesLoaded(descriptorOrName, args) {
+    let descriptor;
+    if (isString(descriptorOrName)) {
+      descriptor = this.pathDescriptorSet.getDescriptor(descriptorOrName);
       if (!descriptor) {
         return false;
       }
     }
+    else {
+      descriptor = descriptorOrName;
+    }
+
     const { varNames } = descriptor.pathInfo;
     if (!isEmpty(varNames)) {
       if (some(
@@ -570,7 +552,7 @@ class DataAccessWrapper {
     const descriptor = this.pathDescriptorSet.getDescriptor(pathDescriptorName);
     if (descriptor) {
       const path = descriptor.getPath(args);
-      return this.dataProvider.isDataLoaded(path);
+      return this.dataSource.isDataLoaded(path);
     }
     return false;
   }
@@ -590,7 +572,7 @@ class DataAccessWrapper {
 
     // 2) try getting the data
     const path = this.pathDescriptorSet.getPath(pathDescriptorName, args);
-    return this.dataProvider.getData(path);
+    return this.dataSource.getData(path);
   }
 
   accessDescriptorData(descriptor, args) {
@@ -599,7 +581,7 @@ class DataAccessWrapper {
     // whenever we access data, make sure, the path is registered
     this._registerPathListener(path);
 
-    return this.dataProvider.getData(path, args);
+    return this.dataSource.getData(path, args);
   }
 
   /**
@@ -659,14 +641,14 @@ class DataAccessWrapper {
   }
 
   _registerPathListener(path) {
-    this.dataProvider.registerListener(path, this);
+    this.dataSource.registerListener(path, this);
   }
 
   /**
    * Internally used method when the component owning this data accessor is unmounted.
    */
   unmount() {
-    this.dataProvider.unregisterListener(this);
+    this.dataSource.unregisterListener(this);
   }
 }
 
@@ -778,11 +760,11 @@ function _getDataBindContextScope(context) {
 }
 
 
-// TODO: Include dataProviderName in accessWrapper query
-// TODO: Only require explicit dataProviderName when there is a naming ambiguity?!
+// TODO: Include dataSourceName in accessWrapper query
+// TODO: Only require explicit dataSourceName when there is a naming ambiguity?!
 
-// Future TODO: some dataProviders should be hierarchical (e.g. Cache in front of DB)
-//      Should dataProvider hierarchy be configurable or hardcoded?
+// Future TODO: some dataSources should be hierarchical (e.g. Cache in front of DB)
+//      Should dataSource hierarchy be configurable or hardcoded?
 function _getDataAccessWrappersFromContext(context) {
   const scope = _getDataBindContextScope(context);
   return scope && scope[dataAccessNamespace];
@@ -796,22 +778,59 @@ function _buildDataAccessContext(accessWrappers) {
   };
 }
 
+
+
+function injectIntoClass(Clazz, methodName, methodWrapper) {
+  Object.defineProperty(Clazz.prototype, methodName,
+    {
+      value: methodWrapper(Clazz.prototype[methodName])
+    }
+  );
+}
+
+/**
+ * Note: This might behave differently for stateful and stateless components.
+ * For stateless functions, pay attention to account for props and context 
+ * in the `argsOrFunc` definition.
+ * 
+ * @see https://codepen.io/Domiii/pen/XejwKy?editors=0010
+ * 
+ * @param {*} Comp 
+ * @param {*} argsOrFunc 
+ * @return {Function} The modified component
+ */
 function injectRenderArgs(Comp, argsOrFunc) {
-  const render = isFunction(Comp) ? Comp : Comp.prototype.render;
-  function renderWrapper() {
-    const args = isFunction(argsOrFunc) ? argsOrFunc() : argsOrFunc;
-    render(...args);
+  const isComponent = Comp && Comp.prototype instanceof Component;
+
+  // there is no good working heuristic to figure out if it's a function representing a component :(
+  const isComponentFunction = isFunction(Comp);
+
+  if (!isComponentFunction && !isComponent) {
+    throw new Error('Tried to decorate object that is neither pure function nor component: ' + Comp);
   }
 
-  if (isFunction(Comp)) {
-    return renderWrapper;
+  function wrappedRender(origRender) {
+    return (...origArgs) => {
+      const props = this && this.props || origArgs[0];
+      const newArgs = isFunction(argsOrFunc) ? argsOrFunc(...origArgs) : argsOrFunc;
+      console.log('wrapped render: ' + props.name + `(${JSON.stringify(origArgs)}) → (${JSON.stringify(newArgs)})`);
+      return origRender.call(this, ...newArgs);
+    };
   }
-  Comp.prototype.render = renderWrapper;
-  return Comp;
+
+  let ResultComp;
+  if (isComponent) {
+    injectIntoClass(Comp, 'render', wrappedRender);
+    ResultComp = Comp;
+  }
+  else {
+    ResultComp = wrappedRender(Comp);
+  }
+
+  return ResultComp;
 }
 
 
-// TODO: Inject (dataProxy, props) into render method
 const dataBind = (dataAccessCfgOrFunc) => _WrappedComponent => {
   class WrapperComponent extends Component {
     static contextTypes = dataBindContextStructure;
@@ -836,37 +855,37 @@ const dataBind = (dataAccessCfgOrFunc) => _WrappedComponent => {
 
       // TODO: Fix this total mess........
       forEach(accessCfg, (
-        { provider: providerName, pathDefinitions }, 
+        { source: sourceName, pathDefinitions },
         accessName
       ) => {
-
-        const dataProvider = DataProviders[providerName];
-        if (!dataProvider) {
-          throw new Error('invalid data provider name: ' + providerName);
+        const dataSource = DataSources[sourceName];
+        if (!dataSource) {
+          throw new Error('invalid data source name: ' + sourceName);
         }
 
-        accessName = accessName || providerName;
+        accessName = accessName || sourceName;
 
         // register new DataAccessWrapper
-        const dataAccessWrapper = 
-          this.dataAccessWrappers[accessName] = 
-          new DataAccessWrapper(dataProvider, this._onNewData);
+        const dataAccessWrapper =
+          this.dataAccessWrappers[accessName] =
+          new DataAccessWrapper(dataSource, this._onNewData);
 
         const parentDataSet = _getDataAccessWrappersFromContext(context);
-        const parentPathDescriptorSet = parentDataSet && 
+        const parentPathDescriptorSet = parentDataSet &&
           parentDataSet.pathDescriptorSet;
 
         this.pathDescriptorSet = new PathDescriptorSet(
-          pathDefinitions, 
-          parentPathDescriptorSet, 
+          pathDefinitions,
+          parentPathDescriptorSet,
           dataAccessWrapper.dataProxy
         );
 
         dataAccessWrapper.addPathDefinitions(this.pathDescriptorSet);
       });
-      
+
       // TODO: we need a single dataProxy per data bound component?
-      this.WrappedComponent = injectRenderArgs(_WrappedComponent, () => [this.dataProxy, this.props]);
+      this.WrappedComponent = injectRenderArgs(_WrappedComponent,
+        () => [this.dataProxy, this.props, this.context]);
     }
 
     getChildContext() {
@@ -878,14 +897,15 @@ const dataBind = (dataAccessCfgOrFunc) => _WrappedComponent => {
     }
 
     shouldComponentUpdate() {
-      // TODO: should it update? 
-      // (whenever any subscribed state in this or any child has changed)
+      // TODO: should it update?
+      // (whenever any props, context, subscribed data in this or any child have changed)
+      //return this.shouldUpdate;
       return true;
     }
 
     componentDidMount() {
       console.log('componentDidMount');
-      
+
       this.shouldUpdate = true;
       this.forceUpdate();
     }
@@ -916,9 +936,15 @@ const dataBind = (dataAccessCfgOrFunc) => _WrappedComponent => {
 //   registerListener('test/1/b');
 // }, 100);
 
+class DataSourceDescriptor {
+  constructor(defaultDataProviderName, rootPath, children) {
+
+  }
+}
 
 
-function DataProviderRoot({ children }) {
+
+function DataSourceRoot({ children }) {
   return Children.only(children);
 }
 
@@ -930,9 +956,9 @@ function DataBind({ name, loading, args }, context) {
   console.log('DataBind.render: ' + name);
 
   if (!accessWrapper || !accessWrapper.isDataLoaded(name, args)) {
-    const Loading = loading;
+    const LoadIndicator = loading;
     accessWrapper && accessWrapper.listenToPath(name, args);
-    return (<Loading />);
+    return (<LoadIndicator />);
   }
 
   let val = accessWrapper.dataProxy[name];
@@ -947,6 +973,44 @@ DataBind.propTypes = {
   loading: PropTypes.func
 };
 DataBind.contextTypes = dataBindContextStructure;
+
+function Loading({ name, names, component, ...args }, context) {
+  names = names || (name && [name]) || EmptyArray;
+  const accessWrapper = _getDataAccessWrappersFromContext(context);
+  const isLoading = some(names, name => accessWrapper.isDataLoaded(name));
+  const Component = component || LoadIndicator;
+  if (isLoading) {
+    return (<Component {...args} />);
+  }
+  else {
+    return (<span />); // empty element
+  }
+}
+Loading.propTypes = {
+  name: PropTypes.string,
+  names: PropTypes.array,
+  component: PropTypes.func
+};
+Loading.contextTypes = dataBindContextStructure;
+
+function Loaded({ name, names, component, ...args }, context) {
+  names = names || (name && [name]) || EmptyArray;
+  const accessWrapper = _getDataAccessWrappersFromContext(context);
+  const isLoading = some(names, name => accessWrapper.isDataLoaded(name));
+  const Component = component;
+  if (!isLoading) {
+    return (<Component {...args} />);
+  }
+  else {
+    return (<span />); // empty element
+  }
+}
+Loaded.propTypes = {
+  name: PropTypes.string,
+  names: PropTypes.array,
+  component: PropTypes.func.isRequired
+};
+Loaded.contextTypes = dataBindContextStructure;
 
 function IfDataLoaded({ name, args, loading, loaded, loadingArgs, loadedArgs }, context) {
   const dataAccess = _getDataAccessWrappersFromContext(context);
@@ -970,51 +1034,189 @@ IfDataLoaded.contextTypes = dataBindContextStructure;
 
 
 
-
-// TODO: Handle list data types properly
-// TODO: Map list of ids to list of objects (e.g. for explicit indexing)
-// TODO: Allow for arguments
+// TODO: Composing of locally used data descriptors from set of globally defined data descriptors
 
 const dataAccessCfg = {
-  currentUser: {
-    provider: 'firebaseAuth',
-    paths: {
+  auth: {
+    source: 'firebaseAuth',
+    children: {
       currentUser: '',
-      uid: 'uid'
+      currentUid: 'uid'
     }
   },
   db: {
-    provider: 'firebase',
-    paths: {
-      userProjects: '/_index/projectUsers/project/$(projectId)',
-      projectUsers: '/_index/projectUsers/user/$(uid)',
-      projects: '/projects/list',
-      project: '/projects/list/$(projectId)'
+    source: 'firebase',
+    children: {
+      uidsOfProject: '/_index/projectUsers/project/$(projectId)',
+      projectIdsOfUser: '/_index/projectUsers/user/$(uid)',
+      users: {
+        path: '/users/public',
+        children: {
+          // TODO: get all users with role >= Roles.GM
+          gms: `?orderByChild=role&equalTo=${Roles.GM}`,
+          user: {
+            path: '$(uid)'
+            // ...
+          }
+        }
+      },
+      projects: {
+        path: '/projects/list',
+        children: {
+          project: '$(projectId)'
+        }
+      },
+      projectStages: {
+        path: '/projectStages',
+        children: {
+          ofProject: {
+            path: '$(projectId)',
+            children: {
+              list: {
+                path: 'list',
+                children: {
+                  stage: {
+                    path: '$(stageId)',
+                    children: {
+                      num: 'num',
+                      status: 'status',
+                      startTime: 'startTime',
+                      finishTime: 'finishTime',
+                      contributions: {
+                        pathTemplate: 'contributions',
+                        children: {
+                          contribution: {
+                            pathTemplate: '$(uid)',
+                            children: {
+                              contributorStatus: 'contributorStatus',
+                              data: 'data'
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      missions: {
+        path: '/missions',
+        children: {
+          mission: '$(missionId)'
+        }
+      }
     }
   }
 };
 
-const ProjectControlView = dataBind(dataAccessCfg)(() => {
-  console.log('ProjectControlView.render');
-  return (<div>
-    <ProjectStagesView stageNode={ProjectStageTree.root} />)
-    <p>
-      uid:
-      <DataBind name="uid" loading={Loading} />
-    </p>
-    <p>
-      currentProjectId:
-      <DataBind name="projectId" loading={Loading} />
-    </p>
-    <p>
-      currentProject:
-      { 
-        map(get('projects'), 
-          (project, projectId) => 
-        )
-      }
-      <DataBind name="project" loading={Loading} />
-    </p>
-  </div>);
-});
+// Data descriptor examples
+//    "uid" -> "currentProjectIndices" -> "currentProjects" -> "currentProject" -> "projectStages" -> "stakeHolders" + "stakeHolderStatus"
+const pathDescriptorTransformations = {
+  projectsOfUser({ projectIdsOfUser, project }, { }, { uid }) {
+    return map(projectIdsOfUser({ uid }) || EmptyObject, projectId => project({projectId}));
+  },
+
+  usersOfProject({ uidsOfProject, user }, { }, { projectId }) {
+    return map(uidsOfProject({ projectId }) || EmptyObject, uid => user({uid}));
+  },
+
+  projectStage({ projectStages: stage }, { }, { projectId, stageId }) {
+    return stage({ projectId, stageId });
+  },
+  
+  stageContributions({ projectStage }, { }, { projectId, stageId }) {
+    const stage = projectStage({ projectId, stageId });
+    return stage && stage.contributions;
+  },
+
+  stageContributors({ projectStage, usersOfProject }, { }, { projectId, stageId }) {
+    const stage = projectStage({ projectId, stageId });
+    const stageName = stage && stage.stageName;
+    const node = stageName && ProjectStageTree.getNode(stageName);
+
+    if (node && node.contributors) {
+      const contributorDefinitions = map(node.contributors, contributorSet => {
+        let userList;
+        switch (contributorSet.groupName) {
+          case 'gm':
+            //userList = ;
+          default:
+            console.error('invalid contributorset has no groupName in stage: ' + stageName);
+            userList = EmptyObject;
+        }
+        return Object.apply({}, contributorSet, { userList });
+      });
+      return contributorDefinitions;
+    }
+    return null;
+  }
+};
+
+
+/**
+ * DataDescriptor functions have four arguments:
+ * 
+ * @param {object} descriptors set of path_or_data_descriptors
+ * @param {object} injectedData set of injected data, interpolated from data descriptors of given names
+ * @param {object} args set of arguments, required to be supplied explicitly.
+ * 
+ * When DataDescriptors are executed the first time in data-bound context, all accessed paths are
+ * added as dependencies and their loading initialized.
+ * 
+ * @return {object or array} Returns one or more sets of data or paths
+ */
+
+
+// TODO: Difference between PathDescriptor + DataDescriptor (latter takes a path descriptor)
+// TODO: One DataDescriptor built from each PathDescriptor
+// TODO: Transformation functions should be PathDescriptor (or flagged correspondingly if they cannot be used that way)
+
+
+// TODO: DataAccessWrapper becomes a composition of paths + transformations from imported "ref" objects
+// TODO: 
+// TODO: Allow for proper dependency injection for data getters + path getters
+
+// TODO: Handle different nodes in data access config: 
+//    dataAccessWrapper, dataSource, paths, transformations
+// TODO: Add support for data transformation functions as "data descriptors"
+
+// TODO: Use reselect for caching results
+// TODO: Add write operations
+// TODO: Add ContextDataSource
+// TODO: Add WebCacheDataSource
+
+// TODO: minimize re-rendering
+// TODO: All kinds of "aside" data (like "partyMembers") does not need to be real-time updated (for now)
+//    -> Consider a priority flag to indicate whether data should always be real-time, or whether some data can be outdated
+
+
+
+const ProjectControlView = dataBind(dataAccessCfg)(
+  () => {
+    console.log('ProjectControlView.render');
+    return (<div>
+      <ProjectStagesView stageNode={ProjectStageTree.root} />)
+      <p>
+        uid:
+        <DataBind name="uid" loading={LoadIndicator} />
+      </p>
+      <p>
+        currentProjectId:
+        <DataBind name="projectId" loading={LoadIndicator} />
+      </p>
+      <p>
+        currentProject:
+        {
+          {/* map(projects, 
+            (project, projectId) => 
+          ) */}
+        }
+        <DataBind name="project" loading={LoadIndicator} />
+      </p>
+    </div>);
+  }
+);
 export default ProjectControlView;

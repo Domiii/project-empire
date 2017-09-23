@@ -2,8 +2,8 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { FAIcon } from 'src/views/components/util';
 
-// TODO: load symbol -> inline + block
-export default class Loading extends PureComponent {
+
+export default class LoadIndicator extends PureComponent {
   static propTypes = {
     block: PropTypes.bool,
     message: PropTypes.string

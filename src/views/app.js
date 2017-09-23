@@ -26,6 +26,16 @@ import { Overlay, LoadOverlay } from 'src/views/components/overlays';
   
   const uid = getFirebase().auth().currentUser && getFirebase().auth().currentUser.uid;
   if (uid) {
+    // ?orderByChild=role&startAt=99
+    getFirebase().ref('/users/public?orderByChild=role&startAt=99')
+      // .orderByChild('role')
+      // .startAt(99)
+      .on('value', 
+        snap => {
+          console.log(snap.val());
+        },
+        console.error
+      );
     UserInfoRef.user.addQuery(paths, {uid});
   }
   //paths.push(UserInfoRef.makeQuery());

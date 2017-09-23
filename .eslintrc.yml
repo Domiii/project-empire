@@ -99,7 +99,7 @@ rules:
   no-empty: 2
   no-empty-character-class: 2
   no-empty-function: 0
-  no-empty-pattern: 2
+  no-empty-pattern: 0
   no-eq-null: 0
   no-eval: 2
   no-ex-assign: 2

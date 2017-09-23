@@ -16,7 +16,7 @@ import {
 
 import ProjectEditTools from './ProjectEditTools';
 import UserList, { UserBadge } from 'src/views/components/users/UserList';
-import Loading from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/loading';
 
 
 // TODO: render + allow editing of guardianNotes + gmNotes + partyNotes
@@ -130,7 +130,7 @@ export default class ProjectPreview extends Component {
 
     const missionHeader = mission && 
       `${mission.code} - ${mission.title}` ||
-      <Loading />;
+      <LoadIndicator />;
 
     return (<div>
       <h1>{missionHeader}</h1>

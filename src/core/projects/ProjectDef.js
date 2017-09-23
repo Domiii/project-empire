@@ -13,38 +13,22 @@ function isCurrentUserInGroup(user, groupName) {
 
 }
 
-function getStageStakeHolders({ groups, count }) {
+function getStageStakeHolders(groups, count) {
   // TODO: support multiple sets of "stake holders"
 
 }
 
-function stakeHolders(groups, count) {
-  groups = !isArray(groups) ? [groups] : groups;
-  return { groups, count };
+function contributorSet(groupName, signOffCount) {
+  return { groupName, signOffCount };
 }
 
-export const GroupSettings = {
-  party: {
-
-  },
-  reviewer: {
-
-  },
-  gms: {
-
-  },
-  any: {
-
-  }
-};
-
-export const StakeHolderSettings = {
+export const ContributorGroup = {
   none: 0,
   party: 1,
   partyMember: 2,
   reviewer: 3,
   gm: 4,
-  all: 5
+  any: 5
 };
 
 export const DefaultPrivs = {
@@ -70,7 +54,7 @@ export const ProjectStageTree = new StageDefTree([
     checklists: [
       // TODO: how to prepare for a collaborative mission properly?
     ],
-    resonponsible: stakeHolders('party', 1)
+    contributors: contributorSet('party', 1)
   },
   {
     id: 'sprint',

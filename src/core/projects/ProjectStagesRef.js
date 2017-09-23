@@ -61,6 +61,7 @@ export function makeStageId(stageDef, previousStageId, previousStage) {
 
 
 const stageDataProps = Object.freeze({
+  stageName: 'stageName',
   num: 'num',
   status: 'status',
   startTime: 'startTime',
