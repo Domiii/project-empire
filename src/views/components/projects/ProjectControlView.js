@@ -36,24 +36,57 @@ import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/loading';
 
 
+// TODO: STICK TO FIREBASE SYNTAX, DON'T OVER-GENERALIZE!
 
-// TODO: Fix PathDescriptor: Allow for proper dependency injection for data getters + path getters
-// TODO: PathDescriptor has a getPath method
+/**
+ * A parsed "dataConfig" object.
+ * Allows composing of local descriptors built from descriptors imported from other places.
+ */
+class DataDescriptionNode {
+  dataProviderName;
+
+  constructor(dataProviderName, dataConfig) {
+    // TODO: parse data config object as shown below.
+    // TODO: can also be used to be exported and added into other dataConfigs
+    // TODO: more...
+    //  1) allow for RefWrapper-type config parsing, with pathTemplate also to be called "path" + advanced features
+    //  2) handle + properly name node types: PathDescriptor (path string + fn), reader (fn), writer (fn).
+    //  3) merge all nodes back into all ascendants when not ambiguous.
+    //    Note: if name is on this node, and the same name is used down the line, add the descriptor from "this node"
+    //    Note: in all other cases of ambiguity, insert "ambiguous error" descriptor
+  }
+}
+
+// TODO: use DataDescriptionNode to build readers and writers
+
+class DataReader {
+  pathDescriptor;
+  
+  constructor(dataDescriptionNode) {
+    // TODO: Handle pathDescriptor returning multiple paths
+  }
+}
+
+class DataWriter {
+  pathDescriptor;
+
+  constructor(dataDescriptionNode) {
+    // TODO: Handle pathDescriptor returning multiple paths
+    // TODO: Just implement the previous writes as is, for now!
+  }
+}
+
+// TODO: implement firebase "applyParamsToQuery"
+// TODO: Distinguish between DataProvider (e.g. cache, some firebase app, etc...) and DataSource (a access wrapper on top of a data provider)
+// TODO: fix PathDescriptor
 // TODO: PathDescriptor.getPath can return one path or array of paths.
 
-// TODO: One DataDescriptor built from each PathDescriptor
-// TODO: DataDescriptor has a getData method
+// TODO: build DataReader from PathDescriptor
+// TODO: DataReader has a getData method?
+
+// TODO: build PathWriter from PathDescriptor
 
 // TODO: Transformation functions should be PathDescriptors, or flagged correspondingly if they cannot be used that way
-
-// TODO:
-//    Build ComposedDataSource? (name pending) from given config objects.
-//    hierarchy 1: allow for RefWrapper config parsing, with pathTemplate also to be called "path".
-//    hierarchy 2: [all node types] path (pathTemplate or pathFunc), pathTransform, dataTransform, children.
-//    hierarchy 3: merge everything back to all ascendants when not ambiguous, else choose furthest override?
-
-// TODO: [ideally] Allow composing of locally used data descriptors from set of globally defined data descriptors
-
 
 // TODO: Add support for data transformation functions as "data descriptors"
 
@@ -177,17 +210,17 @@ StageContributorIcon.propTypes = {
 
 const StageStatusBar = //dataBind(
   ({ stageNode, stageContributors }) => {
-  //return (<StageStatusIcon status={status} />);
-  return (<div>
-    {map(stageContributors, user =>
-      <StageContributorIcon
-        groupName={'???'}
-        user={user}
-        status={getStageContributorStatus(user, stageNode)}
-      />)
-    }
-  </div>);
-};
+    //return (<StageStatusIcon status={status} />);
+    return (<div>
+      {map(stageContributors, user =>
+        <StageContributorIcon
+          groupName={'???'}
+          user={user}
+          status={getStageContributorStatus(user, stageNode)}
+        />)
+      }
+    </div>);
+  };
 //);
 StageStatusBar.propTypes = {
   stageNode: PropTypes.object.isRequired
@@ -342,7 +375,7 @@ import {
 } from 'src/firebaseUtil/dataUtil';
 
 
-class DataSourceBase {
+class DataProviderBase {
   listenersByPath = {};
   listenerData = new Map();
 
@@ -417,7 +450,7 @@ class DataSourceBase {
   }
 }
 
-class FirebaseDataSource extends DataSourceBase {
+class FirebaseDataProvider extends DataProviderBase {
   firebaseCache = {};
 
   constructor() {
@@ -461,14 +494,20 @@ class FirebaseDataSource extends DataSourceBase {
   }
 }
 
-class FirebaseAuthSource extends DataSourceBase {
+class FirebaseAuthProvider extends DataProviderBase {
   firebaseAuthData = undefined;
+  isBound = false;
 
   constructor() {
     super();
 
     autoBind(this);
+  }
+  
+  onListenerAdd(path, listener) {
+    if (this.isBound) return;
 
+    // add listener once the first request comes in
     getFirebase().auth().onAuthStateChanged((user) => {
       if (user) {
         // User is signed in.
@@ -496,19 +535,15 @@ class FirebaseAuthSource extends DataSourceBase {
   }
 }
 
-// const DataSources = {
-//   firebase: new FirebaseDataSource(),
-//   firebaseAuth: new FirebaseAuthSource(),
-//   //temp: new ...(),
-//   //webCache: ...
-// };
-
-
+const DataProviders = {
+  firebase: new FirebaseDataProvider(),
+  firebaseAuth: new FirebaseAuthProvider()
+  //temp: new ...(),
+  //webCache: ...
+};
 
 /**
- * Data access wrapped properly.
- * 
- * Possible data sources: 
+ * TODO: Rename to DataSource (one node as part of hierarchy)
  */
 class DataAccessWrapper {
   dataSource;
@@ -521,6 +556,18 @@ class DataAccessWrapper {
 
     this._dataGetters = {};
 
+    this.buildDataReadProxy();
+
+    autoBind(this);
+  }
+  
+
+  // TODO: Let's redo this whole thing!!!
+  buildDataReadProxy(dataSource) {
+    // Note: only functions that do not have dependencies on local arguments can succeed
+    // const p = new Proxy(dataSource);
+    // return p;
+    
     this.dataProxy = new Proxy(this._dataGetters, {
       get: (target, name) => {
         const f = target[name];
@@ -533,8 +580,6 @@ class DataAccessWrapper {
         }
       }
     });
-
-    autoBind(this);
   }
 
   /**
@@ -701,45 +746,40 @@ class DataAccessWrapper {
  * @return {object or array} Returns one or more sets of data or paths
  */
 class PathDescriptor {
-  _pathTemplate;
+  _pathConfig;
   _pathGetter;
-  _dataProxy;
   _pathInfo;
 
-  constructor(pathTemplate, dataProxy) {
-    this._pathTemplate = pathTemplate;
-    this._dataProxy = dataProxy;
-    // this._pathGetter = createPathGetterFromTemplateProps(pathTemplate, _varContextMap && 
-    //   this._varTransform.bind(this) || 
-    //   null);
+  constructor(pathConfig) {
+    this._pathConfig = pathConfig;
 
-    const lookupPath = createPathGetterFromTemplateProps(pathTemplate);
-    this._pathInfo = lookupPath.pathInfo;
-
-    // lookup variables
-    this._pathGetter = args => lookupPath(this._mapArgs(args));
+    this.buildPathGetter(pathConfig);
 
     autoBind(this);
   }
 
+  // TODO: fix this!
+  buildPathGetter(pathConfig, dataSource) {
+    if (isString(pathConfig)) {
+      // TODO
+      const lookupPath = createPathGetterFromTemplateProps(pathConfig);
+      this._pathInfo = lookupPath.pathInfo;
+    }
+    else if (isPlainObject(pathConfig)) {
+      // TODO
+    }
+    else if (isFunction(pathConfig)) {
+    }
+    this._pathGetter = args => lookupPath(this._mapArgs(args));
+  }
+
+  getPath(dataSourceHierarchy, args) {
+    // call a data read function
+    return this._pathGetter(dataSourceHierarchy, dataSourceHierarchy.dataProxy, args);
+  }
+
   get pathInfo() {
     return this._pathInfo;
-  }
-
-  getPath(args) {
-    return this._pathGetter(args);
-  }
-
-  _mapArgs(args) {
-    // lookup data from dataProxy
-    if (args === undefined) {
-      // minor optimization: Don't create new object if no args given
-      args = this._dataProxy;
-    }
-    else {
-      args = Object.assign({}, this._dataProxy, args);
-    }
-    return args;
   }
 
   _mapVar(inputName) {
@@ -976,17 +1016,6 @@ const dataBind = (dataAccessCfgOrFunc) => _WrappedComponent => {
   return WrapperComponent;
 };
 
-// setTimeout(() => {
-//   registerListener('test/1');
-//   registerListener('test/1/b');
-// }, 100);
-
-class DataSourceDescriptor {
-  constructor(defaultDataProviderName, rootPath, children) {
-
-  }
-}
-
 
 
 function DataSourceRoot({ children }) {
@@ -1158,24 +1187,24 @@ const dataAccessCfg = {
 //    "uid" -> "currentProjectIndices" -> "currentProjects" -> "currentProject" -> "projectStages" -> "stakeHolders" + "stakeHolderStatus"
 const pathDescriptorTransformations = {
   projectsOfUser({ projectIdsOfUser, project }, { }, { uid }) {
-    return map(projectIdsOfUser({ uid }) || EmptyObject, projectId => project({projectId}));
+    return map(projectIdsOfUser({ uid }) || EmptyObject, projectId => project({ projectId }));
   },
 
   usersOfProject({ uidsOfProject, user }, { }, { projectId }) {
-    return map(uidsOfProject({ projectId }) || EmptyObject, uid => user({uid}));
+    return map(uidsOfProject({ projectId }) || EmptyObject, uid => user({ uid }));
   },
 
   projectStage({ projectStages: stage }, { }, { projectId, stageId }) {
     return stage({ projectId, stageId });
   },
-  
+
   stageContributions({ projectStage }, { }, { projectId, stageId }) {
     const stage = projectStage({ projectId, stageId });
     return stage && stage.contributions;
   },
 
   stageContributors({ projectStage, stageContributorUserList },
-    { }, 
+    { },
     { projectId, stageId }) {
     const stage = projectStage({ projectId, stageId });
     const stageName = stage && stage.stageName;
@@ -1191,9 +1220,9 @@ const pathDescriptorTransformations = {
     }
     return null;
   },
-  
-  stageContributorUserList({ usersOfProject, projectReviewer, users: { gms } }, 
-    { }, 
+
+  stageContributorUserList({ usersOfProject, projectReviewer, users: { gms } },
+    { },
     { projectId, groupName }) {
     switch (groupName) {
       case 'gm':
