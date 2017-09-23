@@ -16,7 +16,7 @@ const ConceptsRef = makeRefWrapper({
       // get root entries
       return [
         'orderByChild=parentId',
-        `equalTo=null`
+        'equalTo=null'
       ];
     }
   },

@@ -26,16 +26,6 @@ import { Overlay, LoadOverlay } from 'src/views/components/overlays';
   
   const uid = getFirebase().auth().currentUser && getFirebase().auth().currentUser.uid;
   if (uid) {
-    // ?orderByChild=role&startAt=99
-    getFirebase().ref('/users/public?orderByChild=role&startAt=99')
-      // .orderByChild('role')
-      // .startAt(99)
-      .on('value', 
-        snap => {
-          console.log(snap.val());
-        },
-        console.error
-      );
     UserInfoRef.user.addQuery(paths, {uid});
   }
   //paths.push(UserInfoRef.makeQuery());
@@ -53,6 +43,7 @@ import { Overlay, LoadOverlay } from 'src/views/components/overlays';
   if (auth && auth.uid) {
     // TODO: Move this to componentWillMount
     //    see: https://firebase.google.com/docs/reference/node/firebase.auth.Auth#onAuthStateChanged
+    console.warn(auth.uid);
     props.currentUserRef = UserInfoRef.user(firebase, {auth, uid: auth.uid});
   }
 

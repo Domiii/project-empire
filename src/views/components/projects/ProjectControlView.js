@@ -36,6 +36,38 @@ import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/loading';
 
 
+
+// TODO: Fix PathDescriptor: Allow for proper dependency injection for data getters + path getters
+// TODO: PathDescriptor has a getPath method
+// TODO: PathDescriptor.getPath can return one path or array of paths.
+
+// TODO: One DataDescriptor built from each PathDescriptor
+// TODO: DataDescriptor has a getData method
+
+// TODO: Transformation functions should be PathDescriptors, or flagged correspondingly if they cannot be used that way
+
+// TODO:
+//    Build ComposedDataSource? (name pending) from given config objects.
+//    hierarchy 1: allow for RefWrapper config parsing, with pathTemplate also to be called "path".
+//    hierarchy 2: [all node types] path (pathTemplate or pathFunc), pathTransform, dataTransform, children.
+//    hierarchy 3: merge everything back to all ascendants when not ambiguous, else choose furthest override?
+
+// TODO: [ideally] Allow composing of locally used data descriptors from set of globally defined data descriptors
+
+
+// TODO: Add support for data transformation functions as "data descriptors"
+
+// TODO: Use reselect for caching results
+// TODO: Add write operations
+// TODO: Add ContextDataSource
+// TODO: Add WebCacheDataSource
+
+// TODO: minimize re-rendering
+// TODO: All kinds of "aside" data (like "partyMembers") does not need to be real-time updated (for now)
+//    -> Consider a priority flag to indicate whether data should always be real-time, or whether some data can be outdated
+
+
+
 // ####################################################
 // Getters + Enums
 // ####################################################
@@ -653,7 +685,20 @@ class DataAccessWrapper {
 }
 
 /**
+ * DataDescriptor functions have four arguments:
  * 
+ * @param {object} descriptors set of path/data descriptors
+ * @param {object} injectedData set of injected data, interpolated from data descriptors of given names
+ * @param {object} args set of arguments, required to be supplied explicitly.
+ * 
+ * When DataDescriptors are executed the first time in data-bound context, all accessed paths are
+ * added as dependencies and their loading initialized.
+ * 
+ * When a descriptor is called:
+ * 1) All injected data is automatically added to data dependencies immediately.
+ * 2) descriptor arguments are NOT added immediately, only after they are called.
+ * 
+ * @return {object or array} Returns one or more sets of data or paths
  */
 class PathDescriptor {
   _pathTemplate;
@@ -1033,9 +1078,6 @@ IfDataLoaded.propTypes = {
 IfDataLoaded.contextTypes = dataBindContextStructure;
 
 
-
-// TODO: Composing of locally used data descriptors from set of globally defined data descriptors
-
 const dataAccessCfg = {
   auth: {
     source: 'firebaseAuth',
@@ -1132,66 +1174,40 @@ const pathDescriptorTransformations = {
     return stage && stage.contributions;
   },
 
-  stageContributors({ projectStage, usersOfProject }, { }, { projectId, stageId }) {
+  stageContributors({ projectStage, stageContributorUserList },
+    { }, 
+    { projectId, stageId }) {
     const stage = projectStage({ projectId, stageId });
     const stageName = stage && stage.stageName;
     const node = stageName && ProjectStageTree.getNode(stageName);
 
     if (node && node.contributors) {
       const contributorDefinitions = map(node.contributors, contributorSet => {
-        let userList;
-        switch (contributorSet.groupName) {
-          case 'gm':
-            //userList = ;
-          default:
-            console.error('invalid contributorset has no groupName in stage: ' + stageName);
-            userList = EmptyObject;
-        }
-        return Object.apply({}, contributorSet, { userList });
+        const { groupName } = contributorSet;
+        const userList = stageContributorUserList({ projectId, groupName });
+        return Object.assign({}, contributorSet, { userList });
       });
       return contributorDefinitions;
     }
     return null;
+  },
+  
+  stageContributorUserList({ usersOfProject, projectReviewer, users: { gms } }, 
+    { }, 
+    { projectId, groupName }) {
+    switch (groupName) {
+      case 'gm':
+        return gms();
+      case 'party':
+        return usersOfProject({ projectId });
+      case 'reviewer':
+        return projectReviewer({ projectId });
+      default:
+        console.error('invalid groupName in stage definition: ' + groupName);
+        return EmptyObject;
+    }
   }
 };
-
-
-/**
- * DataDescriptor functions have four arguments:
- * 
- * @param {object} descriptors set of path_or_data_descriptors
- * @param {object} injectedData set of injected data, interpolated from data descriptors of given names
- * @param {object} args set of arguments, required to be supplied explicitly.
- * 
- * When DataDescriptors are executed the first time in data-bound context, all accessed paths are
- * added as dependencies and their loading initialized.
- * 
- * @return {object or array} Returns one or more sets of data or paths
- */
-
-
-// TODO: Difference between PathDescriptor + DataDescriptor (latter takes a path descriptor)
-// TODO: One DataDescriptor built from each PathDescriptor
-// TODO: Transformation functions should be PathDescriptor (or flagged correspondingly if they cannot be used that way)
-
-
-// TODO: DataAccessWrapper becomes a composition of paths + transformations from imported "ref" objects
-// TODO: 
-// TODO: Allow for proper dependency injection for data getters + path getters
-
-// TODO: Handle different nodes in data access config: 
-//    dataAccessWrapper, dataSource, paths, transformations
-// TODO: Add support for data transformation functions as "data descriptors"
-
-// TODO: Use reselect for caching results
-// TODO: Add write operations
-// TODO: Add ContextDataSource
-// TODO: Add WebCacheDataSource
-
-// TODO: minimize re-rendering
-// TODO: All kinds of "aside" data (like "partyMembers") does not need to be real-time updated (for now)
-//    -> Consider a priority flag to indicate whether data should always be real-time, or whether some data can be outdated
-
 
 
 const ProjectControlView = dataBind(dataAccessCfg)(

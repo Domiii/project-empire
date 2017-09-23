@@ -2,9 +2,9 @@
 
 
 /**
- * Thanks go to react-redux-firebase
+ * Thanks go to react-redux-firebase!
  * 
- * @see https://github.com/prescottprue/react-redux-firebase/blob/ed6b902aee8ca225b02e307b71ff1b93b4f9f6fe/src/utils/query.js#L123
+ * @see https://github.com/prescottprue/react-redux-firebase/tree/master/src/utils/query.js#L123
  * 
  * @param {*} queryParams 
  * @param {*} query 

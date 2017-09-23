@@ -25,10 +25,9 @@ function contributorSet(groupName, signOffCount) {
 export const ContributorGroup = {
   none: 0,
   party: 1,
-  partyMember: 2,
-  reviewer: 3,
-  gm: 4,
-  any: 5
+  reviewer: 2,
+  gm: 3,
+  any: 4
 };
 
 export const DefaultPrivs = {
