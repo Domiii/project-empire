@@ -77,7 +77,7 @@ rules:
   no-array-constructor: 2
   no-bitwise: 0
   no-caller: 2
-  no-case-declarations: 2
+  no-case-declarations: 0
   no-catch-shadow: 0
   no-class-assign: 2
   no-cond-assign: 2
