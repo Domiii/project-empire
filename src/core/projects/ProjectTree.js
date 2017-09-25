@@ -180,9 +180,10 @@ export class StageDefTree {
 }
 
 /**
+ * TODO: ???
  * An actual path of a party traversing a project and all its stages
  */
-class StagePath {
+export class StagePath {
   constructor() {
     this.path = [];
     this.traversalStack = [];

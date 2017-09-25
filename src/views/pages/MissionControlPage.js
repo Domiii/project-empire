@@ -196,7 +196,7 @@ export default class MissionControlPage extends Component {
 
       currentProjectOverview = (<div>
         <ProjectPreview {...projectData} />
-        <ProjectControlView />
+        <ProjectControlView projectId={currentProjectId} />
         { /* this.renderMeetings(projectData) */ }
       </div>);
     }
