@@ -10,18 +10,18 @@ import { EmptyObject, EmptyArray } from 'src/util';
  * The node has access to all the named nodes that it's users could possibly make use of.
  * The node then uses the descriptor function while providing data from the bound data providers.
  */
-class DataSourceNode {
-  _dataContext;
+export default class DataSourceNode {
+  _dataSource;
   _dataProvider;
   _descriptor;
   _readByNameProxy;
   _readersByName;
   _sourceNodesByName;
 
-  constructor(dataContext, descriptorNode) {
-    this._dataContext = dataContext;
+  constructor(dataSource, descriptorNode) {
+    this._dataSource = dataSource;
     this._descriptor = descriptorNode;
-    this._dataProvider = dataContext.dataProviders[descriptorNode.dataProviderName];
+    this._dataProvider = dataSource.dataProviders[descriptorNode.dataProviderName];
 
     autoBind(this);
 
@@ -85,15 +85,15 @@ class DataSourceNode {
   // }
 
   resolveName(name) {
-    const node = this.sourceNodesByName[name];
+    const node = this._sourceNodesByName[name];
     if (!node) {
       throw new Error(`Requested name "${name}" does not exist in "${this.name}"`);
     }
     return node;
   }
 
-  call(args) {
+  execute(args) {
     args = args || EmptyObject;
-    return this._descriptor.boundCall(this._readersByName, this._readByNameProxy, args);
+    return this._descriptor.execute(args, this._readByNameProxy, this._readersByName);
   }
 }

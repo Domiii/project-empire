@@ -22,7 +22,7 @@ import {
 import { 
   firebaseConfigs, 
   reduxFirebaseConfig
-} from 'src/config/firebase.cfg'
+} from 'src/config/firebase.cfg';
 
 
 import configureStore from './core/store';

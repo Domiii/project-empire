@@ -24,15 +24,15 @@ export default class DataDescriptorNode {
   }
 
   /**
-   * DescriptorNode boundCall functions have four (five) sets of arguments:
+   * DescriptorNode execute functions have four (five) sets of arguments:
    * 
-   * @param {object} namedCalls Set of all path/read calls provided to the callee. Callee decides when to make the call and with what arguments.
-   * @param {object} namedCallProxy Set of all path/read calls executed right away, directly injecting the path/data to callee with no user arguments provided.
    * @param {object} args Set of user-supplied arguments.
-   * @param {object} callerNode The callerNode supplies access to the DataContext, and all kinds of advanced stuff. Use with caution.
+   * @param {object} namedCallProxy Set of all path/read calls executed right away, directly injecting the path/data to callee with no user arguments provided.
+   * @param {object} namedCalls Set of all path/read calls provided to the callee. Callee decides when to make the call and with what arguments.
+   * @param {object} callerNode The callerNode supplies access to the DataSource, and all kinds of advanced stuff. Use with caution.
    * @param {object} writers set of required writer nodes. For writer nodes only! (Only writers can require more writers)
    * 
-   * They are called from the DataContextNodeBindings which supplies the data the node requests.
+   * They are called from the DataSourceNodeBindings which supplies the data the node requests.
    * 
    * When nodes are called upon the first time, all data read sights are
    * automatically added as dependencies and their loading initialized.
@@ -43,8 +43,8 @@ export default class DataDescriptorNode {
    * 
    * @return {object or array} Returns one or more sets of data or paths
    */
-  boundCall(readersByName, readByNameProxy, args, callerNode) {
-    throw new Error('DescriptorNode did not implement boundCall: ' + this.constructor.name);
+  execute(args, readByNameProxy, readersByName, callerNode) {
+    throw new Error('DescriptorNode did not implement execute: ' + this.constructor.name);
   }
 
   toString() {
@@ -65,9 +65,9 @@ export default class DataDescriptorNode {
   }
 
   _wrapAccessFunction(fn) {
-    return function _wrappedAccessFunction(readersByName, readByNameProxy, args, callerNode) {
+    return function _wrappedAccessFunction(args, readByNameProxy, readersByName, callerNode) {
       try {
-        return fn(readersByName, readByNameProxy, args, callerNode);
+        return fn(args, readByNameProxy, readersByName, callerNode);
       }
       catch (err) {
         console.error(`Failed to execute "${this.nodeType}" function at "${this.name}":`, err.stack);

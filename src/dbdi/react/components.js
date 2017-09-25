@@ -8,15 +8,40 @@ import PropTypes from 'prop-types';
 
 import LoadIndicator from 'src/views/components/util/loading';
 
+import { 
+  dataBindContextStructure,
+  getDataSourceFromReactContext
+} from './lib/dbdi-react-internals';
 
-function DataSourceRoot({ children }) {
-  return Children.only(children);
+// TODO: must expose DataSource to all children
+export class DataSourceRoot extends Component {
+  constructor(props, context) {
+    super(props, context);
+
+    const {
+      dataProviders,
+      dataSourceConfig
+    } = props;
+
+    // TODO: Build DataContext and provide it!
+  }
+
+  getChildContext() {
+    // TODO
+  }
+
+  render() {
+    const {
+      children
+    } = this.props;
+    return Children.only(children);
+  }
 }
 
+// TODO: fix these?!
 
-// TODO: what to do with custom args?
 export function DataBind({ name, loading, args }, context) {
-  const accessWrapper = _getDataAccessWrappersFromContext(context);
+  const accessWrapper = getDataSourceFromReactContext(context);
 
   console.log('DataBind.render: ' + name);
 
@@ -43,7 +68,7 @@ DataBind.contextTypes = dataBindContextStructure;
 
 export function Loading({ name, names, component, ...args }, context) {
   names = names || (name && [name]) || EmptyArray;
-  const accessWrapper = _getDataAccessWrappersFromContext(context);
+  const accessWrapper = getDataSourceFromReactContext(context);
   const isLoading = some(names, name => accessWrapper.isDataLoaded(name));
   const Component = component || LoadIndicator;
   if (isLoading) {
@@ -64,7 +89,7 @@ Loading.contextTypes = dataBindContextStructure;
 
 export function Loaded({ name, names, component, ...args }, context) {
   names = names || (name && [name]) || EmptyArray;
-  const accessWrapper = _getDataAccessWrappersFromContext(context);
+  const accessWrapper = getDataSourceFromReactContext(context);
   const isLoading = some(names, name => accessWrapper.isDataLoaded(name));
   const Component = component;
   if (!isLoading) {
@@ -84,7 +109,7 @@ Loaded.contextTypes = dataBindContextStructure;
 
 
 export function IfDataLoaded({ name, args, loading, loaded, loadingArgs, loadedArgs }, context) {
-  const dataAccess = _getDataAccessWrappersFromContext(context);
+  const dataAccess = getDataSourceFromReactContext(context);
 
   if (!dataAccess || !dataAccess.isDataLoaded(name, args)) {
     const Loading = loading;

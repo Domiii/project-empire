@@ -36,13 +36,13 @@ export default class DataReadDescriptor extends DataDescriptorNode {
   }
 
   _buildGetDataFromDescriptor(pathDescriptor) {
-    return function _getData(readersByName, readByNameProxy, args, callerNode) {
+    return function _getData(args, readByNameProxy, readersByName, callerNode) {
       // // TODO check if all dependencies are loaded?
       // if (!callerNode.areDependenciesLoaded(this)) {
       //   return null;
       // }
 
-      const pathOrPaths = pathDescriptor.getPath(readersByName, readByNameProxy, args, callerNode);
+      const pathOrPaths = pathDescriptor.getPath(args, readByNameProxy, readersByName, callerNode);
       const { dataProvider } = callerNode;
 
       if (isArray(pathOrPaths)) {
@@ -99,8 +99,8 @@ export default class DataReadDescriptor extends DataDescriptorNode {
   }
 
 
-  boundCall(readersByName, readByNameProxy, args, callerNode) {
+  execute(args, readByNameProxy, readersByName, callerNode) {
     // call path read function
-    return this.getData(readersByName, readByNameProxy, args, callerNode);
+    return this.getData(args, readByNameProxy, readersByName, callerNode);
   }
 }

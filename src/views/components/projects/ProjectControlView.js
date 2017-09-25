@@ -166,7 +166,7 @@ const StageContributorIcons = dataBind()(
 // Render icon + status of all responsible contributors for given stage
 
 const StageStatusBar = dataBind()(
-  ({ }, { stageNode, stageContributors }) => {
+  ({ stageNode, stageContributors }, { }) => {
     //return (<StageStatusIcon status={status} />);
     return (<div>
       {map(stageContributors, user =>
@@ -191,36 +191,38 @@ StageStatusBar.propTypes = {
 
 // TODO: ProjectsRef, ProjectStagesRef, MissionsRef, UserInfoRef
 
-export function ProjectStageView({ stageNode }) {
-  const stageDef = stageNode.stageDef;
-  const title = stageDef.title;
+const ProjectStageView = dataBind()(
+  ({ stageNode }, { }) => {
+    const stageDef = stageNode.stageDef;
+    const title = stageDef.title;
 
-  const order = stageNode.order;
-  const status = getStageStatus(stageNode);
-  const bsStyle = statusBsStyles[status];
+    const order = stageNode.order;
+    const status = getStageStatus(stageNode);
+    const bsStyle = statusBsStyles[status];
 
-  const header = (
-    <Flex row justifyContent="space-between" alignItems="center">
-      <Item>
-        <span>{`${order + 1}. ${title}`}</span>
-      </Item>
-      <Item>
-        <StageStatusBar stageNode={stageNode} />
-      </Item>
-    </Flex>
-  );
+    const header = (
+      <Flex row justifyContent="space-between" alignItems="center">
+        <Item>
+          <span>{`${order + 1}. ${title}`}</span>
+        </Item>
+        <Item>
+          <StageStatusBar stageNode={stageNode} />
+        </Item>
+      </Flex>
+    );
 
-  return (<div>
-    <Panel header={header} className="no-margin no-shadow no-border project-stage-panel"
-      bsStyle={bsStyle}>
-      {stageNode.firstChild && (
-        <div>
-          <ProjectStagesView stageNode={stageNode.firstChild} />
-        </div>
-      )}
-    </Panel>
-  </div>);
-}
+    return (<div>
+      <Panel header={header} className="no-margin no-shadow no-border project-stage-panel"
+        bsStyle={bsStyle}>
+        {stageNode.firstChild && (
+          <div>
+            <ProjectStagesView stageNode={stageNode.firstChild} />
+          </div>
+        )}
+      </Panel>
+    </div>);
+  }
+);
 ProjectStageView.propTypes = {
   stageNode: PropTypes.object.isRequired
 };
@@ -234,32 +236,34 @@ ProjectStageArrow.propTypes = {
   previousNode: PropTypes.object.isRequired
 };
 
-export function ProjectStagesView({ stageNode }) {
-  // interject node views with arrows
-  return (
-    <Flex column justifyContent="center" alignItems="center">
-      {
-        stageNode.mapLine(node => {
-          const order = node.order;
-          return (<div key={order} className="full-width">
-            {
-              <Item className="full-width">
-                <ProjectStageView
-                  stageNode={node}
-                />
-              </Item>
-            }
-            {!!node.next &&
-              <Item style={{ display: 'flex' }} justifyContent="center" flex="1" >
-                <ProjectStageArrow previousNode={node} />
-              </Item>
-            }
-          </div>);
-        })
-      }
-    </Flex>
-  );
-}
+const ProjectStagesView = dataBind()(
+  ({ thisProjectStages, stageNode }, { }) => {
+    // interject node views with arrows
+    return (
+      <Flex column justifyContent="center" alignItems="center">
+        {
+          stageNode.mapLine(node => {
+            const order = node.order;
+            return (<div key={order} className="full-width">
+              {
+                <Item className="full-width">
+                  <ProjectStageView
+                    stageNode={node}
+                  />
+                </Item>
+              }
+              {!!node.next &&
+                <Item style={{ display: 'flex' }} justifyContent="center" flex="1" >
+                  <ProjectStageArrow previousNode={node} />
+                </Item>
+              }
+            </div>);
+          })
+        }
+      </Flex>
+    );
+  }
+);
 ProjectStagesView.propTypes = {
   stageNode: PropTypes.object.isRequired
 };
@@ -302,16 +306,16 @@ ProjectStagesView.propTypes = {
 
 
 /**
- * Provide DataContext to @dataBind decorator
+ * Provide DataSource to @dataBind decorator
  * 
  * TODO: fix this mess
  */
-class DataContextWrapper {
-  _dataContext;
+class DataSourceWrapper {
+  _dataSource;
   _dataProxy;
 
-  constructor(dataContext, onNewData) {
-    this._dataContext = dataContext;
+  constructor(dataSource, onNewData) {
+    this._dataSource = dataSource;
     this.onNewData = onNewData;
 
     autoBind(this);
@@ -323,7 +327,7 @@ class DataContextWrapper {
     // whenever we access data, make sure, the path is registered
     this._registerPathListener(path);
 
-    return this._dataContext.getData(path, args);
+    return this._dataSource.getData(path, args);
   }
 
   /**
@@ -353,14 +357,14 @@ class DataContextWrapper {
   }
 
   _registerPathListener(path) {
-    this._dataContext.registerListener(path, this);
+    this._dataSource.registerListener(path, this);
   }
 
   /**
    * Internally used method when the component owning this data accessor is unmounted.
    */
   unmount() {
-    this._dataContext.unregisterListener(this);
+    this._dataSource.unregisterListener(this);
   }
 }
 
@@ -370,15 +374,18 @@ class DataContextWrapper {
 
 
 
+import FirebaseDataProvider, { 
+  FirebaseAuthProvider 
+} from 'dbdi/firebase/FirebaseDataProvider';
 
-const DataProviders = {
+const dataProviders = {
   firebase: new FirebaseDataProvider(),
   firebaseAuth: new FirebaseAuthProvider()
   //temp: new ...(),
   //webCache: ...
 };
 
-const dataAccessCfg = {
+const dataSourceCfg = {
   auth: {
     dataProvider: 'firebaseAuth',
     children: {
@@ -457,22 +464,22 @@ const dataAccessCfg = {
 // Data descriptor examples
 //    "uid" -> "thisProjectIndices" -> "thisProjects" -> "thisProject" -> "projectStages" -> "stakeHolders" + "stakeHolderStatus"
 const pathDescriptorTransformations = {
-  projectsOfUser({ projectIdsOfUser, project }, { }, { uid }) {
+  projectsOfUser({ uid }, { }, { projectIdsOfUser, project }) {
     return map(projectIdsOfUser({ uid }) || EmptyObject, projectId => project({ projectId }));
   },
 
-  usersOfProject({ uidsOfProject, user }, { }, { projectId }) {
+  usersOfProject({ projectId }, { }, { uidsOfProject, user }) {
     return map(uidsOfProject({ projectId }) || EmptyObject, uid => user({ uid }));
   },
 
-  stageContributions({ projectStage }, { }, { projectId, stageId }) {
+  stageContributions({ projectId, stageId }, { }, { projectStage }) {
     const stage = projectStage({ projectId, stageId });
     return stage && stage.contributions;
   },
 
-  stageContributors({ projectStage, stageContributorUserList },
-    { },
-    { projectId, stageId }) {
+  stageContributors(
+    { projectId, stageId }, { }, { projectStage, stageContributorUserList }
+  ) {
     const stage = projectStage({ projectId, stageId });
     const stageName = stage && stage.stageName;
     const node = stageName && ProjectStageTree.getNode(stageName);
@@ -488,9 +495,11 @@ const pathDescriptorTransformations = {
     return null;
   },
 
-  stageContributorUserList({ usersOfProject, projectReviewer, users: { gms } },
+  stageContributorUserList(
+    { projectId, groupName },
     { },
-    { projectId, groupName }) {
+    { usersOfProject, projectReviewer, users: { gms } }
+  ) {
     switch (groupName) {
       case 'gm':
         return gms();
@@ -506,8 +515,8 @@ const pathDescriptorTransformations = {
 };
 
 
-const LoadedProjectControlView = dataBind(dataAccessCfg)(
-  ({ }, { thisProject }) => {
+const LoadedProjectControlView = dataBind()(
+  ({ }, { }) => {
     console.log('ProjectControlView.render');
     return (<div>
       <ProjectStagesView stageNode={ProjectStageTree.root} />
@@ -515,18 +524,29 @@ const LoadedProjectControlView = dataBind(dataAccessCfg)(
   }
 );
 
-// TODO: inject our DataContext first!!!
+// TODO: inject our DataSource first!!!
 
 const ProjectControlView = dataBind()(
-  ({ project }, { projectId }) => {
+  ({ projectId }, { project, projectStages }) => {
     const thisProject = project(projectId);
+    const thisProjectStages = projectStages(projectId);
     const newContext = {
       thisProjectId: projectId,
-      thisProject
+      thisProject,
+      thisProjectStages
     };
     return thisProject &&
       (<LoadedProjectControlView context={newContext} />) ||
       (<LoadIndicator />);
   }
 );
-export default ProjectControlView;
+
+const dataSourceProps = {
+  dataProviders,
+  dataSourceProps
+};
+export default () => (
+  <DataSourceRoot {...dataSourceProps}>
+    <ProjectControlView />
+  </DataSourceRoot>
+);

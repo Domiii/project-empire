@@ -12,9 +12,12 @@ import autoBind from 'src/util/auto-bind';
 import React, { Component, Children } from 'react';
 import PropTypes from 'prop-types';
 
+import { 
+  dataBindContextStructure,
+  dataBindChildContextStructure,
+  buildReactContextFromDataSource
+} from './lib/dbdi-react-internals';
 import { injectRenderArgs } from './react-util';
-
-import LoadIndicator from 'src/views/components/util/loading';
 
 // class ReactContextDataProvider extends DataProviderBase {
 //   // TODO: a data provider to read/write the local React context without it's usual shortcomings
@@ -23,100 +26,159 @@ import LoadIndicator from 'src/views/components/util/loading';
 
 
 
-const dataBindScopeNamespace = '_dataBind_context';
-const dataAccessNamespace = '_dataAccess';
-const dataBindContextStructure = {
-  [dataBindScopeNamespace]: PropTypes.object
-};
-const dataBindChildContextStructure = {
-  [dataBindScopeNamespace]: PropTypes.object//.isRequired
-};
-
-function _getDataBindContextScope(context) {
-  return context[dataBindScopeNamespace];
-}
 
 
-// TODO: Include dataSourceName in accessWrapper query
-// TODO: Only require explicit dataSourceName when there is a naming ambiguity?!
-
-// Future TODO: some dataSources should be hierarchical (e.g. Cache in front of DB)
-//      Should dataSource hierarchy be configurable or hardcoded?
-function _getDataAccessWrappersFromContext(context) {
-  const scope = _getDataBindContextScope(context);
-  return scope && scope[dataAccessNamespace];
-}
-
-function _buildDataAccessContext(accessWrappers) {
-  return {
-    [dataBindScopeNamespace]: {
-      [dataAccessNamespace]: accessWrappers
-    }
-  };
-}
-
-
-export default (dataAccessCfgOrFunc) => _WrappedComponent => {
+export default () => _WrappedComponent => {
   class WrapperComponent extends Component {
     static contextTypes = dataBindContextStructure;
     static childContextTypes = dataBindChildContextStructure;
 
-    shouldUpdate;
-    dataAccessWrappers;
-    pathDescriptorSet;
+    _dataSource;
+
+    /**
+     * The dataProxy first checks for props, then for context, and if nothing is provided,
+     * it executes any pre-configured dataRead node of given name and returns their value.
+     * When data is attempted to be read, its path is added as a dependency, 
+     * and loading initialized if it has not initialized before.
+     */
+    _dataProxy;
+
+    /**
+     * Provides read and write executer functions, as well as special functions as defined in
+     * below _buildSpecialExecutorFunctions.
+     */
+    _dataExecuterProxy;
+    
+    _specialFunctions;
+    _moreContext = {};
+
+    _shouldUpdate;
 
     constructor(props, context) {
       super(props, context);
 
-      this.shouldUpdate = false;
+      this._shouldUpdate = false;
       autoBind(this);
 
-      // TODO: support multiple dataAccess objects?
-      const accessCfg = isFunction(dataAccessCfgOrFunc) ||
-        dataAccessCfgOrFunc(props, context) ||
-        dataAccessCfgOrFunc;
+      // prepare all the stuff
+      this._buildSpecialExecutorFunctions();
+      this._buildDataInjectionProxy();
+      this._buildDataExecutorProxy();
 
-      
-        
-      this.WrappedComponent = injectRenderArgs(_WrappedComponent,
-        () => [this.dataProxy, this.props, this.context]);
+      // finally, engulf the new component with our custom arguments
+      this.WrappedComponent = injectRenderArgs(_WrappedComponent, this._provideRenderArguments);
+    }
+
+    _buildSpecialExecutorFunctions() {
+      this._specialFunctions = {
+        /**
+         * Add context contents.
+         * 
+         * TODO: This is really bad. Need to provide a pub-sub solution using a custom DataProvider instead.
+         */
+        setContext: (newContext) => {
+          Object.assign(this._moreContext, newContext);
+        }
+      };
+    }
+
+    /**
+     * Build the proxy to deliver direct data injection.
+     */
+    _buildDataInjectionProxy() {
+      this._dataProxy = new Proxy({}, {
+        get: (target, name) => {
+          // 1) check props
+          if (this.props[name]) {
+            return this.props[name];
+          }
+
+          // 2) check context
+          if (this.context[name]) {
+            return this.context[name];
+          }
+          
+          // 3) check readers
+          const reader = this._dataSource.readers.resolveName(name);
+          if (reader) {
+            return reader.execute();
+          }
+
+          console.error(`Invalid request for data: Component expected "${name}" but it was not defined.`);
+          return undefined;
+        }
+      });
+    }
+
+    /**
+     * Build the proxy to deliver executor functions
+     */
+    _buildDataExecutorProxy() {
+      this._dataExecuterProxy = new Proxy({}, {
+        get: (target, name) => {
+          const reader = this._dataSource.readers.resolveName(name);
+          if (reader) {
+            return reader;
+          }
+
+          const writer = this._dataSource.writers.resolveName(name);
+          if (writer) {
+            return writer;
+          }
+
+          const specialFn = this._specialFunctions[name];
+          if (specialFn) {
+            return specialFn;
+          }
+
+          console.error(`Invalid request for executor: Component expected "${name}" but it was not defined.`);
+          return null;
+        }
+      });
+    }
+
+    _provideRenderArguments() {
+      return [this._dataProxy, this._dataExecuterProxy];
     }
 
     getChildContext() {
-      //console.log('getChildContext');
-      return _buildDataAccessContext(this.dataAccessWrappers);
+      //console.log('dataBind.getChildContext');
+      return buildReactContextFromDataSource(this._dataSource, this._moreContext);
     }
 
     componentWillUpdate() {
     }
 
     shouldComponentUpdate() {
-      // TODO: should it update?
-      // (whenever any props, context, subscribed data in this or any child have changed)
+      // TODO: add some DataProvider solution for context management
+      // TODO: has any subscribed data in any child component changed?
+      
       //return this.shouldUpdate;
       return true;
     }
 
     componentDidMount() {
-      console.log('componentDidMount');
+      console.log('dataBind.componentDidMount');
 
-      this.shouldUpdate = true;
+      this._shouldUpdate = true;
       this.forceUpdate();
     }
 
     componentWillUnmount() {
-      this.shouldUpdate = true;
-      forEach(this.dataAccessWrappers, wrapper => wrapper.unmount());
+      this._dataSource.unsubscribe(this!?!?);
+
+      this._moreContext = {};   // reset context
+      this._shouldUpdate = true;
     }
 
     _onNewData(path, val) {
-      this.shouldUpdate = true;
-      this.forceUpdate();
+      this._shouldUpdate = true;
+      //this.forceUpdate();
       this.setState(EmptyObject);
     }
 
     render() {
-      this.shouldUpdate = false;
+      this._shouldUpdate = false;
       const { WrappedComponent } = this;
       return (<WrappedComponent {...this.props} data={this.data} />);
     }
