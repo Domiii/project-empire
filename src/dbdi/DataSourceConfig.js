@@ -9,6 +9,16 @@ import { pathJoin } from 'src/util/pathUtil';
 
 import { EmptyObject } from 'src/util';
 
+export function parseConfig(cfg) {
+  if (cfg instanceof DataSourceConfig) {
+    // already parsed!
+    return cfg;
+  }
+
+  // raw configuration input
+  return new DataSourceConfig(cfg);
+}
+
 function parseConfigChildren(parent, children) {
   return map(children, (childCfg, name) =>
     new DataSourceConfigNode(name, parent, childCfg)
@@ -28,14 +38,40 @@ export default class DataSourceConfig {
  */
 export class DataSourceConfigNode {
   name;
-  dataProviderName;
   
   parent;
   children = {};
 
+  /**
+   * This node's (or the parent's) dataProvider name
+   */
+  dataProviderName;
+
+  /**
+   * Whether this node has been explicitly configured as read-only.
+   */
   isReadOnly;
+
+  /**
+   * The path configuration of this node.
+   * 
+   * @type {object}
+   * @property {string} pathTemplate The pathTemplate string
+   * @property {array} queryParams Additional arguments passed to the query of this path
+   * @property {function} pathFn A function to build the path at run-time and override the path template setting
+   */
   pathConfig;
+
+  /**
+   * A custom reader configuration for this node.
+   * Will simply use the pathConfig to create a reader if none is given.
+   */
   reader;
+  
+  /**
+   * A custom writer configuration for this node.
+   * Will simply use the pathConfig to create writer if none is given.
+   */
   writer;
 
   constructor(name, parent, cfg) {
@@ -45,6 +81,11 @@ export class DataSourceConfigNode {
 
     this._parseConfig(cfg);
   }
+
+
+  // ################################################
+  // Private methods
+  // ################################################
 
   _parseConfig(cfg) {
     this.dataProviderName = cfg.dataProvider || (this.parent && this.parent.dataProviderName);
@@ -62,7 +103,9 @@ export class DataSourceConfigNode {
       // more complex descriptor node
       this._parsePath(cfg.path || cfg.pathTemplate);
       this._parseChildren(cfg);
+      this._parseReader(cfg);
       this._parseReaders(cfg);
+      this._parseWriter(cfg);
       this._parseWriters(cfg);
     }
     else {
@@ -71,7 +114,7 @@ export class DataSourceConfigNode {
   }
 
   _parsePath(pathConfig) {
-    if (!pathConfig) {
+    if (pathConfig === null || pathConfig === undefined) {
       this.pathConfig = null;
       return;
     }
@@ -107,7 +150,7 @@ export class DataSourceConfigNode {
 
   _parseReader(cfg) {
     if (cfg.read || cfg.reader) {
-      // a reader for this node
+      // a custom reader for this node
       this.reader = cfg.read || cfg.reader;
     }
   }
@@ -137,7 +180,7 @@ export class DataSourceConfigNode {
 
   _parseWriter(cfg) {
     if (cfg.write || cfg.writer) {
-      // a writer for this node
+      // a custom writer for this node
       this.writer = cfg.write || cfg.writer;
     }
   }

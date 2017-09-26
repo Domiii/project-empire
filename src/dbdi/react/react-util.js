@@ -19,7 +19,7 @@ export function injectIntoClass(Clazz, methodName, methodWrapper) {
  * 
  * @param {*} Comp 
  * @param {*} argsOrFunc 
- * @return {Function} The modified component
+ * @returns {Function} The modified component
  */
 export function injectRenderArgs(Comp, argsOrFunc) {
   const isComponent = Comp && Comp.prototype instanceof Component;

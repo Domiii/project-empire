@@ -24,6 +24,10 @@ export default class PathDescriptor extends DataDescriptorNode {
     this._buildPathGetter(pathConfig);
   }
 
+  // ################################################
+  // Private methods
+  // ################################################
+
   _buildPathGetter(pathConfig) {
     let getPath;
     const { pathTemplate, queryParams, pathFn } = pathConfig;
@@ -57,7 +61,7 @@ export default class PathDescriptor extends DataDescriptorNode {
   }
 
   _buildGetPathFromTemplateString(pathTemplate, queryParams) {
-    // TODO: queryParams
+    // TODO: handle queryParams properly!
     const getPathRaw = createPathGetterFromTemplateProps(pathTemplate);
     //const argNames = getPathRaw.pathInfo && getPathRaw.pathInfo.varNames;
     return function _getPathFromTemplateString(args, readByNameProxy, readersByName, callerNode) {
@@ -65,6 +69,7 @@ export default class PathDescriptor extends DataDescriptorNode {
     };
   }
 
+  
   // ################################################
   // Public properties + methods
   // ################################################

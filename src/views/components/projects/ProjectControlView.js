@@ -546,7 +546,7 @@ const dataSourceProps = {
   dataSourceProps
 };
 export default () => (
-  <DataSourceRoot {...dataSourceProps}>
+  <DataSourceProvider {...dataSourceProps}>
     <ProjectControlView />
-  </DataSourceRoot>
+  </DataSourceProvider>
 );

@@ -13,30 +13,6 @@ import {
   getDataSourceFromReactContext
 } from './lib/dbdi-react-internals';
 
-// TODO: must expose DataSource to all children
-export class DataSourceRoot extends Component {
-  constructor(props, context) {
-    super(props, context);
-
-    const {
-      dataProviders,
-      dataSourceConfig
-    } = props;
-
-    // TODO: Build DataContext and provide it!
-  }
-
-  getChildContext() {
-    // TODO
-  }
-
-  render() {
-    const {
-      children
-    } = this.props;
-    return Children.only(children);
-  }
-}
 
 // TODO: fix these?!
 

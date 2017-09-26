@@ -7,11 +7,11 @@ import { EmptyObject, EmptyArray } from 'src/util';
 /**
  * The DataSourceNode provides access to a specific name in the data hierarchy 
  * through di (dependency injection) proxies and is at the core of the data model.
- * The node has access to all the named nodes that it's users could possibly make use of.
- * The node then uses the descriptor function while providing data from the bound data providers.
+ * The node has access to all the named nodes defined in it and it's descendants (if named unambiguously).
+ * The node connects the (Path/DataRead/DataWrite)Descriptors' with the given DataProviders.
  */
 export default class DataSourceNode {
-  _dataSource;
+  _parent;
   _dataProvider;
   _descriptor;
 
@@ -21,10 +21,10 @@ export default class DataSourceNode {
   
   _sourceNodesByName;
 
-  constructor(dataSource, descriptorNode) {
-    this._dataSource = dataSource;
+  constructor(parent, descriptorNode, dataProvider) {
+    this._parent = parent;
     this._descriptor = descriptorNode;
-    this._dataProvider = dataSource.dataProviders[descriptorNode.dataProviderName];
+    this._dataProvider = dataProvider;
 
     autoBind(this);
 

@@ -41,7 +41,7 @@ export default class DataDescriptorNode {
    * 1) All injected data is automatically added to data dependencies immediately.
    * 2) descriptor arguments are NOT added immediately, only after they are called.
    * 
-   * @return {object or array} Returns one or more sets of data or paths
+   * @returns {(string|Array.)} Returns one or more sets of data or paths
    */
   execute(args, readByNameProxy, readersByName, callerNode) {
     throw new Error('DescriptorNode did not implement execute: ' + this.constructor.name);
