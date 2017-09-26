@@ -19,10 +19,10 @@ export function getDataSourceFromReactContext(context) {
   return scope && scope[dataSourceName];
 }
 
-export function buildReactContextFromDataSource(dataSource) {
-  return {
+export function buildReactContextFromDataSource(dataSource, moreContext) {
+  return Object.assign({}, moreContext, {
     [dataBindScopeNamespace]: {
       [dataSourceName]: dataSource
     }
-  };
+  });
 }

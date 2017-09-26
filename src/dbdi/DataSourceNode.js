@@ -14,8 +14,11 @@ export default class DataSourceNode {
   _dataSource;
   _dataProvider;
   _descriptor;
+
   _readByNameProxy;
-  _readersByName;
+  _readersByNameProxy;
+  _writersByNameProxy;
+  
   _sourceNodesByName;
 
   constructor(dataSource, descriptorNode) {
@@ -31,12 +34,13 @@ export default class DataSourceNode {
     console.assert(this._dataProvider);
   }
 
+
   // ################################################
   // Private methods
   // ################################################
 
   _buildProxies() {
-    this._readersByName = new Proxy({}, this._buildReadersByNameHandler);
+    this._readersByNameProxy = new Proxy({}, this._buildReadersByNameHandler);
     this._readByNameProxy = new Proxy({}, this._buildReadByNameHandler);
   }
 
@@ -94,6 +98,6 @@ export default class DataSourceNode {
 
   execute(args) {
     args = args || EmptyObject;
-    return this._descriptor.execute(args, this._readByNameProxy, this._readersByName);
+    return this._descriptor.execute(args, this._readByNameProxy, this._readersByNameProxy);
   }
 }

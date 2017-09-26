@@ -1,4 +1,9 @@
+import DataSourceConfigNode from './DataSourceConfigNode';
+
+import forEach from 'lodash/forEach';
+
 import autoBind from 'src/util/auto-bind';
+
 
 function buildContextNodeBindings(dataSource, nodes) {
 
@@ -47,8 +52,8 @@ class DataSourceTreeBindings {
  * is bound to it. It also shares data bindings between all read + write operations
  * that are bound to it.
  * 
- * A DataSource can be used globally in an application, or
- * different parts of the app can use different DataSources.
+ * In React, a DataSource is injected into the context through the DataSourceProvider component.
+ * It uses a pub-sub model to keep track of data updates.
  */
 export default class DataSource {
   _dataProviders;
@@ -90,10 +95,13 @@ export default class DataSource {
     return this._dataProviders[name];
   }
 
-  _buildDataSourceHierarchy() {
+  _buildDataSourceHierarchy(cfg) {
     // TODO: move through the config and create the hierarchy
     // TODO: merge all nodes back to all ascendants as long as they do not cause ambiguity
     // TODO: in case of ambiguity, if one node belongs to parent, let it stay
+    forEach(cfg, node => {
+      
+    });
   }
 
 }
