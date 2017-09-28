@@ -3,22 +3,16 @@ import PathDescriptor from './PathDescriptor';
 import DataReadDescriptor from './DataReadDescriptor';
 import DataWriteDescriptor from './DataWriteDescriptor';
 
-import forEach from 'lodash/forEach';
+import map from 'lodash/map';
+import pickBy from 'lodash/pickBy';
 
 import autoBind from 'src/util/auto-bind';
 
 
-// TODO: merge most of this into DataSourceNode
-
-// TODO: build reader nodes from path nodes
-// TODO: build writer nodes from path nodes
 // TODO: use to import old RefWrapper-style configs
-// TODO: merge all nodes back into all ascendants when not ambiguous.
-//    → if name is on this node, and the same name is used down the line, add the descriptor from "this node"
-//    → in all other cases of ambiguity, insert "ambiguous error" descriptor
 
 /**
- * A DataSource is responsible for providing data read + write operations to any part of your app.
+ * A DataSource is responsible for providing data read + write operations to any part of a web app.
  * 
  * In React, a DataSource is injected into the context through the DataSourceProvider component.
  * It uses a pub-sub model to keep track of data updates.
@@ -27,19 +21,9 @@ export default class DataSourceTree {
   _dataProviders;
 
   /**
-   * The data bindings for building paths
+   * All DataSourceNodes
    */
-  _pathRoot;
-
-  /**a
-   * The data bindings for reading data
-   */
-  _readRoot;
-
-  /**
-   * The data bindings for writing data
-   */
-  _writeRoot;
+  _root;
 
 
   constructor(dataProviders, dataSourceCfgRaw) {
@@ -48,7 +32,11 @@ export default class DataSourceTree {
 
     autoBind(this);
 
-    this._buildDataSourceHierarchy(null, this._dataSourceCfg);
+    this._root = new DataSourceNode(null, null, '', null, null, null);
+    this._buildDataReadNodes(this._root, this._dataSourceCfg);
+    this._buildDataWriteNodes(this._root, this._dataSourceCfg);
+
+    this._buildHierarchy(this._root);
   }
 
 
@@ -56,18 +44,99 @@ export default class DataSourceTree {
   // Private methods
   // ################################################
 
-  _buildDataSourceHierarchy(parent, childrenConfig) {
-    
-          // TODO: Finish the hierarchy!
-          
-    // TODO: move through the config and create the hierarchy
-    // TODO: merge all nodes back to all ascendants as long as they do not cause ambiguity
-    // TODO: in case of ambiguity, if one node belongs to parent, let it stay
-    forEach(childrenConfig, configNode => {
-      const dataProvider = this._dataProviders[configNode.dataProviderName];
-      const pathDescriptor = new PathDescriptor(configNode.pathConfig);
-      const newSourceNode = new DataSourceNode(parent, descriptorNode, dataProvider);
+  _addDescendants(descendants, childDescendants) {
+    forEach(childDescendants, (descendant, name) => {
+      if (!descendants[name]) {
+        descendants[name] = descendant;
+      }
+      else {
+        // ambiguous!
+        const originalNode = descendants[name];
+        let ambiguousNode;
+        if (!(originalNode instanceof AmbiguousSourceNode)) {
+          descendants[name] = ambiguousNode = new AmbiguousSourceNode(name, originalNode.fullName);
+        }
+        else {
+          ambiguousNode = originalNode;
+        }
+        ambiguousNode.fullNames.push(descendant.fullName);
+      }
     });
+  }
+
+  _addImmediateDescendants(descendants, node, filter) {
+    // immediate children always have top priority
+    // override any other node in case of ambiguity
+    const children = pickBy(node._children, filter);
+    Object.assign(descendants, children);
+  }
+
+  _buildHierarchy(node) {
+    const readDescendants = {};
+    forEach(node._children, child => {
+      // recurse first
+      this._buildHierarchy(child);
+
+      // on the way back up, build sets of descendants
+      this._addDescendants(readDescendants, child._readDescendants);
+    });
+
+    // merge immediate children into descendants separately
+    this._addImmediateDescendants(readDescendants, node, childNode => childNode.isReader);
+    node._readDescendants = readDescendants;
+  }
+
+  _buildDataReadNodes(parent, cfgChildren) {
+    forEach(cfgChildren, (name, configNode) => {
+      if (!configNode) return null;
+
+      const dataProvider = this._dataProviders[configNode.dataProviderName];
+      const pathDescriptor = configNode.pathConfig && new PathDescriptor(configNode.pathConfig);
+      const readCfg = pathDescriptor || configNode.reader;
+      const readDescriptor = readCfg && new DataReadDescriptor(readCfg);
+      const fullName = parent.fullName + '.' + name;
+      const newNode = new DataSourceNode(parent, dataProvider, name, fullName, pathDescriptor, readDescriptor, null);
+      newNode._children = this._buildDataReadNodes(newNode,
+        Object.assign({}, cfg.children, cfg.readers || EmptyObject));
+      return newNode;
+    });
+  }
+
+  // _makeWriteData(cfg) {
+  //   if (cfg instanceof PathDescriptor) {
+  //     // build writer from pathDescriptor
+  //     writeData = this._build...FromDescriptor(cfg);
+  //   }
+  //   else if (isFunction(cfg)) {
+  //     // custom reader function
+  //     writeData = cfg;
+  //   }
+  //   else {
+  //     throw new Error('Could not make sense of DataWriteDescriptor config node: ' + JSON.stringify(cfg));
+  //   }
+  //   return this._wrapAccessFunction(writeData);
+  // }
+
+  _buildDataWriteNodes(readNode, cfgChildren) {
+    // forEach(cfgChildren, configNode => {
+    //   if (!configNode) return null;
+
+
+    //   const dataProvider = readNode._dataProvider;
+    //   const pathDescriptor = readNode._pathDescriptor;
+
+    //   // TODO: multiple writer nodes per name/path
+    //   const writeFn = this._makeWriteFn(pathDescriptor || configNode.writer);
+    //   const writeDescriptor = new DataWriteDescriptor(...);
+    //   const newNode = new DataSourceNode(readNode, dataProvider, name, pathDescriptor, null, writeDescriptor);
+
+    //   newNode._children = _buildDataSourceHierarchy(newNode, 
+    //     Object.assign({}, cfg.children, cfg.writers || EmptyObject));
+    //
+    //   const writerChildren = pickBy(newNode._children, childNode => childNode.isWriter);
+    //   newNode._writeDescendants = Object.assign({}, newNode._writeDescendants, writerChildren);
+    //   return newNode;
+    // });
   }
 
 
@@ -75,16 +144,8 @@ export default class DataSourceTree {
   // Public methods + properties
   // ################################################
 
-  get paths() {
-    return this._pathRoot;
-  }
-
-  get readers() {
-    return this._readRoot;
-  }
-
-  get writers() {
-    return this._writeRoot;
+  get root() {
+    return this._root;
   }
 
   getDataProvider(name) {

@@ -24,13 +24,16 @@ export default class DataReadDescriptor extends DataDescriptorNode {
 
   _buildGetData(cfg) {
     let getData;
-    if (isPlainObject(cfg instanceof PathDescriptor)) {
+    if (cfg instanceof PathDescriptor) {
       // build reader from pathDescriptor
       getData = this._buildGetDataFromDescriptor(cfg);
     }
     else if (isFunction(cfg)) {
       // custom reader function
       getData = cfg;
+    }
+    else {
+      throw new Error('Could not make sense of DataReadDescriptor config node: ' + JSON.stringify(cfg));
     }
     this.getData = this._wrapAccessFunction(getData);
   }

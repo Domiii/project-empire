@@ -26,6 +26,10 @@ import { injectRenderArgs } from './react-util';
 
 
 
+import { 
+  dataBindContextStructure,
+  getDataSourceFromReactContext
+} from './lib/dbdi-react-internals';
 
 
 export default () => _WrappedComponent => {
@@ -99,9 +103,9 @@ export default () => _WrappedComponent => {
           }
           
           // 3) check readers
-          const reader = this._dataSource.readers.resolveName(name);
+          const reader = this._dataSource.resolveReader(name);
           if (reader) {
-            return reader.execute();
+            return reader.readData();
           }
 
           console.error(`Invalid request for data: Component expected "${name}" but it was not defined.`);
@@ -116,16 +120,19 @@ export default () => _WrappedComponent => {
     _buildDataExecutorProxy() {
       this._dataExecuterProxy = new Proxy({}, {
         get: (target, name) => {
-          const reader = this._dataSource.readers.resolveName(name);
+          // 1) check readers
+          const reader = this._dataSource.resolveReader(name);
           if (reader) {
-            return reader;
+            return reader.readData;
           }
 
-          const writer = this._dataSource.writers.resolveName(name);
+          // 2) check writers
+          const writer = this._dataSource.resolveWriter(name);
           if (writer) {
-            return writer;
+            return writer.writeData;
           }
 
+          // 3) check special function
           const specialFn = this._specialFunctions[name];
           if (specialFn) {
             return specialFn;

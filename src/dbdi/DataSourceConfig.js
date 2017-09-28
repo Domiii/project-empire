@@ -170,7 +170,7 @@ export class DataSourceConfigNode {
       console.assert(isEmpty(overlap),
         'invalid "readers" node has name conflict with "children" in DataSourceConfig node: ' + this.name);
 
-      // add new reader children
+      // add reader-only children
       const readerNodes = map(readers, (reader, name) =>
         new DataSourceConfigNode(name, parent, { reader })
       );

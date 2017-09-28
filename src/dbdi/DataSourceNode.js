@@ -11,27 +11,43 @@ import { EmptyObject, EmptyArray } from 'src/util';
  * The node connects the (Path/DataRead/DataWrite)Descriptors' with the given DataProviders.
  */
 export default class DataSourceNode {
+  name;
+  fullName;
+
   _parent;
   _dataProvider;
-  _descriptor;
 
-  _readByNameProxy;
-  _readersByNameProxy;
-  _writersByNameProxy;
-  
-  _sourceNodesByName;
+  _pathDescriptor;
+  _writeDescriptor;
+  _readDescriptor;
 
-  constructor(parent, descriptorNode, dataProvider) {
+  _injectProxy;
+  _readersProxy;
+  _writersProxy;
+
+  _children = {};
+  _readDescendants = {};
+  _writeDescendants = {};
+
+  constructor(parent, dataProvider, name, fullName, pathDescriptor, readDescriptor, writeDescriptor) {
+    console.assert(!readDescriptor ||
+      !writeDescriptor ||
+      readDescriptor.name === writeDescriptor.name,
+      `something went wrong in DataSourceNode: ${readDescriptor.name} !== ${writeDescriptor.name}`);
+
+    this.name = name;
+    this.fullName = fullName;
+
     this._parent = parent;
-    this._descriptor = descriptorNode;
     this._dataProvider = dataProvider;
+    this._pathDescriptor = pathDescriptor;
+    this._readDescriptor = readDescriptor;
+    this._writeDescriptor = writeDescriptor;
 
     autoBind(this);
 
     this._buildProxies();
     this._buildChildBindings();
-    
-    console.assert(this._dataProvider);
   }
 
 
@@ -40,8 +56,8 @@ export default class DataSourceNode {
   // ################################################
 
   _buildProxies() {
-    this._readersByNameProxy = new Proxy({}, this._buildReadersByNameHandler);
-    this._readByNameProxy = new Proxy({}, this._buildReadByNameHandler);
+    this._injectProxy = new Proxy({}, this._buildReadByNameHandler);
+    this._readersProxy = new Proxy({}, this._buildReadersByNameHandler);
   }
 
   _buildReadersByNameHandler() {
@@ -49,9 +65,9 @@ export default class DataSourceNode {
       get: (target, name) => {
         // resolve node and return call function to caller.
         // let caller decide when to make the actual call and which arguments to supply.
-        const node = this.resolveName(name);
+        const node = this.resolveReader(name);
         // TODO: call function also needs "isLoaded" (and other data-related) meta properties?
-        return node.call;
+        return node.readData;
       }
     };
   }
@@ -60,24 +76,22 @@ export default class DataSourceNode {
     return {
       get: (target, name) => {
         // resolve node and make call as soon as it's accessed
-        const node = this.resolveName(name);
-        return node.call();
+        const node = this.resolveReader(name);
+        return node.readData();
       }
     };
   }
-
-  _buildChildBindings() {
-    // TODO
-    this._sourceNodesByName = eyyyy;
-  }
-
 
   // ################################################
   // Public properties + methods
   // ################################################
 
-  get name() {
-    return this._descriptor.name;
+  get isReader() {
+    return !!this._readDescriptor;
+  }
+
+  get isWriter() {
+    return !!this._writeDescriptor;
   }
 
   // isNameLoaded(sourceName, args) {
@@ -88,16 +102,78 @@ export default class DataSourceNode {
   //   return !node.isDataLoaded(args);
   // }
 
-  resolveName(name) {
-    const node = this._sourceNodesByName[name];
+  resolveReader(name) {
+    const node = this._readDescendants[name];
     if (!node) {
-      throw new Error(`Requested name "${name}" does not exist in "${this.name}"`);
+      throw new Error(`Requested reader "${name}" does not exist in parent "${this.name}"`);
     }
     return node;
   }
 
-  execute(args) {
+  resolveWriter(name) {
+    const node = this._writeDescendants[name];
+    if (!node) {
+      throw new Error(`Requested writer "${name}" does not exist in parent "${this.name}"`);
+    }
+    return node;
+  }
+
+  readData(args) {
     args = args || EmptyObject;
-    return this._descriptor.execute(args, this._readByNameProxy, this._readersByNameProxy);
+    if (!this._readDescriptor) {
+      throw new Error(`Tried to read data from "${this.name}", but node does not have a reader.`);
+    }
+    return this._readDescriptor.readData(args, this._injectProxy, this._readersProxy, this);
+  }
+
+  writeData(args, val) {
+    args = args || EmptyObject;
+    if (!this._writeDescriptor) {
+      throw new Error(`Tried to write data to "${this.name}", but node does not have a writer.`);
+    }
+    throw new Error('NYI writeData');
+    //return this._readDescriptor.writeData(args, val, this._injectProxy, this._readersProxy, this);
+  }
+}
+
+export class AmbiguousSourceNode {
+  name;
+  fullNames;
+
+  constructor(name, ...fullNames) { 
+    this.name = name;
+    this.fullNames = fullNames;
+  }
+
+  // ################################################
+  // Public properties + methods
+  // ################################################
+
+  get isReader() {
+    return false;
+  }
+
+  get isWriter() {
+    return false;
+  }
+
+  resolveReader(name) {
+    throw new Error('Ambiguous node: ' + this);
+  }
+
+  resolveWriter(name) {
+    throw new Error('Ambiguous node: ' + this);
+  }
+
+  readData(args) {
+    throw new Error('Ambiguous node: ' + this);
+  }
+
+  writeData(args, val) {
+    throw new Error('Ambiguous node: ' + this);
+  }
+
+  toString() {
+    return `Ambiguous node "${this.name}", might refer to any of: [${this.fullNames.join(', ')}]`;
   }
 }
