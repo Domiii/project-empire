@@ -524,7 +524,7 @@ const LoadedProjectControlView = dataBind()(
   }
 );
 
-// TODO: inject our DataSource first!!!
+
 
 const ProjectControlView = dataBind()(
   ({ projectId }, { project, projectStages }) => {

@@ -15,6 +15,7 @@ import PropTypes from 'prop-types';
 import { 
   dataBindContextStructure,
   dataBindChildContextStructure,
+  getDataSourceFromReactContext,
   buildReactContextFromDataSource
 } from './lib/dbdi-react-internals';
 import { injectRenderArgs } from './react-util';
@@ -23,13 +24,6 @@ import { injectRenderArgs } from './react-util';
 //   // TODO: a data provider to read/write the local React context without it's usual shortcomings
 //   // TODO: proper pub-sub bindings
 // }
-
-
-
-import { 
-  dataBindContextStructure,
-  getDataSourceFromReactContext
-} from './lib/dbdi-react-internals';
 
 
 export default () => _WrappedComponent => {
@@ -62,6 +56,8 @@ export default () => _WrappedComponent => {
       super(props, context);
 
       this._shouldUpdate = false;
+      this._dataSource = getDataSourceFromReactContext(context);
+      
       autoBind(this);
 
       // prepare all the stuff
@@ -70,7 +66,8 @@ export default () => _WrappedComponent => {
       this._buildDataExecutorProxy();
 
       // finally, engulf the new component with our custom arguments
-      this.WrappedComponent = injectRenderArgs(_WrappedComponent, this._provideRenderArguments);
+      this.WrappedComponent = injectRenderArgs(_WrappedComponent,
+        this._provideRenderArguments);
     }
 
     _buildSpecialExecutorFunctions() {
@@ -78,7 +75,8 @@ export default () => _WrappedComponent => {
         /**
          * Add context contents.
          * 
-         * TODO: This is really bad. Need to provide a pub-sub solution using a custom DataProvider instead.
+         * TODO: This is really bad. 
+         *    Need to provide a pub-sub solution using a custom DataProvider instead.
          */
         setContext: (newContext) => {
           Object.assign(this._moreContext, newContext);
