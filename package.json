@@ -38,6 +38,7 @@
     "moment": "^2.18.1",
     "moment-timezone": "^0.5.13",
     "prop-types": "^15.5.10",
+    "pubsub-js": "^1.5.7",
     "react": "^15.3.2",
     "react-autobind": "^1.0.6",
     "react-bootstrap": "^0.31.3",

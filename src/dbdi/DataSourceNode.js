@@ -14,6 +14,7 @@ export default class DataSourceNode {
   name;
   fullName;
 
+  _tree;
   _parent;
   _dataProvider;
 
@@ -29,7 +30,7 @@ export default class DataSourceNode {
   _readDescendants = {};
   _writeDescendants = {};
 
-  constructor(parent, dataProvider, name, fullName, pathDescriptor, readDescriptor, writeDescriptor) {
+  constructor(tree, parent, dataProvider, name, fullName, pathDescriptor, readDescriptor, writeDescriptor) {
     console.assert(!readDescriptor ||
       !writeDescriptor ||
       readDescriptor.name === writeDescriptor.name,
@@ -38,6 +39,7 @@ export default class DataSourceNode {
     this.name = name;
     this.fullName = fullName;
 
+    this._tree = tree;
     this._parent = parent;
     this._dataProvider = dataProvider;
     this._pathDescriptor = pathDescriptor;
@@ -66,8 +68,7 @@ export default class DataSourceNode {
         // resolve node and return call function to caller.
         // let caller decide when to make the actual call and which arguments to supply.
         const node = this.resolveReader(name);
-        // TODO: call function also needs "isLoaded" (and other data-related) meta properties?
-        return node.readData;
+        return node && node.readData;
       }
     };
   }
@@ -75,9 +76,9 @@ export default class DataSourceNode {
   _buildReadByNameHandler() {
     return {
       get: (target, name) => {
-        // resolve node and make call as soon as it's accessed
+        // resolve node and return read data
         const node = this.resolveReader(name);
-        return node.readData();
+        return node && node.readData();
       }
     };
   }
@@ -118,15 +119,16 @@ export default class DataSourceNode {
     return node;
   }
 
-  readData(args) {
+  readData(who, args) {
     args = args || EmptyObject;
     if (!this._readDescriptor) {
       throw new Error(`Tried to read data from "${this.name}", but node does not have a reader.`);
     }
-    return this._readDescriptor.readData(args, this._injectProxy, this._readersProxy, this);
+    
+    return this._readDescriptor.readData(args, this._injectProxy, this._readersProxy, this, who);
   }
 
-  writeData(args, val) {
+  writeData(who, args, val) {
     args = args || EmptyObject;
     if (!this._writeDescriptor) {
       throw new Error(`Tried to write data to "${this.name}", but node does not have a writer.`);
@@ -158,19 +160,19 @@ export class AmbiguousSourceNode {
   }
 
   resolveReader(name) {
-    throw new Error('Ambiguous node: ' + this);
+    throw new Error('[ERROR] Tried to call resolveReader on ' + this);
   }
 
   resolveWriter(name) {
-    throw new Error('Ambiguous node: ' + this);
+    throw new Error('[ERROR] Tried to call resolveWriter on ' + this);
   }
 
   readData(args) {
-    throw new Error('Ambiguous node: ' + this);
+    throw new Error('[ERROR] Tried to call readData on ' + this);
   }
 
   writeData(args, val) {
-    throw new Error('Ambiguous node: ' + this);
+    throw new Error('[ERROR] Tried to call writeData on ' + this);
   }
 
   toString() {

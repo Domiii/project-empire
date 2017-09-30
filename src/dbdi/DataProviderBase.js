@@ -1,4 +1,5 @@
 import forEach from 'lodash/forEach';
+import isFunction from 'lodash/isFunction';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
@@ -12,7 +13,7 @@ export default class DataProviderBase {
   }
 
   registerListener(path, listener) {
-    console.assert(!!listener.onNewData, '[INTERNAL ERROR] listener has no `onNewData` callback.');
+    console.assert(isFunction(listener), '[INTERNAL ERROR] listener must be function.');
 
     let listeners = this.getListeners(path);
 
@@ -21,28 +22,33 @@ export default class DataProviderBase {
       this.listenersByPath[path] = listeners = new Set();
     }
     if (!listeners.has(listener)) {
-      // add listener to set
+      // add listener to set (if not already listening)
       listeners.add(listener);
-      this.listenerData[listener] = {
+      this.listenerData.add(listener, {
         byPath: {}
-      };
+      });
     }
 
-    if (!this.listenerData[listener].byPath[path]) {
-      // register new listener for this path
+    if (!this.listenerData.get(listener).byPath[path]) {
+      // register new listener for this path (if not already listening on path)
       console.warn('registered path: ', path);
       const customData = this.onListenerAdd(path, listener);
-      this.listenerData[listener].byPath[path] = {
+      this.listenerData.get(listener).byPath[path] = {
         customData
       };
     }
   }
 
   unregisterListener(listener) {
-    const listenerData = this.listenerData[listener];
+    const listenerData = this.listenerData.get(listener);
     if (!!listenerData) {
       const byPath = listenerData.byPath;
-      forEach(byPath, (_, path) => this.unregisterListenerPath(path, listener));
+
+      // we need to first copy the set of keys, since
+      //    we will delete keys from byPath, thereby making an iteration on byPath 
+      //    itself cause all kinds of issues...
+      const paths = Object.keys(byPath);
+      forEach(paths, (path) => this.unregisterListenerPath(path, listener));
     }
   }
 
@@ -50,12 +56,26 @@ export default class DataProviderBase {
     console.log('unregister path: ' + path);
 
     const listeners = this.getListeners(path);
-    console.assert(listeners, '[INTERNAL ERROR] listener not registered at path: ' + path);
 
-    listeners.delete(listener);
-    this.listenerData.delete(listener);
+    const listenerData = this.listenerData.get(listener);
+    
+    if (!listenerData) {
+      //throw new Error('[INTERNAL ERROR] listener not registered at path: ' + path);
+      return;
+    }
 
-    this.onListenerRemove(path, listener);
+    const byPathData = listenerData.byPath[path];
+
+    // delete all kinds of stuff
+    delete listenerData.byPath[path];
+    delete this.listenersByPath[path];
+    if (isEmpty(listenerData.byPath)) {
+      // we removed the last path for listener
+      listeners.delete(listener);
+      this.listenerData.delete(listener);
+    }
+
+    this.onListenerRemove(path, listener, byPathData && byPathData.customData);
   }
 
   // Any DataSource needs to implement the following three methods:
@@ -70,7 +90,7 @@ export default class DataProviderBase {
 
   notifyNewData(path, val) {
     const listeners = this.getListeners(path) || EmptyArray;
-    setTimeout(() => listeners.forEach(listener => listener.onNewData(path, val)));
+    setTimeout(() => listeners.forEach(listener => listener(path, val)));
   }
 
   getData(path) {

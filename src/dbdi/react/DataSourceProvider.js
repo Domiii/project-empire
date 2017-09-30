@@ -11,7 +11,7 @@ import LoadIndicator from 'src/views/components/util/loading';
 import { 
   dataBindContextStructure,
   dataBindChildContextStructure,
-  getDataSourceFromReactContext
+  buildReactContextFromDataSourceTree
 } from './lib/dbdi-react-internals';
 
 
@@ -19,7 +19,6 @@ import {
  * TODO: must provide DataSource to all children
  */
 export class DataSourceProvider extends Component {
-  static contextTypes = getDataSourceFromReactContext;
   static childContextTypes = dataBindChildContextStructure;
 
   constructor(props, context) {
@@ -31,11 +30,11 @@ export class DataSourceProvider extends Component {
     } = props;
 
     const dataSourceTree = new DataSourceTree(dataProviders, dataSourceConfig);
-    this._dataSource = dataSourceTree._root;
+    this._dataSourceTree = dataSourceTree;
   }
 
   getChildContext() {
-    return buildReactContextFromDataSource(this._dataSource);
+    return buildReactContextFromDataSourceTree(this._dataSourceTree);
   }
 
   render() {

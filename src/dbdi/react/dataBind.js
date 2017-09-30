@@ -1,3 +1,5 @@
+import DataAccessTracker from '../DataAccessTracker';
+
 import isPlainObject from 'lodash/isPlainObject';
 import isFunction from 'lodash/isFunction';
 import isArray from 'lodash/isArray';
@@ -12,11 +14,11 @@ import autoBind from 'src/util/auto-bind';
 import React, { Component, Children } from 'react';
 import PropTypes from 'prop-types';
 
-import { 
+import {
   dataBindContextStructure,
   dataBindChildContextStructure,
   getDataSourceFromReactContext,
-  buildReactContextFromDataSource
+  buildReactContextFromDataSourceTree
 } from './lib/dbdi-react-internals';
 import { injectRenderArgs } from './react-util';
 
@@ -31,7 +33,8 @@ export default () => _WrappedComponent => {
     static contextTypes = dataBindContextStructure;
     static childContextTypes = dataBindChildContextStructure;
 
-    _dataSource;
+    _dataSourceTree;
+    _dataAccessTracker;
 
     /**
      * The dataProxy first checks for props, then for context, and if nothing is provided,
@@ -46,7 +49,7 @@ export default () => _WrappedComponent => {
      * below _buildSpecialExecutorFunctions.
      */
     _dataExecuterProxy;
-    
+
     _specialFunctions;
     _moreContext = {};
 
@@ -56,8 +59,9 @@ export default () => _WrappedComponent => {
       super(props, context);
 
       this._shouldUpdate = false;
-      this._dataSource = getDataSourceFromReactContext(context);
-      
+      this._dataSourceTree = getDataSourceTreeFromReactContext(context);
+      this._dataAccessTracker = new DataAccessTracker(this._dataSourceTree, this._onNewData);
+
       autoBind(this);
 
       // prepare all the stuff
@@ -99,11 +103,11 @@ export default () => _WrappedComponent => {
           if (this.context[name]) {
             return this.context[name];
           }
-          
+
           // 3) check readers
-          const reader = this._dataSource.resolveReader(name);
+          const reader = this._dataAccessTracker.resolveReader(name);
           if (reader) {
-            return reader.readData();
+            return reader();
           }
 
           console.error(`Invalid request for data: Component expected "${name}" but it was not defined.`);
@@ -119,13 +123,13 @@ export default () => _WrappedComponent => {
       this._dataExecuterProxy = new Proxy({}, {
         get: (target, name) => {
           // 1) check readers
-          const reader = this._dataSource.resolveReader(name);
+          const reader = this._dataAccessTracker.resolveReader(name);
           if (reader) {
-            return reader.readData;
+            return reader;
           }
 
           // 2) check writers
-          const writer = this._dataSource.resolveWriter(name);
+          const writer = this._dataAccessTracker.resolveWriter(name);
           if (writer) {
             return writer.writeData;
           }
@@ -148,7 +152,7 @@ export default () => _WrappedComponent => {
 
     getChildContext() {
       //console.log('dataBind.getChildContext');
-      return buildReactContextFromDataSource(this._dataSource, this._moreContext);
+      return buildReactContextFromDataSourceTree(this._dataSourceTree, this._moreContext);
     }
 
     componentWillUpdate() {
@@ -157,7 +161,7 @@ export default () => _WrappedComponent => {
     shouldComponentUpdate() {
       // TODO: add some DataProvider solution for context management
       // TODO: has any subscribed data in any child component changed?
-      
+
       //return this.shouldUpdate;
       return true;
     }
@@ -170,7 +174,7 @@ export default () => _WrappedComponent => {
     }
 
     componentWillUnmount() {
-      this._dataSource.unsubscribe(this!?!?);
+      this._dataAccessTracker.unmount();
 
       this._moreContext = {};   // reset context
       this._shouldUpdate = true;

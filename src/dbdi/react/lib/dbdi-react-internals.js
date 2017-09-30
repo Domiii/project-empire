@@ -16,10 +16,16 @@ function _getDataBindContextScope(context) {
 
 export function getDataSourceFromReactContext(context) {
   const scope = _getDataBindContextScope(context);
+  return scope && scope[dataSourceName] && scope[dataSourceName]._root;
+}
+
+
+export function getDataSourceTreeFromReactContext(context) {
+  const scope = _getDataBindContextScope(context);
   return scope && scope[dataSourceName];
 }
 
-export function buildReactContextFromDataSource(dataSource, moreContext) {
+export function buildReactContextFromDataSourceTree(dataSource, moreContext) {
   return Object.assign({}, moreContext, {
     [dataBindScopeNamespace]: {
       [dataSourceName]: dataSource

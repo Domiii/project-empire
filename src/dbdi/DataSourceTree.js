@@ -5,6 +5,7 @@ import DataWriteDescriptor from './DataWriteDescriptor';
 
 import map from 'lodash/map';
 import pickBy from 'lodash/pickBy';
+import last from 'lodash/last';
 
 import autoBind from 'src/util/auto-bind';
 
@@ -25,6 +26,8 @@ export default class DataSourceTree {
    */
   _root;
 
+  _dataAccessRecords = [];
+
 
   constructor(dataProviders, dataSourceCfgRaw) {
     this._dataProviders = dataProviders;
@@ -32,7 +35,7 @@ export default class DataSourceTree {
 
     autoBind(this);
 
-    this._root = new DataSourceNode(null, null, '', null, null, null);
+    this._root = new DataSourceNode(this, null, null, '', null, null, null);
     this._buildDataReadNodes(this._root, this._dataSourceCfg);
     this._buildDataWriteNodes(this._root, this._dataSourceCfg);
 
@@ -95,7 +98,7 @@ export default class DataSourceTree {
       const readCfg = pathDescriptor || configNode.reader;
       const readDescriptor = readCfg && new DataReadDescriptor(readCfg);
       const fullName = parent.fullName + '.' + name;
-      const newNode = new DataSourceNode(parent, dataProvider, name, fullName, pathDescriptor, readDescriptor, null);
+      const newNode = new DataSourceNode(this, parent, dataProvider, name, fullName, pathDescriptor, readDescriptor, null);
       newNode._children = this._buildDataReadNodes(newNode,
         Object.assign({}, cfg.children, cfg.readers || EmptyObject));
       return newNode;
@@ -122,13 +125,13 @@ export default class DataSourceTree {
     //   if (!configNode) return null;
 
 
-    //   const dataProvider = readNode._dataProvider;
-    //   const pathDescriptor = readNode._pathDescriptor;
+    //   const dataProvider = writeNode._dataProvider;
+    //   const pathDescriptor = writeNode._pathDescriptor;
 
     //   // TODO: multiple writer nodes per name/path
     //   const writeFn = this._makeWriteFn(pathDescriptor || configNode.writer);
     //   const writeDescriptor = new DataWriteDescriptor(...);
-    //   const newNode = new DataSourceNode(readNode, dataProvider, name, pathDescriptor, null, writeDescriptor);
+    //   const newNode = new DataSourceNode(this, writeNode, dataProvider, name, pathDescriptor, null, writeDescriptor);
 
     //   newNode._children = _buildDataSourceHierarchy(newNode, 
     //     Object.assign({}, cfg.children, cfg.writers || EmptyObject));
@@ -139,6 +142,18 @@ export default class DataSourceTree {
     // });
   }
 
+  _recordDataAccess(dataProvider, path) {
+    console.assert(dataProvider && path);
+
+    const records = last(this._dataAccessRecords);
+    if (!records) {
+      console.error(`Invalid data access on "${path}" - ` +
+        'Did not call push pushDataAccessRecords first.');
+    }
+    else {
+      records.push({ dataProvider, path });
+    }
+  }
 
   // ################################################
   // Public methods + properties
@@ -150,5 +165,13 @@ export default class DataSourceTree {
 
   getDataProvider(name) {
     return this._dataProviders[name];
+  }
+  
+  pushDataAccessRecords() {
+    this._dataAccessRecords.push([]);
+  }
+  
+  popDataAccessRecords() {
+    return this._dataAccessRecords.pop();
   }
 }

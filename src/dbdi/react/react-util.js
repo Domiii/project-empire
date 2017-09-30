@@ -35,17 +35,19 @@ export function injectRenderArgs(Comp, argsOrFunc) {
     return (...origArgs) => {
       const props = this && this.props || origArgs[0];
       const newArgs = isFunction(argsOrFunc) ? argsOrFunc(...origArgs) : argsOrFunc;
-      console.log('wrapped render: ' + props.name + `(${JSON.stringify(origArgs)}) → (${JSON.stringify(newArgs)})`);
+      //console.log('wrapped render: ' + props.name + `(${JSON.stringify(origArgs)}) → (${JSON.stringify(newArgs)})`);
       return origRender.call(this, ...newArgs);
     };
   }
 
   let ResultComp;
   if (isComponent) {
+    // override render method
     injectIntoClass(Comp, 'render', wrappedRender);
     ResultComp = Comp;
   }
   else {
+    // just wrap the function as-is
     ResultComp = wrappedRender(Comp);
   }
 

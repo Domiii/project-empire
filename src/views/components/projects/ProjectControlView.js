@@ -376,7 +376,7 @@ class DataSourceWrapper {
 
 import FirebaseDataProvider, { 
   FirebaseAuthProvider 
-} from 'dbdi/firebase/FirebaseDataProvider';
+} from 'src/dbdi/firebase/FirebaseDataProvider';
 
 const dataProviders = {
   firebase: new FirebaseDataProvider(),

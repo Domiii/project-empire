@@ -1,6 +1,6 @@
 import firebase from 'firebase';
 
-import DataProviderBase from './DataProviderBase';
+import DataProviderBase from '../DataProviderBase';
 
 import autoBind from 'src/util/auto-bind';
 

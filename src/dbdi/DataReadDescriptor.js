@@ -46,17 +46,29 @@ export default class DataReadDescriptor extends DataDescriptorNode {
       // }
 
       const pathOrPaths = pathDescriptor.getPath(args, readByNameProxy, readersByName, callerNode);
-      const { dataProvider } = callerNode;
 
-      if (isArray(pathOrPaths)) {
-        const paths = pathOrPaths;
-        return paths.map(path => dataProvider.getData(path));
+      if (pathOrPaths) {
+        if (isArray(pathOrPaths)) {
+          const paths = pathOrPaths;
+          return paths.map(path => this._doReadData(path, callerNode));
+        }
+        else {
+          const path = pathOrPaths;
+          return this._doReadData(path, callerNode);
+        }
       }
-      else {
-        const path = pathOrPaths;
-        return dataProvider.getData(path);
-      }
+      return undefined;
     };
+  }
+
+  _doReadData(path, callerNode) {
+    const {
+      dataProvider,
+      _tree
+    } = callerNode;
+
+    _tree._recordDataAccess(dataProvider, path);
+    return dataProvider.getData(path);
   }
 
   // ################################################
