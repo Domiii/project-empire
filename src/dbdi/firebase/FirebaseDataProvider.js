@@ -44,10 +44,10 @@ export default class FirebaseDataProvider extends DataProviderBase {
   }
 
   isDataLoaded(path) {
-    return this.getData(path) !== undefined;
+    return this.readData(path) !== undefined;
   }
 
-  getData(path) {
+  readData(path) {
     return getDataIn(this.firebaseCache, path, undefined);
   }
 }
@@ -89,7 +89,7 @@ export class FirebaseAuthProvider extends DataProviderBase {
     return this.firebaseAuthData !== undefined;
   }
 
-  getData(path) {
+  readData(path) {
     return getDataIn(this.firebaseAuthData, path, undefined);
   }
 }

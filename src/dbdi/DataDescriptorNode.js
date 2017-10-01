@@ -4,19 +4,20 @@
  */
 export default class DataDescriptorNode {
   _cfg;
-  _knownDependencies;
+  _name;
+  //_knownDependencies;
 
-  constructor(cfg) {
+  constructor(cfg, name) {
     this._cfg = cfg;
+    this._name = name;
   }
 
   get name() {
-    console.assert(this._cfg.name);
-    return this._cfg.name;
+    return this._name;
   }
 
   get nodeType() {
-    // TODO!
+    throw new Error('[INTERNAL ERROR] nodeType has not been defined in DataDescriptorNode class');
   }
 
   forEachNodeDFS(fn) {
@@ -70,7 +71,7 @@ export default class DataDescriptorNode {
         return fn(args, readByNameProxy, readersByName, callerNode);
       }
       catch (err) {
-        console.error(`Failed to execute "${this.nodeType}" function at "${this.name}":`, err.stack);
+        console.error(`Failed to execute "${this.nodeType}" at node "${this.name}":\n`, err.stack);
         return undefined;
       }
     };

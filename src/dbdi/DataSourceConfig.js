@@ -1,4 +1,5 @@
 import map from 'lodash/map';
+import mapValues from 'lodash/mapValues';
 import isEmpty from 'lodash/isEmpty';
 import isString from 'lodash/isString';
 import isFunction from 'lodash/isFunction';
@@ -20,7 +21,7 @@ export function parseConfig(cfg) {
 }
 
 function parseConfigChildren(parent, children) {
-  return map(children, (childCfg, name) =>
+  return mapValues(children || EmptyObject, (childCfg, name) =>
     new DataSourceConfigNode(name, parent, childCfg)
   );
 }
@@ -89,7 +90,7 @@ export class DataSourceConfigNode {
 
   _parseConfig(cfg) {
     this.dataProviderName = cfg.dataProvider || (this.parent && this.parent.dataProviderName);
-    console.assert(this.dataProviderName, 'Node does not have dataProviderName: ' + name);
+    //console.assert(this.dataProviderName, 'Node does not have dataProviderName: ' + this.name);
 
     if (isString(cfg)) {
       // path string
@@ -139,7 +140,9 @@ export class DataSourceConfigNode {
     }
 
     // join with parent path
-    pathTemplate = pathJoin(parent.pathConfig.pathTemplate, pathTemplate);
+    const { parent } = this;
+    const parentPath = parent && parent.pathConfig && parent.pathConfig.pathTemplate || '';
+    pathTemplate = pathJoin(parentPath, pathTemplate);
 
     this.pathConfig = {
       pathTemplate,
@@ -168,11 +171,12 @@ export class DataSourceConfigNode {
       const childNames = Object.keys(this.children);
       const overlap = intersection(readerNames, childNames);
       console.assert(isEmpty(overlap),
-        'invalid "readers" node has name conflict with "children" in DataSourceConfig node: ' + this.name);
+        'invalid "readers" definitions have name conflict with "children" in DataSourceConfig node: ' + 
+        this.name, ' - ', overlap.join(', '));
 
       // add reader-only children
-      const readerNodes = map(readers, (reader, name) =>
-        new DataSourceConfigNode(name, parent, { reader })
+      const readerNodes = mapValues(readers, (reader, name) =>
+        new DataSourceConfigNode(name, this.parent, { reader })
       );
       Object.assign(this.children, readerNodes);
     }

@@ -23,9 +23,16 @@ const PORT = 3000;
 //  LOADERS
 //---------------------------------------------------------
 const loaders = {
-  js: {test: /\.js[x]?$/, exclude: /node_modules/, loader: 'babel'},
+  js: {
+    test: /\.js[x]?$/,
+    exclude: /node_modules/,
+    loader: 'babel-loader'
+  },
   json: {test: /\.json$/, loader: 'json-loader' },
-  scss: {test: /\.[s]?css$/, loader: 'style!css!postcss!sass'},
+  scss: {
+    test: /\.[s]?css$/, 
+    loader: 'style-loader!css-loader!postcss-loader!sass-loader'
+  },
   // the url-loader uses DataUrls. 
   urls: { 
     test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, 
@@ -48,9 +55,11 @@ module.exports = config;
 
 
 config.resolve = {
-  extensions: ['', '.js', '.jsx', 'entities.json'],
-  modulesDirectories: ['node_modules'],
-  root: path.resolve('.')
+  extensions: ['.js', '.jsx', 'entities.json'],
+  modules: [
+    path.resolve(__dirname, 'node_modules'),
+    path.resolve(__dirname, './'),
+  ]
 };
 
 config.plugins = [
@@ -59,15 +68,9 @@ config.plugins = [
   })
 ];
 
-config.postcss = [
-  autoprefixer({ browsers: ['last 3 versions'] })
-];
-
-config.sassLoader = {
-  outputStyle: 'compressed',
-  precision: 10,
-  sourceComments: false
-};
+// config.postcss = [
+//   autoprefixer({ browsers: ['last 3 versions'] })
+// ];
 
 
 //=====================================
@@ -100,7 +103,7 @@ if (ENV_DEVELOPMENT || ENV_PRODUCTION) {
 //  DEVELOPMENT
 //-------------------------------------
 if (ENV_DEVELOPMENT) {
-  config.devtool = 'cheap-module-source-map';
+  config.devtool = 'source-map';
 
   config.entry.main.unshift(
     `webpack-dev-server/client?http://${HOST}:${PORT}`,
@@ -150,7 +153,7 @@ if (ENV_DEVELOPMENT) {
 //  PRODUCTION
 //-------------------------------------
 if (ENV_PRODUCTION) {
-  config.devtool = 'source-map';
+  config.devtool = 'eval';
 
   config.entry.vendor = './src/vendor.js';
 

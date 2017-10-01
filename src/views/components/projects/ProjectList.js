@@ -43,7 +43,7 @@ import ProjectEditor from './ProjectEditor';
     })),
     users: userRef.val,
     //userProjectRef,
-    
+
     addProject: project => {
       project.createdAt = getFirebase().database.ServerValue.TIMESTAMP;
       return projectsRef.push_project(project);
@@ -117,7 +117,7 @@ export default class ProjectList extends Component {
       addProject
     } = this.props;
 
-    this.setState({selectedMissionId: null});
+    this.setState({ selectedMissionId: null });
     this.setAdding(false);
 
     return addProject({
@@ -136,7 +136,7 @@ export default class ProjectList extends Component {
     if (!missions[missionId]) {
       missionId = null;
     }
-    this.setState({selectedMissionId: missionId});
+    this.setState({ selectedMissionId: missionId });
   }
 
   makeMissionSelectEl() {
@@ -164,22 +164,21 @@ export default class ProjectList extends Component {
           <FAIcon name="plus" className="color-green" /> add new project
         </Button>
 
-        { this.IsAdding && <span>
-            <Flex row={true} alignItems="start" justifyContent="1" style={{maxWidth: '400px'}}>
-              <Item flexGrow="3">
-                { this.makeMissionSelectEl() }
-              </Item>
-              <Item flexGrow="1">
-                <Button block
-                  bsStyle="success"
-                  disabled={!this.state.selectedMissionId}
-                  onClick={this.addNewProject}>
-                  <FAIcon name="save" className="color-green" /> save new project
+        {this.IsAdding && <span>
+          <Flex row={true} alignItems="start" justifyContent="1" style={{ maxWidth: '400px' }}>
+            <Item flexGrow="3">
+              {this.makeMissionSelectEl()}
+            </Item>
+            <Item flexGrow="1">
+              <Button block
+                bsStyle="success"
+                disabled={!this.state.selectedMissionId}
+                onClick={this.addNewProject}>
+                <FAIcon name="save" className="color-green" /> save new project
                 </Button>
-              </Item>
-            </Flex>
-          </span>
-        }
+            </Item>
+          </Flex>
+        </span>}
       </div>
     );
   }
@@ -191,8 +190,8 @@ export default class ProjectList extends Component {
 
     const {
         setProject,
-        addUserToProject,
-        deleteUserFromProject
+      addUserToProject,
+      deleteUserFromProject
       } = this.props;
 
     return (<ProjectEditor {...{
@@ -201,7 +200,7 @@ export default class ProjectList extends Component {
       existingUsers,
       addableUsers,
 
-      setProject: ({projectId, project}) => {
+      setProject: ({ projectId, project }) => {
         console.log(projectId, project);
         return setProject(projectId, project);
       },
@@ -212,14 +211,14 @@ export default class ProjectList extends Component {
 
   makeEmptyProjectsEl() {
     return (
-        (<Alert bsStyle="warning">
-          <span>there are no projects</span>
-        </Alert>)
+      (<Alert bsStyle="warning">
+        <span>there are no projects</span>
+      </Alert>)
     );
   }
 
   makeProjectsList() {
-    const { 
+    const {
       projects,
       users,
       missions,
@@ -229,7 +228,8 @@ export default class ProjectList extends Component {
       deleteProject
     } = this.props;
 
-    const idList = sortBy(Object.keys(projects), 
+    console.log(projects);
+    const idList = sortBy(Object.keys(projects),
       projectId => -projects[projectId].updatedAt);
     const addableUsers = findUnassignedUsers();
 
@@ -239,8 +239,7 @@ export default class ProjectList extends Component {
         let existingUsers = getUsersByProject(projectId);
 
         return (<li key={projectId} className="list-group-item">
-          <ProjectPreview
-          {...{
+          <ProjectPreview {...{
             canEdit: true,
             projectId,
             project,
@@ -263,7 +262,7 @@ export default class ProjectList extends Component {
   }
 
   render() {
-    const { 
+    const {
       projects,
 
       //userInfoRef,
@@ -288,8 +287,8 @@ export default class ProjectList extends Component {
     }
 
     return (<div>
-      { this.makeEditorHeader() }
-      { projectListEl }
+      {this.makeEditorHeader()}
+      {projectListEl}
     </div>);
   }
 }

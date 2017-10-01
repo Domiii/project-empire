@@ -17,7 +17,7 @@ import PropTypes from 'prop-types';
 import {
   dataBindContextStructure,
   dataBindChildContextStructure,
-  getDataSourceFromReactContext,
+  getDataSourceTreeFromReactContext,
   buildReactContextFromDataSourceTree
 } from './lib/dbdi-react-internals';
 import { injectRenderArgs } from './react-util';
@@ -105,12 +105,12 @@ export default () => _WrappedComponent => {
           }
 
           // 3) check readers
-          const reader = this._dataAccessTracker.resolveReader(name);
-          if (reader) {
-            return reader();
+          const readData = this._dataAccessTracker.resolveReadData(name);
+          if (readData) {
+            return readData();
           }
 
-          console.error(`Invalid request for data: Component expected "${name}" but it was not defined.`);
+          console.error(`Invalid request for data: Component requested "${name}" but it does not exist.`);
           return undefined;
         }
       });
@@ -123,15 +123,15 @@ export default () => _WrappedComponent => {
       this._dataExecuterProxy = new Proxy({}, {
         get: (target, name) => {
           // 1) check readers
-          const reader = this._dataAccessTracker.resolveReader(name);
-          if (reader) {
-            return reader;
+          const readData = this._dataAccessTracker.resolveReadData(name);
+          if (readData) {
+            return readData;
           }
 
           // 2) check writers
-          const writer = this._dataAccessTracker.resolveWriter(name);
-          if (writer) {
-            return writer.writeData;
+          const writeData = this._dataAccessTracker.resolveWriteData(name);
+          if (writeData) {
+            return writeData;
           }
 
           // 3) check special function
@@ -140,7 +140,7 @@ export default () => _WrappedComponent => {
             return specialFn;
           }
 
-          console.error(`Invalid request for executor: Component expected "${name}" but it was not defined.`);
+          console.error(`Invalid request for executor: Component requested "${name}" but it does not exist.`);
           return null;
         }
       });

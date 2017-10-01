@@ -128,7 +128,7 @@ const UserInfoRef = makeRefWrapper({
           // TODO: Separate data writes
 
           setTimeout(() => {
-            if (this.isLoggedIn() && this.isLoaded && !this.public() && !this.private()) {
+            if (this.isLoggedIn() && this.val !== undefined && !this.public() && !this.private()) {
               // user logged in and but no record of user data
               // -> get user data and add to userInfo DB
               // see: https://firebase.google.com/docs/reference/js/firebase.UserInfo

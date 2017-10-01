@@ -8,38 +8,42 @@ import DataDescriptorNode from './DataDescriptorNode';
 import PathDescriptor from './PathDescriptor';
 
 export default class DataReadDescriptor extends DataDescriptorNode {
-  getData;
-  
-  constructor(cfg) {
-    super(cfg);
+  readData;
+
+  constructor(cfg, name) {
+    super(cfg, name);
 
     autoBind(this);
 
-    this._buildGetData(cfg);
+    this._buildReadData(cfg);
+  }
+
+  get nodeType() {
+    return 'DataRead';
   }
 
   // ################################################
   // Private methods
   // ################################################
 
-  _buildGetData(cfg) {
-    let getData;
+  _buildReadData(cfg) {
+    let readData;
     if (cfg instanceof PathDescriptor) {
       // build reader from pathDescriptor
-      getData = this._buildGetDataFromDescriptor(cfg);
+      readData = this._buildReadDataFromDescriptor(cfg);
     }
     else if (isFunction(cfg)) {
       // custom reader function
-      getData = cfg;
+      readData = cfg;
     }
     else {
       throw new Error('Could not make sense of DataReadDescriptor config node: ' + JSON.stringify(cfg));
     }
-    this.getData = this._wrapAccessFunction(getData);
+    this.readData = this._wrapAccessFunction(readData);
   }
 
-  _buildGetDataFromDescriptor(pathDescriptor) {
-    return function _getData(args, readByNameProxy, readersByName, callerNode) {
+  _buildReadDataFromDescriptor(pathDescriptor) {
+    return (args, readByNameProxy, readersByName, callerNode) => {
       // // TODO check if all dependencies are loaded?
       // if (!callerNode.areDependenciesLoaded(this)) {
       //   return null;
@@ -68,13 +72,13 @@ export default class DataReadDescriptor extends DataDescriptorNode {
     } = callerNode;
 
     _tree._recordDataAccess(dataProvider, path);
-    return dataProvider.getData(path);
+    return dataProvider.readData(path);
   }
 
   // ################################################
   // Public properties + methods
   // ################################################
-  
+
   /**
    * Check if all dependencies are loaded
    * 
@@ -100,22 +104,21 @@ export default class DataReadDescriptor extends DataDescriptorNode {
   /**
    * Check if data is loaded
    */
-  isLoaded(args) {
+  isDataLoaded(args, readByNameProxy, readersByName, callerNode) {
     // TODO: fix this!
 
     // 1) check if all dependencies are loaded
-    if (!this.areDependenciesLoaded(args)) {
-      return false;
-    }
+    // if (!this.areDependenciesLoaded(args)) {
+    //   return false;
+    // }
 
-    // 2) check if actual target is also loaded
-    const path = this._descriptor.getPath(args);
-    return this.dataSource.isDataLoaded(path);
+    const data = this.readData(args, readByNameProxy, readersByName, callerNode);
+    return data !== undefined;
   }
 
 
   execute(args, readByNameProxy, readersByName, callerNode) {
     // call path read function
-    return this.getData(args, readByNameProxy, readersByName, callerNode);
+    return this.readData(args, readByNameProxy, readersByName, callerNode);
   }
 }

@@ -42,7 +42,7 @@ import {
 } from './dataAccessors';
 
 
-const DEBUG_WRITES = false;
+const DEBUG_WRITES = true;
 
 const {
   isLoaded,
@@ -385,7 +385,7 @@ function _makeRefWrapper(parent, inheritedSettings, cfgOrPath) {
 
   // add cascadingMethods
   const varNames = parseTemplateString(pathTemplate).varNames;
-  cascadingMethods = _.mapValues(cascadingMethods, function (method, name) {
+  cascadingMethods = _.mapValues(cascadingMethods, function(method, name) {
     // all arguments of cascading methods, are:
     //  1. the arguments already stored in wrapper props
     //  2. run-time supplied arguments

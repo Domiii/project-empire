@@ -1,3 +1,5 @@
+import forEach from 'lodash/forEach';
+
 import autoBind from 'src/util/auto-bind';
 
 import { EmptyObject, EmptyArray } from 'src/util';
@@ -31,10 +33,7 @@ export default class DataSourceNode {
   _writeDescendants = {};
 
   constructor(tree, parent, dataProvider, name, fullName, pathDescriptor, readDescriptor, writeDescriptor) {
-    console.assert(!readDescriptor ||
-      !writeDescriptor ||
-      readDescriptor.name === writeDescriptor.name,
-      `something went wrong in DataSourceNode: ${readDescriptor.name} !== ${writeDescriptor.name}`);
+    //console.log('Building DataSourceNode: ' + name);
 
     this.name = name;
     this.fullName = fullName;
@@ -49,7 +48,6 @@ export default class DataSourceNode {
     autoBind(this);
 
     this._buildProxies();
-    this._buildChildBindings();
   }
 
 
@@ -87,6 +85,10 @@ export default class DataSourceNode {
   // Public properties + methods
   // ################################################
 
+  get dataProvider() {
+    return this._dataProvider;
+  }
+
   get isReader() {
     return !!this._readDescriptor;
   }
@@ -103,10 +105,18 @@ export default class DataSourceNode {
   //   return !node.isDataLoaded(args);
   // }
 
+  hasReader(name) {
+    return !!this._readDescendants[name];
+  }
+
+  hasWriter(name) {
+    return !!this._writeDescendants[name];
+  }
+
   resolveReader(name) {
     const node = this._readDescendants[name];
     if (!node) {
-      throw new Error(`Requested reader "${name}" does not exist in parent "${this.name}"`);
+      console.error(`Requested reader "${name}" does not exist in parent "${this.name}"`);
     }
     return node;
   }
@@ -114,21 +124,25 @@ export default class DataSourceNode {
   resolveWriter(name) {
     const node = this._writeDescendants[name];
     if (!node) {
-      throw new Error(`Requested writer "${name}" does not exist in parent "${this.name}"`);
+      console.error(`Requested writer "${name}" does not exist in parent "${this.name}"`);
     }
     return node;
   }
+  
+  isDataLoaded(args) {
+    return this._readDescriptor.readData(args, this._injectProxy, this._readersProxy, this);
+  }
 
-  readData(who, args) {
+  readData(args) {
     args = args || EmptyObject;
     if (!this._readDescriptor) {
       throw new Error(`Tried to read data from "${this.name}", but node does not have a reader.`);
     }
-    
-    return this._readDescriptor.readData(args, this._injectProxy, this._readersProxy, this, who);
+
+    return this._readDescriptor.readData(args, this._injectProxy, this._readersProxy, this);
   }
 
-  writeData(who, args, val) {
+  writeData(args, val) {
     args = args || EmptyObject;
     if (!this._writeDescriptor) {
       throw new Error(`Tried to write data to "${this.name}", but node does not have a writer.`);
@@ -142,7 +156,7 @@ export class AmbiguousSourceNode {
   name;
   fullNames;
 
-  constructor(name, ...fullNames) { 
+  constructor(name, ...fullNames) {
     this.name = name;
     this.fullNames = fullNames;
   }
@@ -159,12 +173,24 @@ export class AmbiguousSourceNode {
     return false;
   }
 
+  hasReader(name) {
+    throw new Error('[ERROR] Tried to call hasReader on ' + this);
+  }
+
+  hasWriter(name) {
+    throw new Error('[ERROR] Tried to call hasWriter on ' + this);
+  }
+
   resolveReader(name) {
     throw new Error('[ERROR] Tried to call resolveReader on ' + this);
   }
 
   resolveWriter(name) {
     throw new Error('[ERROR] Tried to call resolveWriter on ' + this);
+  }
+
+  isDataLoaded(args) {
+    throw new Error('[ERROR] Tried to call isDataLoaded on ' + this);
   }
 
   readData(args) {

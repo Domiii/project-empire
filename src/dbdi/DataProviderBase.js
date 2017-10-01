@@ -1,5 +1,6 @@
 import forEach from 'lodash/forEach';
 import isFunction from 'lodash/isFunction';
+import isEmpty from 'lodash/isEmpty';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
@@ -24,7 +25,7 @@ export default class DataProviderBase {
     if (!listeners.has(listener)) {
       // add listener to set (if not already listening)
       listeners.add(listener);
-      this.listenerData.add(listener, {
+      this.listenerData.set(listener, {
         byPath: {}
       });
     }
@@ -93,7 +94,7 @@ export default class DataProviderBase {
     setTimeout(() => listeners.forEach(listener => listener(path, val)));
   }
 
-  getData(path) {
-    throw new Error('DataSource did not implement `getData` method');
+  readData(path) {
+    throw new Error('DataSource did not implement `readData` method');
   }
 }

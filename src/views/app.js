@@ -43,7 +43,6 @@ import { Overlay, LoadOverlay } from 'src/views/components/overlays';
   if (auth && auth.uid) {
     // TODO: Move this to componentWillMount
     //    see: https://firebase.google.com/docs/reference/node/firebase.auth.Auth#onAuthStateChanged
-    console.warn(auth.uid);
     props.currentUserRef = UserInfoRef.user(firebase, {auth, uid: auth.uid});
   }
 

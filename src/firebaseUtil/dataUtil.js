@@ -42,7 +42,7 @@ export function createPathGetterFromTemplateArray(pathTemplate, variableTransfor
     return _makePathVariable(args[iArg], varName, variableTransform);
   };
   const getPathWithVariables = function getPathWithVariables(...args) {
-    return getPathWithVariables.pathInfo.nodes.map(node => node(...args)).join('');
+    return getPathWithVariables.pathInfo.nodes.map(node => node(args)).join('');
   };
   return createPathGetterFromTemplate(pathTemplate, varLookup, getPathWithVariables);
 }

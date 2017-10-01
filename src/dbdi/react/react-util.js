@@ -34,9 +34,16 @@ export function injectRenderArgs(Comp, argsOrFunc) {
   function wrappedRender(origRender) {
     return (...origArgs) => {
       const props = this && this.props || origArgs[0];
-      const newArgs = isFunction(argsOrFunc) ? argsOrFunc(...origArgs) : argsOrFunc;
+      const context = this && this.context || origArgs[1];
+      const newArgs = isFunction(argsOrFunc) ? argsOrFunc(props, context) : argsOrFunc;
       //console.log('wrapped render: ' + props.name + `(${JSON.stringify(origArgs)}) → (${JSON.stringify(newArgs)})`);
-      return origRender.call(this, ...newArgs);
+      try {
+        return origRender.call(this, ...newArgs);
+      }
+      catch (err) {
+        console.error('[Component render ERROR]', err.stack);
+        return (<pre style={{color: 'red'}}>[Component render ERROR] {err.stack}</pre>);
+      }
     };
   }
 

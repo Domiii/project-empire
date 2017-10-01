@@ -9,6 +9,7 @@ import autoBind from 'src/util/auto-bind';
 import { EmptyObject, EmptyArray } from 'src/util';
 
 import map from 'lodash/map';
+import mapValues from 'lodash/mapValues';
 import forEach from 'lodash/forEach';
 
 import React, { Component, Children } from 'react';
@@ -20,6 +21,7 @@ import {
 } from 'react-bootstrap';
 
 import dataBind from 'src/dbdi/react/dataBind';
+import DataSourceProvider from 'src/dbdi/react/DataSourceProvider';
 
 import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/loading';
@@ -305,77 +307,12 @@ ProjectStagesView.propTypes = {
 // }
 
 
-/**
- * Provide DataSource to @dataBind decorator
- * 
- * TODO: fix this mess
- */
-class DataSourceWrapper {
-  _dataSource;
-  _dataProxy;
-
-  constructor(dataSource, onNewData) {
-    this._dataSource = dataSource;
-    this.onNewData = onNewData;
-
-    autoBind(this);
-  }
-
-  accessDescriptorData(descriptor, args) {
-    const path = descriptor.getPath(args);
-
-    // whenever we access data, make sure, the path is registered
-    this._registerPathListener(path);
-
-    return this._dataSource.getData(path, args);
-  }
-
-  /**
-   * Read data at given descriptor.
-   * Also registers the listener for path, so changes to data at given path will stay in sync.
-   * 
-   * @param {string} pathDescriptorName 
-   * @param {*} args 
-   */
-  accessData(pathDescriptorName, args) {
-    const descriptor = this.pathDescriptorSet.getDescriptor(pathDescriptorName);
-    //const { varNames } = getPath.pathInfo;
-
-    if (descriptor) {
-      return this.accessDescriptorData(descriptor, args);
-    }
-  }
-
-  listenToPath(descriptorName, args) {
-    if (!this.areDependenciesLoaded(descriptorName, args)) {
-      // only start listening to a path when it's dependencies are fully resolved
-      return;
-    }
-
-    const path = this.pathDescriptorSet.getPath(descriptorName, args);
-    this._registerPathListener(path);
-  }
-
-  _registerPathListener(path) {
-    this._dataSource.registerListener(path, this);
-  }
-
-  /**
-   * Internally used method when the component owning this data accessor is unmounted.
-   */
-  unmount() {
-    this._dataSource.unregisterListener(this);
-  }
-}
 
 
 
 
-
-
-
-import FirebaseDataProvider, { 
-  FirebaseAuthProvider 
+import FirebaseDataProvider, {
+  FirebaseAuthProvider
 } from 'src/dbdi/firebase/FirebaseDataProvider';
 
 const dataProviders = {
@@ -385,7 +322,47 @@ const dataProviders = {
   //webCache: ...
 };
 
-const dataSourceCfg = {
+const allStagesStatus = {
+  path: 'status',
+  children: {
+    projectStageStatus: {
+      path: '$(stageId)',
+      children: {
+        num: 'num',
+        status: 'status',
+        startTime: 'startTime',
+        finishTime: 'finishTime'
+      }
+    }
+  }
+};
+
+const projectStageContributions = {
+  pathTemplate: 'contributions',
+  children: {
+    contribution: {
+      pathTemplate: '$(uid)',
+      children: {
+        contributorStatus: 'status',
+        contributorData: 'data'
+      }
+    }
+  }
+};
+
+const allProjectStageData = {
+  path: 'data',
+  children: {
+    projectStageData: {
+      path: '$(stageId)',
+      children: {
+        projectStageContributions
+      }
+    }
+  }
+};
+
+const dataSourceConfig = {
   auth: {
     dataProvider: 'firebaseAuth',
     children: {
@@ -409,46 +386,82 @@ const dataSourceCfg = {
           }
         }
       },
-      projects: {
-        path: '/projects/list',
+      allProjectData: {
+        path: '/projects',
+        readers: {
+          projectsOfUser({ uid }, { }, { projectIdsOfUser, project }) {
+            return mapValues(projectIdsOfUser({ uid }) || EmptyObject, projectId => project({ projectId }));
+          },
+
+          usersOfProject({ projectId }, { }, { uidsOfProject, user }) {
+            return mapValues(uidsOfProject({ projectId }) || EmptyObject, uid => user({ uid }));
+          },
+
+          stageContributions({ projectId, stageId }, { }, { projectStage }) {
+            const stage = projectStage({ projectId, stageId });
+            return stage && stage.contributions;
+          },
+
+          stageContributors(
+            { projectId, stageId }, { }, { projectStage, stageContributorUserList }
+          ) {
+            const stage = projectStage({ projectId, stageId });
+            const stageName = stage && stage.stageName;
+            const node = stageName && ProjectStageTree.getNode(stageName);
+
+            if (node && node.contributors) {
+              const contributorDefinitions = map(node.contributors, contributorSet => {
+                const { groupName } = contributorSet;
+                const userList = stageContributorUserList({ projectId, groupName });
+                return Object.assign({}, contributorSet, { userList });
+              });
+              return contributorDefinitions;
+            }
+            return null;
+          },
+
+          stageContributorUserList(
+            { projectId, groupName },
+            { },
+            { usersOfProject, projectReviewer, users: { gms } }
+          ) {
+            switch (groupName) {
+              case 'gm':
+                return gms();
+              case 'party':
+                return usersOfProject({ projectId });
+              case 'reviewer':
+                return projectReviewer({ projectId });
+              default:
+                console.error('invalid groupName in stage definition: ' + groupName);
+                return EmptyObject;
+            }
+          }
+        },
         children: {
-          project: '$(projectId)'
-        }
-      },
-      projectStages: {
-        path: '/projectStages',
-        children: {
-          ofProject: {
-            path: '$(projectId)',
+          projects: {
+            path: 'list',
             children: {
-              list: {
-                path: 'list',
+              project: {
+                path: '$(projectId)',
                 children: {
-                  projectStage: {
-                    path: '$(stageId)',
-                    children: {
-                      num: 'num',
-                      status: 'status',
-                      startTime: 'startTime',
-                      finishTime: 'finishTime',
-                      contributions: {
-                        pathTemplate: 'contributions',
-                        children: {
-                          contribution: {
-                            pathTemplate: '$(uid)',
-                            children: {
-                              contributorStatus: 'contributorStatus',
-                              data: 'data'
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
+                  
                 }
               }
             }
-          }
+          },
+          allProjectStages: {
+            path: 'stages',
+            children: {
+              projectStages: {
+                path: '$(projectId)',
+                children: {
+                  allStagesStatus,
+                  allProjectStageData
+                }
+              }
+            }
+          },
         }
       },
       missions: {
@@ -457,59 +470,6 @@ const dataSourceCfg = {
           mission: '$(missionId)'
         }
       }
-    }
-  }
-};
-
-// Data descriptor examples
-//    "uid" -> "thisProjectIndices" -> "thisProjects" -> "thisProject" -> "projectStages" -> "stakeHolders" + "stakeHolderStatus"
-const pathDescriptorTransformations = {
-  projectsOfUser({ uid }, { }, { projectIdsOfUser, project }) {
-    return map(projectIdsOfUser({ uid }) || EmptyObject, projectId => project({ projectId }));
-  },
-
-  usersOfProject({ projectId }, { }, { uidsOfProject, user }) {
-    return map(uidsOfProject({ projectId }) || EmptyObject, uid => user({ uid }));
-  },
-
-  stageContributions({ projectId, stageId }, { }, { projectStage }) {
-    const stage = projectStage({ projectId, stageId });
-    return stage && stage.contributions;
-  },
-
-  stageContributors(
-    { projectId, stageId }, { }, { projectStage, stageContributorUserList }
-  ) {
-    const stage = projectStage({ projectId, stageId });
-    const stageName = stage && stage.stageName;
-    const node = stageName && ProjectStageTree.getNode(stageName);
-
-    if (node && node.contributors) {
-      const contributorDefinitions = map(node.contributors, contributorSet => {
-        const { groupName } = contributorSet;
-        const userList = stageContributorUserList({ projectId, groupName });
-        return Object.assign({}, contributorSet, { userList });
-      });
-      return contributorDefinitions;
-    }
-    return null;
-  },
-
-  stageContributorUserList(
-    { projectId, groupName },
-    { },
-    { usersOfProject, projectReviewer, users: { gms } }
-  ) {
-    switch (groupName) {
-      case 'gm':
-        return gms();
-      case 'party':
-        return usersOfProject({ projectId });
-      case 'reviewer':
-        return projectReviewer({ projectId });
-      default:
-        console.error('invalid groupName in stage definition: ' + groupName);
-        return EmptyObject;
     }
   }
 };
@@ -527,13 +487,13 @@ const LoadedProjectControlView = dataBind()(
 
 
 const ProjectControlView = dataBind()(
-  ({ projectId }, { project, projectStages }) => {
-    const thisProject = project(projectId);
-    const thisProjectStages = projectStages(projectId);
+  ({ projectId }, { project, projectStageStatus }) => {
+    const thisProject = projectId && project({projectId});
+    const thisProjectStageStatus = projectId && projectStageStatus({projectId});
     const newContext = {
       thisProjectId: projectId,
       thisProject,
-      thisProjectStages
+      thisProjectStageStatus
     };
     return thisProject &&
       (<LoadedProjectControlView context={newContext} />) ||
@@ -541,12 +501,31 @@ const ProjectControlView = dataBind()(
   }
 );
 
+const ProjectControlList = dataBind()(
+  ({ currentUid }, { projectsOfUser }) => {
+    if (!projectsOfUser.isDataLoaded({currentUid})) {
+      return <LoadIndicator block />;
+    }
+    
+    const currentProjects = projectsOfUser({currentUid});
+    if (!currentProjects) {
+      return (<Alert bsStyle="warning">
+        你目前沒有在進行專案。推薦選擇任務並且找守門人註冊新的～
+      </Alert>);
+    }
+  }
+);
+
+
 const dataSourceProps = {
   dataProviders,
-  dataSourceProps
+  dataSourceConfig
 };
-export default () => (
+
+const WrappedView = ({ }) => (
   <DataSourceProvider {...dataSourceProps}>
-    <ProjectControlView />
+    <ProjectControlList />
   </DataSourceProvider>
 );
+
+export default WrappedView;

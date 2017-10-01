@@ -14,12 +14,19 @@ import {
   buildReactContextFromDataSourceTree
 } from './lib/dbdi-react-internals';
 
+import DataSourceTree from '../DataSourceTree';
+
 
 /**
  * TODO: must provide DataSource to all children
  */
-export class DataSourceProvider extends Component {
+export default class DataSourceProvider extends Component {
   static childContextTypes = dataBindChildContextStructure;
+  static propTypes = {
+    dataProviders: PropTypes.object.isRequired,
+    dataSourceConfig: PropTypes.object.isRequired,
+    children: PropTypes.object.isRequired
+  };
 
   constructor(props, context) {
     super(props, context);

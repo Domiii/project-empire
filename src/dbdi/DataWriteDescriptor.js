@@ -9,7 +9,7 @@ import PathDescriptor from './PathDescriptor';
 
 export default class DataWriteDescriptor extends DataDescriptorNode {
   writeData;
-  
+
   constructor(cfg) {
     super(cfg);
 
@@ -18,51 +18,20 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
     //this._buildGetData(cfg);
   }
 
+  get nodeType() {
+    return 'DataWrite';
+  }
+
   // ################################################
   // Private methods
   // ################################################
 
-  // _buildGetData(cfg) {
-  //   let getData;
-  //   if (cfg instanceof PathDescriptor) {
-  //     // build reader from pathDescriptor
-  //     getData = this._buildGetDataFromDescriptor(cfg);
-  //   }
-  //   else if (isFunction(cfg)) {
-  //     // custom reader function
-  //     getData = cfg;
-  //   }
-  //   else {
-  //     throw new Error('Could not make sense of DataReadDescriptor config node: ' + JSON.stringify(cfg));
-  //   }
-  //   this.getData = this._wrapAccessFunction(getData);
-  // }
-
-  // _buildGetDataFromDescriptor(pathDescriptor) {
-  //   return function _getData(args, readByNameProxy, readersByName, callerNode) {
-  //     // // TODO check if all dependencies are loaded?
-  //     // if (!callerNode.areDependenciesLoaded(this)) {
-  //     //   return null;
-  //     // }
-
-  //     const pathOrPaths = pathDescriptor.getPath(args, readByNameProxy, readersByName, callerNode);
-  //     const { dataProvider } = callerNode;
-
-  //     if (isArray(pathOrPaths)) {
-  //       const paths = pathOrPaths;
-  //       return paths.map(path => dataProvider.getData(path));
-  //     }
-  //     else {
-  //       const path = pathOrPaths;
-  //       return dataProvider.getData(path);
-  //     }
-  //   };
-  // }
+  // TODO
 
   // // ################################################
   // // Public properties + methods
   // // ################################################
-  
+
   // /**
   //  * Check if all dependencies are loaded
   //  * 
@@ -85,21 +54,6 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
   //   return true;
   // }
 
-  /**
-   * Check if data is loaded
-   */
-  isLoaded(args) {
-    // TODO: fix this!
-
-    // 1) check if all dependencies are loaded
-    if (!this.areDependenciesLoaded(args)) {
-      return false;
-    }
-
-    // 2) check if actual target is also loaded
-    const path = this._descriptor.getPath(args);
-    return this.dataSource.isDataLoaded(path);
-  }
 
 
   execute(args, readByNameProxy, readersByName, callerNode) {

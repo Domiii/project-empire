@@ -177,43 +177,40 @@ export default class MissionControlPage extends Component {
 
     let currentProjectOverview;
     
-    const project = projects && projects[currentProjectId];
-    if (project) {
-      let existingUsers = getUsersByProject(currentProjectId);
+    // const project = projects && projects[currentProjectId];
+    // if (project) {
+    //   let existingUsers = getUsersByProject(currentProjectId);
 
 
-      // TODO: render stuff based on current status
-      const projectStatus = ProjectStatus.Go;
-      const projectData = {
-        projectId: currentProjectId,
-        project,
-        users: existingUsers,
-        assignedGM: users && users[project.assignedGMUid],
-        projectGuardian: users && users[project.guardianUid],
+    //   // TODO: render stuff based on current status
+    //   const projectStatus = ProjectStatus.Go;
+    //   const projectData = {
+    //     projectId: currentProjectId,
+    //     project,
+    //     users: existingUsers,
+    //     assignedGM: users && users[project.assignedGMUid],
+    //     projectGuardian: users && users[project.guardianUid],
 
-        mission: missions && missions[project.missionId]
-      };
+    //     mission: missions && missions[project.missionId]
+    //   };
 
-      currentProjectOverview = (<div>
-        <ProjectPreview {...projectData} />
-        <ProjectControlView projectId={currentProjectId} />
-        { /* this.renderMeetings(projectData) */ }
-      </div>);
-    }
-    else {
-      currentProjectOverview = (<div>
-        <Alert bsStyle="warning">
-          你目前沒有在進行專案。推薦選擇任務並且找守門人註冊新的～
-        </Alert>
-        <ProjectControlView />
-      </div>);
-    }
+    //   currentProjectOverview = (<div>
+    //     <ProjectPreview {...projectData} />
+    //     <ProjectControlView projectId={currentProjectId} />
+    //     { /* this.renderMeetings(projectData) */ }
+    //   </div>);
+    // }
+    // else {
+    //   currentProjectOverview = (<div>
+    //     <ProjectControlView />
+    //   </div>);
+    // }
 
 
     return (
       <div>
         <Panel header="目前的任務">
-          { currentProjectOverview }
+          <ProjectControlView />
         </Panel>
         <Panel header="以前做過的任務">
           TODO: project archive

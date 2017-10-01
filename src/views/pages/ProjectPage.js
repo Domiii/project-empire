@@ -64,10 +64,6 @@ export default class ProjectPage extends Component {
     return hasDisplayRole(currentUserRef, 'Guardian');
   }
 
-  makeGuardianEl() {
-    return (hi);
-  }
-
   render() {
     const {
       projectsRef
@@ -77,8 +73,6 @@ export default class ProjectPage extends Component {
       // still loading
       return (<LoadOverlay />);
     }
-
-
 
         //{ this.IsGuardian && this.makeGuardianEl() }
     return (

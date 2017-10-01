@@ -11,17 +11,18 @@ import {
 import DataDescriptorNode from './DataDescriptorNode';
 
 export default class PathDescriptor extends DataDescriptorNode {
-  _pathConfig;
-  _getPath;
+  getPath;
 
-  constructor(pathConfig) {
-    super();
-
-    this._pathConfig = pathConfig;
+  constructor(pathConfig, name) {
+    super(pathConfig, name);
 
     autoBind(this);
 
     this._buildPathGetter(pathConfig);
+  }
+
+  get nodeType() {
+    return 'Path';
   }
 
   // ################################################
@@ -39,7 +40,7 @@ export default class PathDescriptor extends DataDescriptorNode {
     }
 
     // finally, wrap path getter call
-    this._getPath = this._wrapGetPath(getPath);
+    this.getPath = this._wrapGetPath(getPath);
   }
 
   _wrapGetPath(getPath) {
@@ -49,10 +50,10 @@ export default class PathDescriptor extends DataDescriptorNode {
         path = getPath(args, readByNameProxy, readersByName, callerNode);
       }
       catch (err) {
-        throw new Error('Failed to execute getPath at: ' + this + ' - ' + err.stack);
+        console.error('Failed to execute getPath at: ' + this + ' - ' + err.stack);
       }
 
-      if (!isString(path) && !isArray(path)) {
+      if (path !== undefined && !isString(path) && !isArray(path)) {
         // TODO: (low prio) Proper type checking (e.g.: https://github.com/gkz/type-check)
         throw new Error('getPath did not return string or array-of-string at: ' + this);
       }
@@ -76,6 +77,6 @@ export default class PathDescriptor extends DataDescriptorNode {
 
   execute(args, readByNameProxy, readersByName, callerNode) {
     // call path read function
-    return this._getPath(args, readByNameProxy, readersByName, callerNode);
+    return this.getPath(args, readByNameProxy, readersByName, callerNode);
   }
 }
