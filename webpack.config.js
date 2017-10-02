@@ -22,29 +22,45 @@ const PORT = 3000;
 //=========================================================
 //  LOADERS
 //---------------------------------------------------------
-const loaders = {
-  js: {
+const cssLoaders = [{
+  loader: 'css-loader'
+}, {
+  loader: 'postcss-loader',
+  options: {
+    plugins: () => [ require('autoprefixer')() ]
+  }
+}, 
+{
+  loader: 'sass-loader'
+}];
+
+const loaders = [
+  {
     test: /\.js[x]?$/,
     exclude: /node_modules/,
     loader: 'babel-loader'
   },
-  json: {test: /\.json$/, loader: 'json-loader' },
-  scss: {
-    test: /\.[s]?css$/, 
-    loader: 'style-loader!css-loader!postcss-loader!sass-loader'
+  {
+    test: /\.json$/, loader: 'json-loader'
   },
-  // the url-loader uses DataUrls. 
-  urls: { 
+  {
+    test: /\.[s]?css$/, 
+    use: ENV_DEVELOPMENT ?
+      [{ loader: 'style-loader' }, ...cssLoaders] :
+      ExtractTextPlugin.extract({
+        fallback: 'style-loader',
+        use: cssLoaders
+      })
+  },
+  { 
     test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, 
     loader: 'url-loader?limit=10000&mimetype=application/font-woff'
   },
-
-  // the file-loader emits files. 
-  files: { 
+  { 
     test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, 
     loader: 'file-loader'
-  },
-};
+  }
+];
 
 
 //=========================================================
@@ -113,13 +129,7 @@ if (ENV_DEVELOPMENT) {
   );
 
   config.module = {
-    loaders: [
-      loaders.js,
-      loaders.json,
-      loaders.scss,
-      loaders.files,
-      loaders.urls
-    ]
+    loaders
   };
 
   config.plugins.push(
@@ -160,13 +170,7 @@ if (ENV_PRODUCTION) {
   config.output.filename = '[name].[chunkhash].js';
 
   config.module = {
-    loaders: [
-      loaders.js,
-      loaders.json,
-      loaders.scss,
-      loaders.files,
-      loaders.urls
-    ]
+    loaders
   };
 
   config.plugins.push(
@@ -197,12 +201,6 @@ if (ENV_TEST) {
   config.devtool = 'inline-source-map';
 
   config.module = {
-    loaders: [
-      loaders.js,
-      loaders.json,
-      loaders.scss,
-      loaders.files,
-      loaders.urls
-    ]
+    loaders
   };
 }
