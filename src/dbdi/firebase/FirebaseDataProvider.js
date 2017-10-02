@@ -55,7 +55,6 @@ export default class FirebaseDataProvider extends DataProviderBase {
 
 export class FirebaseAuthProvider extends DataProviderBase {
   firebaseAuthData = undefined;
-  isBound = false;
 
   constructor() {
     super();
@@ -64,8 +63,6 @@ export class FirebaseAuthProvider extends DataProviderBase {
   }
 
   onListenerAdd(path, listener) {
-    if (this.isBound) return;
-
     // add listener once the first request comes in
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {

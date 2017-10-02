@@ -29,9 +29,6 @@ export default class DataSourceTree {
    */
   _root;
 
-  _dataAccessRecords = [];
-
-
   constructor(dataProviders, dataSourceCfgRaw) {
     this._dataProviders = dataProviders;
     this._dataSourceCfgRoot = parseConfig(dataSourceCfgRaw);
@@ -51,15 +48,15 @@ export default class DataSourceTree {
     const readDescriptor = readCfg && new DataReadDescriptor(readCfg, fullName);
     const newNode = new DataSourceNode(
       this, parent,
-      dataProvider, 
-      name, fullName, 
-      pathDescriptor, 
+      dataProvider,
+      name, fullName,
+      pathDescriptor,
       readDescriptor, null);
 
     newNode._children = this._buildDataReadNodes(newNode,
       Object.assign(
-        {}, 
-        configNode.children || EmptyObject, 
+        {},
+        configNode.children || EmptyObject,
         configNode.readers || EmptyObject
       )
     );
@@ -114,11 +111,6 @@ export default class DataSourceTree {
     // });
   }
 
-
-  // ################################################
-  // Private methods
-  // ################################################
-
   _addDescendants(descendants, childDescendants) {
     forEach(childDescendants, (descendant, name) => {
       if (!descendants[name]) {
@@ -161,19 +153,6 @@ export default class DataSourceTree {
     node._readDescendants = readDescendants;
   }
 
-  _recordDataAccess(dataProvider, path) {
-    console.assert(dataProvider && path);
-
-    const records = last(this._dataAccessRecords);
-    if (!records) {
-      console.error(`Invalid data access on "${path}" - ` +
-        'Did not call push pushDataAccessRecords first.');
-    }
-    else {
-      records.push({ dataProvider, path });
-    }
-  }
-
   // ################################################
   // Public methods + properties
   // ################################################
@@ -186,11 +165,37 @@ export default class DataSourceTree {
     return this._dataProviders[name];
   }
 
-  pushDataAccessRecords() {
-    this._dataAccessRecords.push([]);
+  // isNameLoaded(sourceName, args) {
+  //   const node = this.resolveName(sourceName);
+  //   if (!node) {
+  //     throw new Error('invalid node name: ' + sourceName);
+  //   }
+  //   return !node.isDataLoaded(args);
+  // }
+
+  hasReader(name) {
+    return !!this._root._readDescendants[name];
   }
 
-  popDataAccessRecords() {
-    return this._dataAccessRecords.pop();
+  hasWriter(name) {
+    return !!this._root._writeDescendants[name];
+  }
+
+  resolveReader(name) {
+    const node = this._root._readDescendants[name];
+    if (!node) {
+      console.error(`Requested reader "${name}" does not exist in DataSourceTree - ` +
+        '(' + Object.keys(this._root._readDescendants).join(', ') + ')');
+    }
+    return node;
+  }
+
+  resolveWriter(name) {
+    const node = this._root._writeDescendants[name];
+    if (!node) {
+      console.error(`Requested writer "${name}" does not exist in DataSourceTree - ` +
+        '(' + Object.keys(this._root._writeDescendants).join(', ') + ')');
+    }
+    return node;
   }
 }

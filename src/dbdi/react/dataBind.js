@@ -42,7 +42,7 @@ export default () => _WrappedComponent => {
      * When data is attempted to be read, its path is added as a dependency, 
      * and loading initialized if it has not initialized before.
      */
-    _dataProxy;
+    _dataInjectProxy;
 
     /**
      * Provides read and write executer functions, as well as special functions as defined in
@@ -58,11 +58,12 @@ export default () => _WrappedComponent => {
     constructor(props, context) {
       super(props, context);
 
+      autoBind(this);
+
       this._shouldUpdate = false;
       this._dataSourceTree = getDataSourceTreeFromReactContext(context);
       this._dataAccessTracker = new DataAccessTracker(this._dataSourceTree, this._onNewData);
 
-      autoBind(this);
 
       // prepare all the stuff
       this._buildSpecialExecutorFunctions();
@@ -92,7 +93,7 @@ export default () => _WrappedComponent => {
      * Build the proxy to deliver direct data injection.
      */
     _buildDataInjectionProxy() {
-      this._dataProxy = new Proxy({}, {
+      this._dataInjectProxy = new Proxy({}, {
         get: (target, name) => {
           // 1) check props
           if (this.props[name]) {
@@ -147,7 +148,7 @@ export default () => _WrappedComponent => {
     }
 
     _provideRenderArguments() {
-      return [this._dataProxy, this._dataExecuterProxy];
+      return [this._dataInjectProxy, this._dataExecuterProxy];
     }
 
     getChildContext() {
@@ -184,6 +185,7 @@ export default () => _WrappedComponent => {
       this._shouldUpdate = true;
       //this.forceUpdate();
       this.setState(EmptyObject);
+      console.log('_onNewData', path);
     }
 
     render() {

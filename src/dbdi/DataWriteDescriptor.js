@@ -56,8 +56,8 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
 
 
 
-  execute(args, readByNameProxy, readersByName, callerNode) {
+  execute(args, val, readByNameProxy, readersByName, callerNode, accessTracker) {
     // call path read function
-    return this.writeData(args, readByNameProxy, readersByName, callerNode);
+    return this.writeData(args, val, readByNameProxy, readersByName, callerNode, accessTracker);
   }
 }

@@ -43,35 +43,34 @@ export default class DataReadDescriptor extends DataDescriptorNode {
   }
 
   _buildReadDataFromDescriptor(pathDescriptor) {
-    return (args, readByNameProxy, readersByName, callerNode) => {
+    return (args, readByNameProxy, readersByName, callerNode, accessTracker) => {
       // // TODO check if all dependencies are loaded?
       // if (!callerNode.areDependenciesLoaded(this)) {
       //   return null;
       // }
 
-      const pathOrPaths = pathDescriptor.getPath(args, readByNameProxy, readersByName, callerNode);
+      const pathOrPaths = pathDescriptor.getPath(args, readByNameProxy, readersByName, callerNode, accessTracker);
 
       if (pathOrPaths) {
         if (isArray(pathOrPaths)) {
           const paths = pathOrPaths;
-          return paths.map(path => this._doReadData(path, callerNode));
+          return paths.map(path => this._doReadData(path, callerNode, accessTracker));
         }
         else {
           const path = pathOrPaths;
-          return this._doReadData(path, callerNode);
+          return this._doReadData(path, callerNode, accessTracker);
         }
       }
       return undefined;
     };
   }
 
-  _doReadData(path, callerNode) {
+  _doReadData(path, callerNode, accessTracker) {
     const {
-      dataProvider,
-      _tree
+      dataProvider
     } = callerNode;
 
-    _tree._recordDataAccess(dataProvider, path);
+    accessTracker.recordDataAccess(dataProvider, path);
     return dataProvider.readData(path);
   }
 
@@ -104,21 +103,20 @@ export default class DataReadDescriptor extends DataDescriptorNode {
   /**
    * Check if data is loaded
    */
-  isDataLoaded(args, readByNameProxy, readersByName, callerNode) {
+  isDataLoaded(args, readByNameProxy, readersByName, callerNode, accessTracker) {
     // TODO: fix this!
 
     // 1) check if all dependencies are loaded
     // if (!this.areDependenciesLoaded(args)) {
     //   return false;
     // }
-
-    const data = this.readData(args, readByNameProxy, readersByName, callerNode);
+    const data = this.readData(args, readByNameProxy, readersByName, callerNode, accessTracker);
     return data !== undefined;
   }
 
 
-  execute(args, readByNameProxy, readersByName, callerNode) {
+  execute(args, readByNameProxy, readersByName, callerNode, accessTracker) {
     // call path read function
-    return this.readData(args, readByNameProxy, readersByName, callerNode);
+    return this.readData(args, readByNameProxy, readersByName, callerNode, accessTracker);
   }
 }

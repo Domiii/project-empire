@@ -44,10 +44,10 @@ export default class PathDescriptor extends DataDescriptorNode {
   }
 
   _wrapGetPath(getPath) {
-    return function _wrappedGetPath(args, readByNameProxy, readersByName, callerNode) {
+    return function _wrappedGetPath(args, readByNameProxy, readersByName, callerNode, accessTracker) {
       let path;
       try {
-        path = getPath(args, readByNameProxy, readersByName, callerNode);
+        path = getPath(args, readByNameProxy, readersByName, callerNode, accessTracker);
       }
       catch (err) {
         console.error('Failed to execute getPath at: ' + this + ' - ' + err.stack);
@@ -65,7 +65,7 @@ export default class PathDescriptor extends DataDescriptorNode {
     // TODO: handle queryParams properly!
     const getPathRaw = createPathGetterFromTemplateProps(pathTemplate);
     //const argNames = getPathRaw.pathInfo && getPathRaw.pathInfo.varNames;
-    return function _getPathFromTemplateString(args, readByNameProxy, readersByName, callerNode) {
+    return function _getPathFromTemplateString(args, readByNameProxy, readersByName, callerNode, accessTracker) {
       return getPathRaw(args);
     };
   }
@@ -75,8 +75,8 @@ export default class PathDescriptor extends DataDescriptorNode {
   // Public properties + methods
   // ################################################
 
-  execute(args, readByNameProxy, readersByName, callerNode) {
+  execute(args, readByNameProxy, readersByName, callerNode, accessTracker) {
     // call path read function
-    return this.getPath(args, readByNameProxy, readersByName, callerNode);
+    return this.getPath(args, readByNameProxy, readersByName, callerNode, accessTracker);
   }
 }

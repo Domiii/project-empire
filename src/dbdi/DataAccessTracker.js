@@ -1,64 +1,113 @@
-
 import forEach from 'lodash/forEach';
+
+import autoBind from 'src/util/auto-bind';
+
+import { EmptyObject, EmptyArray } from 'src/util';
 
 export default class DataAccessTracker {
   _dataSourceTree;
-  _dataSourceNode;
   _listener;
-  _readerWrappers = new Map();
   _dataProviders = new Set();
+
+  _injectProxy;
+  _readersProxy;
+  _writersProxy;
+
+  _wrappedReaders = {};
+  _wrappedWriters = {};
 
   constructor(dataSourceTree, listener) {
     this._dataSourceTree = dataSourceTree;
-    this._dataSourceNode = this._dataSourceTree._root;
     this._listener = listener;
+
+    autoBind(this);
+
+    this._buildProxies();
   }
 
-  _buildWrappedReader(readerNode) {
-    const f = (...allArgs) => {
-      //  1) set a contextTracker in DataSourceTree
-      this._dataSourceTree.pushDataAccessRecords();
+  // ################################################
+  // Private methods + properties
+  // ################################################
 
-      //  2) call readData function
-      const data = readerNode.readData(...allArgs);
+  _buildProxies() {
+    this._injectProxy = new Proxy({}, this._buildReadByNameHandler());
+    this._readersProxy = new Proxy({}, this._buildReadersByNameHandler());
+  }
 
-      //  3) retrieve all accessed path
-      const dataAccessRecords = this._dataSourceTree.popDataAccessRecords();
-
-      // 4) call registerListener on each accessed path
-      forEach(dataAccessRecords, record => {
-        record.dataProvider.registerListener(record.path, this._listener);
-        this._dataProviders.add(record.dataProvider);
-      });
-      return data;
+  _buildReadByNameHandler() {
+    return {
+      get: (target, name) => {
+        // resolve node and return read data
+        const readData = this.resolveReadData(name);
+        return readData && readData();
+      }
     };
-    f.isDataLoaded = readerNode.isDataLoaded;
-    return f;
   }
 
-  _getOrCreateWrappedReader(readerNode) {
-    let reader = this._readerWrappers.get(readerNode);
-    if (!reader) {
-      this._readerWrappers.set(readerNode, reader = this._buildWrappedReader(readerNode));
-    }
-    return reader;
+  _buildReadersByNameHandler() {
+    return {
+      get: (target, name) => {
+        // resolve node and return call function to caller.
+        // let caller decide when to make the actual call and which arguments to supply.
+        const readData = this.resolveReadData(name);
+        return readData;
+      }
+    };
   }
+
+  _wrapReadData(node) {
+    const wrappedReadData = (args) => {
+      return node.readData(args, this._injectProxy, this._readersProxy, this);
+    };
+
+    wrappedReadData.isLoaded = (args) => {
+      return node.isDataLoaded(args, this._injectProxy, this._readersProxy, this);
+    };
+
+    return wrappedReadData;
+  }
+
+  _wrapWriteData(node) {
+    return (args, val) => {
+      return node.writeData(args, val, this._injectProxy, this._readersProxy, this);
+    };
+  }
+
+  // ################################################
+  // Public methods + properties
+  // ################################################
 
   resolveReadData(name) {
-    if (!this._dataSourceNode.hasReader(name)) {
+    if (!this._dataSourceTree.hasReader(name)) {
       return null;
     }
-    const readerNode = this._dataSourceNode.resolveReader(name);
-    const wrappedReader = this._getOrCreateWrappedReader(readerNode);
-    return wrappedReader;
+
+    let readData = this._wrappedReaders[name];
+    if (!readData) {
+      const node = this._dataSourceTree.resolveReader(name);
+      this._wrappedReaders[name] = readData =
+        this._wrapReadData(node);
+    }
+    return readData;
   }
 
   resolveWriteData(name) {
-    if (!this._dataSourceNode.hasWriter(name)) {
+    if (!this._dataSourceTree.hasWriter(name)) {
       return null;
     }
-    // we don't need to keep track of writer requests
-    return this._dataSourceNode.resolveWriter(name).writeData;
+
+    let writeData = this._wrappedWriters[name];
+    if (!writeData) {
+      const node = this._dataSourceTree.resolveWriter(name);
+      this._wrappedWriters[name] = writeData =
+        this._wrapWriteData(node);
+    }
+    return writeData;
+  }
+
+  recordDataAccess(dataProvider, path) {
+    dataProvider.registerListener(path, this._listener);
+    this._dataProviders.add(dataProvider);
   }
 
   unmount() {
@@ -66,7 +115,6 @@ export default class DataAccessTracker {
     this._dataProviders.forEach(dataProvider => {
       dataProvider.unregisterListener(this._listener);
     });
-    this._readerWrappers = new Map();
     this._dataProviders = new Set();
   }
 }

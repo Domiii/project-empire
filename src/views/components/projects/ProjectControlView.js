@@ -11,6 +11,7 @@ import { EmptyObject, EmptyArray } from 'src/util';
 import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
 import forEach from 'lodash/forEach';
+import isEmpty from 'lodash/isEmpty';
 
 import React, { Component, Children } from 'react';
 import PropTypes from 'prop-types';
@@ -171,12 +172,12 @@ const StageStatusBar = dataBind()(
   ({ stageNode, stageContributors }, { }) => {
     //return (<StageStatusIcon status={status} />);
     return (<div>
-      {map(stageContributors, user =>
+      {map(stageContributors, user => (
         <StageContributorIcons
           user={user}
           status={getStageContributorStatus(user, stageNode)}
         />)
-      }
+      )}
     </div>);
   }
 );
@@ -379,7 +380,11 @@ const dataSourceConfig = {
         path: '/users/public',
         children: {
           // TODO: get all users with role >= Roles.GM
-          gms: { queryParams: ['orderByChild=role', `equalTo=${Roles.GM}`] },
+          gms: { 
+            path: {
+              queryParams: ['orderByChild=role', `equalTo=${Roles.GM}`]
+            }
+          },
           user: {
             path: '$(uid)'
             // ...
@@ -502,16 +507,21 @@ const ProjectControlView = dataBind()(
 );
 
 const ProjectControlList = dataBind()(
-  ({ currentUid }, { projectsOfUser }) => {
-    if (!projectsOfUser.isDataLoaded({currentUid})) {
-      return <LoadIndicator block />;
+  ({ currentUid }, { projectIdsOfUser }) => {
+    if (!projectIdsOfUser.isLoaded({uid: currentUid})) {
+      return (<LoadIndicator block size={1.5} />);
     }
     
-    const currentProjects = projectsOfUser({currentUid});
-    if (!currentProjects) {
+    const currentProjectIds = projectIdsOfUser({uid: currentUid});
+    if (isEmpty(currentProjectIds)) {
       return (<Alert bsStyle="warning">
         你目前沒有在進行專案。推薦選擇任務並且找守門人註冊新的～
       </Alert>);
+    }
+    else {
+      return map(currentProjectIds, (_, projectId) =>
+        (<ProjectControlView projectId={projectId} />)
+      );
     }
   }
 );
