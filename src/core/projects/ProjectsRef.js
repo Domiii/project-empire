@@ -16,7 +16,7 @@ import isArray from 'lodash/isArray';
 
 
 const ProjectsRef = makeRefWrapper({
-  pathTemplate: '/projects',
+  pathTemplate: '/projects/list',
 
   methods: {
 

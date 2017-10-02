@@ -185,7 +185,7 @@ export default () => _WrappedComponent => {
       this._shouldUpdate = true;
       //this.forceUpdate();
       this.setState(EmptyObject);
-      console.log('_onNewData', path);
+      //console.log('_onNewData', path);
     }
 
     render() {

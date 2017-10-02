@@ -70,10 +70,6 @@ function getStageStatus(stage) {
   // TODO
 }
 
-function getStageContributors() {
-  // TODO: get all contributors (party members, reviewer, guardian, etc...)
-}
-
 function getStageContributorStatus(user, stage) {
   // TODO: How to update or determine the stage status of any contributor?
   return 1;
@@ -160,20 +156,18 @@ StageContributorIcon.propTypes = {
   user: PropTypes.object.isRequired
 };
 
-const StageContributorIcons = dataBind()(
-  ({ }, { }) => {
 
-  }
-);
+// TODO: fix this!!!
+
 
 // Render icon + status of all responsible contributors for given stage
 
 const StageStatusBar = dataBind()(
-  ({ stageNode, stageContributors }, { }) => {
-    //return (<StageStatusIcon status={status} />);
+  ({ stageName }, { stageContributors }) => {
+    const contributors = stageContributors({ projectId, stageName });
     return (<div>
-      {map(stageContributors, user => (
-        <StageContributorIcons
+      {map(contributors, user => (
+        <StageContributorIcon
           user={user}
           status={getStageContributorStatus(user, stageNode)}
         />)
@@ -190,9 +184,6 @@ StageStatusBar.propTypes = {
 // ####################################################
 // Project tree + stage logic
 // ####################################################
-
-
-// TODO: ProjectsRef, ProjectStagesRef, MissionsRef, UserInfoRef
 
 const ProjectStageView = dataBind()(
   ({ stageNode }, { }) => {
@@ -240,7 +231,7 @@ ProjectStageArrow.propTypes = {
 };
 
 const ProjectStagesView = dataBind()(
-  ({ thisProjectStages, stageNode }, { }) => {
+  ({ stageNode }, { }) => {
     // interject node views with arrows
     return (
       <Flex column justifyContent="center" alignItems="center">
@@ -329,6 +320,7 @@ const allStagesStatus = {
     projectStageStatus: {
       path: '$(stageId)',
       children: {
+        name: 'name',
         num: 'num',
         status: 'status',
         startTime: 'startTime',
@@ -408,10 +400,8 @@ const dataSourceConfig = {
           },
 
           stageContributors(
-            { projectId, stageId }, { }, { projectStage, stageContributorUserList }
+            { projectId, stageName }, { }, { stageContributorUserList }
           ) {
-            const stage = projectStage({ projectId, stageId });
-            const stageName = stage && stage.stageName;
             const node = stageName && ProjectStageTree.getNode(stageName);
 
             if (node && node.contributors) {
@@ -482,7 +472,6 @@ const dataSourceConfig = {
 
 const LoadedProjectControlView = dataBind()(
   ({ }, { }) => {
-    console.log('ProjectControlView.render');
     return (<div>
       <ProjectStagesView stageNode={ProjectStageTree.root} />
     </div>);
@@ -492,23 +481,22 @@ const LoadedProjectControlView = dataBind()(
 
 
 const ProjectControlView = dataBind()(
-  ({ projectId }, { project, projectStageStatus }) => {
+  ({ projectId }, { project }) => {
     const thisProject = projectId && project({projectId});
-    const thisProjectStageStatus = projectId && projectStageStatus({projectId});
     const newContext = {
       thisProjectId: projectId,
-      thisProject,
-      thisProjectStageStatus
+      thisProject
     };
+    
     return thisProject &&
       (<LoadedProjectControlView context={newContext} />) ||
-      (<LoadIndicator />);
+      (<LoadIndicator block />);
   }
 );
 
 const ProjectControlList = dataBind()(
   ({ currentUid }, { projectIdsOfUser }) => {
-    if (!projectIdsOfUser.isLoaded({uid: currentUid})) {
+    if (!currentUid || !projectIdsOfUser.isLoaded({uid: currentUid})) {
       return (<LoadIndicator block size={1.5} />);
     }
     
@@ -519,9 +507,11 @@ const ProjectControlList = dataBind()(
       </Alert>);
     }
     else {
-      return map(currentProjectIds, (_, projectId) =>
-        (<ProjectControlView projectId={projectId} />)
-      );
+      return (<div>{
+        map(currentProjectIds, (_, projectId) =>
+          (<ProjectControlView key={projectId} projectId={projectId} />)
+        )
+      }</div>);
     }
   }
 );

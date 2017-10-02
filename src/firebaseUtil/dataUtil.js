@@ -1,6 +1,7 @@
 import isPlainObject from 'lodash/isPlainObject';
 import get from 'lodash/get';
 import set from 'lodash/set';
+import some from 'lodash/some';
 
 export function _makePathVariable(val, varName, variableTransform) {
   if (isPlainObject(val)) {
@@ -18,13 +19,18 @@ export function createPathGetterFromTemplateProps(pathTemplate, variableTransfor
     const prop = props && props[varName];
     if (prop === undefined) {
       console.error(`invalid arguments: ${varName} was not provided for path ${pathTemplate}`);
+      return undefined;
     }
 
     return _makePathVariable(prop, varName, variableTransform);
   };
 
   const getPathWithVariables = function getPathWithVariables(props) {
-    return getPathWithVariables.pathInfo.nodes.map(node => node(props)).join('');
+    const nodeOutput = getPathWithVariables.pathInfo.nodes.map(node => node(props));
+    if (some(nodeOutput, output => output === undefined)) {
+      return undefined;
+    }
+    return nodeOutput.join('');
   };
 
   return createPathGetterFromTemplate(pathTemplate, varLookup, getPathWithVariables);

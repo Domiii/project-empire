@@ -61,7 +61,12 @@ export default class DataProviderBase {
     const listenerData = this.listenerData.get(listener);
     
     if (!listenerData) {
-      //throw new Error('[INTERNAL ERROR] listener not registered at path: ' + path);
+      console.error('[INTERNAL ERROR] listener not registered');
+      return;
+    }
+
+    if (!listeners || !listeners.has(listener)) {
+      console.error('[INTERNAL ERROR] listener not registered at path: ' + path);
       return;
     }
 
