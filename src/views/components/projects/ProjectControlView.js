@@ -163,8 +163,10 @@ StageContributorIcon.propTypes = {
 // Render icon + status of all responsible contributors for given stage
 
 const StageStatusBar = dataBind()(
-  ({ stageName }, { stageContributors }) => {
-    const contributors = stageContributors({ projectId, stageName });
+  ({ thisProjectId, stageNode }, { stageContributors }) => {
+    const projectId = thisProjectId;
+    console.log(projectId);
+    const contributors = projectId && stageContributors({ projectId, stageName: stageNode.name });
     return (<div>
       {map(contributors, user => (
         <StageContributorIcon
@@ -371,10 +373,9 @@ const dataSourceConfig = {
       users: {
         path: '/users/public',
         children: {
-          // TODO: get all users with role >= Roles.GM
           gms: { 
             path: {
-              queryParams: ['orderByChild=role', `equalTo=${Roles.GM}`]
+              queryParams: [['orderByChild', 'role'], ['startAt', Roles.GM]]
             }
           },
           user: {
@@ -387,11 +388,17 @@ const dataSourceConfig = {
         path: '/projects',
         readers: {
           projectsOfUser({ uid }, { }, { projectIdsOfUser, project }) {
-            return mapValues(projectIdsOfUser({ uid }) || EmptyObject, projectId => project({ projectId }));
+            return mapValues(
+              projectIdsOfUser({ uid }) || EmptyObject, 
+              projectId => project({ projectId })
+            );
           },
 
           usersOfProject({ projectId }, { }, { uidsOfProject, user }) {
-            return mapValues(uidsOfProject({ projectId }) || EmptyObject, uid => user({ uid }));
+            return mapValues(
+              uidsOfProject({ projectId }) || EmptyObject,
+              uid => user({ uid })
+            );
           },
 
           stageContributions({ projectId, stageId }, { }, { projectStage }) {
@@ -399,9 +406,7 @@ const dataSourceConfig = {
             return stage && stage.contributions;
           },
 
-          stageContributors(
-            { projectId, stageName }, { }, { stageContributorUserList }
-          ) {
+          stageContributors({ projectId, stageName }, { }, { stageContributorUserList }) {
             const node = stageName && ProjectStageTree.getNode(stageName);
 
             if (node && node.contributors) {
@@ -418,7 +423,7 @@ const dataSourceConfig = {
           stageContributorUserList(
             { projectId, groupName },
             { },
-            { usersOfProject, projectReviewer, users: { gms } }
+            { usersOfProject, projectReviewer, gms }
           ) {
             switch (groupName) {
               case 'gm':
@@ -489,7 +494,7 @@ const ProjectControlView = dataBind()(
     };
     
     return thisProject &&
-      (<LoadedProjectControlView context={newContext} />) ||
+      (<LoadedProjectControlView setContext={newContext} />) ||
       (<LoadIndicator block />);
   }
 );

@@ -65,9 +65,19 @@ export default class PathDescriptor extends DataDescriptorNode {
     // TODO: handle queryParams properly!
     const getPathRaw = createPathGetterFromTemplateProps(pathTemplate);
     //const argNames = getPathRaw.pathInfo && getPathRaw.pathInfo.varNames;
-    return function _getPathFromTemplateString(args, readByNameProxy, readersByName, callerNode, accessTracker) {
-      return getPathRaw(args);
-    };
+    if (!queryParams) {
+      return (args, readByNameProxy, readersByName, callerNode, accessTracker) => {
+        return getPathRaw(args);
+      };
+    }
+    else {
+      return (args, readByNameProxy, readersByName, callerNode, accessTracker) => {
+        return {
+          path: getPathRaw(args),
+          queryParams
+        };
+      };
+    }
   }
 
   

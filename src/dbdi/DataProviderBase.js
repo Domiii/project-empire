@@ -1,6 +1,8 @@
 import forEach from 'lodash/forEach';
-import isFunction from 'lodash/isFunction';
 import isEmpty from 'lodash/isEmpty';
+import isFunction from 'lodash/isFunction';
+import isString from 'lodash/isString';
+import isPlainObject from 'lodash/isPlainObject';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
@@ -13,9 +15,17 @@ export default class DataProviderBase {
     return this.listenersByPath[path];
   }
 
-  registerListener(path, listener) {
+  registerListener(pathOrQuery, listener) {
     console.assert(isFunction(listener), '[INTERNAL ERROR] listener must be function.');
 
+    let path, query;
+    if (isString(pathOrQuery)) {
+      path = query = pathOrQuery;
+    }
+    else if (isPlainObject(pathOrQuery)) {
+      path = JSON.stringify(pathOrQuery);
+      query = pathOrQuery;
+    }
     let listeners = this.getListeners(path);
 
     if (!listeners) {
@@ -33,7 +43,7 @@ export default class DataProviderBase {
     if (!this.listenerData.get(listener).byPath[path]) {
       // register new listener for this path (if not already listening on path)
       console.warn('registered path: ', path);
-      const customData = this.onListenerAdd(path, listener);
+      const customData = this.onListenerAdd(path, query, listener);
       this.listenerData.get(listener).byPath[path] = {
         customData
       };

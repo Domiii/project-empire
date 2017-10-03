@@ -1,6 +1,14 @@
 import firebase from 'firebase';
 
+import { 
+  applyParamsToQuery,
+  applyQueryToDataSet
+} from './firebase-util';
+
 import DataProviderBase from '../DataProviderBase';
+
+import isString from 'lodash/isString';
+import isPlainObject from 'lodash/isPlainObject';
 
 import autoBind from 'src/util/auto-bind';
 
@@ -19,7 +27,7 @@ export default class FirebaseDataProvider extends DataProviderBase {
     autoBind(this);
   }
 
-  _onNewData(path, snap) {
+  _onNewData(path, query, snap) {
     const val = snap.val();
     console.log('R [', path, '] ', val);
     setDataIn(this.firebaseCache, path, val);
@@ -31,9 +39,15 @@ export default class FirebaseDataProvider extends DataProviderBase {
     console.error(`[${this.constructor.name}] ${err.stack}`);
   }
 
-  onListenerAdd(path, listener) {
-    const hook = snap => this._onNewData(path, snap);
-    firebase.database().ref(path).on('value',
+  onListenerAdd(path, query, listener) {
+    const hook = snap => this._onNewData(path, query, snap);
+    const { queryParams } = query;
+    let ref = firebase.database().ref().child(path);
+    if (queryParams) {
+      ref = applyParamsToQuery(queryParams, query);
+    }
+
+    ref.on('value',
       hook,
       this._onError);
     return hook;
@@ -47,8 +61,23 @@ export default class FirebaseDataProvider extends DataProviderBase {
     return this.readData(path) !== undefined;
   }
 
-  readData(path) {
-    return getDataIn(this.firebaseCache, path, undefined);
+  readData(pathOrQuery) {
+    if (isString(pathOrQuery)) {
+      const path = pathOrQuery;
+      return getDataIn(this.firebaseCache, path, undefined);
+    }
+    else if (isPlainObject(pathOrQuery)) {
+      const {
+        path,
+        queryParams
+      } = pathOrQuery;
+
+      let allData = getDataIn(this.firebaseCache, path, undefined);
+      if (allData) {
+        allData = applyQueryToDataSet(allData, queryParams);
+      }
+      return allData;
+    }
   }
 }
 
@@ -62,7 +91,7 @@ export class FirebaseAuthProvider extends DataProviderBase {
     autoBind(this);
   }
 
-  onListenerAdd(path, listener) {
+  onListenerAdd(path, query, listener) {
     // add listener once the first request comes in
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
@@ -87,6 +116,7 @@ export class FirebaseAuthProvider extends DataProviderBase {
   }
 
   readData(path) {
+    console.assert(isString(path), 'invalid path in FirebaseDataProvider, path must be string: ' + path);
     return getDataIn(this.firebaseAuthData, path, undefined);
   }
 }

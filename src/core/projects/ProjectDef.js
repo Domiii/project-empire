@@ -19,7 +19,10 @@ function getStageStakeHolders(groups, count) {
 }
 
 function contributorSet(groupName, signOffCount) {
-  return { groupName, signOffCount };
+  return { 
+    groupName,
+    signOffCount
+  };
 }
 
 export const ContributorGroup = {
@@ -63,12 +66,14 @@ export const ProjectStageTree = new StageDefTree([
       {
         id: 'execution',
         title: '執行階段',
+        contributors: contributorSet('party'),
         description: '就做一做～',
         noStatus: true
       },
       {
         id: 'partyPrepareMeeting',
         title: '團隊 準備 團隊鑑定',
+        contributors: contributorSet('party'),
         checklists: [
           {
             id: 'partyPrepareMeeting',
@@ -80,6 +85,7 @@ export const ProjectStageTree = new StageDefTree([
       {
         id: 'reviewerPrepareMeeting',
         title: '支持者 準備 團隊鑑定',
+        contributors: contributorSet('reviewer'),
         checklists: [
           {
             id: 'reviewerPrepareMeeting',
@@ -91,6 +97,7 @@ export const ProjectStageTree = new StageDefTree([
       {
         id: 'holdMeeting',
         title: '團隊鑑定',
+        contributors: contributorSet('reviewer'),
         checklists: [
           {
             id: 'reviewerMeetingRecords',
@@ -106,6 +113,7 @@ export const ProjectStageTree = new StageDefTree([
       {
         id: 'postSprintReflection',
         title: '[進階] 團隊鑑定過後',
+        contributors: contributorSet('party'),
         level: 2,
         checklists: [
           {
@@ -123,6 +131,7 @@ export const ProjectStageTree = new StageDefTree([
   },
   {
     id: 'wrapup',
-    title: '專案總點：一起思考過程喜歡與不喜歡的～'
+    title: '專案總點：一起思考過程喜歡與不喜歡的～',
+    contributors: contributorSet('party', 1)
   }
 ]);

@@ -5,7 +5,7 @@ import isFunction from 'lodash/isFunction';
 import isArray from 'lodash/isArray';
 import isObject from 'lodash/isObject';
 import forEach from 'lodash/forEach';
-import some from 'lodash/some';
+import isEmpty from 'lodash/isEmpty';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
@@ -18,6 +18,7 @@ import {
   dataBindContextStructure,
   dataBindChildContextStructure,
   getDataSourceTreeFromReactContext,
+  getCustomContextFromReactContext,
   buildReactContextFromDataSourceTree
 } from './lib/dbdi-react-internals';
 import { injectRenderArgs } from './react-util';
@@ -32,6 +33,9 @@ export default () => _WrappedComponent => {
   class WrapperComponent extends Component {
     static contextTypes = dataBindContextStructure;
     static childContextTypes = dataBindChildContextStructure;
+    static propTypes = {
+      setContext: PropTypes.object
+    };
 
     _dataSourceTree;
     _dataAccessTracker;
@@ -51,7 +55,7 @@ export default () => _WrappedComponent => {
     _dataExecuterProxy;
 
     _specialFunctions;
-    _moreContext = {};
+    _customChildContext = {};
 
     _shouldUpdate;
 
@@ -75,6 +79,10 @@ export default () => _WrappedComponent => {
         this._provideRenderArguments);
     }
 
+    // ################################################
+    // Private methods + properties
+    // ################################################
+
     _buildSpecialExecutorFunctions() {
       this._specialFunctions = {
         /**
@@ -84,7 +92,7 @@ export default () => _WrappedComponent => {
          *    Need to provide a pub-sub solution using a custom DataProvider instead.
          */
         setContext: (newContext) => {
-          Object.assign(this._moreContext, newContext);
+          Object.assign(this._customChildContext, newContext);
         }
       };
     }
@@ -96,16 +104,23 @@ export default () => _WrappedComponent => {
       this._dataInjectProxy = new Proxy({}, {
         get: (target, name) => {
           // 1) check props
-          if (this.props[name]) {
+          if (this.props[name] !== undefined) {
             return this.props[name];
           }
 
           // 2) check context
-          if (this.context[name]) {
+          if (this.context[name] !== undefined) {
             return this.context[name];
           }
 
-          // 3) check readers
+          // 3) check custom context
+          const customContext = getCustomContextFromReactContext(this.context);
+          if (customContext && customContext[name] !== undefined) {
+            console.warn('get from customContext: ' + name);
+            return customContext[name];
+          }
+
+          // 4) check readers
           const readData = this._dataAccessTracker.resolveReadData(name);
           if (readData) {
             return readData();
@@ -151,9 +166,16 @@ export default () => _WrappedComponent => {
       return [this._dataInjectProxy, this._dataExecuterProxy];
     }
 
+
+    // ################################################
+    // Public methods + properties
+    // ################################################
+
     getChildContext() {
-      //console.log('dataBind.getChildContext');
-      return buildReactContextFromDataSourceTree(this._dataSourceTree, this._moreContext);
+      if (!isEmpty(this._customChildContext)) {
+        console.log('dataBind.getChildContext', buildReactContextFromDataSourceTree(this._dataSourceTree, this._customChildContext));
+      }
+      return buildReactContextFromDataSourceTree(this._dataSourceTree, this._customChildContext);
     }
 
     componentWillUpdate() {
@@ -170,6 +192,11 @@ export default () => _WrappedComponent => {
     componentDidMount() {
       console.log('dataBind.componentDidMount');
 
+      const newContext = this.props.setContext;
+      if (newContext) {
+        this._specialFunctions.setContext(newContext);
+      }
+
       this._shouldUpdate = true;
       this.forceUpdate();
     }
@@ -177,7 +204,7 @@ export default () => _WrappedComponent => {
     componentWillUnmount() {
       this._dataAccessTracker.unmount();
 
-      this._moreContext = {};   // reset context
+      this._customChildContext = {};   // reset context
       this._shouldUpdate = true;
     }
 
