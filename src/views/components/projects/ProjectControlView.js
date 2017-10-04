@@ -394,7 +394,7 @@ const dataSourceConfig = {
           projectReviewers({ projectId }, {}, { project, user }) {
             // single reviewer as "list" or "object" of reviewers
             const proj = project({projectId});
-            const uid = proj && proj.reviewerUid;
+            const uid = proj && proj.guardianUid;
             const reviewer = uid && user({ uid });
             return reviewer && { [uid]: reviewer } || null;
           },

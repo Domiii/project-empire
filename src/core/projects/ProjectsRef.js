@@ -27,9 +27,9 @@ const ProjectsRef = makeRefWrapper({
       pathTemplate: '$(projectId)',
 
       children: {
-        assignedGMUid: 'assignedGMUid',
-        missionId: 'missionId',
         reviewerUid: 'reviewerUid',
+        missionId: 'missionId',
+        guardianUid: 'guardianUid',
         projectStatus: 'projectStatus',
 
         gmNotes: 'gmNotes',

@@ -72,7 +72,7 @@ export class MeetingStatusView extends Component {
     project: PropTypes.object.isRequired,
     users: PropTypes.object,
     projectGuardian: PropTypes.object,
-    assignedGM: PropTypes.object
+    reviewer: PropTypes.object
   };
 
   constructor() {
@@ -123,7 +123,7 @@ export class MeetingPrepUserDetails extends Component {
     project: PropTypes.object.isRequired,
     users: PropTypes.object,
     projectGuardian: PropTypes.object,
-    assignedGM: PropTypes.object
+    reviewer: PropTypes.object
   };
 
   render() {
@@ -190,7 +190,7 @@ export class MeetingPrepUserDetailsEditor extends Component {
     project: PropTypes.object.isRequired,
     users: PropTypes.object,
     projectGuardian: PropTypes.object,
-    assignedGM: PropTypes.object,
+    reviewer: PropTypes.object,
 
     allValues: PropTypes.object,
     submit: PropTypes.func.isRequired
@@ -238,7 +238,7 @@ export class MeetingPrepView extends Component {
     project: PropTypes.object.isRequired,
     users: PropTypes.object,
     projectGuardian: PropTypes.object,
-    assignedGM: PropTypes.object
+    reviewer: PropTypes.object
   };
 
   get IsAdmin() {
@@ -253,7 +253,7 @@ export class MeetingPrepView extends Component {
 
   // renderGMStatus() {
   //   return (<p>
-  //     GM status: <span className="color-gray">no assigned GM</span>
+  //     GM status: <span className="color-gray">no assigned reviewer</span>
   //   </p>);
   // }
 
@@ -309,7 +309,7 @@ export class MeetingGoView extends Component {
     project: PropTypes.object.isRequired,
     users: PropTypes.object,
     projectGuardian: PropTypes.object,
-    assignedGM: PropTypes.object
+    reviewer: PropTypes.object
   };
 
   get IsAdmin() {
@@ -383,7 +383,7 @@ export class MeetingResultsView extends Component {
     project: PropTypes.object.isRequired,
     users: PropTypes.object,
     projectGuardian: PropTypes.object,
-    assignedGM: PropTypes.object
+    reviewer: PropTypes.object
   };
 
   get IsAdmin() {
@@ -423,7 +423,7 @@ export class MeetingArchive extends Component {
     project: PropTypes.object.isRequired,
     users: PropTypes.object,
     projectGuardian: PropTypes.object,
-    assignedGM: PropTypes.object,
+    reviewer: PropTypes.object,
 
     archivedMeetings: PropTypes.object
   };
@@ -465,7 +465,7 @@ export default class MeetingView extends Component {
     project: PropTypes.object.isRequired,
     users: PropTypes.object,
     projectGuardian: PropTypes.object,
-    assignedGM: PropTypes.object
+    reviewer: PropTypes.object
   };
 
   get IsAdmin() {
@@ -503,7 +503,7 @@ export class ProjectMeetingPanel extends Component {
     project: PropTypes.object.isRequired,
     users: PropTypes.object,
     projectGuardian: PropTypes.object,
-    assignedGM: PropTypes.object,
+    reviewer: PropTypes.object,
 
     mission: PropTypes.object,
     meetings: PropTypes.object

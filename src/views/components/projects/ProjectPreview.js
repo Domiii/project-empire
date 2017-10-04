@@ -34,7 +34,7 @@ export default class ProjectPreview extends Component {
     
     users: PropTypes.object,
     projectGuardian: PropTypes.object,
-    assignedGM: PropTypes.object,
+    reviewer: PropTypes.object,
 
     projectEditor: PropTypes.object,
 
@@ -117,7 +117,7 @@ export default class ProjectPreview extends Component {
       users,
       mission,
       projectGuardian,
-      assignedGM,
+      reviewer,
 
       projectEditor
     } = this.props;
@@ -142,12 +142,12 @@ export default class ProjectPreview extends Component {
             <p>Guardian: {
               !projectGuardian ? 
                 <span className="color-gray">no guardian</span> :
-                <UserBadge user={projectGuardian} uid={project.reviewerUid} />
+                <UserBadge user={projectGuardian} uid={project.guardianUid} />
             }</p>
-            <p>GM: {
-              !assignedGM ? 
-                <span className="color-gray">no assigned GM</span> :
-                <UserBadge user={assignedGM} uid={project.assignedGMUid} />
+            <p>Reviewer: {
+              !reviewer ? 
+                <span className="color-gray">no assigned reviewer</span> :
+                <UserBadge user={reviewer} uid={project.reviewerUid} />
             }</p>
             <div>
               <span>Projects ({ size(users) }):</span> { userEls }
