@@ -1,15 +1,26 @@
 import PropTypes from 'prop-types';
 
+import merge from 'lodash/merge';
+
 const dataBindNamespace = '_dbdi_';
 const dataBindCustomContextName = '_customContext';
 const dataSourceTreeName = '_dataSource';
 export const dataBindContextStructure = {
-  [dataBindNamespace]: PropTypes.object,
-  [dataBindCustomContextName]: PropTypes.object
+  [dataBindNamespace]: PropTypes.shape({
+    [dataSourceTreeName]: PropTypes.object.isRequired,
+    [dataBindCustomContextName]: PropTypes.object
+  })
+};
+export const dataBindRootChildContextStructure = {
+  [dataBindNamespace]: PropTypes.shape({
+    [dataSourceTreeName]: PropTypes.object.isRequired
+  })
 };
 export const dataBindChildContextStructure = {
-  [dataBindNamespace]: PropTypes.object,
-  [dataBindCustomContextName]: PropTypes.object.isRequired
+  [dataBindNamespace]: PropTypes.shape({
+    [dataSourceTreeName]: PropTypes.object.isRequired,
+    [dataBindCustomContextName]: PropTypes.object
+  })
 };
 
 function _getDataBindContextScope(context) {
@@ -27,7 +38,20 @@ export function getCustomContextFromReactContext(context) {
   return scope && scope[dataBindCustomContextName];
 }
 
-export function buildReactContextFromDataSourceTree(dataSourceTree, customContext) {
+export function buildReactContextFromDataSourceTree(dataSourceTree, context) {
+  const origCustomContext = getCustomContextFromReactContext(context);
+  return Object.assign({}, {
+    [dataBindNamespace]: {
+      [dataSourceTreeName]: dataSourceTree,
+      //[dataBindCustomContextName]: {b: 'f.'}
+      [dataBindCustomContextName]: origCustomContext
+    }
+  });
+}
+
+export function buildReactContextForDataBind(context, customContext) {
+  //const origCustomContext = getCustomContextFromReactContext(context);
+  const dataSourceTree = getDataSourceTreeFromReactContext(context);
   return Object.assign({}, {
     [dataBindNamespace]: {
       [dataSourceTreeName]: dataSourceTree,

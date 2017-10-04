@@ -9,7 +9,6 @@ import PropTypes from 'prop-types';
 import LoadIndicator from 'src/views/components/util/loading';
 
 import { 
-  dataBindContextStructure,
   dataBindChildContextStructure,
   buildReactContextFromDataSourceTree
 } from './lib/dbdi-react-internals';
@@ -41,7 +40,7 @@ export default class DataSourceProvider extends Component {
   }
 
   getChildContext() {
-    return buildReactContextFromDataSourceTree(this._dataSourceTree);
+    return buildReactContextFromDataSourceTree(this._dataSourceTree, this.context);
   }
 
   render() {

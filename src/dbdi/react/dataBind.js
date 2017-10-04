@@ -1,11 +1,6 @@
 import DataAccessTracker from '../DataAccessTracker';
 
-import isPlainObject from 'lodash/isPlainObject';
-import isFunction from 'lodash/isFunction';
-import isArray from 'lodash/isArray';
-import isObject from 'lodash/isObject';
-import forEach from 'lodash/forEach';
-import isEmpty from 'lodash/isEmpty';
+import merge from 'lodash/merge';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
@@ -19,7 +14,7 @@ import {
   dataBindChildContextStructure,
   getDataSourceTreeFromReactContext,
   getCustomContextFromReactContext,
-  buildReactContextFromDataSourceTree
+  buildReactContextForDataBind
 } from './lib/dbdi-react-internals';
 import { injectRenderArgs } from './react-util';
 
@@ -55,8 +50,9 @@ export default () => _WrappedComponent => {
     _dataExecuterProxy;
 
     _specialFunctions;
-    _customChildContext = {};
+    _customContext;
 
+    _isMounted;
     _shouldUpdate;
 
     constructor(props, context) {
@@ -65,7 +61,9 @@ export default () => _WrappedComponent => {
       autoBind(this);
 
       this._shouldUpdate = false;
+      this._isMounted = false;
       this._dataSourceTree = getDataSourceTreeFromReactContext(context);
+      this._customContext = getCustomContextFromReactContext(context) || {};
       this._dataAccessTracker = new DataAccessTracker(this._dataSourceTree, this._onNewData);
 
 
@@ -92,7 +90,7 @@ export default () => _WrappedComponent => {
          *    Need to provide a pub-sub solution using a custom DataProvider instead.
          */
         setContext: (newContext) => {
-          Object.assign(this._customChildContext, newContext);
+          merge(this._customContext, newContext);
         }
       };
     }
@@ -114,13 +112,9 @@ export default () => _WrappedComponent => {
           }
 
           // 3) check custom context
-          const customContext = getCustomContextFromReactContext(this.context);
-          if (name === 'thisProjectId') {
-            console.log(this.context);
-          }
-          if (customContext && customContext[name] !== undefined) {
-            console.warn('get from customContext: ' + name);
-            return customContext[name];
+          if (this._customContext && this._customContext[name] !== undefined) {
+            //console.warn('get from customContext: ' + name);
+            return this._customContext[name];
           }
 
           // 4) check readers
@@ -129,7 +123,9 @@ export default () => _WrappedComponent => {
             return readData();
           }
 
-          console.error(`Invalid request for data: Component requested "${name}" but it does not exist.`);
+          if (this._isMounted) {
+            console.error(`Invalid request for data: Component requested "${name}" but it does not exist.`);
+          }
           return undefined;
         }
       });
@@ -159,7 +155,9 @@ export default () => _WrappedComponent => {
             return specialFn;
           }
 
-          console.error(`Invalid request for executor: Component requested "${name}" but it does not exist.`);
+          if (this._isMounted) {
+            console.error(`Invalid request for executor: Component requested "${name}" but it does not exist.`);
+          }
           return null;
         }
       });
@@ -175,10 +173,7 @@ export default () => _WrappedComponent => {
     // ################################################
 
     getChildContext() {
-      if (!isEmpty(this._customChildContext)) {
-        console.log('dataBind.getChildContext', buildReactContextFromDataSourceTree(this._dataSourceTree, this._customChildContext));
-      }
-      return buildReactContextFromDataSourceTree(this._dataSourceTree, this._customChildContext);
+      return buildReactContextForDataBind(this.context, this._customContext);
     }
 
     componentWillUpdate() {
@@ -201,6 +196,7 @@ export default () => _WrappedComponent => {
       }
 
       this._shouldUpdate = true;
+      this._isMounted = true;
       this.forceUpdate();
     }
 
@@ -209,6 +205,7 @@ export default () => _WrappedComponent => {
 
       this._customChildContext = {};   // reset context
       this._shouldUpdate = true;
+      this._isMounted = false;
     }
 
     _onNewData(path, val) {
@@ -221,7 +218,7 @@ export default () => _WrappedComponent => {
     render() {
       this._shouldUpdate = false;
       const { WrappedComponent } = this;
-      return (<WrappedComponent {...this.props} data={this.data} />);
+      return (<WrappedComponent {...this.props} />);
     }
   }
 

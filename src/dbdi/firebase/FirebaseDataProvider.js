@@ -73,9 +73,12 @@ export default class FirebaseDataProvider extends DataProviderBase {
       } = pathOrQuery;
 
       let allData = getDataIn(this.firebaseCache, path, undefined);
-      if (allData) {
-        allData = applyQueryToDataSet(allData, queryParams);
-      }
+      
+      // should not be necessary, since we already subscribed to only this subset of data anyway!
+
+      // if (allData) {
+      //   allData = applyQueryToDataSet(allData, queryParams);
+      // }
       return allData;
     }
   }
