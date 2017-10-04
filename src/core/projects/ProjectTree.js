@@ -35,6 +35,10 @@ export class StageDefNode {
    */
   firstChild;
 
+  
+  childrenById;
+  siblingsById;
+
   constructor(stageTree, parent, stageDef, depth, order) {
     this.stageTree = stageTree;
     this.parent = parent;
@@ -42,6 +46,12 @@ export class StageDefNode {
     this.isLoop = stageDef.isLoop || false;
     this.depth = depth;
     this.order = order;
+    this.childrenById = {};
+    this.siblingsById = {};
+  }
+
+  get stageId() {
+    return this.stageDef.id;
   }
 
   get IsRoot() {
@@ -50,6 +60,11 @@ export class StageDefNode {
 
   get IsLeaf() {
     return !this.next;
+  }
+
+  getNode(stageId) {
+    //return this.childrenById[stageId];
+    return this.siblingsById[stageId];
   }
 
   mapDFS(cb) {
@@ -118,9 +133,11 @@ export class StageDefNode {
 // StageDefTree + StagePath are the main data structures for navigating the stagetree
 export class StageDefTree {
   root;
+  nodesById;
 
   constructor(stageDefs) {
-    this.root = this._createSubTree(stageDefs);
+    this.nodesById = {};
+    this.root = this._createSubTree(stageDefs, this.nodesById);
     this._validateAndSanitizeStages();
   }
 
@@ -136,6 +153,11 @@ export class StageDefTree {
     return this.root.forEachDFS(...args);
   }
 
+  getNode(stageId) {
+    //return this.root.getNode(stageId);
+    return this.nodesById[stageId];
+  }
+
   _validateAndSanitizeStages(stageDefs) {
     // TODO: responsible, parent, etc...
     this.forEachDFS(node => {
@@ -143,7 +165,7 @@ export class StageDefTree {
     });
   }
 
-  _createSubTree(stageDefs, parentNode = null, depth = 0) {
+  _createSubTree(stageDefs, allNodesById, parentNode = null, depth = 0) {
     console.assert(isArray(stageDefs));
 
     if (!stageDefs) {
@@ -152,9 +174,12 @@ export class StageDefTree {
 
     let previousNode = null;
     let firstNode = null;
+    let newNodesById = {};
     for (let i = 0; i < stageDefs.length; ++i) {
       const stageDef = stageDefs[i];
       const node = new StageDefNode(this, parentNode, stageDef, depth, i);
+      allNodesById[stageDef.id] = node;
+      newNodesById[stageDef.id] = node;
 
       // remember first node, so we can return it at the end
       firstNode = firstNode || node;
@@ -167,14 +192,16 @@ export class StageDefTree {
 
       // create child nodes
       const { children } = stageDef;
-      children && this._createSubTree(children, node, depth + 1);
+      children && this._createSubTree(children, allNodesById, node, depth + 1);
 
       // move to next
       previousNode = node;
     }
     if (!!parentNode) {
       parentNode.firstChild = firstNode;
+      parentNode.childrenById = newNodesById;
     }
+    firstNode.siblingsById = newNodesById;
     return firstNode;
   }
 }

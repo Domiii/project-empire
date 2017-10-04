@@ -138,23 +138,23 @@ StageStatusIcon.propTypes = {
   status: PropTypes.number.isRequired
 };
 
-function StageContributorIcon({ user, status, groupName }) {
-  // TODO: groupName classes
-  const classes = 'project-contributor project-contributor-' + groupName;
-  return (
-    <div className={classes} style={{ backgroundImage: 'url(' + user.photoURL + ')' }}>
-      {status &&
-        <StageStatusIcon status={status}
-          className=".project-contributor-status-icon" />
-      }
-    </div>
-  );
-}
-StageContributorIcon.propTypes = {
-  groupName: PropTypes.string.isRequired,
-  status: PropTypes.number,
-  user: PropTypes.object.isRequired
-};
+const StageContributorIcon = dataBind()(
+  ({ user, status }, {}) => {
+    // TODO: groupName classes
+    const {
+      groupName 
+    } = user;
+    const classes = 'project-contributor project-contributor-' + groupName;
+    return (
+      <div className={classes} style={{ backgroundImage: 'url(' + user.photoURL + ')' }}>
+        {status &&
+          <StageStatusIcon status={status}
+            className=".project-contributor-status-icon" />
+        }
+      </div>
+    );
+  }
+);
 
 
 // TODO: fix this!!!
@@ -165,15 +165,18 @@ StageContributorIcon.propTypes = {
 const StageStatusBar = dataBind()(
   ({ thisProjectId, stageNode }, { stageContributors }) => {
     const projectId = thisProjectId;
-    console.log(projectId);
-    const contributors = projectId && stageContributors({ projectId, stageName: stageNode.name });
+    const contributors = projectId && stageContributors({ projectId, stageId: stageNode.stageId });
     return (<div>
-      {map(contributors, user => (
-        <StageContributorIcon
+      {map(contributors, contributorSet => {
+        const {
+          signOffCount
+        } = contributorSet;
+        
+        return (<StageContributorIcon
           user={user}
           status={getStageContributorStatus(user, stageNode)}
-        />)
-      )}
+        />);
+      })}
     </div>);
   }
 );
@@ -406,11 +409,11 @@ const dataSourceConfig = {
             return stage && stage.contributions;
           },
 
-          stageContributors({ projectId, stageName }, { }, { stageContributorUserList }) {
-            const node = stageName && ProjectStageTree.getNode(stageName);
+          stageContributors({ projectId, stageId }, { }, { stageContributorUserList }) {
+            const node = stageId && ProjectStageTree.getNode(stageId);
 
-            if (node && node.contributors) {
-              const contributorDefinitions = map(node.contributors, contributorSet => {
+            if (node && node.stageDef.contributors) {
+              const contributorDefinitions = map(node.stageDef.contributors, contributorSet => {
                 const { groupName } = contributorSet;
                 const userList = stageContributorUserList({ projectId, groupName });
                 return Object.assign({}, contributorSet, { userList });

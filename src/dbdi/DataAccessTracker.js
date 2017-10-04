@@ -55,13 +55,25 @@ export default class DataAccessTracker {
     };
   }
 
+  _wrapArgs(args) {
+    args = args || EmptyObject;
+    return new Proxy(args, { 
+      get: (target, name) => {
+        if (target[name] === undefined) {
+          console.warn(`Requested argument was not supplied: ${name}`);
+        }
+        return target[name];
+      }
+    });
+  }
+
   _wrapReadData(node) {
     const wrappedReadData = (args) => {
-      return node.readData(args, this._injectProxy, this._readersProxy, this);
+      return node.readData(this._wrapArgs(args), this._injectProxy, this._readersProxy, this);
     };
 
     wrappedReadData.isLoaded = (args) => {
-      return node.isDataLoaded(args, this._injectProxy, this._readersProxy, this);
+      return node.isDataLoaded(this._wrapArgs(args), this._injectProxy, this._readersProxy, this);
     };
 
     return wrappedReadData;
@@ -69,7 +81,7 @@ export default class DataAccessTracker {
 
   _wrapWriteData(node) {
     return (args, val) => {
-      return node.writeData(args, val, this._injectProxy, this._readersProxy, this);
+      return node.writeData(this._wrapArgs(args), val, this._injectProxy, this._readersProxy, this);
     };
   }
 
