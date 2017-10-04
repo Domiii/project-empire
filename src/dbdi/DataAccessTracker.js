@@ -1,4 +1,4 @@
-import forEach from 'lodash/forEach';
+import isPlainObject from 'lodash/isPlainObject';
 
 import autoBind from 'src/util/auto-bind';
 
@@ -56,6 +56,9 @@ export default class DataAccessTracker {
   }
 
   _wrapArgs(args) {
+    if (args !== undefined && args !== null && !isPlainObject(args)) {
+      throw new Error('Invalid args - expected plain object but found: ' + JSON.stringify(args));
+    }
     args = args || EmptyObject;
     return new Proxy(args, { 
       get: (target, name) => {

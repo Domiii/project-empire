@@ -29,7 +29,7 @@ const ProjectsRef = makeRefWrapper({
       children: {
         assignedGMUid: 'assignedGMUid',
         missionId: 'missionId',
-        guardianUid: 'guardianUid',
+        reviewerUid: 'reviewerUid',
         projectStatus: 'projectStatus',
 
         gmNotes: 'gmNotes',

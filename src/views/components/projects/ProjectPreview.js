@@ -142,7 +142,7 @@ export default class ProjectPreview extends Component {
             <p>Guardian: {
               !projectGuardian ? 
                 <span className="color-gray">no guardian</span> :
-                <UserBadge user={projectGuardian} uid={project.guardianUid} />
+                <UserBadge user={projectGuardian} uid={project.reviewerUid} />
             }</p>
             <p>GM: {
               !assignedGM ? 

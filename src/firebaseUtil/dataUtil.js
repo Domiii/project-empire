@@ -18,8 +18,7 @@ export function createPathGetterFromTemplateProps(pathTemplate, variableTransfor
   const varLookup = (props, varName, iArg) => {
     const prop = props && props[varName];
     if (prop === undefined) {
-      console.error(`invalid arguments: ${varName} was not provided for path ${pathTemplate}`);
-      return undefined;
+      throw new Error(`invalid arguments: ${varName} was not provided for path ${pathTemplate}`);
     }
 
     return _makePathVariable(prop, varName, variableTransform);

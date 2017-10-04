@@ -2,7 +2,8 @@ import Roles from 'src/core/users/Roles';
 
 import {
   ProjectStageTree,
-  StageStatus
+  StageStatus,
+  ContributorGroupNames
 } from 'src/core/projects/ProjectDef';
 
 import autoBind from 'src/util/auto-bind';
@@ -12,6 +13,7 @@ import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
 import forEach from 'lodash/forEach';
 import isEmpty from 'lodash/isEmpty';
+import sortBy from 'lodash/sortBy';
 
 import React, { Component, Children } from 'react';
 import PropTypes from 'prop-types';
@@ -28,33 +30,6 @@ import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/loading';
 
 
-// TODO: use DataDescriptionNode to build readers and writers
-
-// TODO: implement firebase "applyParamsToQuery"
-// TODO: Distinguish between DataProvider (e.g. cache, some firebase app, etc...) and DataSource (a access wrapper on top of a data provider)
-// TODO: fix PathDescriptor
-// TODO: PathDescriptor.getPath can return one path or array of paths.
-
-// TODO: build DataReader from PathDescriptor
-// TODO: DataReader has a getData method?
-
-// TODO: build PathWriter from PathDescriptor
-
-// TODO: Transformation functions should be PathDescriptors, or flagged correspondingly if they cannot be used that way
-
-// TODO: Add support for data transformation functions as "data descriptors"
-
-// TODO: Use reselect for caching results
-// TODO: Add write operations
-// TODO: Add ContextDataSource
-// TODO: Add WebCacheDataSource
-
-// TODO: minimize re-rendering
-// TODO: All kinds of "aside" data (like "partyMembers") does not need to be real-time updated (for now)
-//    -> Consider a priority flag to indicate whether data should always be real-time, or whether some data can be outdated
-
-
-
 // ####################################################
 // Getters + Enums
 // ####################################################
@@ -68,11 +43,6 @@ function getStageStatus(stage) {
   }
   return StageStatus.None;
   // TODO
-}
-
-function getStageContributorStatus(user, stage) {
-  // TODO: How to update or determine the stage status of any contributor?
-  return 1;
 }
 
 
@@ -101,10 +71,10 @@ const statusStyles = {
 
 const statusIcons = {
   [StageStatus.None]: {
-    name: ''
+    name: 'question'
   },
   [StageStatus.NotStarted]: {
-    name: ''
+    name: 'question'
   },
   [StageStatus.Started]: {
     name: 'repeat'
@@ -126,9 +96,6 @@ const statusBsStyles = {
 };
 
 
-const renderers = {
-
-};
 function StageStatusIcon({ status, ...props }) {
   const iconCfg = statusIcons[status];
   const style = statusStyles[status];
@@ -138,44 +105,65 @@ StageStatusIcon.propTypes = {
   status: PropTypes.number.isRequired
 };
 
+          
+// TODO: mixing together data from very different sources can quickly cause trouble!
+
 const StageContributorIcon = dataBind()(
-  ({ user, status }, {}) => {
-    // TODO: groupName classes
-    const {
-      groupName 
-    } = user;
+  ({ uid, groupName, user, status }, {}) => {
+    status = status || 0;
+
     const classes = 'project-contributor project-contributor-' + groupName;
-    return (
-      <div className={classes} style={{ backgroundImage: 'url(' + user.photoURL + ')' }}>
-        {status &&
-          <StageStatusIcon status={status}
-            className=".project-contributor-status-icon" />
-        }
-      </div>
-    );
+    return <span>{JSON.stringify(user)}</span>;
+    // return (
+    //   <div className={classes} style={{ backgroundImage: 'url(' + user.photoURL + ')' }}>
+    //     {status &&
+    //       <StageStatusIcon status={status}
+    //         className=".project-contributor-status-icon" />
+    //     }
+    //   </div>
+    // );
   }
 );
 
 
-// TODO: fix this!!!
-
 
 // Render icon + status of all responsible contributors for given stage
 
+
 const StageStatusBar = dataBind()(
-  ({ thisProjectId, stageNode }, { stageContributors }) => {
+  ({ thisProjectId, stageNode }, 
+    { stageContributors, stageContributorStatus }) => {
     const projectId = thisProjectId;
-    const contributors = projectId && stageContributors({ projectId, stageId: stageNode.stageId });
+    const { stageId } = stageNode;
+    let contributors = projectId && stageContributors({ projectId, stageId: stageNode.stageId });
+
+    // render all groups of contributors
     return (<div>
-      {map(contributors, contributorSet => {
+      {map(contributors, (contributorSet, iSet) => {
         const {
-          signOffCount
+          groupName,
+          signOffCount,
+          userList
         } = contributorSet;
-        
-        return (<StageContributorIcon
-          user={user}
-          status={getStageContributorStatus(user, stageNode)}
-        />);
+
+        if (signOffCount > 0 && signOffCount < userList.length) {
+          // render "unknown user" icons
+          // TODO
+        }
+        else {
+          // render icons of the actual users in group
+          return (<div key={iSet}>
+            {map(userList, 
+              (user, uid) => (<StageContributorIcon
+                key={uid}
+                uid={uid}
+                user={user}
+                groupName={groupName}
+                status={stageContributorStatus({projectId, stageId, uid}) || 0}
+              />)
+            )}
+          </div>);
+        }
       })}
     </div>);
   }
@@ -320,16 +308,15 @@ const dataProviders = {
 };
 
 const allStagesStatus = {
-  path: 'status',
+  path: 'sprintStatus',
   children: {
-    projectStageStatus: {
-      path: '$(stageId)',
+    sprintStageStatus: {
+      path: '$(sprintStageId)',
       children: {
-        name: 'name',
-        num: 'num',
-        status: 'status',
-        startTime: 'startTime',
-        finishTime: 'finishTime'
+        stageName: 'name',
+        stageStatus: 'status',
+        stageStartTime: 'startTime',
+        stageFinishTime: 'finishTime'
       }
     }
   }
@@ -341,8 +328,8 @@ const projectStageContributions = {
     contribution: {
       pathTemplate: '$(uid)',
       children: {
-        contributorStatus: 'status',
-        contributorData: 'data'
+        stageContributorStatus: 'status',
+        stageContributorData: 'data'
       }
     }
   }
@@ -404,6 +391,14 @@ const dataSourceConfig = {
             );
           },
 
+          projectReviewers({ projectId }, {}, { project, user }) {
+            // single reviewer as "list" or "object" of reviewers
+            const proj = project({projectId});
+            const uid = proj && proj.reviewerUid;
+            const reviewer = uid && user({ uid });
+            return reviewer && { [uid]: reviewer } || null;
+          },
+
           stageContributions({ projectId, stageId }, { }, { projectStage }) {
             const stage = projectStage({ projectId, stageId });
             return stage && stage.contributions;
@@ -413,12 +408,15 @@ const dataSourceConfig = {
             const node = stageId && ProjectStageTree.getNode(stageId);
 
             if (node && node.stageDef.contributors) {
+              // get userList for each contributor group
               const contributorDefinitions = map(node.stageDef.contributors, contributorSet => {
                 const { groupName } = contributorSet;
                 const userList = stageContributorUserList({ projectId, groupName });
                 return Object.assign({}, contributorSet, { userList });
               });
-              return contributorDefinitions;
+
+              // sort
+              return sortBy(contributorDefinitions, ['groupName']);
             }
             return null;
           },
@@ -426,7 +424,7 @@ const dataSourceConfig = {
           stageContributorUserList(
             { projectId, groupName },
             { },
-            { usersOfProject, projectReviewer, gms }
+            { usersOfProject, projectReviewers, gms }
           ) {
             switch (groupName) {
               case 'gm':
@@ -434,7 +432,7 @@ const dataSourceConfig = {
               case 'party':
                 return usersOfProject({ projectId });
               case 'reviewer':
-                return projectReviewer({ projectId });
+                return projectReviewers({ projectId });
               default:
                 console.error('invalid groupName in stage definition: ' + groupName);
                 return EmptyObject;

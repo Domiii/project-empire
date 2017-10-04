@@ -189,7 +189,7 @@ export default class MissionControlPage extends Component {
     //     project,
     //     users: existingUsers,
     //     assignedGM: users && users[project.assignedGMUid],
-    //     projectGuardian: users && users[project.guardianUid],
+    //     projectGuardian: users && users[project.reviewerUid],
 
     //     mission: missions && missions[project.missionId]
     //   };

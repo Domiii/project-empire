@@ -25,12 +25,12 @@ function contributorSet(groupName, signOffCount) {
   };
 }
 
-export const ContributorGroup = {
+export const ContributorGroupNames = {
   none: 0,
-  party: 1,
-  reviewer: 2,
-  gm: 3,
-  any: 4
+  any: 1,
+  party: 2,
+  reviewer: 3,
+  gm: 4
 };
 
 export const DefaultPrivs = {

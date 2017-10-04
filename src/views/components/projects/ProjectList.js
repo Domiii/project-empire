@@ -122,7 +122,7 @@ export default class ProjectList extends Component {
 
     return addProject({
       missionId: this.state.selectedMissionId,
-      guardianUid: currentUserRef.props.uid
+      reviewerUid: currentUserRef.props.uid
     });
   }
 
@@ -244,7 +244,7 @@ export default class ProjectList extends Component {
             projectId,
             project,
             assignedGM: users && users[project.assignedGMUid],
-            projectGuardian: users && users[project.guardianUid],
+            projectGuardian: users && users[project.reviewerUid],
             mission: missions && missions[project.missionId],
 
             users: existingUsers,
