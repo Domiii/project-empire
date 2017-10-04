@@ -115,6 +115,9 @@ export default () => _WrappedComponent => {
 
           // 3) check custom context
           const customContext = getCustomContextFromReactContext(this.context);
+          if (name === 'thisProjectId') {
+            console.log(this.context);
+          }
           if (customContext && customContext[name] !== undefined) {
             console.warn('get from customContext: ' + name);
             return customContext[name];

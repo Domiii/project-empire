@@ -9,7 +9,7 @@ export const dataBindContextStructure = {
 };
 export const dataBindChildContextStructure = {
   [dataBindNamespace]: PropTypes.object,
-  [dataBindCustomContextName]: PropTypes.object
+  [dataBindCustomContextName]: PropTypes.object.isRequired
 };
 
 function _getDataBindContextScope(context) {
