@@ -4,27 +4,29 @@ import PropTypes from 'prop-types';
 // Online demo: https://codepen.io/Domiii/pen/mOaGWG?editors=0010
 export default class FAIcon extends PureComponent {
   static propTypes = {
+    name: PropTypes.string.isRequired,
     className: PropTypes.string,
     color: PropTypes.string,
-    name: PropTypes.string.isRequired,
     size: PropTypes.string,
+    style: PropTypes.object,
     spinning: PropTypes.bool
   };
 
   render() {
-    const {
+    let {
       name, 
       className,
       color,
       size,
+      style,
       spinning,
-      ...childProps
+      ...moreProps
     } = this.props;
 
     let classes = 'fa fa-' + name + 
       (!!className && (' ' + className) || '');
     
-    const style = childProps.style || {};
+    style = Object.assign({}, style || {});
     if (color) {
       style.color = color;
     }
@@ -36,7 +38,9 @@ export default class FAIcon extends PureComponent {
       classes += ' fa-spin';
     }
     return (
-      <i className={classes} style={style} aria-hidden="true" {...childProps} />
+      <i className={classes} style={style} aria-hidden="true" {...moreProps}>
+        {moreProps.children}
+      </i>
     );
   }
 }

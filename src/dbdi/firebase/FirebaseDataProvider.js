@@ -29,7 +29,7 @@ export default class FirebaseDataProvider extends DataProviderBase {
 
   _onNewData(path, query, snap) {
     const val = snap.val();
-    console.log('R [', path, '] ', val);
+    //console.log('R [', path, '] ', val);
     setDataIn(this.firebaseCache, path, val);
 
     this.notifyNewData(path, val);

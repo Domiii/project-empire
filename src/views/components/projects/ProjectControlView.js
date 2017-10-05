@@ -14,6 +14,8 @@ import mapValues from 'lodash/mapValues';
 import forEach from 'lodash/forEach';
 import isEmpty from 'lodash/isEmpty';
 import sortBy from 'lodash/sortBy';
+import size from 'lodash/size';
+import times from 'lodash/times';
 
 import React, { Component, Children } from 'react';
 import PropTypes from 'prop-types';
@@ -53,13 +55,13 @@ function getStageStatus(stage) {
 
 const statusStyles = {
   [StageStatus.None]: {
-    color: 'lightgray'
+    color: 'gray'
   },
   [StageStatus.NotStarted]: {
-    color: 'lightgray'
+    color: 'gray'
   },
   [StageStatus.Started]: {
-    color: 'gray'
+    color: 'blue'
   },
   [StageStatus.Finished]: {
     color: 'green'
@@ -109,19 +111,42 @@ StageStatusIcon.propTypes = {
 // TODO: mixing together data from very different sources can quickly cause trouble!
 
 const StageContributorIcon = dataBind()(
-  ({ uid, groupName, user, status }, {}) => {
-    status = status || 0;
+  ({ projectId, stageId, groupName, uid }, { userPublic, stageContributorStatus }) => {
+
+    const isStatusLoaded = stageContributorStatus.isLoaded({projectId, stageId, uid});
+    const isUserLoaded = !uid || userPublic.isLoaded({projectId, stageId, uid});
+    const status = stageContributorStatus({projectId, stageId, uid}) || 0;
+    const user = isUserLoaded && uid && userPublic({uid});
+
+    const statusIconEl = (
+      !isStatusLoaded ? 
+        <LoadIndicator /> :
+        <StageStatusIcon status={status} className="project-contributor-status-icon" />
+    );
 
     const classes = 'project-contributor project-contributor-' + groupName;
-    return <span>{JSON.stringify(user)}</span>;
-    // return (
-    //   <div className={classes} style={{ backgroundImage: 'url(' + user.photoURL + ')' }}>
-    //     {status &&
-    //       <StageStatusIcon status={status}
-    //         className=".project-contributor-status-icon" />
-    //     }
-    //   </div>
-    // );
+    if (!uid) {
+      // unknown user
+      return (
+        <FAIcon className={classes} name="user-secret" >
+          {statusIconEl}
+        </FAIcon>
+      );
+    }
+    else {
+      // user icon
+      return (
+        // <div className={classes} style={{ backgroundImage: 'url(' + user.photoURL + ')' }}>
+        //   {statusIconEl}
+        // </div>
+        !isUserLoaded ? 
+          <LoadIndicator /> :
+          <div className={classes}>
+            <img className={classes} src={user.photoURL} />
+            {statusIconEl}
+          </div>
+      );
+    }
   }
 );
 
@@ -143,26 +168,36 @@ const StageStatusBar = dataBind()(
         const {
           groupName,
           signOffCount,
+          possibleUserList,
           userList
         } = contributorSet;
 
-        if (signOffCount > 0 && signOffCount < userList.length) {
-          // render "unknown user" icons
-          // TODO
+        if (signOffCount > 0 && signOffCount < size(userList)) {
+          // render "unknown user" icons, since it could be any subset of the given users
+          // TODO: what if someone has already taken action?
+          //const status = stageContributorStatus({projectId, stageId, uid});
+          return times(signOffCount, () =>
+            (<StageContributorIcon
+              uid={null}
+              groupName={groupName}
+              status={0}
+            />)
+          );
         }
         else {
           // render icons of the actual users in group
-          return (<div key={iSet}>
+          return (<Flex row key={iSet} justifyContent="flex-end" alignItems="center">
             {map(userList, 
-              (user, uid) => (<StageContributorIcon
-                key={uid}
-                uid={uid}
-                user={user}
-                groupName={groupName}
-                status={stageContributorStatus({projectId, stageId, uid}) || 0}
-              />)
+              (user, uid) => (<Item key={uid} flex="none">{
+                (<StageContributorIcon
+                  projectId={projectId}
+                  stageId={stageId}
+                  uid={uid}
+                  groupName={groupName}
+                />)}
+              </Item>)
             )}
-          </div>);
+          </Flex>);
         }
       })}
     </div>);
@@ -368,7 +403,7 @@ const dataSourceConfig = {
               queryParams: [['orderByChild', 'role'], ['startAt', Roles.GM]]
             }
           },
-          user: {
+          userPublic: {
             path: '$(uid)'
             // ...
           }
@@ -380,22 +415,22 @@ const dataSourceConfig = {
           projectsOfUser({ uid }, { }, { projectIdsOfUser, project }) {
             return mapValues(
               projectIdsOfUser({ uid }) || EmptyObject, 
-              projectId => project({ projectId })
+              (_, projectId) => project({ projectId })
             );
           },
 
-          usersOfProject({ projectId }, { }, { uidsOfProject, user }) {
+          usersOfProject({ projectId }, { }, { uidsOfProject, userPublic }) {
             return mapValues(
               uidsOfProject({ projectId }) || EmptyObject,
-              uid => user({ uid })
+              (_, uid) => userPublic({ uid })
             );
           },
 
-          projectReviewers({ projectId }, {}, { project, user }) {
+          projectReviewers({ projectId }, {}, { project, userPublic }) {
             // single reviewer as "list" or "object" of reviewers
             const proj = project({projectId});
             const uid = proj && proj.guardianUid;
-            const reviewer = uid && user({ uid });
+            const reviewer = uid && userPublic({ uid });
             return reviewer && { [uid]: reviewer } || null;
           },
 
@@ -501,12 +536,13 @@ const ProjectControlView = dataBind()(
 );
 
 const ProjectControlList = dataBind()(
-  ({ currentUid }, { projectIdsOfUser }) => {
-    if (!currentUid || !projectIdsOfUser.isLoaded({uid: currentUid})) {
+  ({ }, { projectIdsOfUser, currentUid }) => {
+    const uid = currentUid();
+    if (!uid || !projectIdsOfUser.isLoaded({uid})) {
       return (<LoadIndicator block size={1.5} />);
     }
     
-    const currentProjectIds = projectIdsOfUser({uid: currentUid});
+    const currentProjectIds = projectIdsOfUser({uid});
     if (isEmpty(currentProjectIds)) {
       return (<Alert bsStyle="warning">
         你目前沒有在進行專案。推薦選擇任務並且找守門人註冊新的～

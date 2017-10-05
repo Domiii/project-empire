@@ -117,11 +117,12 @@ export default () => _WrappedComponent => {
             return this._customContext[name];
           }
 
-          // 4) check readers
-          const readData = this._dataAccessTracker.resolveReadData(name);
-          if (readData) {
-            return readData();
-          }
+          // TODO: move this somewhere else or get rid of it entirely
+          // // 4) check for direct data inject
+          // const readData = this._dataAccessTracker.resolveReadData(name);
+          // if (readData) {
+          //   return readData();
+          // }
 
           if (this._isMounted) {
             console.error(`Invalid request for data: Component requested "${name}" but it does not exist.`);

@@ -242,9 +242,28 @@ button:active { outline:none !important; }
  */
 
 .project-contributor {
-  max-width: 2em;
-  height: 2em;
   position: relative;
+  color: black;
+}
+
+.project-contributor-any {
+  width: 1em;
+  max-height: 1em;
+}
+
+.project-contributor-party {
+  width: 1.5em;
+  max-height: 1.5em;
+}
+
+.project-contributor-reviewer {
+  width: 1em;
+  max-height: 1em;
+}
+
+.project-contributor-gm {
+  width: 1em;
+  max-height: 1em;
 }
 
 .project-contributor-status-icon {
