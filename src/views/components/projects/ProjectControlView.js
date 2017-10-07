@@ -31,6 +31,8 @@ import DataSourceProvider from 'src/dbdi/react/DataSourceProvider';
 import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/loading';
 
+import UserIcon from 'src/views/components/users/UserIcon';
+
 
 // ####################################################
 // Getters + Enums
@@ -107,9 +109,6 @@ StageStatusIcon.propTypes = {
   status: PropTypes.number.isRequired
 };
 
-          
-// TODO: mixing together data from very different sources can quickly cause trouble!
-
 const StageContributorIcon = dataBind()(
   ({ projectId, stageId, groupName, uid }, { userPublic, stageContributorStatus }) => {
 
@@ -136,13 +135,10 @@ const StageContributorIcon = dataBind()(
     else {
       // user icon
       return (
-        // <div className={classes} style={{ backgroundImage: 'url(' + user.photoURL + ')' }}>
-        //   {statusIconEl}
-        // </div>
         !isUserLoaded ? 
           <LoadIndicator /> :
           <div className={classes}>
-            <img className={classes} src={user.photoURL} />
+            <UserIcon user={user} />
             {statusIconEl}
           </div>
       );
@@ -156,8 +152,7 @@ const StageContributorIcon = dataBind()(
 
 
 const StageStatusBar = dataBind()(
-  ({ thisProjectId, stageNode }, 
-    { stageContributors, stageContributorStatus }) => {
+  ({ thisProjectId, stageNode }, { stageContributors }) => {
     const projectId = thisProjectId;
     const { stageId } = stageNode;
     let contributors = projectId && stageContributors({ projectId, stageId: stageNode.stageId });
@@ -168,37 +163,39 @@ const StageStatusBar = dataBind()(
         const {
           groupName,
           signOffCount,
-          possibleUserList,
           userList
         } = contributorSet;
 
-        if (signOffCount > 0 && signOffCount < size(userList)) {
-          // render "unknown user" icons, since it could be any subset of the given users
-          // TODO: what if someone has already taken action?
-          //const status = stageContributorStatus({projectId, stageId, uid});
-          return times(signOffCount, () =>
+        // first: all already known users
+        const userEls = map(userList, 
+          (user, uid) => (<Item key={uid} flex="none">{
             (<StageContributorIcon
+              projectId={projectId}
+              stageId={stageId}
+              uid={uid}
+              groupName={groupName}
+            />)}
+          </Item>)
+        );
+
+        // then: all missing users
+        let unknownEls;
+        if (signOffCount > 0 && signOffCount > userEls.length) {
+          unknownEls = times(signOffCount - userEls.length, () =>
+            (<StageContributorIcon
+              projectId={projectId}
+              stageId={stageId}
               uid={null}
               groupName={groupName}
-              status={0}
             />)
           );
         }
-        else {
-          // render icons of the actual users in group
-          return (<Flex row key={iSet} justifyContent="flex-end" alignItems="center">
-            {map(userList, 
-              (user, uid) => (<Item key={uid} flex="none">{
-                (<StageContributorIcon
-                  projectId={projectId}
-                  stageId={stageId}
-                  uid={uid}
-                  groupName={groupName}
-                />)}
-              </Item>)
-            )}
-          </Flex>);
-        }
+
+        // render icons of the actual users in group
+        return (<Flex row key={iSet} justifyContent="flex-end" alignItems="center">
+          { userEls }
+          { unknownEls }
+        </Flex>);
       })}
     </div>);
   }
@@ -329,6 +326,12 @@ ProjectStagesView.propTypes = {
 
 
 
+// TODO: data tree + format tree have the same shape
+// TODO: in case of repeatable nodes, data tree holds array instead of single object
+// TODO: contributor data is still by UID
+// TODO: in case more people than signOffCount from groupName give feedback, just show them all?
+// TODO: write operations
+// TODO: forms
 
 
 import FirebaseDataProvider, {
@@ -461,6 +464,7 @@ const dataSourceConfig = {
             { },
             { usersOfProject, projectReviewers, gms }
           ) {
+            // TODO: mix this with stage contribution data!
             switch (groupName) {
               case 'gm':
                 return gms();

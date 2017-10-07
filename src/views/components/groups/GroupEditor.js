@@ -14,6 +14,7 @@ import { Flex, Item } from 'react-flex';
 
 import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import UserList from 'src/views/components/users/UserList';
+import UserIcon from 'src/views/components/users/UserIcon';
 
 import { 
   Field, reduxForm, FormSection
@@ -22,6 +23,7 @@ import {
 import { 
   FormInputField, FormInputFieldArray, FAIcon
 } from 'src/views/components/util';
+
 
 
 class _GroupInfoFormContent extends Component {
@@ -107,8 +109,9 @@ function DeleteUserButton({open}) {
 function makeExistingUserEl(deleteUserFromGroup) {
   return ({user, uid}) => (<Badge>
     <span className="user-tag">
-      <img src={user.photoURL} className="user-image-tiny" /> &nbsp;
+      <UserIcon user={user} size="tiny" /> &nbsp;
       {user.displayName} &nbsp;
+      
       <ConfirmModal
         header="Delete user from group?"
         body={(<span>{user.displayName}</span>)}
@@ -131,7 +134,7 @@ function AddUserButton({open}) {
 function makeAddUserEl(addUserToGroup) {
   return ({user, uid}) => (<Badge>
     <span className="user-tag">
-      <img src={user.photoURL} className="user-image-tiny" /> &nbsp;
+      <UserIcon user={user} size="tiny" /> &nbsp;
       {user.displayName} &nbsp;
 
       <ConfirmModal

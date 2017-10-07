@@ -24,6 +24,7 @@ import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import { FAIcon } from 'src/views/components/util';
 
 import UserList from 'src/views/components/users/UserList';
+import UserIcon from 'src/views/components/users/UserIcon';
 
 
 const userListNames = [
@@ -111,7 +112,7 @@ export default class RoleManager extends Component {
 
     return (<Badge>
       <span className="user-tag">
-        <img src={user.photoURL} className="user-image-tiny" /> &nbsp;
+        <img src={user.photoURL} className="user-icon-tiny" /> &nbsp;
         {user.displayName} &nbsp;
         {buttonEls}
       </span>

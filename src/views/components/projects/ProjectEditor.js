@@ -14,6 +14,7 @@ import { Flex, Item } from 'react-flex';
 
 import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import UserList from 'src/views/components/users/UserList';
+import UserIcon from 'src/views/components/users/UserIcon';
 
 import { 
   Field, reduxForm, FormSection
@@ -93,7 +94,7 @@ function DeleteUserButton({open}) {
 function makeExistingUserEl(deleteUserFromProject) {
   return ({user, uid}) => (<Badge>
     <span className="user-tag">
-      <img src={user.photoURL} className="user-image-tiny" /> &nbsp;
+      <UserIcon user={user} size="tiny" /> &nbsp;
       {user.displayName} &nbsp;
       <ConfirmModal
         header="Delete user from project?"
@@ -117,7 +118,7 @@ function AddUserButton({open}) {
 function makeAddUserEl(addUserToProject) {
   return ({user, uid}) => (<Badge>
     <span className="user-tag">
-      <img src={user.photoURL} className="user-image-tiny" /> &nbsp;
+      <UserIcon user={user} size="tiny" /> &nbsp;
       {user.displayName} &nbsp;
 
       <ConfirmModal

@@ -133,7 +133,7 @@ function createInputs(getValue, context, items) {
         item
       };
 
-      const el = (<Comp {...childProps}/>);
+      const el = (<Comp {...childProps} />);
 
       if (!isItemInput(getValue, context, item)) {
         return el;

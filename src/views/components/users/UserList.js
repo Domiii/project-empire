@@ -6,26 +6,27 @@ import {
   Badge
 } from 'react-bootstrap';
 
+import UserIcon from './UserIcon';
+
 
 
 export class UserBadge extends Component {
   static propTypes = {
     user: PropTypes.object.isRequired,
-    uid: PropTypes.string.isRequired,
-    childProps: PropTypes.any
+    uid: PropTypes.string.isRequired
   }
 
   render() {
     const {
       user,
-      childProps
+      ...otherProps
     } = this.props;
 
-    const clazzes = (childProps && childProps.className || '')
+    const clazzes = (otherProps && otherProps.className || '')
       + ' user-tag';
 
-    return (<Badge {...childProps} className={clazzes}>
-      <img src={user.photoURL} className="user-image-tiny" /> &nbsp;
+    return (<Badge {...otherProps} className={clazzes}>
+      <UserIcon user={user} size="tiny" /> &nbsp;
       {user.displayName}
     </Badge>);
   }
