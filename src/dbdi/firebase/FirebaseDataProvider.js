@@ -19,84 +19,101 @@ import {
 
 
 export default class FirebaseDataProvider extends DataProviderBase {
+  database;
   firebaseCache = {};
 
-  constructor() {
+  constructor(app) {
     super();
+
+    this.database = firebase.database(app);
 
     autoBind(this);
   }
+  
+  // ################################################
+  // Private properties + methods
+  // ################################################
 
-  _onNewData(path, query, snap) {
+  _onNewData(query, snap) {
     const val = snap.val();
-    //console.log('R [', path, '] ', val);
-    setDataIn(this.firebaseCache, path, val);
+    console.log('R [', query.remotePath, '] ', val);
+    setDataIn(this.firebaseCache, query.localPath, val);
 
-    this.notifyNewData(path, val);
+    this.notifyNewData(query, val);
   }
 
   _onError(err) {
     console.error(`[${this.constructor.name}] ${err.stack}`);
   }
 
-  onListenerAdd(path, query, listener) {
-    const hook = snap => this._onNewData(path, query, snap);
-    const { queryParams } = query;
-    let ref = firebase.database().ref().child(path);
+  _getRef(query) {
+    const {
+      remotePath,
+      queryParams
+    } = query;
+    let ref = this.database.ref().child(remotePath);
     if (queryParams) {
-      ref = applyParamsToQuery(queryParams, query);
+      ref = applyParamsToQuery(queryParams, ref);
     }
+    return ref;
+  }
 
+  // ################################################
+  // Public properties + methods
+  // ################################################
+
+  onListenerAdd(query, listener) {
+    const hook = snap => this._onNewData(query, snap);
+
+    const ref = this._getRef(query);
     ref.on('value',
       hook,
       this._onError);
     return hook;
   }
 
-  onListenerRemove(path, listener, hook) {
-    firebase.database().ref(path).off('value', hook);
+  onListenerRemove(query, listener, hook) {
+    const ref = this._getRef(query);
+    ref.off('value', hook);
   }
 
-  isDataLoaded(path) {
-    return this.readData(path) !== undefined;
+  isDataLoaded(queryInput) {
+    return this.readData(queryInput) !== undefined;
   }
 
-  readData(pathOrQuery) {
-    if (isString(pathOrQuery)) {
-      const path = pathOrQuery;
-      return getDataIn(this.firebaseCache, path, undefined);
+  readData(queryInput) {
+    const query = this.getQueryByQueryInput(queryInput);
+    if (!query) {
+      return undefined;
     }
-    else if (isPlainObject(pathOrQuery)) {
-      const {
-        path,
-        queryParams
-      } = pathOrQuery;
 
-      let allData = getDataIn(this.firebaseCache, path, undefined);
-      
-      // should not be necessary, since we already subscribed to only this subset of data anyway!
+    let allData = getDataIn(this.firebaseCache, query.localPath, undefined);
+    
+    // should not be necessary, since we already subscribed to only this subset of data anyway!
 
-      // if (allData) {
-      //   allData = applyQueryToDataSet(allData, queryParams);
-      // }
-      return allData;
-    }
+    // if (allData) {
+    //   allData = applyQueryToDataSet(allData, queryParams);
+    // }
+    return allData;
   }
 }
 
 
 export class FirebaseAuthProvider extends DataProviderBase {
+  auth;
   firebaseAuthData = undefined;
 
-  constructor() {
+  constructor(app) {
     super();
+
+    this.auth = firebase.auth(app);
 
     autoBind(this);
   }
 
-  onListenerAdd(path, query, listener) {
+  onListenerAdd(query, listener) {
     // add listener once the first request comes in
-    firebase.auth().onAuthStateChanged((user) => {
+    this.auth.onAuthStateChanged((user) => {
       if (user) {
         // User is signed in.
         this.firebaseAuthData = user;
@@ -106,7 +123,7 @@ export class FirebaseAuthProvider extends DataProviderBase {
         this.firebaseAuthData = null;
       }
 
-      this.notifyNewData('', user);
+      this.notifyNewData(query, user);
     });
   }
 
@@ -114,12 +131,16 @@ export class FirebaseAuthProvider extends DataProviderBase {
     console.error(`[${this.constructor.name}] ${err.stack}`);
   }
 
-  isDataLoaded(path) {
+  isDataLoaded(queryInput) {
     return this.firebaseAuthData !== undefined;
   }
 
-  readData(path) {
-    console.assert(isString(path), 'invalid path in FirebaseDataProvider, path must be string: ' + path);
-    return getDataIn(this.firebaseAuthData, path, undefined);
+  readData(queryInput) {
+    const query = this.getQueryByQueryInput(queryInput);
+    if (!query) {
+      return undefined;
+    }
+
+    return getDataIn(this.firebaseCache, query.localPath, undefined);
   }
 }

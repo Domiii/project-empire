@@ -565,12 +565,87 @@ const ProjectControlList = dataBind()(
 
 const dataSourceProps = {
   dataProviders,
-  dataSourceConfig
+  dataSourceConfig: {
+    auth: {
+      dataProvider: 'firebaseAuth',
+      children: {
+        currentUser: '',
+        currentUid: 'uid'
+      }
+    },
+    db: {
+      dataProvider: 'firebase',
+      children: {
+        projectIdsOfUser: '/_index/projectUsers/user/$(uid)',
+        allTests: {
+          path: '/test',
+          children: {
+            test: {
+              path: '$(testId)',
+              children: {
+                a: 'a',
+                b: 'b',
+                world: 'world'
+              }
+            }
+          }
+        },
+        users: {
+          path: '/users/public',
+          children: {
+            gms: { 
+              path: {
+                queryParams: [['orderByChild', 'role'], ['startAt', Roles.GM]]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 };
+
+
+const WriteTestA = dataBind()(
+  () => (<div>
+    <TestEditor setContext={{world: 'new world'}} />
+    <AllTests />
+  </div>)
+);
+const TestEditor = dataBind(
+  ({ testId }, { set_test, push_test }) => ({
+    onSubmit(data) {
+      if (!testId) {
+        // new test data
+        push_test(data);
+      }
+      else {
+        // existing test data
+        set_test(testId, data);
+      }
+    }
+  })
+)(
+  ({ b, world }, { addTestHandler, test }) => (<div>
+    {
+      // TODO: render editor
+    }
+    <Button onClick={ addTestHandler } />
+  </div>)
+);
+const AllTests = dataBind()(
+  ({  }, { allTests }) => {
+    const tests = allTests();
+    return (<div>
+      <h3>{size(tests)}</h3>
+      <pre>{tests}</pre>
+    </div>);
+  }
+);
 
 const WrappedView = ({ }) => (
   <DataSourceProvider {...dataSourceProps}>
-    <ProjectControlList />
+    <WriteTestA />
   </DataSourceProvider>
 );
 
