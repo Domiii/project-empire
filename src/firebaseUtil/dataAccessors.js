@@ -33,32 +33,32 @@ function createChildDataAccessors(prototype, children, parentPathTemplate, varia
     // NOTE2: The path for `push` is actually the path up to and including the parent only.
     const pathTemplate = pathJoin(parentPathTemplate, childPath);
     const getPath = createPathGetterFromTemplateArray(pathTemplate, variableTransform);
-    const parentGetPath = createPathGetterFromTemplateArray(parentPathTemplate, variableTransform);
+    const pushGetPath = createPathGetterFromTemplateArray(parentPathTemplate, variableTransform);
 
     if (prototype[wrapperName]) {
       throw new Error(`invalid: duplicate path name '${wrapperName}' under '${parentPathTemplate}'`);
     }
 
     // get
-    prototype[wrapperName] = createChildDataGet(getPath);
+    prototype[wrapperName] = createDataGet(getPath);
 
     // add
-    prototype['push_' + wrapperName] = createChildDataPush(parentGetPath);
+    prototype['push_' + wrapperName] = createDataPush(pushGetPath);
 
     // set
-    prototype['set_' + wrapperName] = createChildDataSet(getPath);
+    prototype['set_' + wrapperName] = createDataSet(getPath);
 
     // update
-    prototype['update_' + wrapperName] = createChildDataUpdate(getPath);
+    prototype['update_' + wrapperName] = createDataUpdate(getPath);
 
     // batch update (add to a single bigger update, instead of sending out multiple smaller updates individually)
-    prototype['batchUpdate_' + wrapperName] = createChildDataBatchUpdate(getPath);
+    prototype['batchUpdate_' + wrapperName] = createDataBatchUpdate(getPath);
 
     // delete
-    prototype['delete_' + wrapperName] = createChildDataDelete(getPath);
+    prototype['delete_' + wrapperName] = createDataDelete(getPath);
 
     // keep going
-    createChildDataAccessors(prototype, childCfgOrPath.children, pathTemplate);
+    createDataAccessors(prototype, childCfgOrPath.children, pathTemplate);
   }
 }
 
@@ -69,13 +69,13 @@ function _getChildPath(getPath, args, childArgs) {
   return getPath(...args);
 }
 
-function createChildDataGet(getPath) {
+function createDataGet(getPath) {
   return function _get(...args) {
     const path = _getChildPath(getPath, args, this._childArgs);
     return this.getData(path);
   };
 }
-function createChildDataPush(getPath) {
+function createDataPush(getPath) {
   if (getPath.hasVariables) {
     return function _push(...args) {
       const pathArgs = initial(args);
@@ -86,12 +86,12 @@ function createChildDataPush(getPath) {
   }
   else {
     return function _push(data) {
-      const path = _getChildPath(getPath, EmptyArray, this._childArgs);
+      const path = R(getPath, EmptyArray, this._childArgs);
       return this.pushChild(path, data);
     };
   }
 }
-function createChildDataSet(getPath) {
+function createDataSet(getPath) {
   if (getPath.hasVariables) {
     return function _set(...args) {
       const pathArgs = initial(args);
@@ -107,7 +107,7 @@ function createChildDataSet(getPath) {
     };
   }
 }
-function createChildDataUpdate(getPath) {
+function createDataUpdate(getPath) {
   if (getPath.hasVariables) {
     return function _update(...args) {
       const pathArgs = initial(args);
@@ -123,7 +123,7 @@ function createChildDataUpdate(getPath) {
     };
   }
 }
-function createChildDataBatchUpdate(getPath) {
+function createDataBatchUpdate(getPath) {
   if (getPath.hasVariables) {
     return function _update(update, ...args) {
       const pathArgs = initial(args);
@@ -139,7 +139,7 @@ function createChildDataBatchUpdate(getPath) {
     };
   }
 }
-function createChildDataDelete(getPath) {
+function createDataDelete(getPath) {
   if (getPath.hasVariables) {
     return function _delete(...args) {
       const path = _getChildPath(getPath, args, this._childArgs);

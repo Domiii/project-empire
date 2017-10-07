@@ -1,6 +1,8 @@
 import DataAccessTracker from '../DataAccessTracker';
 
 import merge from 'lodash/merge';
+import isFunction from 'lodash/isFunction';
+import isPlainObject from 'lodash/isPlainObject';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
@@ -24,7 +26,7 @@ import { injectRenderArgs } from './react-util';
 // }
 
 
-export default () => _WrappedComponent => {
+export default (propsOrPropCb) => _WrappedComponent => {
   class WrapperComponent extends Component {
     static contextTypes = dataBindContextStructure;
     static childContextTypes = dataBindChildContextStructure;
@@ -73,8 +75,10 @@ export default () => _WrappedComponent => {
       this._buildDataExecutorProxy();
 
       // finally, engulf the new component with our custom arguments
+      this._renderArguments = [this._dataInjectProxy, this._dataExecuterProxy];
+      
       this.WrappedComponent = injectRenderArgs(_WrappedComponent,
-        this._provideRenderArguments);
+        this._renderArguments);
     }
 
     // ################################################
@@ -164,8 +168,19 @@ export default () => _WrappedComponent => {
       });
     }
 
-    _provideRenderArguments() {
-      return [this._dataInjectProxy, this._dataExecuterProxy];
+    _injectProps() {
+      if (propsOrPropCb) {
+        // merge given props into new props
+        let props = propsOrPropCb;
+        if (isFunction(propsOrPropCb)) {
+          props = propsOrPropCb(...this._renderArguments);
+        }
+        if (props && !isPlainObject(props)) {
+          throw new Error('Invalid props returned from dataBind callback: ' + 
+            this.wrappedComponentName);
+        }
+        Object.assign(this.props, props);
+      }
     }
 
 
@@ -173,11 +188,16 @@ export default () => _WrappedComponent => {
     // Public methods + properties
     // ################################################
 
+    get wrappedComponentName() {
+      return _WrappedComponent.name || '<unnamed component>';
+    }
+
     getChildContext() {
       return buildReactContextForDataBind(this.context, this._customContext);
     }
 
-    componentWillUpdate() {
+    componentDidUpdate() {
+      this._injectProps();
     }
 
     shouldComponentUpdate() {
@@ -198,6 +218,7 @@ export default () => _WrappedComponent => {
 
       this._shouldUpdate = true;
       this._isMounted = true;
+      this._injectProps();
       this.forceUpdate();
     }
 
