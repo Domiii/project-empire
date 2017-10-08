@@ -3,6 +3,15 @@ import DataAccessTracker from '../DataAccessTracker';
 import merge from 'lodash/merge';
 import isFunction from 'lodash/isFunction';
 import isPlainObject from 'lodash/isPlainObject';
+import groupBy from 'lodash/groupBy';
+
+import fpGroupBy from 'lodash/fp/groupBy';
+import fpMap from 'lodash/fp/map';
+import fpMapValues from 'lodash/fp/mapValues';
+import fpToPairs from 'lodash/fp/toPairs';
+import fpZipObject from 'lodash/fp/zipObject';
+import flow from 'lodash/fp/flow';
+
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
@@ -47,13 +56,16 @@ export default (propsOrPropCb) => _WrappedComponent => {
 
     /**
      * Provides read and write executer functions, as well as special functions as defined in
-     * below _buildSpecialExecutorFunctions.
+     * below _buildActionProxy.
      */
-    _dataExecuterProxy;
+    _actionProxy;
 
-    _specialFunctions;
+    // more data injection stuff
     _customContext;
+    _customProps;
+    _customActions = {};
 
+    // bookkeeping (currently mostly unused)
     _isMounted;
     _shouldUpdate;
 
@@ -70,13 +82,13 @@ export default (propsOrPropCb) => _WrappedComponent => {
 
 
       // prepare all the stuff
-      this._buildSpecialExecutorFunctions();
+      this._buildCustomActions();
       this._buildDataInjectionProxy();
-      this._buildDataExecutorProxy();
+      this._buildActionProxy();
 
       // finally, engulf the new component with our custom arguments
-      this._renderArguments = [this._dataInjectProxy, this._dataExecuterProxy];
-      
+      this._renderArguments = [this._dataInjectProxy, this._actionProxy];
+
       this.WrappedComponent = injectRenderArgs(_WrappedComponent,
         this._renderArguments);
     }
@@ -85,8 +97,8 @@ export default (propsOrPropCb) => _WrappedComponent => {
     // Private methods + properties
     // ################################################
 
-    _buildSpecialExecutorFunctions() {
-      this._specialFunctions = {
+    _buildCustomActions() {
+      this._customActions = {
         /**
          * Add context contents.
          * 
@@ -105,18 +117,23 @@ export default (propsOrPropCb) => _WrappedComponent => {
     _buildDataInjectionProxy() {
       this._dataInjectProxy = new Proxy({}, {
         get: (target, name) => {
-          // 1) check props
+          // 1) check custom data
+          if (this._customProps[name] !== undefined) {
+            return this._customProps[name];
+          }
+
+          // 2) check props
           if (this.props[name] !== undefined) {
             return this.props[name];
           }
 
-          // 2) check context
+          // 3) check context
           if (this.context[name] !== undefined) {
             return this.context[name];
           }
 
-          // 3) check custom context
-          if (this._customContext && this._customContext[name] !== undefined) {
+          // 4) check custom context
+          if (this._customContext[name] !== undefined) {
             //console.warn('get from customContext: ' + name);
             return this._customContext[name];
           }
@@ -137,49 +154,71 @@ export default (propsOrPropCb) => _WrappedComponent => {
     }
 
     /**
-     * Build the proxy to deliver executor functions
+     * Build the proxy to inject actions + selections
      */
-    _buildDataExecutorProxy() {
-      this._dataExecuterProxy = new Proxy({}, {
+    _buildActionProxy() {
+      this._actionProxy = new Proxy({}, {
         get: (target, name) => {
-          // 1) check readers
+          // 1) check custom actions
+          const customAction = this._customActions[name];
+          if (customAction) {
+            return customAction;
+          }
+
+          // 2) check readers
           const readData = this._dataAccessTracker.resolveReadData(name);
           if (readData) {
             return readData;
           }
 
-          // 2) check writers
+          // 3) check writers
           const writeData = this._dataAccessTracker.resolveWriteData(name);
           if (writeData) {
             return writeData;
           }
 
-          // 3) check special function
-          const specialFn = this._specialFunctions[name];
-          if (specialFn) {
-            return specialFn;
-          }
-
           if (this._isMounted) {
-            console.error(`Invalid request for executor: Component requested "${name}" but it does not exist.`);
+            console.error(`Invalid request for function: Component requested "${name}" but it does not exist.`);
           }
           return null;
         }
       });
     }
+    
+    _separateActionsAndData = flow(
+      fpToPairs,
+      fpGroupBy(item => isFunction(item[1]) ? 'actions' : 'data' ),
+      fpMapValues(items => 
+        fpZipObject(fpMap(item => item[0])(items))(fpMap(item => item[1])(items))
+      )
+    )
 
-    _injectProps() {
+    _prepareInjectedProps() {
       if (propsOrPropCb) {
-        // merge given props into new props
+        // prepare _moreProps object
         let props = propsOrPropCb;
         if (isFunction(propsOrPropCb)) {
           props = propsOrPropCb(...this._renderArguments);
         }
+        else if (!!this._customProps) {
+          // already done, don't do it again!
+          return;
+        }
+
         if (props && !isPlainObject(props)) {
-          throw new Error('Invalid props returned from dataBind callback: ' + 
+          throw new Error('Invalid props returned from dataBind callback: ' +
             this.wrappedComponentName);
         }
-        Object.assign(this.props, props);
+
+        // group props into actions and "data" props
+        const {
+          actions,
+          data
+        } = this._separateActionsAndData(props);
+
+        // assign
+        this._customProps = data || EmptyObject;
+        Object.assign(this._customActions, actions);
       }
     }
 
@@ -196,8 +235,8 @@ export default (propsOrPropCb) => _WrappedComponent => {
       return buildReactContextForDataBind(this.context, this._customContext);
     }
 
-    componentDidUpdate() {
-      this._injectProps();
+    componentWillUpdate() {
+      this._prepareInjectedProps();
     }
 
     shouldComponentUpdate() {
@@ -208,18 +247,22 @@ export default (propsOrPropCb) => _WrappedComponent => {
       return true;
     }
 
-    componentDidMount() {
+    componentWillMount() {
       console.log('dataBind.componentDidMount');
 
       const newContext = this.props.setContext;
       if (newContext) {
-        this._specialFunctions.setContext(newContext);
+        this._customActions.setContext(newContext);
       }
 
       this._shouldUpdate = true;
       this._isMounted = true;
-      this._injectProps();
+      this._prepareInjectedProps();
       this.forceUpdate();
+    }
+
+    componentDidMount() {
+      console.log('dataBind.componentDidMount');
     }
 
     componentWillUnmount() {
@@ -240,7 +283,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
     render() {
       this._shouldUpdate = false;
       const { WrappedComponent } = this;
-      return (<WrappedComponent {...this.props} />);
+      return (<WrappedComponent {...this.props} {...this._moreProps} />);
     }
   }
 

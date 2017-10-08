@@ -27,7 +27,7 @@ export default class DataProviderBase {
   }
 
   _getOrCreateQueryInputCache(queryInput) {
-    const cache = this._queriesByQueryInput.get(queryInput);
+    let cache = this._queriesByQueryInput.get(queryInput);
     if (!cache) {
       // does not exist yet
       let localPath, remotePath, remoteQuery;
@@ -40,7 +40,7 @@ export default class DataProviderBase {
         remotePath = queryInput.path;
       }
 
-      const cache = {
+      cache = {
         queryInput,
         localPath,
         remotePath,

@@ -1,6 +1,6 @@
 import firebase from 'firebase';
 
-import { 
+import {
   applyParamsToQuery,
   applyQueryToDataSet
 } from './firebase-util';
@@ -19,17 +19,26 @@ import {
 
 
 export default class FirebaseDataProvider extends DataProviderBase {
-  database;
+  _database;
   firebaseCache = {};
 
   constructor(app) {
     super();
 
-    this.database = firebase.database(app);
+    if (app) {
+      this._database = firebase.database(app);
+    }
 
     autoBind(this);
   }
-  
+
+  database() {
+    if (!this._database) {
+      this._database = firebase.database();
+    }
+    return this._database;
+  }
+
   // ################################################
   // Private properties + methods
   // ################################################
@@ -51,7 +60,7 @@ export default class FirebaseDataProvider extends DataProviderBase {
       remotePath,
       queryParams
     } = query;
-    let ref = this.database.ref().child(remotePath);
+    let ref = this.database().ref().child(remotePath);
     if (queryParams) {
       ref = applyParamsToQuery(queryParams, ref);
     }
@@ -88,7 +97,7 @@ export default class FirebaseDataProvider extends DataProviderBase {
     }
 
     let allData = getDataIn(this.firebaseCache, query.localPath, undefined);
-    
+
     // should not be necessary, since we already subscribed to only this subset of data anyway!
 
     // if (allData) {
@@ -100,20 +109,29 @@ export default class FirebaseDataProvider extends DataProviderBase {
 
 
 export class FirebaseAuthProvider extends DataProviderBase {
-  auth;
+  _auth;
   firebaseAuthData = undefined;
 
   constructor(app) {
     super();
 
-    this.auth = firebase.auth(app);
+    if (app) {
+      this._auth = firebase.auth(app);
+    }
 
     autoBind(this);
   }
 
+  auth() {
+    if (!this._auth) {
+      this._auth = firebase.auth();
+    }
+    return this._auth;
+  }
+
   onListenerAdd(query, listener) {
     // add listener once the first request comes in
-    this.auth.onAuthStateChanged((user) => {
+    this.auth().onAuthStateChanged((user) => {
       if (user) {
         // User is signed in.
         this.firebaseAuthData = user;

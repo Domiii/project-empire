@@ -681,7 +681,10 @@ const testLog = (type) => console.log.bind(console, type);
 
 const FormTest = dataBind()(
   () => (<div>
-    <TestEditor testId={null} setContext={{world: 'world'}} />
+    <h2>Add new data</h2>
+    <TestEditor testId={null} data={null} setContext={{world: 'world'}} />
+
+    <h2>All existing data</h2>
     <AllTests />
   </div>)
 );
@@ -697,9 +700,9 @@ const TestEditor = dataBind({
     }
   }
 })(
-  ({ data }, { onSubmit }) => (<div>
+  ({ testId }, { onSubmit, test }) => (<div>
     <Form schema={TestFormSchema}
-      formData={data}
+      formData={testId && test({testId}) || EmptyObject}
       onChange={testLog('changed')}
       onError={testLog('errors')}
       onSubmit={onSubmit} />
@@ -710,8 +713,11 @@ const AllTests = dataBind()(
     const tests = allTests();
     return (<div>
       <h3>{size(tests)}</h3>
-      { map(tests, (test, testId) => <TestEditor data={test} testId={testId} />) }
-      <pre>{tests}</pre>
+      { map(tests, (test, testId) => (<div key={testId}>
+        <hr />
+        <TestEditor testId={testId} />
+      </div>)) }
+      <pre>{JSON.stringify(tests, null, 2)}</pre>
     </div>);
   }
 );
