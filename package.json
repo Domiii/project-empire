@@ -43,6 +43,7 @@
     "react-bootstrap": "^0.31.3",
     "react-dom": "^15.6.2",
     "react-flex": "^2.2.8",
+    "react-jsonschema-form": "^0.50.1",
     "react-keydown": "^1.9.4",
     "react-markdown": "^2.4.4",
     "react-moment": "^0.2.2",

@@ -25,6 +25,8 @@ import {
   Panel, Button, Alert, Well
 } from 'react-bootstrap';
 
+import Form from 'react-jsonschema-form';
+
 import dataBind from 'src/dbdi/react/dataBind';
 import DataSourceProvider from 'src/dbdi/react/DataSourceProvider';
 
@@ -32,6 +34,7 @@ import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/loading';
 
 import UserIcon from 'src/views/components/users/UserIcon';
+
 
 
 // ####################################################
@@ -606,38 +609,108 @@ const dataSourceProps = {
 };
 
 
-const WriteTestA = dataBind()(
+const TestFormSchema = {
+  'title': 'A registration form',
+  'description': 'A simple form example.',
+  'type': 'object',
+  'required': [
+    'firstName',
+    'lastName'
+  ],
+  'properties': {
+    'firstName': {
+      'type': 'string',
+      'title': 'First name'
+    },
+    'lastName': {
+      'type': 'string',
+      'title': 'Last name'
+    },
+    'age': {
+      'type': 'integer',
+      'title': 'Age'
+    },
+    'bio': {
+      'type': 'string',
+      'title': 'Bio'
+    },
+    'password': {
+      'type': 'string',
+      'title': 'Password',
+      'minLength': 3
+    },
+    'telephone': {
+      'type': 'string',
+      'title': 'Telephone',
+      'minLength': 10
+    }
+  }
+};
+
+
+const TestFormUISchema = {
+  'firstName': {
+    'ui:autofocus': true,
+    'ui:emptyValue': '',
+    'ui:label': '',
+    'ui:readonly': true
+  },
+  'age': {
+    'ui:widget': 'updown',
+    'ui:title': 'Age of person',
+    'ui:description': '(earthian year)'
+  },
+  'bio': {
+    'ui:widget': 'textarea'
+  },
+  'password': {
+    'ui:widget': 'password',
+    'ui:help': 'Hint: Make it strong!'
+  },
+  'date': {
+    'ui:widget': 'alt-datetime'
+  },
+  'telephone': {
+    'ui:options': {
+      'inputType': 'tel'
+    }
+  }
+};
+
+const testLog = (type) => console.log.bind(console, type);
+
+const FormTest = dataBind()(
   () => (<div>
-    <TestEditor setContext={{world: 'new world'}} />
+    <TestEditor testId={null} setContext={{world: 'world'}} />
     <AllTests />
   </div>)
 );
-const TestEditor = dataBind(
-  ({ testId }, { set_test, push_test }) => ({
-    onSubmit(data) {
-      if (!testId) {
-        // new test data
-        push_test(data);
-      }
-      else {
-        // existing test data
-        set_test(testId, data);
-      }
+const TestEditor = dataBind({
+  onSubmit({ testId, data }, { set_test, push_test }) {
+    if (!testId) {
+      // new test data
+      push_test(data);
     }
-  })
-)(
-  ({ b, world }, { addTestHandler, test }) => (<div>
-    {
-      // TODO: render editor
+    else {
+      // existing test data
+      set_test(testId, data);
     }
-    <Button onClick={ addTestHandler } />
+  }
+})(
+  ({ data }, { onSubmit }) => (<div>
+    <Form schema={TestFormSchema}
+      formData={data}
+      onChange={testLog('changed')}
+      onError={testLog('errors')}
+      onSubmit={onSubmit} />
   </div>)
 );
 const AllTests = dataBind()(
-  ({  }, { allTests }) => {
+  ({ }, { allTests }) => {
     const tests = allTests();
     return (<div>
       <h3>{size(tests)}</h3>
+      { map(tests, (test, testId) => <TestEditor data={test} testId={testId} />) }
       <pre>{tests}</pre>
     </div>);
   }
@@ -645,7 +718,7 @@ const AllTests = dataBind()(
 
 const WrappedView = ({ }) => (
   <DataSourceProvider {...dataSourceProps}>
-    <WriteTestA />
+    <FormTest />
   </DataSourceProvider>
 );
 
