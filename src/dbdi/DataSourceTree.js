@@ -5,6 +5,7 @@ import DataWriteDescriptor from './DataWriteDescriptor';
 import DataSourceNode, { AmbiguousSourceNode } from './DataSourceNode';
 
 import forEach from 'lodash/forEach';
+import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
 import pickBy from 'lodash/pickBy';
 import last from 'lodash/last';
@@ -35,80 +36,102 @@ export default class DataSourceTree {
 
     autoBind(this);
 
-    this._root = this._buildNode(null, this._dataSourceCfgRoot, '');
+    this._root = this._buildNodeWithChildren(this._dataSourceCfgRoot, null, '');
 
     this._compressHierarchy(this._root);
   }
 
-  _buildNode(parent, configNode, name) {
+  _buildNodeWithChildren(configNode, ...moreArgs) {
+    const newDataNode = this._buildNode(configNode, ...moreArgs);
+    this._buildChildren(newDataNode, configNode);
+    return newDataNode;
+  }
+
+  _buildChildren(newDataNode, configNode) {
+    const children = Object.assign({},
+      this._buildAdditionalDataReadNodes(newDataNode, configNode.readers),
+      this._buildAdditionalDataWriteNodes(newDataNode, configNode.writers),
+
+      this._buildHybridDataNodes(newDataNode, configNode.children)
+    );
+
+    newDataNode._children = children;
+  }
+
+  _buildNode(configNode, parent, nodeList, name, buildDataReadDescriptor, buildDataWriteDescriptor) {
     const dataProvider = this._dataProviders[configNode.dataProviderName];
     const fullName = (parent && parent.fullName && (parent.fullName + '.') || '') + name;
     const pathDescriptor = configNode.pathConfig && new PathDescriptor(configNode.pathConfig, fullName);
-    const readCfg = pathDescriptor || configNode.reader;
-    const readDescriptor = readCfg && new DataReadDescriptor(readCfg, fullName);
-    const newNode = new DataSourceNode(
-      this, parent,
-      dataProvider,
+
+    return new DataSourceNode(
+      this, parent, dataProvider,
       name, fullName,
       pathDescriptor,
-      readDescriptor, null);
-
-    newNode._children = this._buildDataReadNodes(newNode,
-      Object.assign(
-        {},
-        configNode.children || EmptyObject,
-        configNode.readers || EmptyObject
-      )
+      buildDataReadDescriptor && buildDataReadDescriptor(fullName, configNode, pathDescriptor),
+      buildDataWriteDescriptor && buildDataWriteDescriptor(fullName, configNode, pathDescriptor)
     );
-
-    //this._buildDataWriteNodes(sourceNode, this._dataSourceCfgRoot);
-
-    return newNode;
   }
 
-  _buildDataReadNodes(parent, cfgChildren) {
-    return mapValues(cfgChildren, (configNode, name) => {
-      if (!configNode) return null;
+  _buildDataReadDescriptor(fullName, configNode, pathDescriptor) {
+    const readCfg = configNode.reader || pathDescriptor;
+    const readDescriptor = readCfg && new DataReadDescriptor(readCfg, fullName);
+    return readDescriptor;
+  }
 
-      return this._buildNode(parent, configNode, name);
+  _buildHybridDataNodes(parent, cfgChildren) {
+    // nodes that potentially have both readers and writers
+    const newNodes = {};
+    forEach(cfgChildren, (configNode, name) => {
+      if (configNode.pathConfig) {
+        // add default writers at path
+        forEach(this._defaultDataWriteDescriptorBuilders, (descriptorBuilder, writerName) => {
+          this._addDataWriteNode(configNode, parent, writerName + '_' + name, descriptorBuilder, newNodes);
+        });
+      }
+
+      // build node
+      const newDataNode = newNodes[name] = this._buildNode(configNode, parent, name,
+        this._buildDataReadDescriptor,
+        this._dataWriteCustomBuilder);
+
+      // recurse
+      this._buildChildren(newDataNode, configNode);
+    });
+    return newNodes;
+  }
+
+  _buildAdditionalDataReadNodes(parent, cfgChildren) {
+    return mapValues(cfgChildren, (configNode, name) => {
+      const newDataNode = this._buildNode(configNode, parent, name, this._buildDataReadDescriptor);
+      return newDataNode;
     });
   }
 
-  // _makeWriteData(cfg) {
-  //   if (cfg instanceof PathDescriptor) {
-  //     // build writer from pathDescriptor
-  //     writeData = this._build...FromDescriptor(cfg);
-  //   }
-  //   else if (isFunction(cfg)) {
-  //     // custom reader function
-  //     writeData = cfg;
-  //   }
-  //   else {
-  //     throw new Error('Could not make sense of DataWriteDescriptor config node: ' + JSON.stringify(cfg));
-  //   }
-  //   return this._wrapAccessFunction(writeData);
-  // }
+  _defaultDataWriteDescriptorBuilders = map(['push', 'set', 'update'], (actionName) =>
+    (fullName, configNode, pathDescriptor) => {
+      return pathDescriptor && new DataWriteDescriptor(pathDescriptor, fullName, actionName);
+    }
+  )
 
-  _buildDataWriteNodes(parent, cfgChildren) {
-    // forEach(cfgChildren, configNode => {
-    //   if (!configNode) return null;
+  _dataWriteCustomBuilder(fullName, configNode, _) {
+    return configNode.writer && new DataWriteDescriptor(configNode.writer, fullName, '<custom writer>');
+  }
 
 
-    //   const dataProvider = writeNode._dataProvider;
-    //   const pathDescriptor = writeNode._pathDescriptor;
+  _addDataWriteNode(configNode, parent, name, descriptorBuilder, newChildren) {
+    const newDataNode = this._buildNode(
+      configNode, parent, name,
+      null, descriptorBuilder);
 
-    //   // TODO: multiple writer nodes per name/path
-    //   const writeFn = this._makeWriteFn(pathDescriptor || configNode.writer);
-    //   const writeDescriptor = new DataWriteDescriptor(...);
-    //   const newNode = new DataSourceNode(this, writeNode, dataProvider, name, pathDescriptor, null, writeDescriptor);
+    newChildren[name] = newDataNode;
+  }
 
-    //   newNode._children = _buildDataSourceHierarchy(newNode, 
-    //     Object.assign({}, configNode.children, configNode.writers || EmptyObject));
-    //
-    //   const writerChildren = pickBy(newNode._children, childNode => childNode.isWriter);
-    //   newNode._writeDescendants = Object.assign({}, newNode._writeDescendants, writerChildren);
-    //   return newNode;
-    // });
+  _buildAdditionalDataWriteNodes(parent, cfgChildren) {
+    const newChildren = {};
+    forEach(cfgChildren, (configNode, name) => {
+      this._addDataWriteNode(configNode, parent, name, this._dataWriteCustomBuilder, newChildren);
+    });
+    return newChildren;
   }
 
   _addDescendants(descendants, childDescendants) {

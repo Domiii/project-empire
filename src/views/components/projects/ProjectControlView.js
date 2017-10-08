@@ -329,6 +329,7 @@ ProjectStagesView.propTypes = {
 
 
 
+// TODO: [ProjectStageTree]
 // TODO: data tree + format tree have the same shape
 // TODO: in case of repeatable nodes, data tree holds array instead of single object
 // TODO: contributor data is still by UID
