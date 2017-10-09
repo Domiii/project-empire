@@ -109,16 +109,26 @@ export default class DataSourceTree {
 
   _defaultWriteOps = ['push', 'set', 'update', 'delete']
 
+  _buildMetaWriteCfg(configNode, actionName) {
+    const { onWrite } = configNode;
+    return {
+      actionName,
+      onWrite: onWrite
+    };
+  }
+
   _defaultDataWriteDescriptorBuilders = zipObject(this._defaultWriteOps, 
     map(this._defaultWriteOps, (actionName) =>
       (fullName, configNode, pathDescriptor) => {
-        return pathDescriptor && new DataWriteDescriptor(pathDescriptor, fullName, actionName);
+        const metaCfg = this._buildMetaWriteCfg(configNode, actionName);
+        return pathDescriptor && new DataWriteDescriptor(pathDescriptor, metaCfg, fullName);
       }
     )
   )
 
   _dataWriteCustomBuilder(fullName, configNode, _) {
-    return configNode.writer && new DataWriteDescriptor(configNode.writer, fullName, '<custom writer>');
+    const metaCfg = this._buildMetaWriteCfg(configNode, 'custom');
+    return configNode.writer && new DataWriteDescriptor(configNode.writer, metaCfg, fullName);
   }
 
 

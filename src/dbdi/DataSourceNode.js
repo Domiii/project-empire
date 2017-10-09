@@ -28,7 +28,8 @@ export default class DataSourceNode {
   _readDescendants = {};
   _writeDescendants = {};
 
-  constructor(tree, parent, dataProvider, name, fullName, pathDescriptor, readDescriptor, writeDescriptor) {
+  constructor(tree, parent, dataProvider, name, fullName, 
+    pathDescriptor, readDescriptor, writeDescriptor) {
     //console.log('Building DataSourceNode: ' + name);
 
     this.name = name;

@@ -10,7 +10,7 @@ import PathDescriptor from './PathDescriptor';
 
 const DEBUG_WRITES = true;
 
-function defaultProcessArguments(node, writeArgs) {
+function processArgumentsDefault(node, writeArgs) {
   let res;
   let queryArgs, val;
   switch (writeArgs.length) {
@@ -38,15 +38,15 @@ function processArgumentsNoValue(node, writeArgs) {
 export const writeParameterConfig = Object.freeze({
   push: {
     parameterCount: 2,
-    processArguments: defaultProcessArguments
+    processArguments: processArgumentsDefault
   },
   set: {
     parameterCount: 2,
-    processArguments: defaultProcessArguments
+    processArguments: processArgumentsDefault
   },
   update: {
     parameterCount: 2,
-    processArguments: defaultProcessArguments
+    processArguments: processArgumentsDefault
   },
   delete: {
     parameterCount: 1,
@@ -56,16 +56,19 @@ export const writeParameterConfig = Object.freeze({
 
 export default class DataWriteDescriptor extends DataDescriptorNode {
   actionName;
+  onWrite;
+
   writeData;
 
-  constructor(cfg, name, actionName) {
-    super(cfg, name);
+  constructor(writerCfg, writeMetaCfg, name) {
+    super(writerCfg, name);
 
-    this.actionName = actionName;
+    this.actionName = writeMetaCfg.actionName;
+    this.onWrite = writeMetaCfg.onWrite;
 
     autoBind(this);
 
-    this._buildWriteData(cfg);
+    this._buildWriteData(writerCfg);
   }
 
   get nodeType() {
@@ -76,18 +79,18 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
   // Private properties + methods
   // ################################################
 
-  _buildWriteData(cfg) {
+  _buildWriteData(writerCfg) {
     let writeData;
-    if (cfg instanceof PathDescriptor) {
+    if (writerCfg instanceof PathDescriptor) {
       // build writer from pathDescriptor
-      writeData = this._buildWriteDataFromDescriptor(cfg);
+      writeData = this._buildWriteDataFromDescriptor(writerCfg);
     }
-    else if (isFunction(cfg)) {
+    else if (isFunction(writerCfg)) {
       // custom writer function
-      writeData = cfg;
+      writeData = writerCfg;
     }
     else {
-      throw new Error('Could not make sense of DataWriteDescriptor config node: ' + JSON.stringify(cfg));
+      throw new Error('Could not make sense of DataWriteDescriptor config node: ' + JSON.stringify(writerCfg));
     }
     this.writeData = this._wrapAccessFunction(writeData);
   }
@@ -121,16 +124,19 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
       } = args;
 
       const path = this._doGetPath(pathDescriptor, queryArgs, readByNameProxy, readersByName, callerNode, accessTracker);
-      return this._doWriteData(path, val, callerNode, accessTracker);
+      return this._doWriteData(path, val, queryArgs, readByNameProxy, readersByName, callerNode, accessTracker);
     };
   }
 
-  _doWriteData(path, val, callerNode, accessTracker) {
+  _doWriteData(path, val, queryArgs, readByNameProxy, readersByName, callerNode, accessTracker) {
     const {
       dataProvider
     } = callerNode;
 
     //accessTracker.recordDataWrite(dataProvider, path, val);
+
+    this.onWrite && this.onWrite(queryArgs, val, readByNameProxy, readersByName);
+
     return dataProvider.actions[this.actionName](path, val);
     //dataProvider.writeData(path, val);
   }

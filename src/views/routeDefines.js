@@ -12,7 +12,7 @@ import MissionControlPage from './pages/MissionControlPage';
 import GMPage from './pages/GMPage';
 import ProjectPage from './pages/ProjectPage';
 import GroupPage from './pages/GroupPage';
-//import TestPage from './pages/TestPage';
+import TestPage from './pages/TestPage';
 
 const requireAuth = getState => {
   return (nextState, replace) => {
@@ -83,17 +83,15 @@ export const getRoutes = getState => {
           onEnter: requireAuth(getState)
         }
       },
-      // {
-      //   name: routeNames.TEST,
-      //   path: routeTemplates.TEST,
-      //   onEnter: requireAuth(getState),
-      //   childRoutes: [
-      //     {
-      //       component: TestPage,
-      //       onEnter: requireAuth(getState)
-      //     }
-      //   ]
-      // }
+      {
+        name: routeNames.TEST,
+        path: routeTemplates.TEST,
+        indexRoute: [
+          {
+            component: TestPage,
+          }
+        ]
+      }
     ]
   };
 };

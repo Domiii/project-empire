@@ -75,6 +75,11 @@ export class DataStructureConfigNode {
    */
   writer;
 
+  /**
+   * Called to make modifications to written object
+   */
+  onWrite;
+
   constructor(name, parent, cfg) {
     this.name = name;
     this.parent = parent;
@@ -187,6 +192,7 @@ export class DataStructureConfigNode {
       // a custom writer for this node
       this.writer = cfg.write || cfg.writer;
     }
+    this.onWrite = cfg.onWrite;
   }
 
   _parseWriters(cfg) {

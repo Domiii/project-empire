@@ -6,6 +6,11 @@ import {
   ContributorGroupNames
 } from 'src/core/projects/ProjectDef';
 
+import FirebaseDataProvider, {
+  FirebaseAuthProvider
+} from 'src/dbdi/firebase/FirebaseDataProvider';
+
+
 import autoBind from 'src/util/auto-bind';
 import { EmptyObject, EmptyArray } from 'src/util';
 
@@ -340,10 +345,6 @@ ProjectStagesView.propTypes = {
 // TODO: forms
 
 
-import FirebaseDataProvider, {
-  FirebaseAuthProvider
-} from 'src/dbdi/firebase/FirebaseDataProvider';
-
 const dataProviders = {
   firebase: new FirebaseDataProvider(),
   firebaseAuth: new FirebaseAuthProvider()
@@ -568,185 +569,18 @@ const ProjectControlList = dataBind()(
   }
 );
 
-
-// #########################################################
-// Remote (and in the future also local) data providers + data structure
-// #########################################################
+// ##########################################################################
+// Wrap everything in DataSourceProvider, and go!
+// ##########################################################################
 
 const dataConfig = {
-  dataProviders: {
-    firebase: new FirebaseDataProvider(),
-    firebaseAuth: new FirebaseAuthProvider()
-    //temp: new ...(),
-    //webCache: ...
-  },
-
-  // the data tree represents all accessible data within the context that we use it
-  dataStructureConfig: {
-    auth: {
-      dataProvider: 'firebaseAuth',
-      children: {
-        // currentUser represents everything provided by `firebaseAuth` provider
-        currentUser: '',
-        currentUid: 'uid'
-      }
-    },
-    db: {
-      dataProvider: 'firebase',
-      children: {
-        testList: {
-          path: '/test',
-          children: {
-            test: {
-              path: '$(testId)',
-              children: {
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+  dataProviders,
+  dataStructureConfig
 };
-
-
-// #########################################################
-// Schema for `react-jsonschema-form` library
-// #########################################################
-
-const TestFormSchema = {
-  'title': '',
-  'description': '',
-  'type': 'object',
-  'required': [
-    'lastName'
-  ],
-  'properties': {
-    'title': {
-      'type': 'string',
-      'title': 'Title'
-    },
-    'lastName': {
-      'type': 'string',
-      'title': 'Last name'
-    },
-    'other': {
-      'type': 'string',
-      'title': 'Other'
-    }
-  }
-};
-
-
-const TestFormUISchema = {
-  'firstName': {
-    'ui:autofocus': true,
-    'ui:label': false,
-    'ui:readonly': true
-  }
-};
-
-const testLog = (type) => console.log.bind(console, type);
-
-const FormTest = dataBind()(
-  () => (<div>
-    <h2>Testing the test data!</h2>
-    <AllTests />
-  </div>)
-);
-
-const AllTests = dataBind()(
-  ({ }, { testList }) => {
-    if (!testList.isLoaded()) {
-      // not loaded yet
-      return (<LoadIndicator block size="2em" />);
-    }
-
-    const tests = testList();
-    let i = 0;
-    return (<div>
-      {/* add new test item */}
-      <Panel header="Add new" bsStyle="primary">
-        <TestEditor testId={null} />
-      </Panel>
-
-      {/* list all test items */}
-      <h3>Your list currently has {size(tests)} items</h3>
-      {map(tests, (test, testId) => (
-        <Panel key={testId} header={(++i) + '. ' + test.title} bsStyle="info">
-          <TestEditor testId={testId} />
-        </Panel>
-      ))}
-      <hr />
-
-      {/* Debug data view */}
-      <Panel header="Debug data view" bsStyle="warning">
-        <pre>{JSON.stringify(tests, null, 2)}</pre>
-      </Panel>
-    </div>);
-  }
-);
-
-function TestDeleteButton({ open }) {
-  return (<button className="btn btn-warning" onClick={open}>
-    <FAIcon name="trash" /> Delete!
-  </button>);
-}
-
-const TestEditor = dataBind({
-  onSubmit({ testId }, { set_test, push_testList }, { formData }) {
-    // get rid of undefined fields, created by (weird) form editor
-    formData = pickBy(formData, val => val !== undefined);
-
-    if (!testId) {
-      // new test data
-      push_testList(formData);
-    }
-    else {
-      // existing test data
-      set_test({ testId }, formData);
-    }
-  },
-
-  doDelete({ testId }, { delete_test }) {
-    return delete_test({ testId });
-  }
-})(
-  ({ testId }, { onSubmit, doDelete, test }) => {
-    const data = testId && test({ testId }) || EmptyObject;
-    return (<div>
-      <h2>{data.title}</h2>
-      <Form schema={TestFormSchema}
-        liveValidate={true}
-        uiSchema={TestFormUISchema}
-        formData={data}
-        onChange={testLog('changed')}
-        onError={testLog('errors')}
-        onSubmit={onSubmit} >
-        <p>
-          <button type="submit" className="btn btn-info">
-            {testId ? 'Update' : 'Add'}
-          </button>
-          {testId &&
-
-            <ConfirmModal
-              header="Really delete?"
-              ButtonCreator={TestDeleteButton}
-              onConfirm={doDelete}>
-
-              <span>{data.title}</span>
-
-            </ConfirmModal>
-          }
-        </p>
-      </Form>
-    </div>);
-  }
-  );
 
 const WrappedView = ({ }) => (
   <DataSourceProvider {...dataConfig}>
-    <FormTest />
+    <ProjectControlList />
   </DataSourceProvider>
 );
 
