@@ -123,8 +123,7 @@ const FormUISchema = {
 };
 
 const CustomFields = {
-  momentTime: ({ formData, schema: { title }, ...otherProps }) => {
-    console.log(otherProps);
+  momentTime: ({ formData, schema: { title } }) => {
     return (!formData && <span /> || <span>
       <label>{title}</label>{' '}
       <Moment fromNow>{formData}</Moment> (
@@ -210,12 +209,16 @@ const ItemEditor = dataBind({
     }
   },
 
+  /**
+   * DI-decorated action: delete item
+   */
   doDelete({ itemId }, { delete_item }) {
     return delete_item({ itemId });
   }
 })(
   ({ itemId }, { onSubmit, doDelete, item }) => {
-    const data = itemId && item({ itemId }) || EmptyObject;
+    const alreadyExists = !!itemId;
+    const data = alreadyExists && item({ itemId }) || EmptyObject;
     return (<div>
       <h2>{data.title}</h2>
       <Form schema={FormSchema}
@@ -228,10 +231,9 @@ const ItemEditor = dataBind({
         onSubmit={onSubmit} >
         <div>
           <button type="submit" className="btn btn-info">
-            {itemId ? 'Update' : 'Add'}
+            {alreadyExists ? 'Update' : 'Add'}
           </button>
-          {itemId &&
-
+          {alreadyExists &&
             <ConfirmModal
               header="Confirm DELETE"
               ButtonCreator={ItemDeleteButton}
