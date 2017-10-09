@@ -180,7 +180,6 @@ if (ENV_PRODUCTION) {
       name: 'vendor',
       minChunks: Infinity
     }),
-    new webpack.optimize.DedupePlugin(),
     new webpack.optimize.UglifyJsPlugin({
       mangle: true,
       compress: {
