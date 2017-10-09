@@ -20,9 +20,25 @@ export default class PathDescriptor extends DataDescriptorNode {
 
     this._buildPathGetter(pathConfig);
   }
+  
+  
+  // ################################################
+  // Public properties + methods
+  // ################################################
 
   get nodeType() {
     return 'Path';
+  }
+
+  buildParentPathDescriptor(name) {
+    const { pathTemplate, pathFn } = this.config;
+    if (isString(pathTemplate) && !pathFn) {
+      const newPathTemplate = pathTemplate.split('/').slice(0, -1).join('/');
+      return new PathDescriptor({
+        pathTemplate: newPathTemplate
+      }, name);
+    }
+    return this;
   }
 
   // ################################################
@@ -78,15 +94,5 @@ export default class PathDescriptor extends DataDescriptorNode {
         };
       };
     }
-  }
-
-  
-  // ################################################
-  // Public properties + methods
-  // ################################################
-
-  execute(args, readByNameProxy, readersByName, callerNode, accessTracker) {
-    // call path read function
-    return this.getPath(args, readByNameProxy, readersByName, callerNode, accessTracker);
   }
 }

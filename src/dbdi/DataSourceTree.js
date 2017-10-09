@@ -109,19 +109,35 @@ export default class DataSourceTree {
 
   _defaultWriteOps = ['push', 'set', 'update', 'delete']
 
+  _customWritePathDescriptors = {
+    push(pathDescriptor, name) {
+      return pathDescriptor.buildParentPathDescriptor(name);
+    }
+  }
+
   _buildMetaWriteCfg(configNode, actionName) {
     const { onWrite } = configNode;
     return {
       actionName,
-      onWrite: onWrite
+      onWrite
     };
   }
 
-  _defaultDataWriteDescriptorBuilders = zipObject(this._defaultWriteOps, 
+  /**
+   * functions to create DataWriteScriptor for each write action.
+   * 
+   * TODO: move this out of here, it is DataProvider dependent.
+   */
+  _defaultDataWriteDescriptorBuilders = zipObject(this._defaultWriteOps,
     map(this._defaultWriteOps, (actionName) =>
       (fullName, configNode, pathDescriptor) => {
         const metaCfg = this._buildMetaWriteCfg(configNode, actionName);
-        return pathDescriptor && new DataWriteDescriptor(pathDescriptor, metaCfg, fullName);
+        const customPathDescriptorBuilder = this._customWritePathDescriptors[actionName];
+        if (customPathDescriptorBuilder) {
+          // push has a special path
+          pathDescriptor = customPathDescriptorBuilder(pathDescriptor, fullName);
+        }
+        return new DataWriteDescriptor(pathDescriptor, metaCfg, fullName);
       }
     )
   )

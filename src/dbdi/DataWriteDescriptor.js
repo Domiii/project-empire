@@ -135,6 +135,7 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
 
     //accessTracker.recordDataWrite(dataProvider, path, val);
 
+    debugger;
     this.onWrite && this.onWrite(queryArgs, val, readByNameProxy, readersByName);
 
     return dataProvider.actions[this.actionName](path, val);

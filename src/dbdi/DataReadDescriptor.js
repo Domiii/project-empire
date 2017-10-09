@@ -113,10 +113,4 @@ export default class DataReadDescriptor extends DataDescriptorNode {
     const data = this.readData(args, readByNameProxy, readersByName, callerNode, accessTracker);
     return data !== undefined;
   }
-
-
-  execute(args, readByNameProxy, readersByName, callerNode, accessTracker) {
-    // call path read function
-    return this.readData(args, readByNameProxy, readersByName, callerNode, accessTracker);
-  }
 }

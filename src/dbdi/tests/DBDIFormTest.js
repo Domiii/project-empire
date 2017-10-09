@@ -67,6 +67,7 @@ const dataConfig = {
             item: {
               path: '$(itemId)',
               onWrite(queryArgs, val) {
+                debugger;
                 val && (val.updatedAt = firebase.database.ServerValue.TIMESTAMP);
               },
               children: {
@@ -97,6 +98,10 @@ const FormSchema = {
     'title': {
       'type': 'string',
       'title': 'Title'
+    },
+    'good': {
+      'type': 'boolean',
+      'title': 'Good'
     },
     'other': {
       'type': 'string',
@@ -163,11 +168,14 @@ const ItemList = dataBind()(
 
       {/* list all item items */}
       <h3>Your list currently has {size(items)} items</h3>
-      {map(sortedIds, itemId => (
-        <Panel key={itemId} header={`(${++i}) ${items[itemId].title}`} bsStyle="info">
+      {map(sortedIds, itemId => {
+        const item = items[itemId];
+        return (<Panel 
+          key={itemId} bsStyle={item.good ? 'success' : 'danger'}
+          header={`(${++i}) ${item.title}`}>
           <ItemEditor itemId={itemId} />
-        </Panel>
-      ))}
+        </Panel>);
+      })}
 
       {/* Debug data view */}
       <Panel header="Debug data view" bsStyle="warning">
@@ -195,13 +203,13 @@ const ItemEditor = dataBind({
   /**
    * DI-decorated action: create or update item
    */
-  onSubmit({ itemId }, { set_item, push_itemList }, { formData }) {
+  onSubmit({ itemId }, { set_item, push_item }, { formData }) {
     // get rid of undefined fields, created by (weird) form editor
     formData = pickBy(formData, val => val !== undefined);
 
     if (!itemId) {
       // new item data
-      push_itemList(formData);
+      push_item(formData);
     }
     else {
       // existing item data
@@ -220,18 +228,18 @@ const ItemEditor = dataBind({
     const alreadyExists = !!itemId;
     const data = alreadyExists && item({ itemId }) || EmptyObject;
     return (<div>
-      <h2>{data.title}</h2>
       <Form schema={FormSchema}
         liveValidate={true}
         uiSchema={FormUISchema}
         fields={CustomFields}
         formData={data}
+        showErrorList={false}
         onChange={itemLog('changed')}
         onError={itemLog('errors')}
         onSubmit={onSubmit} >
         <div>
           <button type="submit" className="btn btn-info">
-            {alreadyExists ? 'Update' : 'Add'}
+            {alreadyExists ? 'Update' : 'Add new'}
           </button>
           {alreadyExists &&
             <ConfirmModal

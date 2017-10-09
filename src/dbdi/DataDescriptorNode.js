@@ -16,6 +16,10 @@ export default class DataDescriptorNode {
     return this._name;
   }
 
+  get config() {
+    return this._cfg;
+  }
+
   get nodeType() {
     throw new Error('[INTERNAL ERROR] nodeType has not been defined in DataDescriptorNode class');
   }
