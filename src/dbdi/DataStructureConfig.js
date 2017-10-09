@@ -11,21 +11,21 @@ import { pathJoin } from 'src/util/pathUtil';
 import { EmptyObject } from 'src/util';
 
 export function parseConfig(cfg) {
-  if (cfg instanceof DataSourceConfig) {
+  if (cfg instanceof DataStructureConfig) {
     // already parsed!
     return cfg;
   }
 
   // raw configuration input
-  return new DataSourceConfig(cfg);
+  return new DataStructureConfig(cfg);
 }
 
 function parseConfigChildren(parent, children) {
   return mapValues(children || EmptyObject, (childCfg, name) =>
-    new DataSourceConfigNode(name, parent, childCfg)
+    new DataStructureConfigNode(name, parent, childCfg)
   );
 }
-export default class DataSourceConfig {
+export default class DataStructureConfig {
   children;
 
   constructor(cfg) {
@@ -37,7 +37,7 @@ export default class DataSourceConfig {
  * A parsed "dataConfig" object.
  * Allows composing of local descriptors built from descriptors imported from other places.
  */
-export class DataSourceConfigNode {
+export class DataStructureConfigNode {
   name;
   
   parent;
@@ -165,18 +165,18 @@ export class DataSourceConfigNode {
 
       // readers 
       console.assert(isPlainObject(readers), 
-        'invalid "readers" node is not (but must be) "plain object" in DataSourceConfig node: ' + this.name);
+        'invalid "readers" node is not (but must be) "plain object" in DataStructureConfig node: ' + this.name);
 
       const readerNames = Object.keys(readers);
       const childNames = Object.keys(this.children);
       const overlap = intersection(readerNames, childNames);
       console.assert(isEmpty(overlap),
-        'invalid "readers" definitions have name conflict with "children" in DataSourceConfig node: ' + 
+        'invalid "readers" definitions have name conflict with "children" in DataStructureConfig node: ' + 
         this.name, ' - ', overlap.join(', '));
 
       // add reader-only children
       const readerNodes = mapValues(readers, (reader, name) =>
-        new DataSourceConfigNode(name, this.parent, { reader })
+        new DataStructureConfigNode(name, this.parent, { reader })
       );
       Object.assign(this.children, readerNodes);
     }
@@ -195,7 +195,7 @@ export class DataSourceConfigNode {
       console.assert(isPlainObject(cfg.writers), 'invalid "writers" node is not plain object in: ' + this.name);
 
       // TODO: fix this after "readers" work
-      console.error('NIY: "writers" in DataSourceConfigNode');
+      console.error('NIY: "writers" in DataStructureConfigNode');
     }
   }
 

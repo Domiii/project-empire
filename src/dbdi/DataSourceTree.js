@@ -1,4 +1,4 @@
-import { parseConfig } from './DataSourceConfig';
+import { parseConfig } from './DataStructureConfig';
 import PathDescriptor from './PathDescriptor';
 import DataReadDescriptor from './DataReadDescriptor';
 import DataWriteDescriptor from './DataWriteDescriptor';
@@ -30,13 +30,13 @@ export default class DataSourceTree {
    */
   _root;
 
-  constructor(dataProviders, dataSourceCfgRaw) {
+  constructor(dataProviders, dataStructureCfgRaw) {
     this._dataProviders = dataProviders;
-    this._dataSourceCfgRoot = parseConfig(dataSourceCfgRaw);
+    this._dataStructureCfgRoot = parseConfig(dataStructureCfgRaw);
 
     autoBind(this);
 
-    this._root = this._buildNodeWithChildren(this._dataSourceCfgRoot, null, '');
+    this._root = this._buildNodeWithChildren(this._dataStructureCfgRoot, null, '');
 
     this._compressHierarchy(this._root);
   }

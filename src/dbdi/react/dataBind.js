@@ -1,5 +1,7 @@
 import DataAccessTracker from '../DataAccessTracker';
 
+import partial from 'lodash/partial';
+import mapValues from 'lodash/mapValues';
 import merge from 'lodash/merge';
 import isFunction from 'lodash/isFunction';
 import isPlainObject from 'lodash/isPlainObject';
@@ -63,7 +65,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
     // more data injection stuff
     _customContext;
     _customProps = {};
-    _customActions = {};
+    _customFunctions = {};
 
     // bookkeeping (currently mostly unused)
     _isMounted;
@@ -82,7 +84,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
 
 
       // prepare all the stuff
-      this._buildCustomActions();
+      this._buildCustomFunctions();
       this._buildDataInjectionProxy();
       this._buildActionProxy();
 
@@ -97,8 +99,8 @@ export default (propsOrPropCb) => _WrappedComponent => {
     // Private methods + properties
     // ################################################
 
-    _buildCustomActions() {
-      this._customActions = {
+    _buildCustomFunctions() {
+      this._customFunctions = {
         /**
          * Add context contents.
          * 
@@ -161,9 +163,9 @@ export default (propsOrPropCb) => _WrappedComponent => {
         get: (target, name) => {
      
           // 1) check custom actions
-          const customAction = this._customActions[name];
-          if (customAction) {
-            return customAction;
+          const customFunction = this._customFunctions[name];
+          if (customFunction) {
+            return customFunction;
           }
 
           // 2) check readers
@@ -185,13 +187,26 @@ export default (propsOrPropCb) => _WrappedComponent => {
         }
       });
     }
+
+    _wrapCustomData(data) {
+      return data;
+    }
+
+    _wrapCustomFunctions(f) {
+      // inject proxies as first arguments
+      return partial(f, ...this._renderArguments);
+    }
     
-    _separateActionsAndData = flow(
+    _wrapCustomFunctionsAndData = flow(
       fpToPairs,
-      fpGroupBy(item => isFunction(item[1]) ? 'actions' : 'data' ),
+      fpGroupBy(item => isFunction(item[1]) ? 'functions' : 'data' ),
       fpMapValues(items => 
         fpZipObject(fpMap(item => item[0])(items))(fpMap(item => item[1])(items))
-      )
+      ),
+      (items) => ({
+        data: mapValues(items.data, this._wrapCustomData),
+        functions: mapValues(items.functions, this._wrapCustomFunctions)
+      })
     )
 
     _prepareInjectedProps() {
@@ -201,10 +216,12 @@ export default (propsOrPropCb) => _WrappedComponent => {
         if (isFunction(propsOrPropCb)) {
           props = propsOrPropCb(...this._renderArguments);
         }
-        else if (isEmpty(this._customProps)) {
+        else if (!isEmpty(this._customProps)) {
           // already done, don't do it again!
           return;
         }
+
+        // TODO: if a function is supplied, be smart about it
 
         if (props && !isPlainObject(props)) {
           throw new Error('Invalid props returned from dataBind callback: ' +
@@ -213,13 +230,13 @@ export default (propsOrPropCb) => _WrappedComponent => {
 
         // group props into actions and "data" props
         const {
-          actions,
+          functions,
           data
-        } = this._separateActionsAndData(props);
+        } = this._wrapCustomFunctionsAndData(props);
 
         // assign
         this._customProps = data || EmptyObject;
-        Object.assign(this._customActions, actions);
+        Object.assign(this._customFunctions, functions);
       }
     }
 
@@ -253,7 +270,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
 
       const newContext = this.props.setContext;
       if (newContext) {
-        this._customActions.setContext(newContext);
+        this._customFunctions.setContext(newContext);
       }
 
       this._shouldUpdate = true;

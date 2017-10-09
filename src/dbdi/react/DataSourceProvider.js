@@ -23,7 +23,7 @@ export default class DataSourceProvider extends Component {
   static childContextTypes = dataBindChildContextStructure;
   static propTypes = {
     dataProviders: PropTypes.object.isRequired,
-    dataSourceConfig: PropTypes.object.isRequired,
+    dataStructureConfig: PropTypes.object.isRequired,
     children: PropTypes.object.isRequired
   };
 
@@ -32,10 +32,10 @@ export default class DataSourceProvider extends Component {
 
     const {
       dataProviders,
-      dataSourceConfig
+      dataStructureConfig
     } = props;
 
-    const dataSourceTree = new DataSourceTree(dataProviders, dataSourceConfig);
+    const dataSourceTree = new DataSourceTree(dataProviders, dataStructureConfig);
     this._dataSourceTree = dataSourceTree;
   }
 

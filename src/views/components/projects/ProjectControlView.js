@@ -34,6 +34,7 @@ import DataSourceProvider from 'src/dbdi/react/DataSourceProvider';
 import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/loading';
 
+import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import UserIcon from 'src/views/components/users/UserIcon';
 
 
@@ -116,13 +117,13 @@ StageStatusIcon.propTypes = {
 const StageContributorIcon = dataBind()(
   ({ projectId, stageId, groupName, uid }, { userPublic, stageContributorStatus }) => {
 
-    const isStatusLoaded = stageContributorStatus.isLoaded({projectId, stageId, uid});
-    const isUserLoaded = !uid || userPublic.isLoaded({projectId, stageId, uid});
-    const status = stageContributorStatus({projectId, stageId, uid}) || 0;
-    const user = isUserLoaded && uid && userPublic({uid});
+    const isStatusLoaded = stageContributorStatus.isLoaded({ projectId, stageId, uid });
+    const isUserLoaded = !uid || userPublic.isLoaded({ projectId, stageId, uid });
+    const status = stageContributorStatus({ projectId, stageId, uid }) || 0;
+    const user = isUserLoaded && uid && userPublic({ uid });
 
     const statusIconEl = (
-      !isStatusLoaded ? 
+      !isStatusLoaded ?
         <LoadIndicator /> :
         <StageStatusIcon status={status} className="project-contributor-status-icon" />
     );
@@ -139,7 +140,7 @@ const StageContributorIcon = dataBind()(
     else {
       // user icon
       return (
-        !isUserLoaded ? 
+        !isUserLoaded ?
           <LoadIndicator /> :
           <div className={classes}>
             <UserIcon user={user} />
@@ -171,7 +172,7 @@ const StageStatusBar = dataBind()(
         } = contributorSet;
 
         // first: all already known users
-        const userEls = map(userList, 
+        const userEls = map(userList,
           (user, uid) => (<Item key={uid} flex="none">{
             (<StageContributorIcon
               projectId={projectId}
@@ -197,8 +198,8 @@ const StageStatusBar = dataBind()(
 
         // render icons of the actual users in group
         return (<Flex row key={iSet} justifyContent="flex-end" alignItems="center">
-          { userEls }
-          { unknownEls }
+          {userEls}
+          {unknownEls}
         </Flex>);
       })}
     </div>);
@@ -390,7 +391,7 @@ const allProjectStageData = {
   }
 };
 
-const dataSourceConfig = {
+const dataStructureConfig = {
   auth: {
     dataProvider: 'firebaseAuth',
     children: {
@@ -406,7 +407,7 @@ const dataSourceConfig = {
       users: {
         path: '/users/public',
         children: {
-          gms: { 
+          gms: {
             path: {
               queryParams: [['orderByChild', 'role'], ['startAt', Roles.GM]]
             }
@@ -422,7 +423,7 @@ const dataSourceConfig = {
         readers: {
           projectsOfUser({ uid }, { }, { projectIdsOfUser, project }) {
             return mapValues(
-              projectIdsOfUser({ uid }) || EmptyObject, 
+              projectIdsOfUser({ uid }) || EmptyObject,
               (_, projectId) => project({ projectId })
             );
           },
@@ -434,9 +435,9 @@ const dataSourceConfig = {
             );
           },
 
-          projectReviewers({ projectId }, {}, { project, userPublic }) {
+          projectReviewers({ projectId }, { }, { project, userPublic }) {
             // single reviewer as "list" or "object" of reviewers
-            const proj = project({projectId});
+            const proj = project({ projectId });
             const uid = proj && proj.guardianUid;
             const reviewer = uid && userPublic({ uid });
             return reviewer && { [uid]: reviewer } || null;
@@ -490,7 +491,7 @@ const dataSourceConfig = {
               project: {
                 path: '$(projectId)',
                 children: {
-                  
+
                 }
               }
             }
@@ -532,12 +533,12 @@ const LoadedProjectControlView = dataBind()(
 
 const ProjectControlView = dataBind()(
   ({ projectId }, { project }) => {
-    const thisProject = projectId && project({projectId});
+    const thisProject = projectId && project({ projectId });
     const newContext = {
       thisProjectId: projectId,
       thisProject
     };
-    
+
     return thisProject &&
       (<LoadedProjectControlView setContext={newContext} />) ||
       (<LoadIndicator block />);
@@ -547,11 +548,11 @@ const ProjectControlView = dataBind()(
 const ProjectControlList = dataBind()(
   ({ }, { projectIdsOfUser, currentUid }) => {
     const uid = currentUid();
-    if (!uid || !projectIdsOfUser.isLoaded({uid})) {
+    if (!uid || !projectIdsOfUser.isLoaded({ uid })) {
       return (<LoadIndicator block size={1.5} />);
     }
-    
-    const currentProjectIds = projectIdsOfUser({uid});
+
+    const currentProjectIds = projectIdsOfUser({ uid });
     if (isEmpty(currentProjectIds)) {
       return (<Alert bsStyle="warning">
         你目前沒有在進行專案。推薦選擇任務並且找守門人註冊新的～
@@ -568,12 +569,24 @@ const ProjectControlList = dataBind()(
 );
 
 
-const dataSourceProps = {
-  dataProviders,
-  dataSourceConfig: {
+// #########################################################
+// Remote (and in the future also local) data providers + data structure
+// #########################################################
+
+const dataConfig = {
+  dataProviders: {
+    firebase: new FirebaseDataProvider(),
+    firebaseAuth: new FirebaseAuthProvider()
+    //temp: new ...(),
+    //webCache: ...
+  },
+
+  // the data tree represents all accessible data within the context that we use it
+  dataStructureConfig: {
     auth: {
       dataProvider: 'firebaseAuth',
       children: {
+        // currentUser represents everything provided by `firebaseAuth` provider
         currentUser: '',
         currentUid: 'uid'
       }
@@ -581,8 +594,7 @@ const dataSourceProps = {
     db: {
       dataProvider: 'firebase',
       children: {
-        projectIdsOfUser: '/_index/projectUsers/user/$(uid)',
-        allTests: {
+        testList: {
           path: '/test',
           children: {
             test: {
@@ -597,6 +609,10 @@ const dataSourceProps = {
   }
 };
 
+
+// #########################################################
+// Schema for `react-jsonschema-form` library
+// #########################################################
 
 const TestFormSchema = {
   'title': '',
@@ -634,19 +650,57 @@ const testLog = (type) => console.log.bind(console, type);
 
 const FormTest = dataBind()(
   () => (<div>
-    <h2>Add new data</h2>
-    <TestEditor testId={null} data={null} setContext={{world: 'world'}} />
-
-    <h2>All existing data</h2>
+    <h2>Testing the test data!</h2>
     <AllTests />
   </div>)
 );
-const TestEditor = dataBind(({ testId }, { set_test, push_allTests, delete_test }) => ({
-  onSubmit({formData}) {
+
+const AllTests = dataBind()(
+  ({ }, { testList }) => {
+    if (!testList.isLoaded()) {
+      // not loaded yet
+      return (<LoadIndicator block size="2em" />);
+    }
+
+    const tests = testList();
+    let i = 0;
+    return (<div>
+      {/* add new test item */}
+      <Panel header="Add new" bsStyle="primary">
+        <TestEditor testId={null} />
+      </Panel>
+
+      {/* list all test items */}
+      <h3>Your list currently has {size(tests)} items</h3>
+      {map(tests, (test, testId) => (
+        <Panel key={testId} header={(++i) + '. ' + test.title} bsStyle="info">
+          <TestEditor testId={testId} />
+        </Panel>
+      ))}
+      <hr />
+
+      {/* Debug data view */}
+      <Panel header="Debug data view" bsStyle="warning">
+        <pre>{JSON.stringify(tests, null, 2)}</pre>
+      </Panel>
+    </div>);
+  }
+);
+
+function TestDeleteButton({ open }) {
+  return (<button className="btn btn-warning" onClick={open}>
+    <FAIcon name="trash" /> Delete!
+  </button>);
+}
+
+const TestEditor = dataBind({
+  onSubmit({ testId }, { set_test, push_testList }, { formData }) {
+    // get rid of undefined fields, created by (weird) form editor
     formData = pickBy(formData, val => val !== undefined);
+
     if (!testId) {
       // new test data
-      push_allTests(formData);
+      push_testList(formData);
     }
     else {
       // existing test data
@@ -654,13 +708,12 @@ const TestEditor = dataBind(({ testId }, { set_test, push_allTests, delete_test 
     }
   },
 
-  doDelete(evt) {
-    evt.preventDefault();
-    return delete_test({testId});
+  doDelete({ testId }, { delete_test }) {
+    return delete_test({ testId });
   }
-}))(
+})(
   ({ testId }, { onSubmit, doDelete, test }) => {
-    const data = testId && test({testId}) || EmptyObject;
+    const data = testId && test({ testId }) || EmptyObject;
     return (<div>
       <h2>{data.title}</h2>
       <Form schema={TestFormSchema}
@@ -674,33 +727,25 @@ const TestEditor = dataBind(({ testId }, { set_test, push_allTests, delete_test 
           <button type="submit" className="btn btn-info">
             {testId ? 'Update' : 'Add'}
           </button>
-          { testId &&
-            <button className="btn btn-warning" onClick={doDelete}>
-              Delete!
-            </button>
+          {testId &&
+
+            <ConfirmModal
+              header="Really delete?"
+              ButtonCreator={TestDeleteButton}
+              onConfirm={doDelete}>
+
+              <span>{data.title}</span>
+
+            </ConfirmModal>
           }
         </p>
       </Form>
     </div>);
   }
-);
-const AllTests = dataBind()(
-  ({ }, { allTests }) => {
-    const tests = allTests();
-    return (<div>
-      <h3>{size(tests)}</h3>
-      { map(tests, (test, testId) => (<div key={testId}>
-        <hr />
-        <TestEditor testId={testId} />
-      </div>)) }
-      <hr />
-      <pre>{JSON.stringify(tests, null, 2)}</pre>
-    </div>);
-  }
-);
+  );
 
 const WrappedView = ({ }) => (
-  <DataSourceProvider {...dataSourceProps}>
+  <DataSourceProvider {...dataConfig}>
     <FormTest />
   </DataSourceProvider>
 );

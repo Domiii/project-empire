@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { 
   Alert, Button, Modal
@@ -31,6 +30,11 @@ export default class ConfirmModal extends Component {
       PropTypes.element,
       PropTypes.string
     ]),
+    children: PropTypes.oneOfType([
+      PropTypes.element,
+      PropTypes.string
+    ]),
+    confirmArgs: PropTypes.any,
     ButtonCreator: PropTypes.func.isRequired,
     onConfirm: PropTypes.func.isRequired
   };
@@ -60,6 +64,7 @@ export default class ConfirmModal extends Component {
     const { 
       header,
       body,
+      children,
       ButtonCreator
     } = this.props;
 
@@ -75,12 +80,14 @@ export default class ConfirmModal extends Component {
     // modal setup
     const modalContents = this.state.showModal && (
       <Modal style={modalStyle}
-          show={this.state.showModal} onHide={close}>
+        show={this.state.showModal} onHide={close}>
+
         <Modal.Header closeButton>
           <Modal.Title>{header}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {body}
+          {children}
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={ onClickConfirm }

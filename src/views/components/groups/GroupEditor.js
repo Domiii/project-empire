@@ -139,11 +139,11 @@ function makeAddUserEl(addUserToGroup) {
 
       <ConfirmModal
         header="Add user to group?"
-        body={(<span>{user.displayName}</span>)}
         ButtonCreator={AddUserButton}
         onConfirm={addUserToGroup}
-        confirmArgs={uid}
-      />
+        confirmArgs={uid}>
+        <span>{user.displayName}</span>
+      </ConfirmModal>
     </span>
   </Badge>);
 }
