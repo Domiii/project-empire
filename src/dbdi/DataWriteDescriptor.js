@@ -10,14 +10,58 @@ import PathDescriptor from './PathDescriptor';
 
 const DEBUG_WRITES = true;
 
+function defaultProcessArguments(node, writeArgs) {
+  let res;
+  let queryArgs, val;
+  switch (writeArgs.length) {
+    case 1:
+      [val] = writeArgs;
+      res = { val };
+      break;
+    case 2:
+      [queryArgs, val] = writeArgs;
+      res = { queryArgs, val };
+      break;
+    default:
+      throw new Error(`Invalid argument count provided for write operation at ${node.fullName} (must be 1 or 2): 
+          ${JSON.stringify(writeArgs)}`);
+  }
+  return res;
+}
+
+function processArgumentsNoValue(node, writeArgs) {
+  // only query arguments, no value
+  const [queryArgs] = writeArgs;
+  return { queryArgs };
+}
+
+export const writeParameterConfig = Object.freeze({
+  push: {
+    parameterCount: 2,
+    processArguments: defaultProcessArguments
+  },
+  set: {
+    parameterCount: 2,
+    processArguments: defaultProcessArguments
+  },
+  update: {
+    parameterCount: 2,
+    processArguments: defaultProcessArguments
+  },
+  delete: {
+    parameterCount: 1,
+    processArguments: processArgumentsNoValue
+  }
+});
+
 export default class DataWriteDescriptor extends DataDescriptorNode {
-  _actionName;
+  actionName;
   writeData;
 
   constructor(cfg, name, actionName) {
     super(cfg, name);
-    
-    this._actionName = actionName;
+
+    this.actionName = actionName;
 
     autoBind(this);
 
@@ -65,24 +109,29 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
   }
 
   _buildWriteDataFromDescriptor(pathDescriptor) {
-    return (args, val, readByNameProxy, readersByName, callerNode, accessTracker) => {
+    return (args, readByNameProxy, readersByName, callerNode, accessTracker) => {
       // // TODO check if all dependencies are loaded?
       // if (!callerNode.areDependenciesLoaded(this)) {
       //   return null;
       // }
-      
-      const path = this._doGetPath(pathDescriptor, args, readByNameProxy, readersByName, callerNode, accessTracker);
+
+      const {
+        queryArgs,
+        val
+      } = args;
+
+      const path = this._doGetPath(pathDescriptor, queryArgs, readByNameProxy, readersByName, callerNode, accessTracker);
       return this._doWriteData(path, val, callerNode, accessTracker);
     };
   }
-  
+
   _doWriteData(path, val, callerNode, accessTracker) {
     const {
       dataProvider
     } = callerNode;
 
     //accessTracker.recordDataWrite(dataProvider, path, val);
-    return dataProvider.actions[this._actionName](path, val);
+    return dataProvider.actions[this.actionName](path, val);
     //dataProvider.writeData(path, val);
-  } 
+  }
 }

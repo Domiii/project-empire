@@ -1,3 +1,5 @@
+import { writeParameterConfig } from 'src/dbdi/DataWriteDescriptor';
+
 import isPlainObject from 'lodash/isPlainObject';
 
 import autoBind from 'src/util/auto-bind';
@@ -83,8 +85,15 @@ export default class DataAccessTracker {
   }
 
   _wrapWriteData(node) {
-    return (args, val) => {
-      return node.writeData(this._wrapArgs(args), val, this._injectProxy, this._readersProxy, this);
+    const writeDescriptor = node.writeDescriptor;
+    const paramConfig = writeParameterConfig[writeDescriptor.actionName];
+    console.assert(paramConfig);
+    const { processArguments } = paramConfig;
+
+    return (...writeArgs) => {
+      const allArgs = processArguments(node, writeArgs);
+      allArgs.queryArgs = this._wrapArgs(allArgs.queryArgs);
+      return node.writeData(allArgs, this._injectProxy, this._readersProxy, this);
     };
   }
 
@@ -114,8 +123,7 @@ export default class DataAccessTracker {
     let writeData = this._wrappedWriters[name];
     if (!writeData) {
       const node = this._dataSourceTree.resolveWriter(name);
-      this._wrappedWriters[name] = writeData =
-        this._wrapWriteData(node);
+      this._wrappedWriters[name] = writeData = this._wrapWriteData(node);
     }
     return writeData;
   }

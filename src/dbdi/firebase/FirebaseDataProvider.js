@@ -114,20 +114,34 @@ export default class FirebaseDataProvider extends DataProviderBase {
     return allData;
   }
 
+  _onWrite(action, remotePath, val) {
+    console.log('W [', action, remotePath, '] ', val);
+    return true;
+  }
+
   actions = {
     set: (remotePath, val) => {
+      this._onWrite('Set', remotePath, val);
       let ref = this.database().ref().child(remotePath);
       return ref.set(val);
     },
 
     push: (remotePath, val) => {
+      this._onWrite('Pus', remotePath, val);
       let ref = this.database().ref().child(remotePath);
       return ref.push(val);
     },
 
     update: (remotePath, val) => {
+      this._onWrite('Upd', remotePath, val);
       let ref = this.database().ref().child(remotePath);
       return ref.update(val);
+    },
+
+    delete: (remotePath) => {
+      this._onWrite('Del', remotePath);
+      let ref = this.database().ref().child(remotePath);
+      return ref.set(null);
     },
 
     transaction: () => {

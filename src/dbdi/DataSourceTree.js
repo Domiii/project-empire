@@ -8,7 +8,7 @@ import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
 import pickBy from 'lodash/pickBy';
-import last from 'lodash/last';
+import zipObject from 'lodash/zipObject';
 
 import autoBind from 'src/util/auto-bind';
 
@@ -58,7 +58,7 @@ export default class DataSourceTree {
     newDataNode._children = children;
   }
 
-  _buildNode(configNode, parent, nodeList, name, buildDataReadDescriptor, buildDataWriteDescriptor) {
+  _buildNode(configNode, parent, name, buildDataReadDescriptor, buildDataWriteDescriptor) {
     const dataProvider = this._dataProviders[configNode.dataProviderName];
     const fullName = (parent && parent.fullName && (parent.fullName + '.') || '') + name;
     const pathDescriptor = configNode.pathConfig && new PathDescriptor(configNode.pathConfig, fullName);
@@ -107,10 +107,14 @@ export default class DataSourceTree {
     });
   }
 
-  _defaultDataWriteDescriptorBuilders = map(['push', 'set', 'update'], (actionName) =>
-    (fullName, configNode, pathDescriptor) => {
-      return pathDescriptor && new DataWriteDescriptor(pathDescriptor, fullName, actionName);
-    }
+  _defaultWriteOps = ['push', 'set', 'update', 'delete']
+
+  _defaultDataWriteDescriptorBuilders = zipObject(this._defaultWriteOps, 
+    map(this._defaultWriteOps, (actionName) =>
+      (fullName, configNode, pathDescriptor) => {
+        return pathDescriptor && new DataWriteDescriptor(pathDescriptor, fullName, actionName);
+      }
+    )
   )
 
   _dataWriteCustomBuilder(fullName, configNode, _) {
@@ -163,17 +167,22 @@ export default class DataSourceTree {
 
   _compressHierarchy(node) {
     const readDescendants = {};
+    const writeDescendants = {};
     forEach(node._children, child => {
-      // recurse first
+      // recurse: compress children first
       this._compressHierarchy(child);
 
       // on the way back up, build sets of descendants
       this._addDescendants(readDescendants, child._readDescendants);
+      this._addDescendants(writeDescendants, child._writeDescendants);
     });
 
-    // merge immediate children into descendants separately
+    // merge immediate children into node's descendant sets
     this._addImmediateDescendants(readDescendants, node, childNode => childNode.isReader);
     node._readDescendants = readDescendants;
+
+    this._addImmediateDescendants(writeDescendants, node, childNode => childNode.isWriter);
+    node._writeDescendants = writeDescendants;
   }
 
   // ################################################

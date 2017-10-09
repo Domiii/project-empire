@@ -54,6 +54,14 @@ export default class DataSourceNode {
     return this._dataProvider;
   }
 
+  get readDescriptor() {
+    return this._readDescriptor;
+  }
+
+  get writeDescriptor() {
+    return this._writeDescriptor;
+  }
+
   get isReader() {
     return !!this._readDescriptor;
   }
@@ -74,20 +82,26 @@ export default class DataSourceNode {
     }
 
     return this._readDescriptor.readData(
-      args, 
-      injectProxy, 
+      args,
+      injectProxy,
       readersProxy,
       this,
       accessTracker);
   }
 
-  writeData(args, val, injectProxy, readersProxy, accessTracker) {
+  writeData(args, injectProxy, readersProxy, accessTracker) {
     args = args || EmptyObject;
     if (!this._writeDescriptor) {
-      throw new Error(`Tried to write data to "${this.fullName}", but node does not have a writer.`);
+      throw new Error(`Tried to write data to "${this.fullName}",
+        but node does not have a writer.`);
     }
-    throw new Error('NYI writeData');
-    //return this._readDescriptor.writeData(args, val, this._tree._injectProxy, this._tree._readersProxy, this);
+
+    return this._writeDescriptor.writeData(
+      args,
+      injectProxy,
+      readersProxy,
+      this,
+      accessTracker);
   }
 }
 

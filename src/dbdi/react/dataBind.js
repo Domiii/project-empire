@@ -3,7 +3,7 @@ import DataAccessTracker from '../DataAccessTracker';
 import merge from 'lodash/merge';
 import isFunction from 'lodash/isFunction';
 import isPlainObject from 'lodash/isPlainObject';
-import groupBy from 'lodash/groupBy';
+import isEmpty from 'lodash/isEmpty';
 
 import fpGroupBy from 'lodash/fp/groupBy';
 import fpMap from 'lodash/fp/map';
@@ -62,7 +62,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
 
     // more data injection stuff
     _customContext;
-    _customProps;
+    _customProps = {};
     _customActions = {};
 
     // bookkeeping (currently mostly unused)
@@ -159,6 +159,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
     _buildActionProxy() {
       this._actionProxy = new Proxy({}, {
         get: (target, name) => {
+     
           // 1) check custom actions
           const customAction = this._customActions[name];
           if (customAction) {
@@ -200,7 +201,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
         if (isFunction(propsOrPropCb)) {
           props = propsOrPropCb(...this._renderArguments);
         }
-        else if (!!this._customProps) {
+        else if (isEmpty(this._customProps)) {
           // already done, don't do it again!
           return;
         }

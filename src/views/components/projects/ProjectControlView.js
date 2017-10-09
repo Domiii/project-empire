@@ -16,6 +16,7 @@ import isEmpty from 'lodash/isEmpty';
 import sortBy from 'lodash/sortBy';
 import size from 'lodash/size';
 import times from 'lodash/times';
+import pickBy from 'lodash/pickBy';
 
 import React, { Component, Children } from 'react';
 import PropTypes from 'prop-types';
@@ -587,19 +588,6 @@ const dataSourceProps = {
             test: {
               path: '$(testId)',
               children: {
-                a: 'a',
-                b: 'b',
-                world: 'world'
-              }
-            }
-          }
-        },
-        users: {
-          path: '/users/public',
-          children: {
-            gms: { 
-              path: {
-                queryParams: [['orderByChild', 'role'], ['startAt', Roles.GM]]
               }
             }
           }
@@ -611,39 +599,24 @@ const dataSourceProps = {
 
 
 const TestFormSchema = {
-  'title': 'A registration form',
-  'description': 'A simple form example.',
+  'title': '',
+  'description': '',
   'type': 'object',
   'required': [
-    'firstName',
     'lastName'
   ],
   'properties': {
-    'firstName': {
+    'title': {
       'type': 'string',
-      'title': 'First name'
+      'title': 'Title'
     },
     'lastName': {
       'type': 'string',
       'title': 'Last name'
     },
-    'age': {
-      'type': 'integer',
-      'title': 'Age'
-    },
-    'bio': {
+    'other': {
       'type': 'string',
-      'title': 'Bio'
-    },
-    'password': {
-      'type': 'string',
-      'title': 'Password',
-      'minLength': 3
-    },
-    'telephone': {
-      'type': 'string',
-      'title': 'Telephone',
-      'minLength': 10
+      'title': 'Other'
     }
   }
 };
@@ -652,29 +625,8 @@ const TestFormSchema = {
 const TestFormUISchema = {
   'firstName': {
     'ui:autofocus': true,
-    'ui:emptyValue': '',
-    'ui:label': '',
+    'ui:label': false,
     'ui:readonly': true
-  },
-  'age': {
-    'ui:widget': 'updown',
-    'ui:title': 'Age of person',
-    'ui:description': '(earthian year)'
-  },
-  'bio': {
-    'ui:widget': 'textarea'
-  },
-  'password': {
-    'ui:widget': 'password',
-    'ui:help': 'Hint: Make it strong!'
-  },
-  'date': {
-    'ui:widget': 'alt-datetime'
-  },
-  'telephone': {
-    'ui:options': {
-      'inputType': 'tel'
-    }
   }
 };
 
@@ -689,25 +641,48 @@ const FormTest = dataBind()(
     <AllTests />
   </div>)
 );
-const TestEditor = dataBind({
-  onSubmit({ testId, data }, { set_test, push_test }) {
+const TestEditor = dataBind(({ testId }, { set_test, push_allTests, delete_test }) => ({
+  onSubmit({formData}) {
+    formData = pickBy(formData, val => val !== undefined);
     if (!testId) {
       // new test data
-      push_test(data);
+      push_allTests(formData);
     }
     else {
       // existing test data
-      set_test(testId, data);
+      set_test({ testId }, formData);
     }
+  },
+
+  doDelete(evt) {
+    evt.preventDefault();
+    return delete_test({testId});
   }
-})(
-  ({ testId }, { onSubmit, test }) => (<div>
-    <Form schema={TestFormSchema}
-      formData={testId && test({testId}) || EmptyObject}
-      onChange={testLog('changed')}
-      onError={testLog('errors')}
-      onSubmit={onSubmit} />
-  </div>)
+}))(
+  ({ testId }, { onSubmit, doDelete, test }) => {
+    const data = testId && test({testId}) || EmptyObject;
+    return (<div>
+      <h2>{data.title}</h2>
+      <Form schema={TestFormSchema}
+        liveValidate={true}
+        uiSchema={TestFormUISchema}
+        formData={data}
+        onChange={testLog('changed')}
+        onError={testLog('errors')}
+        onSubmit={onSubmit} >
+        <p>
+          <button type="submit" className="btn btn-info">
+            {testId ? 'Update' : 'Add'}
+          </button>
+          { testId &&
+            <button className="btn btn-warning" onClick={doDelete}>
+              Delete!
+            </button>
+          }
+        </p>
+      </Form>
+    </div>);
+  }
 );
 const AllTests = dataBind()(
   ({ }, { allTests }) => {
@@ -718,6 +693,7 @@ const AllTests = dataBind()(
         <hr />
         <TestEditor testId={testId} />
       </div>)) }
+      <hr />
       <pre>{JSON.stringify(tests, null, 2)}</pre>
     </div>);
   }
