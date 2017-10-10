@@ -95,8 +95,8 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
     this.writeData = this._wrapAccessFunction(writeData);
   }
 
-  _doGetPath(pathDescriptor, args, readByNameProxy, readersByName, callerNode, accessTracker) {
-    const pathOrPaths = pathDescriptor.getPath(args, readByNameProxy, readersByName, callerNode, accessTracker);
+  _doGetPath(pathDescriptor, args, dataInjectProxy, readerProxy, callerNode, accessTracker) {
+    const pathOrPaths = pathDescriptor.getPath(args, dataInjectProxy, readerProxy, callerNode, accessTracker);
 
     if (pathOrPaths) {
       if (isArray(pathOrPaths)) {
@@ -112,7 +112,7 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
   }
 
   _buildWriteDataFromDescriptor(pathDescriptor) {
-    return (args, readByNameProxy, readersByName, callerNode, accessTracker) => {
+    return (args, dataInjectProxy, readerProxy, writerProxy, callerNode, accessTracker) => {
       // // TODO check if all dependencies are loaded?
       // if (!callerNode.areDependenciesLoaded(this)) {
       //   return null;
@@ -123,20 +123,19 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
         val
       } = args;
 
-      const path = this._doGetPath(pathDescriptor, queryArgs, readByNameProxy, readersByName, callerNode, accessTracker);
-      return this._doWriteData(path, val, queryArgs, readByNameProxy, readersByName, callerNode, accessTracker);
+      const path = this._doGetPath(pathDescriptor, queryArgs, dataInjectProxy, readerProxy, callerNode, accessTracker);
+      return this._doWriteData(path, val, queryArgs, dataInjectProxy, readerProxy, writerProxy, callerNode, accessTracker);
     };
   }
 
-  _doWriteData(path, val, queryArgs, readByNameProxy, readersByName, callerNode, accessTracker) {
+  _doWriteData(path, val, queryArgs, dataInjectProxy, readerProxy, writerProxy, callerNode, accessTracker) {
     const {
       dataProvider
     } = callerNode;
 
     //accessTracker.recordDataWrite(dataProvider, path, val);
 
-    debugger;
-    this.onWrite && this.onWrite(queryArgs, val, readByNameProxy, readersByName);
+    this.onWrite && this.onWrite(queryArgs, val, dataInjectProxy, readerProxy);
 
     return dataProvider.actions[this.actionName](path, val);
     //dataProvider.writeData(path, val);

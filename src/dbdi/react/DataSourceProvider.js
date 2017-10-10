@@ -17,7 +17,7 @@ import DataSourceTree from '../DataSourceTree';
 
 
 /**
- * TODO: must provide DataSource to all children
+ * provide all configured DataSources + providers to all children
  */
 export default class DataSourceProvider extends Component {
   static childContextTypes = dataBindChildContextStructure;

@@ -85,7 +85,7 @@ export const ProjectStageTree = new StageDefTree([
       {
         id: 'reviewerPrepareMeeting',
         title: '支持者 準備 團隊鑑定',
-        contributors: contributorSet('reviewer'),
+        contributors: contributorSet('reviewer', 1),
         checklists: [
           {
             id: 'reviewerPrepareMeeting',
@@ -97,7 +97,7 @@ export const ProjectStageTree = new StageDefTree([
       {
         id: 'holdMeeting',
         title: '團隊鑑定',
-        contributors: contributorSet('reviewer'),
+        contributors: contributorSet('reviewer', 1),
         checklists: [
           {
             id: 'reviewerMeetingRecords',

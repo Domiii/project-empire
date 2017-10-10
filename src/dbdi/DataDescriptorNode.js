@@ -48,7 +48,7 @@ export default class DataDescriptorNode {
    * 
    * @returns {(string|Array.)} Returns one or more sets of data or paths
    */
-  execute(args, readByNameProxy, readersByName, callerNode, accessTracker) {
+  execute(args, dataInjectProxy, readerProxy, callerNode, accessTracker) {
     throw new Error('DescriptorNode did not implement execute: ' + this.constructor.name);
   }
 
@@ -70,13 +70,12 @@ export default class DataDescriptorNode {
   }
 
   _wrapAccessFunction(fn) {
-    return function _wrappedAccessFunction(args, readByNameProxy, readersByName, callerNode, accessTracker) {
+    return function _wrappedAccessFunction(...allArgs) {
       try {
-        return fn(args, readByNameProxy, readersByName, callerNode, accessTracker);
+        return fn(...allArgs);
       }
       catch (err) {
-        console.error(`Failed to execute "${this.nodeType}" at node "${this.name}":\n`, err.stack);
-        return undefined;
+        throw new Error(`Failed to execute "${this.nodeType}" at node "${this.name}":\n` + err.stack);
       }
     };
   }

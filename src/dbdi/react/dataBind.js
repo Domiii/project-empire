@@ -58,16 +58,16 @@ export default (propsOrPropCb) => _WrappedComponent => {
 
     /**
      * Provides read and write executer functions, as well as special functions as defined in
-     * below _buildActionProxy.
+     * below _buildFunctionProxy.
      */
-    _actionProxy;
+    _functionProxy;
 
     // more data injection stuff
     _customContext;
     _customProps = {};
     _customFunctions = {};
 
-    // bookkeeping (currently mostly unused)
+    // bookkeeping ((currently) mostly unused)
     _isMounted;
     _shouldUpdate;
 
@@ -86,10 +86,10 @@ export default (propsOrPropCb) => _WrappedComponent => {
       // prepare all the stuff
       this._buildCustomFunctions();
       this._buildDataInjectionProxy();
-      this._buildActionProxy();
+      this._buildFunctionProxy();
 
       // finally, engulf the new component with our custom arguments
-      this._renderArguments = [this._dataInjectProxy, this._actionProxy];
+      this._renderArguments = [this._dataInjectProxy, this._functionProxy];
 
       this.WrappedComponent = injectRenderArgs(_WrappedComponent,
         this._renderArguments);
@@ -158,10 +158,10 @@ export default (propsOrPropCb) => _WrappedComponent => {
     /**
      * Build the proxy to inject actions + selections
      */
-    _buildActionProxy() {
-      this._actionProxy = new Proxy({}, {
+    _buildFunctionProxy() {
+      this._functionProxy = new Proxy({}, {
         get: (target, name) => {
-     
+
           // 1) check custom actions
           const customFunction = this._customFunctions[name];
           if (customFunction) {
@@ -196,11 +196,11 @@ export default (propsOrPropCb) => _WrappedComponent => {
       // inject proxies as first arguments
       return partial(f, ...this._renderArguments);
     }
-    
+
     _wrapCustomFunctionsAndData = flow(
       fpToPairs,
-      fpGroupBy(item => isFunction(item[1]) ? 'functions' : 'data' ),
-      fpMapValues(items => 
+      fpGroupBy(item => isFunction(item[1]) ? 'functions' : 'data'),
+      fpMapValues(items =>
         fpZipObject(fpMap(item => item[0])(items))(fpMap(item => item[1])(items))
       ),
       (items) => ({
@@ -211,7 +211,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
 
     _prepareInjectedProps() {
       if (propsOrPropCb) {
-        // prepare _moreProps object
+        // prepare _customProps object
         let props = propsOrPropCb;
         if (isFunction(propsOrPropCb)) {
           props = propsOrPropCb(...this._renderArguments);
@@ -301,7 +301,12 @@ export default (propsOrPropCb) => _WrappedComponent => {
     render() {
       this._shouldUpdate = false;
       const { WrappedComponent } = this;
-      return (<WrappedComponent {...this.props} {...this._moreProps} />);
+      return (<WrappedComponent
+        {...this.props}
+        {...this._customProps}
+        readers={this._dataAccessTracker._readerProxy}
+        writers={this._dataAccessTracker._writerProxy}
+      />);
     }
   }
 

@@ -43,13 +43,13 @@ export default class DataReadDescriptor extends DataDescriptorNode {
   }
 
   _buildReadDataFromDescriptor(pathDescriptor) {
-    return (args, readByNameProxy, readersByName, callerNode, accessTracker) => {
+    return (args, dataInjectProxy, readerProxy, callerNode, accessTracker) => {
       // // TODO check if all dependencies are loaded?
       // if (!callerNode.areDependenciesLoaded(this)) {
       //   return null;
       // }
 
-      const pathOrPaths = pathDescriptor.getPath(args, readByNameProxy, readersByName, callerNode, accessTracker);
+      const pathOrPaths = pathDescriptor.getPath(args, dataInjectProxy, readerProxy, callerNode, accessTracker);
 
       if (pathOrPaths) {
         if (isArray(pathOrPaths)) {
@@ -103,14 +103,14 @@ export default class DataReadDescriptor extends DataDescriptorNode {
   /**
    * Check if data is loaded
    */
-  isDataLoaded(args, readByNameProxy, readersByName, callerNode, accessTracker) {
+  isDataLoaded(args, dataInjectProxy, readerProxy, callerNode, accessTracker) {
     // TODO: fix this!
 
     // 1) check if all dependencies are loaded
     // if (!this.areDependenciesLoaded(args)) {
     //   return false;
     // }
-    const data = this.readData(args, readByNameProxy, readersByName, callerNode, accessTracker);
+    const data = this.readData(args, dataInjectProxy, readerProxy, callerNode, accessTracker);
     return data !== undefined;
   }
 }

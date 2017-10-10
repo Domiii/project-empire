@@ -55,6 +55,10 @@ export default class DataSourceNode {
     return this._dataProvider;
   }
 
+  get pathDescriptor() {
+    return this._pathDescriptor;
+  }
+
   get readDescriptor() {
     return this._readDescriptor;
   }
@@ -71,11 +75,11 @@ export default class DataSourceNode {
     return !!this._writeDescriptor;
   }
 
-  isDataLoaded(args, injectProxy, readersProxy, accessTracker) {
-    return this.readData(args, injectProxy, readersProxy, accessTracker) !== undefined;
+  isDataLoaded(args, injectProxy, readerProxy, accessTracker) {
+    return this.readData(args, injectProxy, readerProxy, accessTracker) !== undefined;
   }
 
-  readData(args, injectProxy, readersProxy, accessTracker) {
+  readData(args, injectProxy, readerProxy, accessTracker) {
     args = args || EmptyObject;
     if (!this._readDescriptor) {
       throw new Error(`Tried to read data from "${this.fullName}", 
@@ -85,12 +89,12 @@ export default class DataSourceNode {
     return this._readDescriptor.readData(
       args,
       injectProxy,
-      readersProxy,
+      readerProxy,
       this,
       accessTracker);
   }
 
-  writeData(args, injectProxy, readersProxy, accessTracker) {
+  writeData(args, injectProxy, readerProxy, writerProxy, accessTracker) {
     args = args || EmptyObject;
     if (!this._writeDescriptor) {
       throw new Error(`Tried to write data to "${this.fullName}",
@@ -100,7 +104,8 @@ export default class DataSourceNode {
     return this._writeDescriptor.writeData(
       args,
       injectProxy,
-      readersProxy,
+      readerProxy,
+      writerProxy,
       this,
       accessTracker);
   }
@@ -119,12 +124,28 @@ export class AmbiguousSourceNode {
   // Public properties + methods
   // ################################################
 
+  get dataProvider() {
+    throw new Error('[ERROR] Tried to get dataProvider from ' + this);
+  }
+
+  get pathDescriptor() {
+    throw new Error('[ERROR] Tried to get pathDescriptor from ' + this);
+  }
+
+  get readDescriptor() {
+    throw new Error('[ERROR] Tried to get readDescriptor from ' + this);
+  }
+
+  get writeDescriptor() {
+    throw new Error('[ERROR] Tried to get writeDescriptor from ' + this);
+  }
+
   get isReader() {
-    return false;
+    throw new Error('[ERROR] Tried to call isReader on ' + this);
   }
 
   get isWriter() {
-    return false;
+    throw new Error('[ERROR] Tried to call isWriter on ' + this);
   }
 
   isDataLoaded() {

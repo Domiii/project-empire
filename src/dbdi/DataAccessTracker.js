@@ -13,8 +13,8 @@ export default class DataAccessTracker {
   _dataProviders = new Set();
 
   _injectProxy;
-  _readersProxy;
-  _writersProxy;
+  _readerProxy;
+  _writerProxy;
 
   _wrappedReaders = {};
   _wrappedWriters = {};
@@ -33,11 +33,12 @@ export default class DataAccessTracker {
   // ################################################
 
   _buildProxies() {
-    this._injectProxy = new Proxy({}, this._buildReadByNameHandler());
-    this._readersProxy = new Proxy({}, this._buildReadersByNameHandler());
+    this._injectProxy = new Proxy({}, this._buildDataInjectProxyHandler());
+    this._readerProxy = new Proxy({}, this._buildReaderProxyHandler());
+    this._writerProxy = new Proxy({}, this._buildWriterProxyHandler());
   }
 
-  _buildReadByNameHandler() {
+  _buildDataInjectProxyHandler() {
     return {
       get: (target, name) => {
         // resolve node and return read data
@@ -47,13 +48,22 @@ export default class DataAccessTracker {
     };
   }
 
-  _buildReadersByNameHandler() {
+  _buildReaderProxyHandler() {
     return {
       get: (target, name) => {
         // resolve node and return call function to caller.
         // let caller decide when to make the actual call and which arguments to supply.
-        const readData = this.resolveReadDataForce(name);
-        return readData;
+        return this.resolveReadDataForce(name);
+      }
+    };
+  }
+
+  _buildWriterProxyHandler() {
+    return {
+      get: (target, name) => {
+        // resolve node and return call function to caller.
+        // let caller decide when to make the actual call and which arguments to supply.
+        return this.resolveWriteDataForce(name);
       }
     };
   }
@@ -81,7 +91,7 @@ export default class DataAccessTracker {
       else {
         moreInfo = args;
       }
-      throw new Error(`Invalid arguments for data node "${node.fullName}"\n→ expected plain object but found: ` + 
+      throw new Error(`Invalid arguments for data node "${node.fullName}"\n→ expected plain object but found: ` +
         moreInfo + ' ←\n');
     }
     args = args || EmptyObject;
@@ -90,14 +100,14 @@ export default class DataAccessTracker {
 
   _wrapReadData(node) {
     const wrappedReadData = (args) => {
-      return node.readData(this._wrapArgs(args, node), this._injectProxy, this._readersProxy, this);
+      return node.readData(this._wrapArgs(args, node), this._injectProxy, this._readerProxy, this);
     };
 
     wrappedReadData.isLoaded = (args) => {
-      return node.isDataLoaded(this._wrapArgs(args, node), this._injectProxy, this._readersProxy, this);
+      return node.isDataLoaded(this._wrapArgs(args, node), this._injectProxy, this._readerProxy, this);
     };
 
-    return wrappedReadData;
+    return this._decorateWrapper(wrappedReadData, node);
   }
 
   _wrapWriteData(node) {
@@ -106,11 +116,25 @@ export default class DataAccessTracker {
     console.assert(paramConfig);
     const { processArguments } = paramConfig;
 
-    return (...writeArgs) => {
+    const wrappedWriteData = (...writeArgs) => {
       const allArgs = processArguments(node, writeArgs);
       allArgs.queryArgs = this._wrapArgs(allArgs.queryArgs, node);
-      return node.writeData(allArgs, this._injectProxy, this._readersProxy, this);
+      return node.writeData(allArgs, this._injectProxy, this._readerProxy, this._writerProxy, this);
     };
+
+    return this._decorateWrapper(wrappedWriteData, node);
+  }
+
+  _decorateWrapper(wrapper, node) {
+    const { pathDescriptor } = node.pathDescriptor;
+    if (pathDescriptor) {
+      wrapper.getPath = () => { return undefined; };
+    }
+    else {
+      wrapper.getPath = (args) => {
+        return pathDescriptor.getPath(args, this._injectProxy, this._readerProxy, this);
+      };
+    }
   }
 
   // ################################################

@@ -156,6 +156,21 @@ export class DataStructureConfigNode {
     };
   }
 
+  _checkSpecializedChildrenStructure(children, otherChildren, childrenName) {
+    // want a plain object
+    console.assert(isPlainObject(otherChildren), 
+      `invalid "${childrenName}" node is not plain object in DataStructureConfigNode: ` + this.name);
+
+    // check for naming conflict
+    const readerNames = Object.keys(otherChildren);
+    const childNames = Object.keys(this.children);
+    const overlap = intersection(readerNames, childNames);
+    if (!isEmpty(overlap)) {
+      throw new Error(`invalid "${childrenName}" definitions have name conflict with ` +
+        `"children" in DataStructureConfigNode "${this.name}": ${overlap.join(', ')} exist in both`);
+    }
+  }
+
   _parseReader(cfg) {
     if (cfg.read || cfg.reader) {
       // a custom reader for this node
@@ -168,16 +183,8 @@ export class DataStructureConfigNode {
       // multiple readers that are actually children of this node
       const { readers } = cfg;
 
-      // readers 
-      console.assert(isPlainObject(readers), 
-        'invalid "readers" node is not (but must be) "plain object" in DataStructureConfig node: ' + this.name);
-
-      const readerNames = Object.keys(readers);
-      const childNames = Object.keys(this.children);
-      const overlap = intersection(readerNames, childNames);
-      console.assert(isEmpty(overlap),
-        'invalid "readers" definitions have name conflict with "children" in DataStructureConfig node: ' + 
-        this.name, ' - ', overlap.join(', '));
+      // check for name conflict between "readers" and "children"
+      this._checkSpecializedChildrenStructure(this.children, readers, 'readers');
 
       // add reader-only children
       const readerNodes = mapValues(readers, (reader, name) =>
@@ -198,10 +205,16 @@ export class DataStructureConfigNode {
   _parseWriters(cfg) {
     if (cfg.writers) {
       // multiple writers that are actually children of this node
-      console.assert(isPlainObject(cfg.writers), 'invalid "writers" node is not plain object in: ' + this.name);
+      const { writers } = cfg;
 
-      // TODO: fix this after "readers" work
-      console.error('NIY: "writers" in DataStructureConfigNode');
+      // check for name conflict between "readers" and "children"
+      this._checkSpecializedChildrenStructure(this.children, writers, 'readers');
+
+      // add writer-only children
+      const newNodes = mapValues(writers, (writer, name) =>
+        new DataStructureConfigNode(name, this.parent, { writer })
+      );
+      Object.assign(this.children, newNodes);
     }
   }
 

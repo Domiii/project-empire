@@ -1,16 +1,13 @@
 import DBStatusRef from 'src/core/DBStatusRef';
-import { UserInfoRef } from 'src/core/users';
-import { createSelector } from 'reselect';
 
 import isEqual from 'lodash/isEqual';
 
-import React, { Component, PropTypes } from 'react';
-import { connect } from 'react-redux';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
-import { 
-  firebaseConnect,
-  getFirebase
-} from 'react-redux-firebase';
+
+import dataBind from 'src/dbdi/react/dataBind';
+
 import Header from './components/header';
 import { FAIcon } from 'src/views/components/util';
 import { lookupLocalized } from 'src/util/localizeUtil';
@@ -19,37 +16,7 @@ import { Overlay, LoadOverlay } from 'src/views/components/overlays';
 
 
 
-@firebaseConnect((props, firebase) => {
-  const paths = [
-    DBStatusRef.makeQuery()
-  ];
-  
-  const uid = getFirebase().auth().currentUser && getFirebase().auth().currentUser.uid;
-  if (uid) {
-    UserInfoRef.user.addQuery(paths, {uid});
-  }
-  //paths.push(UserInfoRef.makeQuery());
-  return paths;
-})
-@connect(({ firebase }, ownProps) => {
-  const auth = firebase.auth;
-  //const dBStatusRef = DBStatusRef(firebase);
-
-  const props = {
-    //dBStatusRef,
-    //clientVersion: dBStatusRef.version()
-  };
-
-  if (auth && auth.uid) {
-    // TODO: Move this to componentWillMount
-    //    see: https://firebase.google.com/docs/reference/node/firebase.auth.Auth#onAuthStateChanged
-    props.currentUserRef = UserInfoRef.user(firebase, {auth, uid: auth.uid});
-  }
-
-  //console.log(UserInfoRef(firebase).val);
-
-  return props;
-})
+@dataBind()
 export class App extends Component {
   static contextTypes = {
     router: PropTypes.object.isRequired
@@ -64,13 +31,11 @@ export class App extends Component {
   };
 
   static childContextTypes = {
-    currentUserRef: PropTypes.object,
     lookupLocalized: PropTypes.func
   };
 
   getChildContext() {
     return {
-      currentUserRef: this.props.currentUserRef,
       lookupLocalized: this.lookupLocalized
     };
   }
@@ -86,12 +51,10 @@ export class App extends Component {
   //   const { router } = this.context;
   // }
 
-  componentWillReceiveProps(nextProps) {
-    const { currentUserRef } = nextProps;
+  componentWillReceiveProps() {
+    const { ensureUserInitialized } = this.writers;
 
-    if (!!currentUserRef) {
-      currentUserRef.ensureUserInitialized();
-    }
+    ensureUserInitialized();
         
     // TODO: log new visit
     // TODO: add hook to browserhistory
@@ -134,7 +97,6 @@ export class App extends Component {
     return (
       <div className="app container full-height">
         <Header
-          currentUser={currentUserRef && currentUserRef.val}
           signOut={this.signOut}
         />
 

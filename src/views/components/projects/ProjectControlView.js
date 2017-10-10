@@ -1,18 +1,10 @@
 import Roles from 'src/core/users/Roles';
 
-import ProjectDataConfig from 'src/core/projects/ProjectDataConfig';
-import UserDataConfig from 'src/core/users/UserDataConfig';
-
 import {
   ProjectStageTree,
   StageStatus,
   ContributorGroupNames
 } from 'src/core/projects/ProjectDef';
-
-import FirebaseDataProvider, {
-  FirebaseAuthProvider
-} from 'src/dbdi/firebase/FirebaseDataProvider';
-
 
 import autoBind from 'src/util/auto-bind';
 import { EmptyObject, EmptyArray } from 'src/util';
@@ -24,7 +16,6 @@ import isEmpty from 'lodash/isEmpty';
 import sortBy from 'lodash/sortBy';
 import size from 'lodash/size';
 import times from 'lodash/times';
-import merge from 'lodash/merge';
 import pickBy from 'lodash/pickBy';
 
 import React, { Component, Children } from 'react';
@@ -38,7 +29,6 @@ import {
 import Form from 'react-jsonschema-form';
 
 import dataBind from 'src/dbdi/react/dataBind';
-import DataSourceProvider from 'src/dbdi/react/DataSourceProvider';
 
 import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/loading';
@@ -115,7 +105,7 @@ StageStatusIcon.propTypes = {
 const StageContributorIcon = dataBind()(
   ({ projectId, stageId, groupName, uid }, { userPublic, stageContributorStatus }) => {
 
-    const isStatusLoaded = stageContributorStatus.isLoaded({ projectId, stageId, uid });
+    const isStatusLoaded = !uid || stageContributorStatus.isLoaded({ projectId, stageId, uid });
     const isUserLoaded = !uid || userPublic.isLoaded({ projectId, stageId, uid });
     const status = stageContributorStatus({ projectId, stageId, uid }) || 0;
     const user = isUserLoaded && uid && userPublic({ uid });
@@ -172,13 +162,13 @@ const StageStatusBar = dataBind()(
 
         // first: all already known users
         const userEls = map(userList,
-          (user, uid) => (<Item key={uid} flex="none">{
-            (<StageContributorIcon
+          (user, uid) => (<Item key={uid} flex="none">
+            <StageContributorIcon
               projectId={projectId}
               stageId={stageId}
               uid={uid}
               groupName={groupName}
-            />)}
+            />
           </Item>)
         );
 
@@ -313,38 +303,6 @@ ProjectStagesView.propTypes = {
 // TODO: forms
 
 
-const dataProviders = {
-  firebase: new FirebaseDataProvider(),
-  firebaseAuth: new FirebaseAuthProvider()
-  //temp: new ...(),
-  //webCache: ...
-};
-
-const dataStructureConfig = {
-  auth: {
-    dataProvider: 'firebaseAuth',
-    children: {
-      currentUser: '',
-      currentUid: 'uid'
-    }
-  },
-  db: {
-    dataProvider: 'firebase',
-    children: merge({},
-      ProjectDataConfig,
-      UserDataConfig,
-      {
-        missions: {
-          path: 'missions',
-          children: {
-            mission: '$(missionId)'
-          }
-        }
-      }
-    )
-  }
-};
-
 
 const LoadedProjectControlView = dataBind()(
   ({ }, { }) => {
@@ -395,19 +353,4 @@ const ProjectControlList = dataBind()(
   }
 );
 
-// ##########################################################################
-// Wrap everything in DataSourceProvider, and go!
-// ##########################################################################
-
-const dataConfig = {
-  dataProviders,
-  dataStructureConfig
-};
-
-const WrappedView = ({ }) => (
-  <DataSourceProvider {...dataConfig}>
-    <ProjectControlList />
-  </DataSourceProvider>
-);
-
-export default WrappedView;
+export default ProjectControlList;

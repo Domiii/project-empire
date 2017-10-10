@@ -175,15 +175,8 @@ const UserInfoRef = makeRefWrapper({
           pushPathTemplate: 'private',
 
           children: {
-            data: 'data',   // personal user data (we copy this from firebase auth on first use)
-
+            data: 'data' // personal user data (we copy this from firebase auth on first use)
             // TODO: Put this into a different path. Personal user settings don't belong with account data.
-            prefs: {    // some UI user preferences
-              pathTemplate: 'prefs',
-              children: {
-                
-              }
-            }
           }
         }
       }
