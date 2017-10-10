@@ -94,15 +94,18 @@
         "$uid" : {
           ".read": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))",
           
-          "prefs": {
-            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
-          },
           "updatedAt": {
             ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
           },
           "data": {
             ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
           }
+        }
+      },
+      "prefs": {
+        "$uid" : {
+          ".read": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))",
+          ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
         }
       }
     },
