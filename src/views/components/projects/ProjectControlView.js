@@ -1,5 +1,8 @@
 import Roles from 'src/core/users/Roles';
 
+import ProjectDataConfig from 'src/core/projects/ProjectDataConfig';
+import UserDataConfig from 'src/core/users/UserDataConfig';
+
 import {
   ProjectStageTree,
   StageStatus,
@@ -21,6 +24,7 @@ import isEmpty from 'lodash/isEmpty';
 import sortBy from 'lodash/sortBy';
 import size from 'lodash/size';
 import times from 'lodash/times';
+import merge from 'lodash/merge';
 import pickBy from 'lodash/pickBy';
 
 import React, { Component, Children } from 'react';
@@ -44,25 +48,14 @@ import UserIcon from 'src/views/components/users/UserIcon';
 
 
 
-// ####################################################
-// Getters + Enums
-// ####################################################
-
-function getStageStatus(stage) {
-  if (stage.noStatus) {
-    return StageStatus.None;
-  }
-  if (stage.stageDef.id === 'prepare') {
-    return StageStatus.Finished;
-  }
-  return StageStatus.None;
-  // TODO
-}
+// ###########################################################################
+// Enums
+// ###########################################################################
 
 
-// ####################################################
-// Renderers
-// ####################################################
+// ###########################################################################
+// Project-specific renderers
+// ###########################################################################
 
 
 const statusStyles = {
@@ -129,7 +122,7 @@ const StageContributorIcon = dataBind()(
 
     const statusIconEl = (
       !isStatusLoaded ?
-        <LoadIndicator /> :
+        <LoadIndicator className="project-contributor-status-icon" /> :
         <StageStatusIcon status={status} className="project-contributor-status-icon" />
     );
 
@@ -142,15 +135,16 @@ const StageContributorIcon = dataBind()(
         </FAIcon>
       );
     }
+    else if (!isUserLoaded) {
+      return (<LoadIndicator />);
+    }
     else {
       // user icon
       return (
-        !isUserLoaded ?
-          <LoadIndicator /> :
-          <div className={classes}>
-            <UserIcon user={user} />
-            {statusIconEl}
-          </div>
+        <div className={classes}>
+          <UserIcon size="1em" user={user} />
+          {statusIconEl}
+        </div>
       );
     }
   }
@@ -191,8 +185,9 @@ const StageStatusBar = dataBind()(
         // then: all missing users
         let unknownEls;
         if (signOffCount > 0 && signOffCount > userEls.length) {
-          unknownEls = times(signOffCount - userEls.length, () =>
+          unknownEls = times(signOffCount - userEls.length, (i) =>
             (<StageContributorIcon
+              key={i + userEls.length}
               projectId={projectId}
               stageId={stageId}
               uid={null}
@@ -216,17 +211,19 @@ StageStatusBar.propTypes = {
 
 
 
-// ####################################################
+// ###########################################################################
 // Project tree + stage logic
-// ####################################################
+// ###########################################################################
 
 const ProjectStageView = dataBind()(
-  ({ stageNode }, { }) => {
+  ({ stageNode, thisProjectId }, { getStageStatus }) => {
+    const projectId = thisProjectId;
     const stageDef = stageNode.stageDef;
+    const stageId = stageDef.id;
     const title = stageDef.title;
 
     const order = stageNode.order;
-    const status = getStageStatus(stageNode);
+    const status = projectId && getStageStatus({ projectId, stageId });
     const bsStyle = statusBsStyles[status];
 
     const header = (
@@ -256,14 +253,16 @@ ProjectStageView.propTypes = {
   stageNode: PropTypes.object.isRequired
 };
 
-function ProjectStageArrow({ previousNode }) {
-  const status = getStageStatus(previousNode);
-  const style = statusStyles[status];
-  return (<FAIcon name="arrow-down" size="4em" style={style} />);
-}
-ProjectStageArrow.propTypes = {
-  previousNode: PropTypes.object.isRequired
-};
+const ProjectStageArrow = dataBind()(
+  ({ previousNode, thisProjectId }, { getStageStatus }) => {
+    const projectId = thisProjectId;
+    const stageDef = previousNode.stageDef;
+    const stageId = stageDef.id;
+    const status = projectId && getStageStatus({ projectId, stageId });
+    const style = statusStyles[status];
+    return (<FAIcon name="arrow-down" size="4em" style={style} />);
+  }
+);
 
 const ProjectStagesView = dataBind()(
   ({ stageNode }, { }) => {
@@ -298,40 +297,9 @@ ProjectStagesView.propTypes = {
 };
 
 
-// ####################################################
+// ###########################################################################
 // ProjectControlView
-// ####################################################
-
-// const activePaths = {};
-
-// function addPath(newPath) {
-//   let node = get(activePaths, newPath);
-//   if (!node) {
-//     node = {};
-//     set(activePaths, newPath, node);
-//   }
-//   if (!node._paths) {
-//     node._count = 0;
-//   }
-//   ++node._count;
-// }
-
-// function removePath(oldPath) {
-//   const pathComponents = oldPath.split('/');
-//   let node = get(activePaths, oldPath);
-//   if (node !== null) {
-//     --node._count;
-//   }
-
-//   // remove all empty nodes along the path
-//   for (var i = pathComponents.length-1; i >= 0; --i) {
-//     const node = get(activePaths, pathComponents);
-//     if (node !== null) {
-//       // TODO
-//     }
-//     pathComponents.pop();
-//   }
-// }
+// ###########################################################################
 
 
 
@@ -352,46 +320,6 @@ const dataProviders = {
   //webCache: ...
 };
 
-const allStagesStatus = {
-  path: 'sprintStatus',
-  children: {
-    sprintStageStatus: {
-      path: '$(sprintStageId)',
-      children: {
-        stageName: 'name',
-        stageStatus: 'status',
-        stageStartTime: 'startTime',
-        stageFinishTime: 'finishTime'
-      }
-    }
-  }
-};
-
-const projectStageContributions = {
-  pathTemplate: 'contributions',
-  children: {
-    contribution: {
-      pathTemplate: '$(uid)',
-      children: {
-        stageContributorStatus: 'status',
-        stageContributorData: 'data'
-      }
-    }
-  }
-};
-
-const allProjectStageData = {
-  path: 'data',
-  children: {
-    projectStageData: {
-      path: '$(stageId)',
-      children: {
-        projectStageContributions
-      }
-    }
-  }
-};
-
 const dataStructureConfig = {
   auth: {
     dataProvider: 'firebaseAuth',
@@ -402,122 +330,18 @@ const dataStructureConfig = {
   },
   db: {
     dataProvider: 'firebase',
-    children: {
-      uidsOfProject: '/_index/projectUsers/project/$(projectId)',
-      projectIdsOfUser: '/_index/projectUsers/user/$(uid)',
-      users: {
-        path: '/users/public',
-        children: {
-          gms: {
-            path: {
-              queryParams: [['orderByChild', 'role'], ['startAt', Roles.GM]]
-            }
-          },
-          userPublic: {
-            path: '$(uid)'
-            // ...
+    children: merge({},
+      ProjectDataConfig,
+      UserDataConfig,
+      {
+        missions: {
+          path: 'missions',
+          children: {
+            mission: '$(missionId)'
           }
-        }
-      },
-      allProjectData: {
-        path: '/projects',
-        readers: {
-          projectsOfUser({ uid }, { }, { projectIdsOfUser, project }) {
-            return mapValues(
-              projectIdsOfUser({ uid }) || EmptyObject,
-              (_, projectId) => project({ projectId })
-            );
-          },
-
-          usersOfProject({ projectId }, { }, { uidsOfProject, userPublic }) {
-            return mapValues(
-              uidsOfProject({ projectId }) || EmptyObject,
-              (_, uid) => userPublic({ uid })
-            );
-          },
-
-          projectReviewers({ projectId }, { }, { project, userPublic }) {
-            // single reviewer as "list" or "object" of reviewers
-            const proj = project({ projectId });
-            const uid = proj && proj.guardianUid;
-            const reviewer = uid && userPublic({ uid });
-            return reviewer && { [uid]: reviewer } || null;
-          },
-
-          stageContributions({ projectId, stageId }, { }, { projectStage }) {
-            const stage = projectStage({ projectId, stageId });
-            return stage && stage.contributions;
-          },
-
-          stageContributors({ projectId, stageId }, { }, { stageContributorUserList }) {
-            const node = stageId && ProjectStageTree.getNode(stageId);
-
-            if (node && node.stageDef.contributors) {
-              // get userList for each contributor group
-              const contributorDefinitions = map(node.stageDef.contributors, contributorSet => {
-                const { groupName } = contributorSet;
-                const userList = stageContributorUserList({ projectId, groupName });
-                return Object.assign({}, contributorSet, { userList });
-              });
-
-              // sort
-              return sortBy(contributorDefinitions, ['groupName']);
-            }
-            return null;
-          },
-
-          stageContributorUserList(
-            { projectId, groupName },
-            { },
-            { usersOfProject, projectReviewers, gms }
-          ) {
-            // TODO: mix this with stage contribution data!
-            switch (groupName) {
-              case 'gm':
-                return gms();
-              case 'party':
-                return usersOfProject({ projectId });
-              case 'reviewer':
-                return projectReviewers({ projectId });
-              default:
-                console.error('invalid groupName in stage definition: ' + groupName);
-                return EmptyObject;
-            }
-          }
-        },
-        children: {
-          projects: {
-            path: 'list',
-            children: {
-              project: {
-                path: '$(projectId)',
-                children: {
-
-                }
-              }
-            }
-          },
-          allProjectStages: {
-            path: 'stages',
-            children: {
-              projectStages: {
-                path: '$(projectId)',
-                children: {
-                  allStagesStatus,
-                  allProjectStageData
-                }
-              }
-            }
-          },
-        }
-      },
-      missions: {
-        path: '/missions',
-        children: {
-          mission: '$(missionId)'
         }
       }
-    }
+    )
   }
 };
 
@@ -534,15 +358,17 @@ const LoadedProjectControlView = dataBind()(
 
 const ProjectControlView = dataBind()(
   ({ projectId }, { project }) => {
-    const thisProject = projectId && project({ projectId });
+    if (!project.isLoaded({ projectId })) {
+      return (<LoadIndicator block />);
+    }
+
+    const thisProject = project({ projectId });
     const newContext = {
       thisProjectId: projectId,
       thisProject
     };
 
-    return thisProject &&
-      (<LoadedProjectControlView setContext={newContext} />) ||
-      (<LoadIndicator block />);
+    return <LoadedProjectControlView setContext={newContext} />;
   }
 );
 

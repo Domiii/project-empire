@@ -148,7 +148,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
           // }
 
           if (this._isMounted) {
-            console.error(`Invalid request for data: Component requested "${name}" but it does not exist.`);
+            console.error(`DI failed: Component requested data "${name}" but it does not exist.`);
           }
           return undefined;
         }
@@ -181,7 +181,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
           }
 
           if (this._isMounted) {
-            console.error(`Invalid request for function: Component requested "${name}" but it does not exist.`);
+            console.error(`DI failed: Component requested function "${name}" but it does not exist.`);
           }
           return null;
         }

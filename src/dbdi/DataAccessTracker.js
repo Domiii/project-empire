@@ -1,5 +1,6 @@
 import { writeParameterConfig } from 'src/dbdi/DataWriteDescriptor';
 
+import isObject from 'lodash/isObject';
 import isPlainObject from 'lodash/isPlainObject';
 
 import autoBind from 'src/util/auto-bind';
@@ -40,7 +41,7 @@ export default class DataAccessTracker {
     return {
       get: (target, name) => {
         // resolve node and return read data
-        const readData = this.resolveReadData(name);
+        const readData = this.resolveReadDataForce(name);
         return readData && readData();
       }
     };
@@ -51,34 +52,49 @@ export default class DataAccessTracker {
       get: (target, name) => {
         // resolve node and return call function to caller.
         // let caller decide when to make the actual call and which arguments to supply.
-        const readData = this.resolveReadData(name);
+        const readData = this.resolveReadDataForce(name);
         return readData;
       }
     };
   }
 
-  _wrapArgs(args) {
+  _resolveArgumentHandler = {
+    get: (target, name) => {
+      if (target[name] === undefined) {
+        console.warn(`Requested argument was not supplied: ${name}`);
+      }
+      return target[name];
+    }
+  };
+
+  _wrapArgs(args, node) {
     if (args !== undefined && args !== null && !isPlainObject(args)) {
-      throw new Error('Invalid args - expected plain object but found: ' + JSON.stringify(args));
+      let moreInfo = '';
+      if (isObject(args)) {
+        if (args.constructor) {
+          moreInfo = 'object of type "' + args.constructor.name + '"';
+        }
+        else {
+          moreInfo = `<object of unknown type>\n → keys: ${Object.keys(args)}`;
+        }
+      }
+      else {
+        moreInfo = args;
+      }
+      throw new Error(`Invalid arguments for data node "${node.fullName}"\n→ expected plain object but found: ` + 
+        moreInfo + ' ←\n');
     }
     args = args || EmptyObject;
-    return new Proxy(args, { 
-      get: (target, name) => {
-        if (target[name] === undefined) {
-          console.warn(`Requested argument was not supplied: ${name}`);
-        }
-        return target[name];
-      }
-    });
+    return new Proxy(args, this._resolveArgumentHandler);
   }
 
   _wrapReadData(node) {
     const wrappedReadData = (args) => {
-      return node.readData(this._wrapArgs(args), this._injectProxy, this._readersProxy, this);
+      return node.readData(this._wrapArgs(args, node), this._injectProxy, this._readersProxy, this);
     };
 
     wrappedReadData.isLoaded = (args) => {
-      return node.isDataLoaded(this._wrapArgs(args), this._injectProxy, this._readersProxy, this);
+      return node.isDataLoaded(this._wrapArgs(args, node), this._injectProxy, this._readersProxy, this);
     };
 
     return wrappedReadData;
@@ -92,7 +108,7 @@ export default class DataAccessTracker {
 
     return (...writeArgs) => {
       const allArgs = processArguments(node, writeArgs);
-      allArgs.queryArgs = this._wrapArgs(allArgs.queryArgs);
+      allArgs.queryArgs = this._wrapArgs(allArgs.queryArgs, node);
       return node.writeData(allArgs, this._injectProxy, this._readersProxy, this);
     };
   }
@@ -103,7 +119,7 @@ export default class DataAccessTracker {
 
   resolveReadData(name) {
     if (!this._dataSourceTree.hasReader(name)) {
-      return null;
+      return undefined;
     }
 
     let readData = this._wrappedReaders[name];
@@ -115,9 +131,21 @@ export default class DataAccessTracker {
     return readData;
   }
 
+  /**
+   * Throws error when reader of name does not exist
+   */
+  resolveReadDataForce(name) {
+    const readData = this.resolveReadData(name);
+    if (!readData) {
+      throw new Error(`DI failed - reader does not exist: "${name}"`);
+    }
+    return readData;
+  }
+
   resolveWriteData(name) {
     if (!this._dataSourceTree.hasWriter(name)) {
-      return null;
+      //throw new Error(`DI failed - writer does not exist: "${name}"`);
+      return undefined;
     }
 
     let writeData = this._wrappedWriters[name];

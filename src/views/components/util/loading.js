@@ -12,8 +12,7 @@ export default class LoadIndicator extends PureComponent {
     size: PropTypes.oneOfType([
       PropTypes.number,
       PropTypes.string
-    ]),
-    style: PropTypes.object
+    ])
   };
 
   get DefaultMessage() {
@@ -25,21 +24,24 @@ export default class LoadIndicator extends PureComponent {
       message,
       block,
       size,
-      style
+      ...moreProps
      } = this.props;
 
     if (message === undefined) {
       message = this.DefaultMessage;
     }
-    const classNames = 'loading' + (block && ' loading-block' || '');
-    if (style || size) {
-      style = style || {};
+
+    const style = Object.assign({}, moreProps.style);
+    let clazz = moreProps.className || '';
+    clazz += ' loading' + (block && ' loading-block' || '');
+  
+    if (size) {
       if (isNumber(size)) {
         size = size + 'em';
       }
       style.fontSize = size;
     }
-    return (<span style={style} className={classNames}>
+    return (<span {...moreProps} style={style} className={clazz}>
       { message && (<span>{ message }&nbsp;</span>) || '' }
       <FAIcon name="cog" spinning />
     </span>);

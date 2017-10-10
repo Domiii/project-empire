@@ -36,6 +36,8 @@ export default class DataSourceProvider extends Component {
     } = props;
 
     const dataSourceTree = new DataSourceTree(dataProviders, dataStructureConfig);
+    // console.log(dataStructureConfig);
+    // console.log(dataSourceTree._root._readDescendants);
     this._dataSourceTree = dataSourceTree;
   }
 

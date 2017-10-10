@@ -67,7 +67,6 @@ const dataConfig = {
             item: {
               path: '$(itemId)',
               onWrite(queryArgs, val) {
-                debugger;
                 val && (val.updatedAt = firebase.database.ServerValue.TIMESTAMP);
               },
               children: {
@@ -224,6 +223,10 @@ const ItemEditor = dataBind({
     return delete_item({ itemId });
   }
 })(
+  /**
+   * The actual render function for ItemEditor
+   * (of course, also with DI)
+   */
   ({ itemId }, { onSubmit, doDelete, item }) => {
     const alreadyExists = !!itemId;
     const data = alreadyExists && item({ itemId }) || EmptyObject;
@@ -237,6 +240,7 @@ const ItemEditor = dataBind({
         onChange={itemLog('changed')}
         onError={itemLog('errors')}
         onSubmit={onSubmit} >
+        {/* the Form children are rendered at the bottom of the form */}
         <div>
           <button type="submit" className="btn btn-info">
             {alreadyExists ? 'Update' : 'Add new'}

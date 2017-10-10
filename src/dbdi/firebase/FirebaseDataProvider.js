@@ -206,7 +206,7 @@ export class FirebaseAuthProvider extends DataProviderBase {
       return undefined;
     }
 
-    return getDataIn(this.firebaseCache, query.localPath, undefined);
+    return getDataIn(this.firebaseAuthData, query.localPath, undefined);
   }
 }
 

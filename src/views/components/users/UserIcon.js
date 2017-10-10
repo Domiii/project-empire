@@ -1,3 +1,5 @@
+import isNumber from 'lodash/isNumber';
+
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -6,20 +8,24 @@ const UserIconSizes = {
 };
 
 export default function UserIcon({user, size, ...moreProps}) {
-  let style;
+  const style = Object.assign({}, moreProps.style);
   let clazz = moreProps.className || '';
-
   clazz += ' user-icon';
+  
   if (size) {
-    style = Object.assign({}, moreProps.style);
     if (UserIconSizes[size]) {
-      style.fontSize = UserIconSizes[size];
+      style.maxWidth = UserIconSizes[size];
+      style.maxHeight = UserIconSizes[size];
     }
     else {
-      style.fontSize = size;
+      if (isNumber(size)) {
+        size = size + 'em';
+      }
+      style.maxWidth = size;
+      style.maxHeight = size;
     }
   }
-  return (<img src={user.photoURL} className={clazz} style={style} {...moreProps} />);
+  return (<img {...moreProps} src={user.photoURL} className={clazz} style={style} />);
 }
 UserIcon.propTypes = {
   user: PropTypes.object.isRequired,
