@@ -202,7 +202,7 @@ const ItemEditor = dataBind({
   /**
    * DI-decorated action: create or update item
    */
-  onSubmit({ itemId }, { set_item, push_item }, { formData }) {
+  onSubmit({ itemId }, { set_item, push_item }, {}, { formData }) {
     // get rid of undefined fields, created by (weird) form editor
     formData = pickBy(formData, val => val !== undefined);
 
@@ -219,7 +219,7 @@ const ItemEditor = dataBind({
   /**
    * DI-decorated action: delete item
    */
-  doDelete({ itemId }, { delete_item }) {
+  doDelete({ itemId }, { delete_item }, {}) {
     return delete_item({ itemId });
   }
 })(

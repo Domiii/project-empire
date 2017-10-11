@@ -8,14 +8,15 @@ import zipObject from 'lodash/zipObject';
 import { EmptyObject, EmptyArray } from 'src/util';
 
 import UserInfoRef from 'src/core/users/UserInfoRef';
-import Roles from 'src/core/users/Roles';
+import Roles, { isAtLeastRole } from 'src/core/users/Roles';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import { firebaseConnect } from 'react-redux-firebase'
 
 import autoBind from 'react-autobind';
+
+import dataBind from 'src/dbdi/react/dataBind';
+
 import {
   Panel, Button, ListGroup, ListGroupItem, Alert, Badge
 } from 'react-bootstrap';
@@ -28,79 +29,61 @@ import UserIcon from 'src/views/components/users/UserIcon';
 
 
 const userListNames = [
-  'Projectr',
   'Guardian',
   'GM'
 ];
 
 // create + cache "changeRoleButtons" components
-function makeChangeRoleButtons(setRoleName) {
-  return zipObject(userListNames, 
-    map(userListNames, roleName => {
-      const header = `Make user ${roleName}?`;
-      const changeRole = uid => setRoleName(uid, roleName);
-
-      return ({user, uid}) => {
-        const arrowEl = Roles[roleName] < user.role ? 
-          (<span className="color-red"><FAIcon name="level-down" /></span>) :
-          (<span className="color-green"><FAIcon name="level-up" /></span>);
-        const btnEl = ({open}) => (<Button onClick={open} bsSize="small"
-              className="no-padding">
-            { roleName } { arrowEl }
-          </Button>);
-        return (<ConfirmModal
-          key={roleName}
-          header={header}
-          body={(<span>
-            { user.displayName }
-            { arrowEl }
-          </span>)}
-          ButtonCreator={btnEl}
-          onConfirm={changeRole}
-          confirmArgs={uid}
-        />);
-      };
-    }
-  ));
+function RoleChangeArrow({ role1, role2 }) {
+  return isAtLeastRole(role1, role2) ?
+    (<span className="color-green"><FAIcon name="level-up" /></span>) :
+    (<span className="color-red"><FAIcon name="level-down" /></span>);
 }
 
-@firebaseConnect((props, firebase) => {
-  const paths = [
-    UserInfoRef.userList.makeQuery()
-  ];
-  return paths;
-})
-@connect(({ firebase }, props) => {
-  const userListRef = UserInfoRef.userList(firebase);
-  return {
-    userListRef,
-    setRoleName: userListRef.setRoleName,
-    changeRoleButtons: makeChangeRoleButtons(userListRef.setRoleName)
-  };
+function ChangeRoleButton({ oldRoleName, newRole, open }) {
+  return (<Button onClick={open} bsSize="small" className="no-padding">
+    <RoleChangeArrow role1={oldRoleName} role2={newRole} /> {oldRoleName}
+  </Button>);
+}
+
+function makeChangeRoleButtons({ }, { setRoleName }) {
+  return zipObject(
+    userListNames,
+    map(userListNames, newRoleName => {
+      const changeRole = uid => setRoleName({ uid, role: newRoleName });
+
+      return ({ user, uid }) => (<ConfirmModal
+        key={newRoleName}
+        header={<span>Make user <RoleChangeArrow
+          role1={newRoleName} role2={user.role} /> {newRoleName}?</span>}
+        ButtonCreator={ChangeRoleButton}
+        onConfirm={changeRole}
+        confirmArgs={uid}
+
+        oldRoleName={user.role}
+        newRole={newRoleName}
+      >
+        <span>
+          Promote/demote {user.displayName} to <RoleChangeArrow
+            role1={newRoleName} role2={user.role} /> {newRoleName}?
+          </span>
+      </ConfirmModal>);
+    })
+  );
+}
+
+@dataBind({
+  changeRoleButtons: makeChangeRoleButtons
 })
 export default class RoleManager extends Component {
-  static contextTypes = {
-    currentUserRef: PropTypes.object
-  };
-
-  static propTypes = {
-    userListRef: PropTypes.object.isRequired,
-    setRoleName: PropTypes.func.isRequired
-  };
-
   constructor() {
     super();
 
     autoBind(this);
   }
 
-  get IsAdmin() {
-    const { currentUserRef } = this.context;
-    return currentUserRef && currentUserRef.isAdminDisplayMode() || false;
-  }
-
-  RenderUser({user, uid}) {
-    const otherRoles = userListNames.filter(name => Roles[name] !== (user.role || 1));
+  RenderUser({ user, uid }) {
+    const otherRoles = userListNames.filter(name => Roles[name] !== (user.role || 0));
     const ButtonComps = map(otherRoles, role => this.props.changeRoleButtons[role]);
     const buttonEls = (
       <span>
@@ -120,11 +103,7 @@ export default class RoleManager extends Component {
   }
 
   getUserLists() {
-    const { 
-      userListRef,
-    } = this.props;
-
-    const allUsers = userListRef.val || {};
+    const allUsers = this.props.fromReader.usersPublic;
     const allUids = Object.keys(allUsers);
     const sortedUids = sortBy(allUids, uid => allUsers[uid].role || 1);
     const userLists = map(userListNames, name => ({ name, role: Roles[name], list: {} }));
@@ -134,7 +113,7 @@ export default class RoleManager extends Component {
     for (let i = 0; i < sortedUids.length; ++i) {
       const uid = sortedUids[i];
       const user = allUsers[uid];
-      while (listI < userListNames.length-1 && user.role && user.role >= userLists[listI+1].role) {
+      while (listI < userListNames.length - 1 && user.role && user.role >= userLists[listI + 1].role) {
         ++listI;
       }
       userLists[listI].list[uid] = user;
@@ -142,39 +121,28 @@ export default class RoleManager extends Component {
     return userLists;
   }
 
-  roleListEls() {
-    const { 
-      userListRef,
-      setRoleName
-    } = this.props;
-
-    const userLists = this.getUserLists();
-
-    // render
-    return (
-      map(userLists, (userList) => {
-        const {
-          name,
-          list
-        } = userList;
-
-        return (<Panel key={name} header={name}> 
-          <UserList users={list} 
-              renderUser={this.RenderUser} />
-        </Panel>);
-      })
-    );
-  }
-
-  render() {
-    if (!this.IsAdmin) {
+  render({}, {}, isCurrentUserAdminDisplayMode) {
+    if (!isCurrentUserAdminDisplayMode) {
       return (
         <Alert bsStyle="warning">GM only</Alert>
       );
     }
 
+    const userLists = this.getUserLists();
+
     return (<div>
-      { this.roleListEls() }
+      {
+        map(userLists, (userList) => {
+          const {
+            name,
+            list
+          } = userList;
+
+          return (<Panel key={name} header={name}>
+            <UserList users={list} renderUser={this.RenderUser} />
+          </Panel>);
+        })
+      }
     </div>);
   }
 }

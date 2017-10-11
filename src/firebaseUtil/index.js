@@ -1,18 +1,17 @@
 import { getFirebase } from 'react-redux-firebase';
 
-// export function authenticate(provider) {
-//   return getFirebase().auth().signInWithRedirect(provider);
-// };
+export function signIn(provider) {
+  return getFirebase().auth().signInWithRedirect(provider);
+}
 
 // export function signInWithGithub() {
 //   return authenticate(new getFirebase().auth.GithubAuthProvider());
 // };
 
 
-// export function signInWithGoogle() {
-//   return authenticate(new getFirebase().auth.GoogleAuthProvider());
-// };
-
+export function signInWithGoogle() {
+  return signIn(new getFirebase().auth.GoogleAuthProvider());
+}
 
 // export function signInWithTwitter() {
 //   return authenticate(new getFirebase().auth.TwitterAuthProvider());
@@ -20,7 +19,7 @@ import { getFirebase } from 'react-redux-firebase';
 
 export function isAuthenticated(firebaseApp) {
   return !!getFirebase().auth().currentUser;
-};
+}
 
 
 export {

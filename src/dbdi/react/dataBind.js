@@ -54,7 +54,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
      * When data is attempted to be read, its path is added as a dependency, 
      * and loading initialized if it has not initialized before.
      */
-    _dataInjectProxy;
+    _variableProxy;
 
     /**
      * Provides read and write executer functions, as well as special functions as defined in
@@ -85,11 +85,15 @@ export default (propsOrPropCb) => _WrappedComponent => {
 
       // prepare all the stuff
       this._buildCustomFunctions();
-      this._buildDataInjectionProxy();
+      this._buildVariableProxy();
       this._buildFunctionProxy();
 
       // finally, engulf the new component with our custom arguments
-      this._renderArguments = [this._dataInjectProxy, this._functionProxy];
+      this._renderArguments = [
+        this._variableProxy, 
+        this._functionProxy, 
+        this._dataAccessTracker._injectProxy
+      ];
 
       this.WrappedComponent = injectRenderArgs(_WrappedComponent,
         this._renderArguments);
@@ -114,10 +118,10 @@ export default (propsOrPropCb) => _WrappedComponent => {
     }
 
     /**
-     * Build the proxy to deliver direct data injection.
+     * Build the proxy to deliver props, context and custom data.
      */
-    _buildDataInjectionProxy() {
-      this._dataInjectProxy = new Proxy({}, {
+    _buildVariableProxy() {
+      this._variableProxy = new Proxy({}, {
         get: (target, name) => {
           // 1) check custom data
           if (this._customProps[name] !== undefined) {
@@ -193,7 +197,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
     }
 
     _wrapCustomFunctions(f) {
-      // inject proxies as first arguments
+      // inject proxies as initial arguments
       return partial(f, ...this._renderArguments);
     }
 
@@ -304,8 +308,10 @@ export default (propsOrPropCb) => _WrappedComponent => {
       return (<WrappedComponent
         {...this.props}
         {...this._customProps}
+        {...this._customFunctions}
         readers={this._dataAccessTracker._readerProxy}
         writers={this._dataAccessTracker._writerProxy}
+        fromReader={this._dataAccessTracker._injectProxy}
       />);
     }
   }

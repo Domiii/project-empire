@@ -10,6 +10,10 @@ import 'react-select/dist/react-select.css';
 // import our own main CSS
 import 'src/views/styles/styles.scss';
 
+// // import extra libraries
+// import 'moment/locale/en';
+// import 'moment/locale/zh-tw';
+
 // import JS
 // import 'bootstrap';   // bootstrap JS
 import React from 'react';

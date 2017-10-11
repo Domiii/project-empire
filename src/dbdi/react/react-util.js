@@ -31,8 +31,8 @@ export function injectRenderArgs(Comp, argsOrFunc) {
     throw new Error('Tried to decorate object that is neither pure function nor component: ' + Comp);
   }
 
-  function wrappedRender(origRender) {
-    return (...origArgs) => {
+  function renderWrapper(origRender) {
+    return function __wrappedRender(...origArgs) {
       const props = this && this.props || origArgs[0];
       const context = this && this.context || origArgs[1];
       const newArgs = isFunction(argsOrFunc) ? argsOrFunc(props, context) : argsOrFunc;
@@ -50,12 +50,12 @@ export function injectRenderArgs(Comp, argsOrFunc) {
   let ResultComp;
   if (isComponent) {
     // override render method
-    injectIntoClass(Comp, 'render', wrappedRender);
+    injectIntoClass(Comp, 'render', renderWrapper);
     ResultComp = Comp;
   }
   else {
     // just wrap the function as-is
-    ResultComp = wrappedRender(Comp);
+    ResultComp = renderWrapper(Comp);
   }
 
   return ResultComp;

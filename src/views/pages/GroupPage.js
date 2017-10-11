@@ -2,9 +2,7 @@ import GroupsRef, { UserGroupRef } from 'src/core/groups/GroupsRef';
 import UserInfoRef from 'src/core/users/UserInfoRef';
 
 import React, { Component } from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { firebaseConnect } from 'react-redux-firebase';
 import { 
   Alert, Button, Jumbotron, Well
 } from 'react-bootstrap';
@@ -18,7 +16,7 @@ import { LoadOverlay } from 'src/views/components/overlays';
 import GroupList from 'src/views/components/groups/GroupList';
 
 
-@firebaseConnect((props, firebase) => {
+@dataBind((props, firebase) => {
   const paths = [
     GroupsRef.makeQuery(),
     '/users/public'

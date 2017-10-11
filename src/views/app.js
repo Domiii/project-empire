@@ -1,3 +1,5 @@
+import firebase from 'firebase';
+
 import DBStatusRef from 'src/core/DBStatusRef';
 
 import isEqual from 'lodash/isEqual';
@@ -19,12 +21,10 @@ import { Overlay, LoadOverlay } from 'src/views/components/overlays';
 @dataBind()
 export class App extends Component {
   static contextTypes = {
-    router: PropTypes.object.isRequired
+    //router: PropTypes.object.isRequired
   };
 
   static propTypes = {
-    firebase: PropTypes.object.isRequired,
-    currentUserRef: PropTypes.object,
     //dBStatusRef: PropTypes.object.isRequired,
 
     children: PropTypes.object
@@ -51,8 +51,8 @@ export class App extends Component {
   //   const { router } = this.context;
   // }
 
-  componentWillReceiveProps() {
-    const { ensureUserInitialized } = this.writers;
+  componentWillUpdate() {
+    const { ensureUserInitialized } = this.prop.writers;
 
     ensureUserInitialized();
         
@@ -65,7 +65,7 @@ export class App extends Component {
 
   signOut() {
     try {
-      this.props.firebase.logout();
+      firebase.auth().signOut();
       setTimeout(() => window.location.reload());
     }
     catch (err) {
@@ -74,13 +74,14 @@ export class App extends Component {
   }
 
   lookupLocalized(obj, entry) {
-    const lang = this.props.currentUserRef && this.props.currentUserRef.locale() || 'en';
+    const { currentUser } = this.props.fromReader;
+    const lang = currentUser && currentUser.userLocale || 'en';
     return lookupLocalized(lang, obj, entry);
   }
 
   render() {
-    const { currentUserRef, children } = this.props;
-    const { router } = this.context;
+    const { children } = this.props;
+    //const { router } = this.context;
 
     //const notYetLoaded = !dBStatusRef.isLoaded;
 

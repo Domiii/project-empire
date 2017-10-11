@@ -15,8 +15,6 @@ import { EmptyObject, EmptyArray } from 'src/util';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import { firebaseConnect } from 'react-redux-firebase';
 import autoBind from 'react-autobind';
 
 import {
@@ -158,8 +156,7 @@ export class MeetingPrepUserDetails extends Component {
 //     meetingPrepPath
 //   ];
 // })
-@firebaseConnect(() => {})
-@connect(({ firebase }, { projectId, meetingId, meeting, uid }) => {
+@dataBind(({ firebase }, { projectId, meetingId, meeting, uid }) => {
   const meetingsRef = MeetingsRef(firebase);
 
   //console.log(Object.keys(firebase.data), firebase.data.meetings)

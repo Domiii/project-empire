@@ -10,7 +10,6 @@ import { EmptyObject, EmptyArray } from 'src/util';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { helpers, firebaseConnect } from 'react-redux-firebase';
 import { 
   Alert, Button, Jumbotron, Well, Panel, Badge
 } from 'react-bootstrap';
@@ -27,10 +26,6 @@ import ProjectControlView from 'src/views/components/projects/ProjectControlView
 //import { ProjectMeetingPanel } from 'src/views/components/projects/MeetingView';
 import { UserBadge } from 'src/views/components/users/UserList';
 
-const {
-  isLoaded
-} = helpers;
-
 
 const ProjectStatus = {
   None: 0,
@@ -43,78 +38,78 @@ const ProjectStatus = {
 // TODO: add "project prep" or "project first steps" to help the team hit the ground running
 
 
-@connect(({ firebase }, props) => {
-  const auth = firebase.auth;
-  const currentUid = auth && auth.uid;
+// @connect(({ firebase }, props) => {
+//   const auth = firebase.auth;
+//   const currentUid = auth && auth.uid;
 
-  const userProjectRef = UserProjectRef(firebase);
+//   const userProjectRef = UserProjectRef(firebase);
 
-  const u2aIdx = userProjectRef.indexRefs.user.val;
-  let currentProjectId, missionsRef;
-  if (!!u2aIdx) {
-    const projectIds = u2aIdx[currentUid] && Object.keys(u2aIdx[currentUid]);
+//   const u2aIdx = userProjectRef.indexRefs.user.val;
+//   let currentProjectId, missionsRef;
+//   if (!!u2aIdx) {
+//     const projectIds = u2aIdx[currentUid] && Object.keys(u2aIdx[currentUid]);
 
-    currentProjectId = projectIds && projectIds[0] || null;
+//     currentProjectId = projectIds && projectIds[0] || null;
 
-    if (currentProjectId) {
-      // get ready for project-related data
-      missionsRef = MissionsRef(firebase);
-    }
-  }
+//     if (currentProjectId) {
+//       // get ready for project-related data
+//       missionsRef = MissionsRef(firebase);
+//     }
+//   }
 
-  const projectsRef = userProjectRef.refs.project;
-  const isReady = currentUid && userProjectRef.indexRefs.user.isLoaded;
+//   const projectsRef = userProjectRef.refs.project;
+//   const isReady = currentUid && userProjectRef.indexRefs.user.isLoaded;
 
-  return {
-    isReady: true
-    // currentUid,
-    // currentProjectId,
+//   return {
+//     isReady: true
+//     // currentUid,
+//     // currentProjectId,
     
-    // isReady,
+//     // isReady,
 
-    // users: userProjectRef.refs.user.val,
-    // projects: projectsRef.val,
+//     // users: userProjectRef.refs.user.val,
+//     // projects: projectsRef.val,
     
-    // missions: missionsRef && missionsRef.val,
+//     // missions: missionsRef && missionsRef.val,
     
-    // u2aIdx,
-    // a2uIdx: userProjectRef.indexRefs.project.val,
+//     // u2aIdx,
+//     // a2uIdx: userProjectRef.indexRefs.project.val,
 
-    // getUsersByProject: userProjectRef.get_user_by_project
-  };
-})
-@firebaseConnect((props, firebase) => {
-  // const {
-  //   currentUid,
-  //   currentProjectId,
-  //   projects
-  // } = props;
+//     // getUsersByProject: userProjectRef.get_user_by_project
+//   };
+// })
+// @firebaseConnect((props, firebase) => {
+//   // const {
+//   //   currentUid,
+//   //   currentProjectId,
+//   //   projects
+//   // } = props;
 
-  // if (!!currentUid) {
-  //   const paths = [
-  //     UserInfoRef.userList.makeQuery(),
-  //     ProjectsRef.makeQuery()
-  //   ];
+//   // if (!!currentUid) {
+//   //   const paths = [
+//   //     UserInfoRef.userList.makeQuery(),
+//   //     ProjectsRef.makeQuery()
+//   //   ];
 
-  //   const currentProject = projects && projects[currentProjectId];
-  //   if (!!currentProject) {
-  //     // get project-related data
-  //     paths.push(
-  //       MissionsRef.makeQuery(currentProject.missionId)
-  //     );
-  //   }
+//   //   const currentProject = projects && projects[currentProjectId];
+//   //   if (!!currentProject) {
+//   //     // get project-related data
+//   //     paths.push(
+//   //       MissionsRef.makeQuery(currentProject.missionId)
+//   //     );
+//   //   }
 
-  //   UserProjectRef.addIndexQueries(paths, {
-  //     user: [currentUid]
-  //   });
-  //   //console.log(paths, props.projects);
-  //   return paths;
-  // }
-  // else 
-  {
-    return EmptyArray;
-  }
-})
+//   //   UserProjectRef.addIndexQueries(paths, {
+//   //     user: [currentUid]
+//   //   });
+//   //   //console.log(paths, props.projects);
+//   //   return paths;
+//   // }
+//   // else 
+//   {
+//     return EmptyArray;
+//   }
+// })
 export default class MissionControlPage extends Component {
   static contextTypes = {
     currentUserRef: PropTypes.object.isRequired

@@ -5,7 +5,6 @@ import isFunction from 'lodash/isFunction';
 
 const Roles = {
   User: 1,
-  Projectr: 1,
   Reviewer: 2,
 
   Guardian: 5,
@@ -67,14 +66,18 @@ export function hasDisplayRole(a, b) {
   return getDisplayRole(a) >= getDisplayRole(b);
 }
 
+export function isAtLeastRole(a, b) {
+  return getRole(a) >= getRole(b);
+}
+
 export function isGM(roleObj) {
-  return getDisplayRole(roleObj) >= Role.GM;
+  return getDisplayRole(roleObj) >= Roles.GM;
 }
 
 export function isGuardian(roleObj) {
-  return getDisplayRole(roleObj) >= Role.Guardian;
+  return getDisplayRole(roleObj) >= Roles.Guardian;
 }
 
 export function isProjectr(roleObj) {
-  return getDisplayRole(roleObj) >= Role.Projectr;
+  return getDisplayRole(roleObj) >= Roles.Projectr;
 }

@@ -3,6 +3,9 @@ import Roles, { hasDisplayRole } from 'src/core/users/Roles';
 import React, { PropTypes, PureComponent } from 'react';
 import { connect } from 'redux';
 import autoBind from 'react-autobind';
+
+import dataBind from 'src/dbdi/react/dataBind';
+
 import { Link } from 'react-router';
 
 
@@ -16,10 +19,13 @@ import {
 import Loading from 'src/views/components/util/loading';
 import { FAIcon } from 'src/views/components/util';
 
+
+@dataBind({
+
+})
 export default class Header extends PureComponent {
   static contextTypes = {
-    router: PropTypes.object.isRequired,
-    currentUserRef: PropTypes.object
+    router: PropTypes.object.isRequired
   };
 
   static propTypes = {
@@ -32,10 +38,12 @@ export default class Header extends PureComponent {
     autoBind(this);
   }
 
-
   gotoProfile() {
+    const { currentUid } = this.props.fromReader;
     const { router } = this.context;
-    router.replace('/user');
+    if (currentUid) {
+      router.replace('/user/' + currentUid);
+    }
   }
 
   gotoSubmissions(evt) {
@@ -53,7 +61,7 @@ export default class Header extends PureComponent {
 
   switchToEn() {
     const { currentUserRef } = this.context;
-    currentUserRef.set_locale('en');
+    currentUserRef.set_userLocale('en');
   }
 
   switchToZh() {
@@ -66,19 +74,20 @@ export default class Header extends PureComponent {
     currentUserRef.setAdminDisplayMode(!currentUserRef.isAdminDisplayMode());
   }
 
-  render() {
+  render({ }, {}, 
+      {currentUid, currentUser, isCurrentUserAdmin, isCurrentUserAdminDisplayMode}) {
+
     //console.log('header');
-    const { router, currentUserRef } = this.context;
+    const { router } = this.context;
     const { signOut } = this.props;
 
-    const isAdminView = currentUserRef && currentUserRef.isAdminDisplayMode();
-    const isGuardian = hasDisplayRole(currentUserRef, Roles.Guardian);
-    const isLoading = !currentUserRef || !currentUserRef.isLoaded;
-    const userData = currentUserRef && currentUserRef.data();
-    const lang = currentUserRef && currentUserRef.locale() || 'en';
+    const isLoading = currentUser.isLoaded();
+    const isAdminView = isCurrentUserAdminDisplayMode() || false;
+    //const isGuardian = hasDisplayRole(currentUserRef, Roles.Guardian);
+    const lang = currentUser && currentUser.userLocale || 'en';
 
     // elements
-    const adminToolsEL = (!currentUserRef || !currentUserRef.isAdmin()) ? null : (
+    const adminToolsEL = isCurrentUserAdmin && (
       <NavItem className="header-right">
         <Button onClick={this.toggleAdminView} bsStyle={isAdminView && 'success' || 'danger'}
           className="header-gavel-button"
@@ -94,7 +103,7 @@ export default class Header extends PureComponent {
       userToolsEl = (<NavItem className="header-right"><Loading /></NavItem>);
     }
     else {
-      userToolsEl = !currentUserRef.val ? null : (
+      userToolsEl = !currentUser ? null : (
         <NavItem className="header-right">
           <ButtonGroup>
             <Button active={lang === 'en'} onClick={this.switchToEn} bsSize="small">
@@ -108,33 +117,35 @@ export default class Header extends PureComponent {
       );
     }
 
-    const profileEl = (userData && 
-      <MenuItem eventKey="user-drop-profile" onClick={this.gotoProfile}>
-        <span>
-          {
-            userData.photoURL &&
-            <img src={userData.photoURL} style={{width: '2em'}} /> ||
-            <FAIcon name="user" />
-          }
-          <span className="padding-half" />
-          {userData.displayName || userData.email}
-        </span>
+    const profileEl = (currentUser &&
+      <MenuItem eventKey="user-drop-profile">
+        <Link to={'/user/' + currentUid}>
+          <span>
+            {
+              currentUser.photoURL &&
+              <img src={currentUser.photoURL} style={{ width: '2em' }} /> ||
+              <FAIcon name="user" />
+            }
+            <span className="padding-half" />
+            {currentUser.displayName || '<unnamed user>'}
+          </span>
+        </Link>
       </MenuItem>
     );
 
-    let warningEl;
+    // let warningEl;
 
-    if (router.location.pathname === '/submissions') {
-      warningEl = (
-        <Alert bsStyle="danger">
-          This page suffers from data inconsistency when clicking buttons/links.
-          Open links in new window instead.
-        </Alert>
-      );
-    }
+    // if (router.location.pathname === '/submissions') {
+    //   warningEl = (
+    //     <Alert bsStyle="danger">
+    //       This page suffers from data inconsistency when clicking buttons/links.
+    //       Open links in new window instead.
+    //     </Alert>
+    //   );
+    // }
 
     return (<div>
-      { warningEl }
+      {/* {warningEl} */}
       <header className="header">
         <Navbar inverse collapseOnSelect className=" no-margin">
           <Navbar.Header>
@@ -151,25 +162,25 @@ export default class Header extends PureComponent {
               <LinkContainer to="/projects">
                 <NavItem eventKey={3}>All Projects</NavItem>
               </LinkContainer>
-              { isAdminView &&
-                <LinkContainer to='/gm'>
+              {isAdminView &&
+                <LinkContainer to="/gm">
                   <NavItem eventKey={4}>GM Tools</NavItem>
                 </LinkContainer>
               }
             </Nav>
             <Nav pullRight className="header-right-container">
-              { adminToolsEL }
-              { userToolsEl }
-              <NavDropdown eventKey="more-drop" 
+              {adminToolsEL}
+              {userToolsEl}
+              <NavDropdown eventKey="more-drop"
                 id="user-dropdown" title={<FAIcon name="bars" />}>
-                { profileEl }
-                { !!userData && <MenuItem divider /> }
-                <MenuItem eventKey="more-drop-sand" onClick={ this.gotoGit }>
+                {profileEl}
+                {!!currentUser && <MenuItem divider />}
+                <MenuItem eventKey="more-drop-sand" onClick={this.gotoGit}>
                   <FAIcon name="github" /> View Source Code
                 </MenuItem>
-                { !!userData && <MenuItem divider /> }
-                { !!userData && (
-                  <MenuItem eventKey="user-drop-logout" onClick={ signOut }>
+                {!!currentUser && <MenuItem divider />}
+                {!!currentUser && (
+                  <MenuItem eventKey="user-drop-logout" onClick={signOut}>
                     <FAIcon name="close" className="color-red" /> Sign Out
                   </MenuItem>)
                 }

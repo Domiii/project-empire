@@ -1,9 +1,10 @@
-import Roles from 'src/core/users/Roles';
+import Roles, {getRole} from 'src/core/users/Roles';
 
 export default {
   allUserRecords: {
     path: 'users',
     readers: {
+      
       isCurrentUserLoggedIn({ }, { currentUid }, { }) {
         return !!currentUid;
       },
@@ -30,7 +31,7 @@ export default {
        * Store new user data in database after first login
        */
       ensureUserInitialized({ }, { currentUser },
-        { userPublic, userPrivate, setUserData }, { }) {
+        { userPublic, userPrivate }, { setUserData }) {
         if (!currentUser || !currentUser.uid) return;
 
         const {
@@ -57,8 +58,7 @@ export default {
           // user logged in, but has no record of user data yet
           // -> get user data and add to userInfo DB
           // see: https://firebase.google.com/docs/reference/js/firebase.UserInfo
-          let userData = providerData && providerData.length &&
-            providerData[0];
+          let userData = providerData && providerData.length && providerData[0];
           if (!userData) {
             userData = {
               displayName: displayName || '<unknown user>',
@@ -70,29 +70,24 @@ export default {
         });
       },
 
-      setAdminDisplayMode(enabled) {
+      setAdminDisplayMode({ enabled }, { }, { }, set_displayRole) {
         return set_displayRole(enabled ? Roles.Admin : Roles.User);
       },
 
-      setUserData({ userData }, { }, { }, { }) {
+      setUserData(
+        { uid, userData }, { },
+        { userPrivateData },
+        { set_userPrivateData, set_userPhotoURL, set_displayName }) {
         console.log('Writing user data: ' + JSON.stringify(userData));
 
-        
-
-        // TODO: fix all this!
-
-
-
-
-        
         const updates = [];
 
-        if (!data()) {
-          updates.push(set_data(userData));
+        if (!userPrivateData({ uid })) {
+          updates.push(set_userPrivateData({ uid }, userData));
         }
 
         if (userData.photoURL) {
-          updates.push(set_photoURL(userData.photoURL));
+          updates.push(set_userPhotoURL(userData.photoURL));
         }
 
         if (userData.displayName) {
@@ -100,6 +95,25 @@ export default {
         }
 
         return Promise.all(updates);
+      },
+
+      setRoleName({uid, role}, {}, {}, {update_userPublic}) {
+        const roleNum = getRole(role);
+        if (!roleNum) {
+          throw new Error('invalid role: ' + role);
+        }
+
+        // make sure to set display role first.
+        // in case, you demote yourself, you still need your original role for this.
+        // return this.set_userDisplayRole(uid, roleNum).then(() =>
+        //   this.set_userRole(uid, roleNum)
+        // );
+        
+        const val = {
+          role: roleNum,
+          displayRole: roleNum
+        };
+        return update_userPublic({uid}, val);
       },
     },
 
@@ -121,6 +135,10 @@ export default {
       // public user information is shared
       usersPublic: {
         path: 'public',
+        readers: {
+          currentUser: ({ }, { currentUid }, { userPublic }) =>
+            userPublic({ uid: currentUid })
+        },
         children: {
           gms: {
             path: {
@@ -140,7 +158,7 @@ export default {
         }
       },
 
-      
+
       // some UI user preferences
       usersPrefs: {
         path: 'prefs',

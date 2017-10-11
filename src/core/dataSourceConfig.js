@@ -9,7 +9,7 @@ const dataStructureConfig = {
   auth: {
     dataProvider: 'firebaseAuth',
     children: {
-      currentUser: '',
+      currentUserAuthData: '',
       currentUid: 'uid'
     }
   },

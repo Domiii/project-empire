@@ -65,7 +65,12 @@ export default class ConfirmModal extends Component {
       header,
       body,
       children,
-      ButtonCreator
+      ButtonCreator,
+
+      onConfirm,
+      confirmArgs,
+
+      ...moreProps
     } = this.props;
 
     // actions
@@ -105,7 +110,7 @@ export default class ConfirmModal extends Component {
 
     return (
       <span>
-        { <ButtonCreator open={open} /> }
+        { <ButtonCreator open={open} {...moreProps} /> }
 
         { modalContents }
       </span>
