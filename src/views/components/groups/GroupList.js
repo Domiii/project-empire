@@ -5,8 +5,10 @@ import sortBy from 'lodash/sortBy';
 import GroupsRef, { UserGroupRef } from 'src/core/groups/GroupsRef';
 
 import React, { Component, PropTypes } from 'react';
-import { connect } from 'react-redux';
 import autoBind from 'react-autobind';
+
+import dataBind from 'src/dbdi/react/dataBind';
+
 import {
   Button, ListGroup, ListGroupItem, Alert
 } from 'react-bootstrap';
@@ -18,6 +20,9 @@ import GroupView from './GroupView';
 import GroupEditor from './GroupEditor';
 
 
+@dataBind({
+  
+})
 @connect(({ firebase }, props) => {
   const userGroupRef = UserGroupRef(firebase);
   const userRef = userGroupRef.refs.user;

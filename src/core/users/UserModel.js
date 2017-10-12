@@ -1,20 +1,32 @@
-import Roles, {getRole} from 'src/core/users/Roles';
+import Roles, { hasRole, hasDisplayRole } from 'src/core/users/Roles';
 
 export default {
   allUserRecords: {
     path: 'users',
+
+    // #######################################################################
+    // User readers
+    // #######################################################################
+
     readers: {
-      
       isCurrentUserLoggedIn({ }, { currentUid }, { }) {
         return !!currentUid;
       },
 
-      isCurrentUserAdmin({ }, { currentUserRole }, { }) {
-        return currentUserRole >= Roles.Admin;
+      isCurrentUserAdmin({ }, { hasCurrentUserRole }, { }) {
+        return hasCurrentUserRole(Roles.Admin);
       },
 
-      isCurrentUserAdminDisplayMode({ }, { isCurrentUserAdmin, currentUserDisplayRole }, { }) {
-        return isCurrentUserAdmin && currentUserDisplayRole >= Roles.Admin;
+      hasCurrentUserRole({ role }, { currentUserRole }, { }) {
+        return currentUserRole && hasRole(currentUserRole, role);
+      },
+
+      hasCurrentUserDisplayRole({ role }, { currentUserDisplayRole }, { }) {
+        return currentUserDisplayRole && hasDisplayRole(currentUserDisplayRole, role);
+      },
+
+      isCurrentUserAdminDisplayRole({ }, { currentUserDisplayRole }, { }) {
+        return currentUserDisplayRole && hasDisplayRole(currentUserDisplayRole, Roles.Admin);
       },
 
       currentUserRole({ }, { currentUser }, { }) {
@@ -25,6 +37,11 @@ export default {
         return currentUser && currentUser.displayRole;
       }
     },
+
+    
+    // #######################################################################
+    // User writers
+    // #######################################################################
 
     writers: {
       /**

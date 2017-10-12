@@ -58,7 +58,7 @@ const allProjectStageData = {
 };
 
 const readers = {
-  projectsOfUser({ uid }, { }, { projectIdsOfUser, project }) {
+  projectsOfUser({ uid }, { projectIdsOfUser, project }, { }) {
     return mapValues(
       projectIdsOfUser(
         { uid }) || EmptyObject,
@@ -67,7 +67,7 @@ const readers = {
     );
   },
 
-  usersOfProject({ projectId }, { }, { uidsOfProject, userPublic }) {
+  usersOfProject({ projectId }, { uidsOfProject, userPublic }, { }) {
     return mapValues(
       uidsOfProject(
         { projectId }) || EmptyObject,
@@ -76,7 +76,7 @@ const readers = {
     );
   },
 
-  projectReviewers({ projectId }, { }, { project, userPublic }) {
+  projectReviewers({ projectId }, { project, userPublic }, { }) {
     const proj = project({ projectId });
     const uid = proj && proj.guardianUid;
     const reviewer = uid && userPublic({ uid });
@@ -90,7 +90,7 @@ const readers = {
   // Stages
   // #########################################################################
 
-  getStageStatus({ projectId, stageId }, { }, { projectStageRecord }) {
+  getStageStatus({ projectId, stageId }, { projectStageRecord }, { }) {
     // TODO
     
     const node = ProjectStageTree.getNode(stageId);
@@ -106,12 +106,12 @@ const readers = {
   },
   
 
-  stageContributions({ projectId, stageId }, { }, { projectStageRecord }) {
+  stageContributions({ projectId, stageId }, { projectStageRecord }, { }) {
     const stage = projectStageRecord({ projectId, stageId });
     return stage && stage.contributions;
   },
 
-  stageContributors({ projectId, stageId }, { }, { stageContributorUserList }) {
+  stageContributors({ projectId, stageId }, { stageContributorUserList }, { }) {
     const node = stageId && ProjectStageTree.getNode(stageId);
 
     if (node && node.stageDef.contributors) {
@@ -130,8 +130,8 @@ const readers = {
 
   stageContributorUserList(
     { projectId, groupName },
-    { },
-    { usersOfProject, projectReviewers, gms }
+    { usersOfProject, projectReviewers, gms },
+    { }
   ) {
     // TODO: mix this with stage contribution data!
     switch (groupName) {
@@ -160,6 +160,10 @@ export default {
         children: {
           project: {
             path: '$(projectId)',
+            onWrite: [
+              'updatedAt',
+              'createdAt'
+            ],
             children: {
 
             }

@@ -4,6 +4,9 @@ import DataReadDescriptor from './DataReadDescriptor';
 import DataWriteDescriptor from './DataWriteDescriptor';
 import DataSourceNode, { AmbiguousSourceNode } from './DataSourceNode';
 
+import isArray from 'lodash/isArray';
+import isString from 'lodash/isString';
+import isFunction from 'lodash/isFunction';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
@@ -25,14 +28,17 @@ import { EmptyObject, EmptyArray } from 'src/util';
 export default class DataSourceTree {
   _dataProviders;
 
+  _plugins;
+
   /**
    * All DataSourceNodes
    */
   _root;
 
-  constructor(dataProviders, dataStructureCfgRaw) {
+  constructor(dataProviders, dataStructureCfgRaw, plugins) {
     this._dataProviders = dataProviders;
     this._dataStructureCfgRoot = parseConfig(dataStructureCfgRaw);
+    this._plugins = plugins;
 
     autoBind(this);
 
@@ -40,6 +46,79 @@ export default class DataSourceTree {
 
     this._compressHierarchy(this._root);
   }
+
+  // #########################################################################
+  // Public methods + properties
+  // #########################################################################
+
+  get root() {
+    return this._root;
+  }
+
+  getDataProvider(name) {
+    return this._dataProviders[name];
+  }
+
+  // isNameLoaded(sourceName, args) {
+  //   const node = this.resolveName(sourceName);
+  //   if (!node) {
+  //     throw new Error('invalid node name: ' + sourceName);
+  //   }
+  //   return !node.isDataLoaded(args);
+  // }
+
+  hasReader(name) {
+    return !!this._root._readDescendants[name];
+  }
+
+  hasWriter(name) {
+    return !!this._root._writeDescendants[name];
+  }
+
+  resolveReader(name) {
+    const node = this._root._readDescendants[name];
+    if (!node) {
+      console.error(`Requested reader "${name}" does not exist in DataSourceTree - ` +
+        '(' + Object.keys(this._root._readDescendants).join(', ') + ')');
+    }
+    return node;
+  }
+
+  resolveWriter(name) {
+    const node = this._root._writeDescendants[name];
+    if (!node) {
+      console.error(`Requested writer "${name}" does not exist in DataSourceTree - ` +
+        '(' + Object.keys(this._root._writeDescendants).join(', ') + ')');
+    }
+    return node;
+  }
+
+  getPlugins(type) {
+    return this._plugins[type];
+  }
+
+  getPlugin(type, cfg) {
+    if (isFunction(cfg)) {
+      return cfg;
+    } 
+    else if (isString(cfg)) {
+      const name = cfg;
+      const plugins = this.getPlugins(type);
+      const plugin = plugins && plugins[name];
+      if (!plugin) {
+        throw new Error(`Could not find plugin of type "${type}" and name "${name}"`);
+      }
+      return plugin; 
+    }
+    else {
+      throw new Error(`Invalid config entry of type "${type}" must be function or string: ` + 
+        cfg);
+    }
+  }
+
+  // #########################################################################
+  // Private methods + properties
+  // #########################################################################
 
   _buildNodeWithChildren(configNode, ...moreArgs) {
     const newDataNode = this._buildNode(configNode, ...moreArgs);
@@ -116,7 +195,23 @@ export default class DataSourceTree {
   }
 
   _buildMetaWriteCfg(configNode, actionName) {
-    const { onWrite } = configNode;
+    let { onWrite } = configNode;
+
+    if (isArray(onWrite)) {
+      // get final set of functions for each function
+      const fns = map(onWrite, cfg => this.getPlugin('onWrite', cfg));
+
+      // nest function calls
+      onWrite = (...args) => {
+        for (let i = 0; i < fns.length; ++i) {
+          fns[i](...args);
+        }
+      };
+    }
+    else {
+      onWrite = this.getPlugin('onWrite', onWrite);
+    }
+
     return {
       actionName,
       onWrite
@@ -209,51 +304,5 @@ export default class DataSourceTree {
 
     this._addImmediateDescendants(writeDescendants, node, childNode => childNode.isWriter);
     node._writeDescendants = writeDescendants;
-  }
-
-  // ################################################
-  // Public methods + properties
-  // ################################################
-
-  get root() {
-    return this._root;
-  }
-
-  getDataProvider(name) {
-    return this._dataProviders[name];
-  }
-
-  // isNameLoaded(sourceName, args) {
-  //   const node = this.resolveName(sourceName);
-  //   if (!node) {
-  //     throw new Error('invalid node name: ' + sourceName);
-  //   }
-  //   return !node.isDataLoaded(args);
-  // }
-
-  hasReader(name) {
-    return !!this._root._readDescendants[name];
-  }
-
-  hasWriter(name) {
-    return !!this._root._writeDescendants[name];
-  }
-
-  resolveReader(name) {
-    const node = this._root._readDescendants[name];
-    if (!node) {
-      console.error(`Requested reader "${name}" does not exist in DataSourceTree - ` +
-        '(' + Object.keys(this._root._readDescendants).join(', ') + ')');
-    }
-    return node;
-  }
-
-  resolveWriter(name) {
-    const node = this._root._writeDescendants[name];
-    if (!node) {
-      console.error(`Requested writer "${name}" does not exist in DataSourceTree - ` +
-        '(' + Object.keys(this._root._writeDescendants).join(', ') + ')');
-    }
-    return node;
   }
 }

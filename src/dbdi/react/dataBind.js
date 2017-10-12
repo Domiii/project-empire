@@ -1,6 +1,6 @@
 import DataAccessTracker from '../DataAccessTracker';
 
-import partial from 'lodash/partial';
+import partialRight from 'lodash/partialRight';
 import mapValues from 'lodash/mapValues';
 import merge from 'lodash/merge';
 import isFunction from 'lodash/isFunction';
@@ -198,7 +198,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
 
     _wrapCustomFunctions(f) {
       // inject proxies as initial arguments
-      return partial(f, ...this._renderArguments);
+      return partialRight(f, ...this._renderArguments);
     }
 
     _wrapCustomFunctionsAndData = flow(
@@ -290,7 +290,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
     componentWillUnmount() {
       this._dataAccessTracker.unmount();
 
-      this._customChildContext = {};   // reset context
+      this._customChildContext = {}; // reset context
       this._shouldUpdate = true;
       this._isMounted = false;
     }
@@ -305,6 +305,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
     render() {
       this._shouldUpdate = false;
       const { WrappedComponent } = this;
+      
       return (<WrappedComponent
         {...this.props}
         {...this._customProps}

@@ -73,18 +73,20 @@ function makeChangeRoleButtons({ }, { setRoleName }) {
 }
 
 @dataBind({
-  changeRoleButtons: makeChangeRoleButtons
+  makeChangeRoleButtons
 })
 export default class RoleManager extends Component {
-  constructor() {
+  constructor(props) {
     super();
 
+    this.changeRoleButtons = props.makeChangeRoleButtons();
+    
     autoBind(this);
   }
 
   RenderUser({ user, uid }) {
     const otherRoles = userListNames.filter(name => Roles[name] !== (user.role || 0));
-    const ButtonComps = map(otherRoles, role => this.props.changeRoleButtons[role]);
+    const ButtonComps = map(otherRoles, role => this.changeRoleButtons[role]);
     const buttonEls = (
       <span>
         {map(ButtonComps, (Btn, i) => (
@@ -121,8 +123,8 @@ export default class RoleManager extends Component {
     return userLists;
   }
 
-  render({}, {}, isCurrentUserAdminDisplayMode) {
-    if (!isCurrentUserAdminDisplayMode) {
+  render({}, {}, { isCurrentUserAdminDisplayRole }) {
+    if (!isCurrentUserAdminDisplayRole) {
       return (
         <Alert bsStyle="warning">GM only</Alert>
       );

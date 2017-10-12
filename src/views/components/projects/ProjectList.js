@@ -1,23 +1,22 @@
 import ProjectsRef, { UserProjectRef } from 'src/core/projects/ProjectsRef';
 import MissionsRef from 'src/core/missions/MissionsRef';
-import { hasDisplayRole } from 'src/core/users/Roles';
+import Roles, { hasDisplayRole } from 'src/core/users/Roles';
 
 import isEmpty from 'lodash/isEmpty';
 import map from 'lodash/map';
 import sortBy from 'lodash/sortBy';
 
 import { EmptyObject, EmptyArray } from 'src/util';
-import { getFirebase } from 'react-redux-firebase';
 
 import React, { Component, PropTypes } from 'react';
-import { connect } from 'react-redux';
 import autoBind from 'react-autobind';
+
+import dataBind from 'src/dbdi/react/dataBind';
+
 import {
   Button, ListGroup, Alert
 } from 'react-bootstrap';
-
 import { Flex, Item } from 'react-flex';
-
 import Select from 'react-select';
 
 import { FAIcon } from 'src/views/components/util';
@@ -25,8 +24,8 @@ import { FAIcon } from 'src/views/components/util';
 import ProjectPreview from './ProjectPreview';
 import ProjectEditor from './ProjectEditor';
 
+/*
 
-@connect(({ firebase }, props) => {
   const userProjectRef = UserProjectRef(firebase);
   const userRef = userProjectRef.refs.user;
   const projectsRef = userProjectRef.refs.project;
@@ -56,27 +55,12 @@ import ProjectEditor from './ProjectEditor';
     addUserToProject: userProjectRef.addEntry,
     deleteUserFromProject: userProjectRef.deleteEntry
   };
+}
+*/
+
+@dataBind({
 })
 export default class ProjectList extends Component {
-  static contextTypes = {
-    currentUserRef: PropTypes.object
-  };
-
-  static propTypes = {
-    projects: PropTypes.object,
-    missions: PropTypes.object.isRequired,
-    users: PropTypes.object,
-
-    addProject: PropTypes.func.isRequired,
-    setProject: PropTypes.func.isRequired,
-    deleteProject: PropTypes.func.isRequired,
-
-    getUsersByProject: PropTypes.func.isRequired,
-    findUnassignedUsers: PropTypes.func.isRequired,
-    addUserToProject: PropTypes.func.isRequired,
-    deleteUserFromProject: PropTypes.func.isRequired
-  };
-
   constructor() {
     super();
 
@@ -85,16 +69,6 @@ export default class ProjectList extends Component {
     };
 
     autoBind(this);
-  }
-
-  get IsAdmin() {
-    const { currentUserRef } = this.context;
-    return currentUserRef && currentUserRef.isAdminDisplayMode() || false;
-  }
-
-  get IsGuardian() {
-    const { currentUserRef } = this.context;
-    return hasDisplayRole(currentUserRef, 'Guardian');
   }
 
   get IsAdding() {
@@ -112,17 +86,19 @@ export default class ProjectList extends Component {
   }
 
   addNewProject() {
-    const { currentUserRef } = this.context;
     const {
-      addProject
-    } = this.props;
+      currentUid
+    } = this.props.fromReader;
+    const {
+      push_project
+    } = this.props.writers;
 
     this.setState({ selectedMissionId: null });
     this.setAdding(false);
 
-    return addProject({
+    return push_project({
       missionId: this.state.selectedMissionId,
-      guardianUid: currentUserRef.props.uid
+      guardianUid: currentUid
     });
   }
 
@@ -153,9 +129,9 @@ export default class ProjectList extends Component {
   }
 
   makeEditorHeader() {
-    const { missions } = this.props;
+    const { missions, isGuardian } = this.props;
 
-    return !this.IsGuardian ? null : (
+    return !isGuardian ? null : (
       <div>
         <Button active={this.IsAdding}
           bsStyle="success" bsSize="small"
@@ -189,10 +165,10 @@ export default class ProjectList extends Component {
     }
 
     const {
-        setProject,
+      setProject,
       addUserToProject,
       deleteUserFromProject
-      } = this.props;
+    } = this.props;
 
     return (<ProjectEditor {...{
       projectId,
@@ -263,18 +239,7 @@ export default class ProjectList extends Component {
 
   render() {
     const {
-      projects,
-
-      //userInfoRef,
-      //projectsRef,
-
-      setProject,
-      deleteProject,
-
-      getUsersByProject,
-
-      addUserToProject,
-      deleteUserFromProject
+      projects
     } = this.props;
 
 

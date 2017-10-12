@@ -75,14 +75,14 @@ export default class Header extends PureComponent {
   }
 
   render({ }, {}, 
-      {currentUid, currentUser, isCurrentUserAdmin, isCurrentUserAdminDisplayMode}) {
+      {currentUid, currentUser, isCurrentUserAdmin, isCurrentUserAdminDisplayRole}) {
 
     //console.log('header');
     const { router } = this.context;
     const { signOut } = this.props;
 
     const isLoading = currentUser.isLoaded();
-    const isAdminView = isCurrentUserAdminDisplayMode() || false;
+    const isAdminView = isCurrentUserAdminDisplayRole() || false;
     //const isGuardian = hasDisplayRole(currentUserRef, Roles.Guardian);
     const lang = currentUser && currentUser.userLocale || 'en';
 

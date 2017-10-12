@@ -11,7 +11,6 @@ import LandingPage from './pages/LandingPage';
 import MissionControlPage from './pages/MissionControlPage';
 import GMPage from './pages/GMPage';
 import ProjectPage from './pages/ProjectPage';
-import GroupPage from './pages/GroupPage';
 import TestPage from './pages/TestPage';
 
 const requireAuth = getState => {
@@ -72,14 +71,6 @@ export const getRoutes = getState => {
         path: routeTemplates.PROJECTS,
         indexRoute: {
           component: ProjectPage,
-          onEnter: requireAuth(getState)
-        }
-      },
-      {
-        name: routeNames.GROUPS,
-        path: routeTemplates.GROUPS,
-        indexRoute: {
-          component: GroupPage,
           onEnter: requireAuth(getState)
         }
       },
