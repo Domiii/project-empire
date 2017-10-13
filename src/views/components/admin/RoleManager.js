@@ -28,7 +28,8 @@ import UserList from 'src/views/components/users/UserList';
 import UserIcon from 'src/views/components/users/UserIcon';
 
 
-const userListNames = [
+const RoleNames = [
+  'Adventurer',
   'Guardian',
   'GM'
 ];
@@ -46,10 +47,10 @@ function ChangeRoleButton({ oldRoleName, newRole, open }) {
   </Button>);
 }
 
-function makeChangeRoleButtons({ setRoleName }) {
+function makeChangeRoleButtons({}, { setRoleName }) {
   return zipObject(
-    userListNames,
-    map(userListNames, newRoleName => {
+    RoleNames,
+    map(RoleNames, newRoleName => {
       const changeRole = uid => setRoleName({ uid, role: newRoleName });
 
       return ({ user, uid }) => (<ConfirmModal
@@ -73,19 +74,41 @@ function makeChangeRoleButtons({ setRoleName }) {
 }
 
 @dataBind({
-  makeChangeRoleButtons
+  makeChangeRoleButtons,
+  
+  userLists({}, {}, { usersPublic }) {
+    const allUids = Object.keys(usersPublic);
+    const sortedUids = sortBy(allUids, uid => usersPublic[uid].role || 1);
+    const userLists = map(RoleNames, name => ({ name, role: Roles[name], list: {} }));
+
+    // sort users into userLists by role
+    let listI = 0;
+    for (let i = 0; i < sortedUids.length; ++i) {
+      const uid = sortedUids[i];
+      const user = usersPublic[uid];
+      while (listI < RoleNames.length - 1 && user.role && user.role >= userLists[listI + 1].role) {
+        ++listI;
+      }
+      userLists[listI].list[uid] = user;
+    }
+    return userLists;
+  }
 })
 export default class RoleManager extends Component {
   constructor(props) {
     super();
 
     this.changeRoleButtons = props.makeChangeRoleButtons();
+
+    this.dataBindMethods(
+      this.getUserList
+    );
     
     autoBind(this);
   }
 
   RenderUser({ user, uid }) {
-    const otherRoles = userListNames.filter(name => Roles[name] !== (user.role || 0));
+    const otherRoles = RoleNames.filter(name => Roles[name] !== (user.role || 0));
     const ButtonComps = map(otherRoles, role => this.changeRoleButtons[role]);
     const buttonEls = (
       <span>
@@ -97,40 +120,19 @@ export default class RoleManager extends Component {
 
     return (<Badge>
       <span className="user-tag">
-        <img src={user.photoURL} className="user-icon-tiny" /> &nbsp;
+        <UserIcon user={user} size="tiny" /> &nbsp;
         {user.displayName} &nbsp;
         {buttonEls}
       </span>
     </Badge>);
   }
 
-  getUserLists() {
-    const allUsers = this.props.dataInject.usersPublic;
-    const allUids = Object.keys(allUsers);
-    const sortedUids = sortBy(allUids, uid => allUsers[uid].role || 1);
-    const userLists = map(userListNames, name => ({ name, role: Roles[name], list: {} }));
-
-    // sort users into userLists by role
-    let listI = 0;
-    for (let i = 0; i < sortedUids.length; ++i) {
-      const uid = sortedUids[i];
-      const user = allUsers[uid];
-      while (listI < userListNames.length - 1 && user.role && user.role >= userLists[listI + 1].role) {
-        ++listI;
-      }
-      userLists[listI].list[uid] = user;
-    }
-    return userLists;
-  }
-
-  render({}, {}, { isCurrentUserAdminDisplayRole }) {
+  render({}, {}, { isCurrentUserAdminDisplayRole, userLists }) {
     if (!isCurrentUserAdminDisplayRole) {
       return (
         <Alert bsStyle="warning">GM only</Alert>
       );
     }
-
-    const userLists = this.getUserLists();
 
     return (<div>
       {

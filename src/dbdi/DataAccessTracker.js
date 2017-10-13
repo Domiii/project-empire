@@ -69,11 +69,15 @@ export default class DataAccessTracker {
   }
 
   _resolveArgumentHandler = {
-    get: (target, name) => {
+    get(target, name) {
       if (target[name] === undefined) {
         console.warn(`Requested argument was not supplied: ${name}`);
       }
       return target[name];
+    },
+
+    has(target, name) {
+      return target.hasOwnProperty(name);
     }
   };
 

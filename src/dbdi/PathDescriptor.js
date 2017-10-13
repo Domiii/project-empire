@@ -1,5 +1,6 @@
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
+import isFunction from 'lodash/isFunction';
 
 
 import autoBind from 'src/util/auto-bind';
@@ -77,17 +78,20 @@ export default class PathDescriptor extends DataDescriptorNode {
     };
   }
 
-  _buildGetPathFromTemplateString(pathTemplate, queryParams) {
+  _buildGetPathFromTemplateString(pathTemplate, _queryParams) {
     // TODO: handle queryParams properly!
     const getPathRaw = createPathGetterFromTemplateProps(pathTemplate);
     //const argNames = getPathRaw.pathInfo && getPathRaw.pathInfo.varNames;
-    if (!queryParams) {
+    if (!_queryParams) {
       return (args, dataInjectProxy, readerProxy, callerNode, accessTracker) => {
         return getPathRaw(args);
       };
     }
     else {
       return (args, dataInjectProxy, readerProxy, callerNode, accessTracker) => {
+        const queryParams = isFunction(_queryParams) ? 
+          _queryParams(args, dataInjectProxy, readerProxy, callerNode, accessTracker) :
+          queryParams;
         return {
           path: getPathRaw(args),
           queryParams

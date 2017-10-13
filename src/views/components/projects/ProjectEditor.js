@@ -1,9 +1,12 @@
 import map from 'lodash/map';
 import isEmpty from 'lodash/isEmpty';
 
-import React, { Component, PropTypes } from 'react';
-import { connect } from 'react-redux';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
+
+import dataBind from 'src/dbdi/react/dataBind';
+
 import Moment from 'react-moment';
 import {
   Alert, Button, Badge,
@@ -16,11 +19,11 @@ import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import UserList from 'src/views/components/users/UserList';
 import UserIcon from 'src/views/components/users/UserIcon';
 
-import { 
+import {
   Field, reduxForm, FormSection
 } from 'redux-form';
 
-import { 
+import {
   FormInputField,
   FAIcon
 } from 'src/views/components/util';
@@ -42,22 +45,22 @@ class _ProjectInfoFormContent extends Component {
 
       handleSubmit,
       pristine,
-      reset, 
-      submitting 
+      reset,
+      submitting
     } = this.props;
 
-    return (<form className="form-horizontal" 
-        onSubmit={handleSubmit}>
+    return (<form className="form-horizontal"
+      onSubmit={handleSubmit}>
       <Field name="projectId" value={projectId} component="input" type="hidden" />
       <FormSection name="project">
         <FormInputField name="guardianNotes" label="Guardian Notes"
           component="textarea"
           inputProps={{
-            rows: '3', 
-            placeholder:"冒險者有沒有提出疑問或是對 Guardian 不友善？"
+            rows: '3',
+            placeholder: '冒險者有沒有提出疑問或是對 Guardian 不友善？'
           }}
-          labelProps={{xs: 2, className: 'no-padding'}}
-          inputColProps={{xs: 10, className: 'no-padding'}}
+          labelProps={{ xs: 2, className: 'no-padding' }}
+          inputColProps={{ xs: 10, className: 'no-padding' }}
         />
 
         <div>
@@ -85,14 +88,14 @@ export const ProjectInfoForm = connect(
   }
 )(_ProjectInfoForm);
 
-function DeleteUserButton({open}) {
+function DeleteUserButton({ open }) {
   return (<Button onClick={open} bsSize="small"
-      className="color-red no-padding">
+    className="color-red no-padding">
     <FAIcon name="trash" />
   </Button>);
 }
 function makeExistingUserEl(deleteUserFromProject) {
-  return ({user, uid}) => (<Badge>
+  return ({ user, uid }) => (<Badge>
     <span className="user-tag">
       <UserIcon user={user} size="tiny" /> &nbsp;
       {user.displayName} &nbsp;
@@ -108,7 +111,7 @@ function makeExistingUserEl(deleteUserFromProject) {
 }
 
 
-function AddUserButton({open}) {
+function AddUserButton({ open }) {
   return (<Button onClick={open}
     className="color-green no-padding"
     bsSize="small">
@@ -116,7 +119,7 @@ function AddUserButton({open}) {
   </Button>);
 }
 function makeAddUserEl(addUserToProject) {
-  return ({user, uid}) => (<Badge>
+  return ({ user, uid }) => (<Badge>
     <span className="user-tag">
       <UserIcon user={user} size="tiny" /> &nbsp;
       {user.displayName} &nbsp;
@@ -132,37 +135,32 @@ function makeAddUserEl(addUserToProject) {
   </Badge>);
 }
 
-export function ProjectUserEditor({
-  existingUsers,
-  addableUsers,
 
-  deleteUserFromProject,
-  addUserToProject
-}) {
-  return (<Flex row={true} alignItems="start">
-    <Item>
-      <UserList users={existingUsers} 
+export const ProjectUserEditor = dataBind({
+
+})(
+  ({ }) => {
+    const addableUsers = findUnassignedUsers();
+    const existingUsers = getUsersByProject(projectId);
+
+    return (<Flex row={true} alignItems="start">
+      <Item>
+        <UserList users={existingUsers}
           renderUser={makeExistingUserEl(deleteUserFromProject)} />
-    </Item>
-    <Item>
-      <UserList users={addableUsers} 
+      </Item>
+      <Item>
+        <UserList users={addableUsers}
           renderUser={makeAddUserEl(addUserToProject)} />
-    </Item>
-  </Flex>);
-}
+      </Item>
+    </Flex>);
+  }
+  );
 
 
 
 export default class ProjectEditor extends Component {
   static propTypes = {
-    projectId: PropTypes.string.isRequired,
-    project: PropTypes.object.isRequired,
-    existingUsers: PropTypes.object.isRequired,
-    addableUsers: PropTypes.object.isRequired,
-
-    setProject: PropTypes.func.isRequired,
-    addUserToProject: PropTypes.func.isRequired,
-    deleteUserFromProject: PropTypes.func.isRequired
+    projectId: PropTypes.string.isRequired
   };
 
   constructor() {
@@ -209,8 +207,8 @@ export default class ProjectEditor extends Component {
 
     return (
       <div>
-        <ProjectInfoForm 
-          onSubmit={ setProject }
+        <ProjectInfoForm
+          onSubmit={setProject}
           {...{ project, projectId }}
         />
 

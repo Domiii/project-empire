@@ -1,6 +1,6 @@
 import ProjectsRef, { UserProjectRef } from 'src/core/projects/ProjectsRef';
 import MissionsRef from 'src/core/missions/MissionsRef';
-import Roles, { hasDisplayRole } from 'src/core/users/Roles';
+import Roles, { hasDisplayRole, isGuardian } from 'src/core/users/Roles';
 
 import isEmpty from 'lodash/isEmpty';
 import map from 'lodash/map';
@@ -8,7 +8,8 @@ import sortBy from 'lodash/sortBy';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
 
 import dataBind from 'src/dbdi/react/dataBind';
@@ -18,6 +19,8 @@ import {
 } from 'react-bootstrap';
 import { Flex, Item } from 'react-flex';
 import Select from 'react-select';
+
+import { LoadOverlay } from 'src/views/components/overlays';
 
 import { FAIcon } from 'src/views/components/util';
 
@@ -59,17 +62,28 @@ import ProjectEditor from './ProjectEditor';
 */
 
 @dataBind({
+  missionOptions({ }, { }, { allMissions }) {
+    return allMissions && map(allMissions, (mission, missionId) => ({
+      value: missionId,
+      label: `${mission.code} - ${mission.title}`
+    }));
+  }
 })
 export default class ProjectList extends Component {
   constructor() {
     super();
 
     this.state = {
-      adding: false
+      adding: false,
+      page: 0
     };
 
     this.dataBindMethods(
-      this.addNewProject
+      this.addNewProject,
+      this.onSelectedMissionChanged,
+      this.makeMissionSelectEl,
+      this.makeEditorHeader,
+      this.makeProjectsList
     );
 
     autoBind(this);
@@ -79,17 +93,33 @@ export default class ProjectList extends Component {
     return this.state.adding;
   }
 
+  get CurrentPage() {
+    return this.stage.page;
+  }
+
+  get ProjectListArgs() {
+    return {
+      page: this.CurrentPage
+    };
+  }
+
+  getProjectIds({ }, { sortedProjectIdsOfPage }, { }) {
+    return sortedProjectIdsOfPage(this.ProjectListArgs);
+  }
+
   toggleAdding() {
     this.setAdding(!this.state.adding);
   }
 
   setAdding(adding) {
-    this.setState({
-      adding
-    });
+    this.setState({ adding });
   }
 
-  addNewProject({}, { push_project }, { currentUid }) {
+  setPage(page) {
+    this.setState({ page });
+  }
+
+  addNewProject({ }, { push_project }, { currentUid }) {
     this.setState({ selectedMissionId: null });
     this.setAdding(false);
 
@@ -99,24 +129,16 @@ export default class ProjectList extends Component {
     });
   }
 
-  onSelectedMissionChanged(option) {
-    const {
-      missions
-    } = this.props;
-
+  onSelectedMissionChanged(option, { }, { }, { allMissions }) {
     let missionId = option && option.value;
 
-    if (!missions[missionId]) {
+    if (!allMissions[missionId]) {
       missionId = null;
     }
     this.setState({ selectedMissionId: missionId });
   }
 
-  makeMissionSelectEl() {
-    const {
-      missionOptions
-    } = this.props;
-
+  makeMissionSelectEl({ }, { }, { missionOptions }) {
     return (<Select
       value={this.state.selectedMissionId}
       placeholder="select mission"
@@ -125,14 +147,12 @@ export default class ProjectList extends Component {
     />);
   }
 
-  makeEditorHeader() {
-    const { missions, isGuardian } = this.props;
-
-    return !isGuardian ? null : (
+  makeEditorHeader({ }, { }, { isCurrentUserGuardian, allMissions }) {
+    return !isCurrentUserGuardian ? null : (
       <div>
         <Button active={this.IsAdding}
           bsStyle="success" bsSize="small"
-          disabled={isEmpty(missions)}
+          disabled={isEmpty(allMissions)}
           onClick={this.toggleAdding}>
           <FAIcon name="plus" className="color-green" /> add new project
         </Button>
@@ -156,29 +176,13 @@ export default class ProjectList extends Component {
     );
   }
 
-  makeProjectEditorEl(projectId, project, existingUsers, addableUsers) {
+  makeProjectEditorEl(projectId) {
     if (!this.IsGuardian) {
       return null;
     }
 
-    const {
-      setProject,
-      addUserToProject,
-      deleteUserFromProject
-    } = this.props;
-
     return (<ProjectEditor {...{
-      projectId,
-      project,
-      existingUsers,
-      addableUsers,
-
-      setProject: ({ projectId, project }) => {
-        console.log(projectId, project);
-        return setProject(projectId, project);
-      },
-      addUserToProject,
-      deleteUserFromProject
+      projectId
     }} />);
   }
 
@@ -190,58 +194,38 @@ export default class ProjectList extends Component {
     );
   }
 
-  makeProjectsList() {
-    const {
-      projects,
-      users,
-      missions,
-
-      findUnassignedUsers,
-      getUsersByProject,
-      deleteProject
-    } = this.props;
-
-    console.log(projects);
-    const idList = sortBy(Object.keys(projects),
-      projectId => -projects[projectId].updatedAt);
-    const addableUsers = findUnassignedUsers();
+  makeProjectsList({}, {}, {}) {
+    const idList = this.getProjectIds();
 
     return (<ListGroup> {
       map(idList, (projectId) => {
-        const project = projects[projectId];
-        let existingUsers = getUsersByProject(projectId);
 
         return (<li key={projectId} className="list-group-item">
           <ProjectPreview {...{
             canEdit: true,
             projectId,
-            project,
             reviewer: users && users[project.reviewerUid],
             projectGuardian: users && users[project.guardianUid],
             mission: missions && missions[project.missionId],
-
-            users: existingUsers,
             //projectsRef,
 
             deleteProject,
 
-            projectEditor: this.makeProjectEditorEl(
-              projectId, project,
-              existingUsers, addableUsers)
+            projectEditor: this.makeProjectEditorEl(projectId)
           }} />
         </li>);
       })
     } </ListGroup>);
   }
 
-  render() {
-    const {
-      projects
-    } = this.props;
-
+  render({ }, { sortedProjectIdsOfPage }, { }) {
+    if (!sortedProjectIdsOfPage.isLoaded(this.ProjectListArgs)) {
+      // still loading
+      return (<LoadOverlay />);
+    }
 
     let projectListEl;
-    if (isEmpty(projects)) {
+    if (isEmpty(this.getProjectIds())) {
       projectListEl = this.makeEmptyProjectsEl();
     }
     else {

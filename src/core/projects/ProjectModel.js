@@ -6,6 +6,7 @@ import {
 
 
 import { EmptyObject, EmptyArray } from 'src/util';
+import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 
 import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
@@ -80,7 +81,7 @@ const readers = {
     const proj = project({ projectId });
     const uid = proj && proj.guardianUid;
     const reviewer = uid && userPublic({ uid });
-    
+
     // single reviewer as "list" or "object" of reviewers
     return reviewer && { [uid]: reviewer } || EmptyObject;
   },
@@ -92,7 +93,7 @@ const readers = {
 
   getStageStatus({ projectId, stageId }, { projectStageRecord }, { }) {
     // TODO
-    
+
     const node = ProjectStageTree.getNode(stageId);
     const stageRecord = projectStageRecord({ projectId, stageId });
 
@@ -104,7 +105,7 @@ const readers = {
     }
     return StageStatus.None;
   },
-  
+
 
   stageContributions({ projectId, stageId }, { projectStageRecord }, { }) {
     const stage = projectStageRecord({ projectId, stageId });
@@ -148,16 +149,116 @@ const readers = {
   }
 };
 
+import zipObject from 'lodash/zipObject';
+//import times from 'lodash/times';
+
+function updateAll({ pathArgs, readers, val }, { update_db }) {
+  const updateObj = zipObject(
+    map(readers, reader => reader.getPath(pathArgs)),
+    times(readers.length, val)
+  );
+  return update_db(updateObj);
+}
+
+const writers = {
+  addUserToProject(
+    { uid, projectId },
+    { uidOfProject, projectIdOfUser }) {
+    return updateAll({
+      pathArgs: { uid, projectId },
+      readers: [uidOfProject, projectIdOfUser],
+      val: 1
+    });
+  },
+
+  deleteUserFromProject(
+    { uid, projectId },
+    { uidOfProject, projectIdOfUser }) {
+    return updateAll({
+      pathArgs: { uid, projectId },
+      readers: [uidOfProject, projectIdOfUser],
+      val: null
+    });
+  }
+};
+
+const projectsPageCfg = {
+
+};
+
 export default {
-  uidsOfProject: '/_index/projectUsers/project/$(projectId)',
-  projectIdsOfUser: '/_index/projectUsers/user/$(uid)',
+  projectUidIndex: {
+    path: '/_index/projectUsers/project',
+    children: {
+      uidsOfProject: {
+        path: '$(projectId)',
+        children: {
+          uidOfProject: '$(uid)'
+        }
+      }
+    }
+  },
+  projectIdsOfUser: {
+    path: '/_index/projectUsers/user/$(uid)',
+    children: {
+      projectIdOfUser: '$(projectId)'
+    }
+  },
   allProjectData: {
     path: '/projects',
     readers,
+    writers,
     children: {
-      projects: {
+      projectList: {
         path: 'list',
+        readers: {
+          sortedProjectIdsOfPage(args, { projectsOfPage }, { }) {
+            if (!projectsOfPage.isLoaded(args)) {
+              return EmptyArray;
+            }
+
+            const projects = projectsOfPage(args);
+
+            const {
+              orderBy,
+              ascending
+            } = getOptionalArguments(args, {
+                orderBy: 'updatedAt',
+                ascending: false
+              });
+
+            return sortBy(Object.keys(projects || EmptyObject),
+              id => ascending ?
+                projects[id][orderBy] :
+                -projects[id][orderBy]
+            );
+          }
+        },
         children: {
+          projectsOfPage: {
+            path: {
+              queryParams(args) {
+                const {
+                  page
+                } = args;
+
+                const {
+                  orderBy,
+                  itemsPerPage,
+                  ascending
+                } = getOptionalArguments(args, {
+                    orderBy: 'updatedAt',
+                    itemsPerPage: 20,
+                    ascending: false
+                  });
+
+                return [
+                  ['orderByChild', orderBy],
+                  [ascending ? 'limitToFirst' : 'limitToLast', page * itemsPerPage]
+                ];
+              }
+            }
+          },
           project: {
             path: '$(projectId)',
             onWrite: [

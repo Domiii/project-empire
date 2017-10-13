@@ -4,7 +4,6 @@
 
 
 import { makeRefWrapper } from 'src/firebaseUtil';
-import _ from 'lodash';
 import { EmptyObject, EmptyArray } from 'src/util';
 
 const MissionsRef = makeRefWrapper({

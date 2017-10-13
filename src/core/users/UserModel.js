@@ -17,6 +17,10 @@ export default {
         return hasCurrentUserRole(Roles.Admin);
       },
 
+      isCurrentUserGuardian({ }, { hasCurrentUserDisplayRole }, { }) {
+        return hasCurrentUserDisplayRole(Roles.Guardian);
+      },
+
       hasCurrentUserRole({ role }, { currentUserRole }, { }) {
         return currentUserRole && hasRole(currentUserRole, role);
       },
@@ -38,7 +42,7 @@ export default {
       }
     },
 
-    
+
     // #######################################################################
     // User writers
     // #######################################################################
@@ -114,7 +118,7 @@ export default {
         return Promise.all(updates);
       },
 
-      setRoleName({uid, role}, {}, {}, {update_userPublic}) {
+      setRoleName({ uid, role }, { }, { }, { update_userPublic }) {
         const roleNum = getRole(role);
         if (!roleNum) {
           throw new Error('invalid role: ' + role);
@@ -125,12 +129,12 @@ export default {
         // return this.set_userDisplayRole(uid, roleNum).then(() =>
         //   this.set_userRole(uid, roleNum)
         // );
-        
+
         const val = {
           role: roleNum,
           displayRole: roleNum
         };
-        return update_userPublic({uid}, val);
+        return update_userPublic({ uid }, val);
       },
     },
 

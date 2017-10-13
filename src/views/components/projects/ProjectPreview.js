@@ -31,7 +31,7 @@ export default class ProjectPreview extends Component {
     projectId: PropTypes.string.isRequired,
     project: PropTypes.object.isRequired,
     mission: PropTypes.object,
-    
+
     users: PropTypes.object,
     projectGuardian: PropTypes.object,
     reviewer: PropTypes.object,
@@ -63,7 +63,7 @@ export default class ProjectPreview extends Component {
 
   get EmptyEl() {
     return (
-      <Alert bsStyle="warning" style={{display: 'inline'}} className="no-padding">
+      <Alert bsStyle="warning" style={{ display: 'inline' }} className="no-padding">
         <span>no projects have been added yet</span>
       </Alert>
     );
@@ -80,9 +80,8 @@ export default class ProjectPreview extends Component {
   }
 
   editorHeader() {
-    const { 
+    const {
       projectId,
-      project,
       deleteProject,
       users,
       mission,
@@ -111,56 +110,46 @@ export default class ProjectPreview extends Component {
     );
   }
 
-  render() {
-    const {
-      project,
-      users,
-      mission,
-      projectGuardian,
-      reviewer,
+  render({ }, { project }, { }) {
+    const proj = project({ projectId });
 
-      projectEditor
-    } = this.props;
-
-    const userEls = isEmpty(users) ? 
-      this.EmptyEl : 
+    const userEls = isEmpty(users) ?
+      this.EmptyEl :
       (<UserList users={users} />);
 
-      //console.log(size(users), users);
+    //console.log(size(users), users);
 
-    const missionHeader = mission && 
+    const missionHeader = mission &&
       `${mission.code} - ${mission.title}` ||
       <LoadIndicator />;
 
     return (<div>
       <h1>{missionHeader}</h1>
       <Panel header={null} bsStyle="info">
-        { 
+        {
           mission && (<div>
-            { this.editorHeader() }
-            <p>Created: <Moment fromNow>{project.createdAt}</Moment></p>
+            {this.editorHeader()}
+            <p>Created: <Moment fromNow>{proj.createdAt}</Moment></p>
             <p>Guardian: {
-              !projectGuardian ? 
+              !proj.guardianUid ?
                 <span className="color-gray">no guardian</span> :
-                <UserBadge user={projectGuardian} uid={project.guardianUid} />
+                <UserBadge uid={proj.guardianUid} />
             }</p>
             <p>Reviewer: {
-              !reviewer ? 
+              !proj.reviewerUid ?
                 <span className="color-gray">no assigned reviewer</span> :
-                <UserBadge user={reviewer} uid={project.reviewerUid} />
+                <UserBadge uid={proj.reviewerUid} />
             }</p>
             <div>
-              <span>Projects ({ size(users) }):</span> { userEls }
+              <span>Projects ({size(users)}):</span> {userEls}
             </div>
             <div className="margin-half" />
             <Well>
-              <h4 className="no-margin no-padding">{ mission.description }</h4>
-
-              TODO: render complete mission preview
+              <h4 className="no-margin no-padding">{mission.description}</h4>
             </Well>
-            { !this.IsEditing ? null : projectEditor }
+            {!this.IsEditing ? null : projectEditor}
           </div>)
-         }
+        }
       </Panel>
     </div>);
   }

@@ -1,5 +1,6 @@
 import ProjectModel from 'src/core/projects/ProjectModel';
 import UserModel from 'src/core/users/UserModel';
+import MissionModel from 'src/core/missions/MissionModel';
 
 import dataProviders from './dataProviders.js';
 
@@ -15,9 +16,11 @@ const dataStructureConfig = {
   },
   db: {
     dataProvider: 'firebase',
+    path: '/',
     children: merge({},
-      ProjectModel,
       UserModel,
+      MissionModel,
+      ProjectModel,
       {
         missions: {
           path: 'missions',
