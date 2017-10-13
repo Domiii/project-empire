@@ -8,13 +8,15 @@ import mapValues from 'lodash/mapValues';
 import { EmptyObject, EmptyArray } from 'src/util';
 
 import React, { Component } from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import autoBind from 'react-autobind';
+
+import dataBind from 'src/dbdi/react/dataBind';
+
 import { 
   Alert, Button, Jumbotron, Well, Panel, Badge
 } from 'react-bootstrap';
 
-import autoBind from 'react-autobind';
 import {
   LinkContainer
 } from 'react-router-bootstrap';
@@ -110,11 +112,10 @@ const ProjectStatus = {
 //     return EmptyArray;
 //   }
 // })
-export default class MissionControlPage extends Component {
-  static contextTypes = {
-    currentUserRef: PropTypes.object.isRequired
-  };
+@dataBind({
 
+})
+export default class MissionControlPage extends Component {
   static propTypes = {
 
   };

@@ -39,7 +39,7 @@ export default class Header extends PureComponent {
   }
 
   gotoProfile() {
-    const { currentUid } = this.props.fromReader;
+    const { currentUid } = this.props.dataInject;
     const { router } = this.context;
     if (currentUid) {
       router.replace('/user/' + currentUid);

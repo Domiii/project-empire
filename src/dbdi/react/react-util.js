@@ -10,6 +10,7 @@ export function injectIntoClass(Clazz, methodName, methodWrapper) {
   );
 }
 
+
 /**
  * Note: This might behave differently for stateful and stateless components.
  * For stateless functions, pay attention to account for props and context 

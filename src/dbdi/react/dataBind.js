@@ -1,11 +1,13 @@
 import DataAccessTracker from '../DataAccessTracker';
 
 import partialRight from 'lodash/partialRight';
+import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
 import merge from 'lodash/merge';
 import isFunction from 'lodash/isFunction';
 import isPlainObject from 'lodash/isPlainObject';
 import isEmpty from 'lodash/isEmpty';
+import isString from 'lodash/isString';
 
 import fpGroupBy from 'lodash/fp/groupBy';
 import fpMap from 'lodash/fp/map';
@@ -89,19 +91,44 @@ export default (propsOrPropCb) => _WrappedComponent => {
       this._buildFunctionProxy();
 
       // finally, engulf the new component with our custom arguments
-      this._renderArguments = [
-        this._variableProxy, 
-        this._functionProxy, 
+      this._injectedArguments = [
+        this._variableProxy,
+        this._functionProxy,
         this._dataAccessTracker._injectProxy
       ];
 
       this.WrappedComponent = injectRenderArgs(_WrappedComponent,
-        this._renderArguments);
+        this._injectedArguments);
+
+      Object.assign(this.WrappedComponent.prototype, 
+        this._buildPrototypeExtensions());
     }
+
 
     // ################################################
     // Private methods + properties
     // ################################################
+
+    _buildPrototypeExtensions() {
+      return {
+        dataBindMethod(methodOrName) {
+          const methodName = isString(methodOrName) ? 
+            methodOrName : 
+            methodOrName.name;
+          
+          return this[methodName] = 
+            partialRight(
+              this[methodName], 
+              ...this._injectedArguments
+            );
+        },
+
+        dataBindMethods(...methodOrNames) {
+          return map(methodOrNames, methodOrName =>
+            this.dataBindMethod(methodOrName));
+        }
+      };
+    }
 
     _buildCustomFunctions() {
       this._customFunctions = {
@@ -198,7 +225,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
 
     _wrapCustomFunctions(f) {
       // inject proxies as initial arguments
-      return partialRight(f, ...this._renderArguments);
+      return partialRight(f, ...this._injectedArguments);
     }
 
     _wrapCustomFunctionsAndData = flow(
@@ -218,7 +245,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
         // prepare _customProps object
         let props = propsOrPropCb;
         if (isFunction(propsOrPropCb)) {
-          props = propsOrPropCb(...this._renderArguments);
+          props = propsOrPropCb(...this._injectedArguments);
         }
         else if (!isEmpty(this._customProps)) {
           // already done, don't do it again!
@@ -305,14 +332,14 @@ export default (propsOrPropCb) => _WrappedComponent => {
     render() {
       this._shouldUpdate = false;
       const { WrappedComponent } = this;
-      
+
       return (<WrappedComponent
         {...this.props}
         {...this._customProps}
         {...this._customFunctions}
         readers={this._dataAccessTracker._readerProxy}
         writers={this._dataAccessTracker._writerProxy}
-        fromReader={this._dataAccessTracker._injectProxy}
+        dataInject={this._dataAccessTracker._injectProxy}
       />);
     }
   }

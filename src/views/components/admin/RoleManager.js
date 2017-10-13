@@ -46,7 +46,7 @@ function ChangeRoleButton({ oldRoleName, newRole, open }) {
   </Button>);
 }
 
-function makeChangeRoleButtons({ }, { setRoleName }) {
+function makeChangeRoleButtons({ setRoleName }) {
   return zipObject(
     userListNames,
     map(userListNames, newRoleName => {
@@ -105,7 +105,7 @@ export default class RoleManager extends Component {
   }
 
   getUserLists() {
-    const allUsers = this.props.fromReader.usersPublic;
+    const allUsers = this.props.dataInject.usersPublic;
     const allUids = Object.keys(allUsers);
     const sortedUids = sortBy(allUids, uid => allUsers[uid].role || 1);
     const userLists = map(userListNames, name => ({ name, role: Roles[name], list: {} }));

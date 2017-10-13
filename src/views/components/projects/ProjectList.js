@@ -68,6 +68,10 @@ export default class ProjectList extends Component {
       adding: false
     };
 
+    this.dataBindMethods(
+      this.addNewProject
+    );
+
     autoBind(this);
   }
 
@@ -85,14 +89,7 @@ export default class ProjectList extends Component {
     });
   }
 
-  addNewProject() {
-    const {
-      currentUid
-    } = this.props.fromReader;
-    const {
-      push_project
-    } = this.props.writers;
-
+  addNewProject({}, { push_project }, { currentUid }) {
     this.setState({ selectedMissionId: null });
     this.setAdding(false);
 
