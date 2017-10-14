@@ -59,11 +59,11 @@ const allProjectStageData = {
 };
 
 const readers = {
-  projectsOfUser({ uid }, { projectIdsOfUser, project }, { }) {
+  projectsOfUser({ uid }, { projectIdsOfUser, projectById }, { }) {
     return mapValues(
       projectIdsOfUser(
         { uid }) || EmptyObject,
-      (_, projectId) => project({ projectId }
+      (_, projectId) => projectById({ projectId }
       )
     );
   },
@@ -77,8 +77,8 @@ const readers = {
     );
   },
 
-  projectReviewers({ projectId }, { project, userPublic }, { }) {
-    const proj = project({ projectId });
+  projectReviewers({ projectId }, { projectById, userPublic }, { }) {
+    const proj = projectById({ projectId });
     const uid = proj && proj.guardianUid;
     const reviewer = uid && userPublic({ uid });
 
@@ -259,14 +259,19 @@ export default {
               }
             }
           },
-          project: {
+          projectById: {
             path: '$(projectId)',
             onWrite: [
               'updatedAt',
               'createdAt'
             ],
             children: {
+              projectMissionId: 'missionId',
 
+              // only one reviewer (GM) for now
+              projectReviewerId: 'reviewerId',
+
+              projectGuardianId: 'guardianId'
             }
           }
         }

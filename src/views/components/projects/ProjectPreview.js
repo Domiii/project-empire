@@ -7,6 +7,9 @@ import size from 'lodash/size';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
+
+import dataBind from 'src/dbdi/react/dataBind';
+
 import Moment from 'react-moment';
 import {
   Alert, Badge,
@@ -14,31 +17,41 @@ import {
 } from 'react-bootstrap';
 
 
+import ProjectEditor from './ProjectEditor';
 import ProjectEditTools from './ProjectEditTools';
 import UserList, { UserBadge } from 'src/views/components/users/UserList';
 import LoadIndicator from 'src/views/components/util/loading';
 
 
-// TODO: render + allow editing of guardianNotes + gmNotes + partyNotes
+export const ProjectTeam = dataBind({})(
+  ({ projectId }, { uidsOfProject }) => {
+    if (!uidsOfProject.isLoaded({ projectId })) {
+      return <LoadIndicator />;
+    }
+    else {
+      const uids = Object.keys(uidsOfProject({ projectId }));
 
+      if (isEmpty(uids)) {
+        return (<Alert bsStyle="warning" style={{ display: 'inline' }} className="no-padding">
+          <span>this project has no team yet</span>
+        </Alert>);
+      }
+      else {
+        return (<div>
+          <span>Team ({size(uids)}):</span> <UserList uids={uids} />
+        </div>);
+      }
+    }
+  }
+);
+
+@dataBind({
+
+})
 export default class ProjectPreview extends Component {
-  static contextTypes = {
-    currentUserRef: PropTypes.object,
-    lookupLocalized: PropTypes.func.isRequired
-  };
-
   static propTypes = {
     projectId: PropTypes.string.isRequired,
-    project: PropTypes.object.isRequired,
-    mission: PropTypes.object,
-
-    users: PropTypes.object,
-    projectGuardian: PropTypes.object,
-    reviewer: PropTypes.object,
-
-    projectEditor: PropTypes.object,
-
-    deleteProject: PropTypes.func
+    readonly: PropTypes.bool
   };
 
   constructor() {
@@ -61,14 +74,6 @@ export default class ProjectPreview extends Component {
     return hasDisplayRole(currentUserRef, 'Guardian');
   }
 
-  get EmptyEl() {
-    return (
-      <Alert bsStyle="warning" style={{ display: 'inline' }} className="no-padding">
-        <span>no projects have been added yet</span>
-      </Alert>
-    );
-  }
-
   get IsEditing() {
     return this.state.editing;
   }
@@ -82,74 +87,88 @@ export default class ProjectPreview extends Component {
   editorHeader() {
     const {
       projectId,
-      deleteProject,
-      users,
-      mission,
-      projectEditor
+      readonly
     } = this.props;
 
-    const usersString = map(users, user => user && user.displayName).join(', ');
-    const missionInfo = mission && `${mission.code} - ${mission.title}` || 'mission';
-    const projectInfo = `${missionInfo} (${usersString})`;
-    const canEdit = !!projectEditor;
-
-    return (!canEdit || !this.IsGuardian) ? null : (
+    return (readonly || !this.IsGuardian) ? null : (
       <div>
         <ProjectEditTools {...{
           projectId,
-          entryInfo: projectInfo,
 
           //changeOrder: 
 
           editing: this.IsEditing,
-          toggleEdit: this.toggleEdit,
-
-          deleteEntry: deleteProject
+          toggleEdit: this.toggleEdit
         }} />
       </div>
     );
   }
 
-  render({ }, { project }, { }) {
-    const proj = project({ projectId });
+  render({ }, { projectById, missionById }, { }) {
+    const {
+      projectId
+    } = this.props;
 
-    const userEls = isEmpty(users) ?
-      this.EmptyEl :
-      (<UserList users={users} />);
+    if (!projectById.isLoaded({ projectId })) {
+      return <LoadIndicator block message="loading project..." />;
+    }
+    const project = projectById({ projectId });
 
-    //console.log(size(users), users);
+    if (!project) {
+      return (<Alert bsStyle="danger">invalid project id {projectId}</Alert>);
+    }
 
-    const missionHeader = mission &&
-      `${mission.code} - ${mission.title}` ||
-      <LoadIndicator />;
+    // mission
+    const isMissionLoaded = missionById.isLoaded({ missionId: project.missionId });
+    const mission = missionById({ missionId: project.missionId });
+    let missionEl;
+    let missionHeader;
+    if (isMissionLoaded) {
+      if (mission) {
+        missionHeader = `${mission.code} - ${mission.title}`;
+        missionEl = (<Well>
+          <h4 className="no-margin no-padding">{mission.description}</h4>
+        </Well>);
+      }
+      else {
+        missionHeader = '<unknown mission>';
+        missionEl = (<Alert bsStyle="danger">mission doesn{'\''}t exist (anymore)</Alert>);
+      }
+    }
+    else {
+      missionHeader = <LoadIndicator />;
+      missionEl = <LoadIndicator block message="loading mission..." />;
+    }
 
     return (<div>
       <h1>{missionHeader}</h1>
       <Panel header={null} bsStyle="info">
-        {
-          mission && (<div>
-            {this.editorHeader()}
-            <p>Created: <Moment fromNow>{proj.createdAt}</Moment></p>
-            <p>Guardian: {
-              !proj.guardianUid ?
-                <span className="color-gray">no guardian</span> :
-                <UserBadge uid={proj.guardianUid} />
-            }</p>
-            <p>Reviewer: {
-              !proj.reviewerUid ?
-                <span className="color-gray">no assigned reviewer</span> :
-                <UserBadge uid={proj.reviewerUid} />
-            }</p>
-            <div>
-              <span>Projects ({size(users)}):</span> {userEls}
-            </div>
-            <div className="margin-half" />
-            <Well>
-              <h4 className="no-margin no-padding">{mission.description}</h4>
-            </Well>
-            {!this.IsEditing ? null : projectEditor}
-          </div>)
-        }
+        <div>
+          {this.editorHeader()}
+          <p>Started: <Moment fromNow>{project.createdAt}</Moment></p>
+          <p>Guardian: {
+            !project.guardianUid ?
+              <span className="color-gray">no guardian</span> :
+              <UserBadge uid={project.guardianUid} />
+          }</p>
+          <p>Reviewer: {
+            !project.reviewerUid ?
+              <span className="color-gray">no assigned reviewer</span> :
+              <UserBadge uid={project.reviewerUid} />
+          }</p>
+
+          <ProjectTeam projectId={projectId} />
+
+          <div className="margin-half" />
+
+          {missionEl}
+
+          <div className="margin-half" />
+
+          {!this.IsEditing ? null : (
+            <ProjectEditor {...{ projectId }} />
+          )}
+        </div>
       </Panel>
     </div>);
   }

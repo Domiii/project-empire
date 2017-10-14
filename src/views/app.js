@@ -17,6 +17,8 @@ import { lookupLocalized } from 'src/util/localizeUtil';
 import { Overlay, LoadOverlay } from 'src/views/components/overlays';
 
 
+/* global window */
+
 
 @dataBind()
 export class App extends Component {

@@ -36,7 +36,7 @@ export class UserBadge extends Component {
 
 export default class UserList extends Component {
   static propTypes = {
-    users: PropTypes.object.isRequired,
+    uids: PropTypes.object.isRequired,
     renderUser: PropTypes.oneOfType([
       PropTypes.func,
       PropTypes.element
@@ -45,16 +45,16 @@ export default class UserList extends Component {
 
   render() {
     let {
-      users,
+      uids,
       renderUser
     } = this.props;
 
     const RenderUser = renderUser || UserBadge;
 
     return (<span>
-      {map(users, (user, uid) => (
-        !user ? null : <span key={uid}>
-          { <RenderUser uid={uid} /> }&nbsp;
+      {map(uids, (uid) => (
+        <span key={uid}>
+          { <RenderUser uid={uid} /> } {' '}
         </span>
       ))}
     </span>);

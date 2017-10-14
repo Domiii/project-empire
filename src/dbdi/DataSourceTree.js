@@ -163,9 +163,13 @@ export default class DataSourceTree {
     forEach(cfgChildren, (configNode, name) => {
       if (configNode.pathConfig) {
         // add default writers at path
-        forEach(this._defaultDataWriteDescriptorBuilders, (descriptorBuilder, writerName) => {
-          this._addDataWriteNode(configNode, parent, writerName + '_' + name, descriptorBuilder, newNodes);
-        });
+        this._buildDefaultWriters(configNode, parent, name, newNodes);
+
+        // add isLoaded node
+        newNodes[name + '_isLoaded'] = this._buildNode(
+          configNode, parent, name,
+          (args, readers) => readers[name].isLoaded(args), 
+          null);
       }
 
       // build node
@@ -185,6 +189,12 @@ export default class DataSourceTree {
       return newDataNode;
     });
   }
+  
+  // #########################################################################
+  // Handle Writers
+  //
+  // TODO: move (most of) this out of here. It is DataProvider dependent.
+  // #########################################################################
 
   _defaultWriteOps = ['push', 'set', 'update', 'delete']
 
@@ -192,6 +202,12 @@ export default class DataSourceTree {
     push(pathDescriptor, name) {
       return pathDescriptor.buildParentPathDescriptor(name);
     }
+  }
+
+  _buildDefaultWriters(configNode, parent, name, newNodes) {
+    forEach(this._defaultDataWriteDescriptorBuilders, (descriptorBuilder, writerName) => {
+      this._addDataWriteNode(configNode, parent, writerName + '_' + name, descriptorBuilder, newNodes);
+    });
   }
 
   _buildMetaWriteCfg(configNode, actionName) {
@@ -220,8 +236,6 @@ export default class DataSourceTree {
 
   /**
    * functions to create DataWriteScriptor for each write action.
-   * 
-   * TODO: move this out of here, it is DataProvider dependent.
    */
   _defaultDataWriteDescriptorBuilders = zipObject(this._defaultWriteOps,
     map(this._defaultWriteOps, (actionName) =>
@@ -248,7 +262,7 @@ export default class DataSourceTree {
       configNode, parent, name,
       null, descriptorBuilder);
 
-    newChildren[name] = newDataNode;
+    return newChildren[name] = newDataNode;
   }
 
   _buildAdditionalDataWriteNodes(parent, cfgChildren) {
@@ -258,6 +272,11 @@ export default class DataSourceTree {
     });
     return newChildren;
   }
+  
+  
+  // #########################################################################
+  // Descendant management + hierarchy compression
+  // #########################################################################
 
   _addDescendants(descendants, childDescendants) {
     forEach(childDescendants, (descendant, name) => {

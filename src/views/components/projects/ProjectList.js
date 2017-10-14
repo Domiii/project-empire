@@ -18,12 +18,12 @@ import {
   Button, ListGroup, Alert
 } from 'react-bootstrap';
 import { Flex, Item } from 'react-flex';
-import Select from 'react-select';
 
 import { LoadOverlay } from 'src/views/components/overlays';
 
 import { FAIcon } from 'src/views/components/util';
 
+import LoadIndicator from 'src/views/components/util/loading';
 import ProjectPreview from './ProjectPreview';
 import ProjectEditor from './ProjectEditor';
 
@@ -61,13 +61,9 @@ import ProjectEditor from './ProjectEditor';
 }
 */
 
+
+
 @dataBind({
-  missionOptions({ }, { }, { allMissions }) {
-    return allMissions && map(allMissions, (mission, missionId) => ({
-      value: missionId,
-      label: `${mission.code} - ${mission.title}`
-    }));
-  }
 })
 export default class ProjectList extends Component {
   constructor() {
@@ -79,9 +75,9 @@ export default class ProjectList extends Component {
     };
 
     this.dataBindMethods(
+      this.getProjectIds,
       this.addNewProject,
       this.onSelectedMissionChanged,
-      this.makeMissionSelectEl,
       this.makeEditorHeader,
       this.makeProjectsList
     );
@@ -115,36 +111,12 @@ export default class ProjectList extends Component {
     this.setState({ adding });
   }
 
+  onAddedProject() {
+    this.setAdding(false);
+  }
+
   setPage(page) {
     this.setState({ page });
-  }
-
-  addNewProject({ }, { push_project }, { currentUid }) {
-    this.setState({ selectedMissionId: null });
-    this.setAdding(false);
-
-    return push_project({
-      missionId: this.state.selectedMissionId,
-      guardianUid: currentUid
-    });
-  }
-
-  onSelectedMissionChanged(option, { }, { }, { allMissions }) {
-    let missionId = option && option.value;
-
-    if (!allMissions[missionId]) {
-      missionId = null;
-    }
-    this.setState({ selectedMissionId: missionId });
-  }
-
-  makeMissionSelectEl({ }, { }, { missionOptions }) {
-    return (<Select
-      value={this.state.selectedMissionId}
-      placeholder="select mission"
-      options={missionOptions}
-      onChange={this.onSelectedMissionChanged}
-    />);
   }
 
   makeEditorHeader({ }, { }, { isCurrentUserGuardian, allMissions }) {
@@ -157,65 +129,11 @@ export default class ProjectList extends Component {
           <FAIcon name="plus" className="color-green" /> add new project
         </Button>
 
-        {this.IsAdding && <span>
-          <Flex row={true} alignItems="start" justifyContent="1" style={{ maxWidth: '400px' }}>
-            <Item flexGrow="3">
-              {this.makeMissionSelectEl()}
-            </Item>
-            <Item flexGrow="1">
-              <Button block
-                bsStyle="success"
-                disabled={!this.state.selectedMissionId}
-                onClick={this.addNewProject}>
-                <FAIcon name="save" className="color-green" /> save new project
-                </Button>
-            </Item>
-          </Flex>
-        </span>}
+        {this.IsAdding &&
+          <ProjectEditor projectId={null} onSave={this.onAddedProject} />
+        }
       </div>
     );
-  }
-
-  makeProjectEditorEl(projectId) {
-    if (!this.IsGuardian) {
-      return null;
-    }
-
-    return (<ProjectEditor {...{
-      projectId
-    }} />);
-  }
-
-  makeEmptyProjectsEl() {
-    return (
-      (<Alert bsStyle="warning">
-        <span>there are no projects</span>
-      </Alert>)
-    );
-  }
-
-  makeProjectsList({}, {}, {}) {
-    const idList = this.getProjectIds();
-
-    return (<ListGroup> {
-      map(idList, (projectId) => {
-
-        return (<li key={projectId} className="list-group-item">
-          <ProjectPreview {...{
-            canEdit: true,
-            projectId,
-            reviewer: users && users[project.reviewerUid],
-            projectGuardian: users && users[project.guardianUid],
-            mission: missions && missions[project.missionId],
-            //projectsRef,
-
-            deleteProject,
-
-            projectEditor: this.makeProjectEditorEl(projectId)
-          }} />
-        </li>);
-      })
-    } </ListGroup>);
   }
 
   render({ }, { sortedProjectIdsOfPage }, { }) {
@@ -224,12 +142,24 @@ export default class ProjectList extends Component {
       return (<LoadOverlay />);
     }
 
+    const projectIds = this.getProjectIds();
+
     let projectListEl;
-    if (isEmpty(this.getProjectIds())) {
-      projectListEl = this.makeEmptyProjectsEl();
+    if (isEmpty(projectIds)) {
+      projectListEl = (<Alert bsStyle="warning">there are no projects</Alert>);
     }
     else {
-      projectListEl = this.makeProjectsList();
+      projectListEl = (<ListGroup> {
+        map(projectIds, (projectId) => {
+
+          return (<li key={projectId} className="list-group-item">
+            <ProjectPreview {...{
+              readonly: false,
+              projectId
+            }} />
+          </li>);
+        })
+      } </ListGroup>);
     }
 
     return (<div>

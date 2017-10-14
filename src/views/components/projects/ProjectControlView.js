@@ -315,12 +315,12 @@ const LoadedProjectControlView = dataBind()(
 
 
 const ProjectControlView = dataBind()(
-  ({ projectId }, { project }) => {
-    if (!project.isLoaded({ projectId })) {
+  ({ projectId }, { projectById }) => {
+    if (!projectById.isLoaded({ projectId })) {
       return (<LoadIndicator block />);
     }
 
-    const thisProject = project({ projectId });
+    const thisProject = projectById({ projectId });
     const newContext = {
       thisProjectId: projectId,
       thisProject

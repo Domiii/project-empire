@@ -40,7 +40,9 @@ const dataConfig = {
     //webCache: ...
   },
 
-  // the data tree represents all accessible data within the context that we use it
+  /**
+    * The data tree represents all data made accessible via `DataSourceProvider`
+    */
   dataStructureConfig: {
     auth: {
       dataProvider: 'firebaseAuth',

@@ -56,6 +56,7 @@ export default class Header extends PureComponent {
 
   openInNewTab(evt, url) {
     evt.preventDefault();
+    /* global window */
     window.open(url, '_blank');
   }
 
@@ -75,23 +76,23 @@ export default class Header extends PureComponent {
   }
 
   render({ }, {}, 
-      {currentUid, currentUser, isCurrentUserAdmin, isCurrentUserAdminDisplayRole}) {
+      {currentUid, currentUser, currentUser_isLoaded, 
+        isCurrentUserAdmin, isCurrentUserAdminReal}) {
 
     //console.log('header');
-    const { router } = this.context;
     const { signOut } = this.props;
 
-    const isLoading = currentUser.isLoaded();
-    const isAdminView = isCurrentUserAdminDisplayRole() || false;
     //const isGuardian = hasDisplayRole(currentUserRef, Roles.Guardian);
     const lang = currentUser && currentUser.userLocale || 'en';
 
     // elements
-    const adminToolsEL = isCurrentUserAdmin && (
+    const adminToolsEL = isCurrentUserAdminReal && (
       <NavItem className="header-right">
-        <Button onClick={this.toggleAdminView} bsStyle={isAdminView && 'success' || 'danger'}
+        <Button
+          onClick={this.toggleAdminView} 
+          bsStyle={isCurrentUserAdmin && 'success' || 'danger'}
           className="header-gavel-button"
-          active={isAdminView}>
+          active={isCurrentUserAdmin}>
           <FAIcon name="gavel" />
         </Button>
         <span className="padding-half" />
@@ -99,7 +100,7 @@ export default class Header extends PureComponent {
     );
 
     let userToolsEl;
-    if (isLoading) {
+    if (!currentUser_isLoaded) {
       userToolsEl = (<NavItem className="header-right"><Loading /></NavItem>);
     }
     else {
@@ -162,7 +163,7 @@ export default class Header extends PureComponent {
               <LinkContainer to="/projects">
                 <NavItem eventKey={3}>All Projects</NavItem>
               </LinkContainer>
-              {isAdminView &&
+              {isCurrentUserAdmin &&
                 <LinkContainer to="/gm">
                   <NavItem eventKey={4}>GM Tools</NavItem>
                 </LinkContainer>

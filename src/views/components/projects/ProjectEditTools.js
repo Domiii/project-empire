@@ -1,8 +1,14 @@
+import map from 'lodash/map';
+
 import { hasDisplayRole } from 'src/core/users/Roles';
 
+import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
-import React, { PureComponent, PropTypes } from 'react';
-import { 
+
+import dataBind from 'src/dbdi/react/dataBind';
+
+import {
   ButtonProject, Button
 } from 'react-bootstrap';
 
@@ -12,36 +18,49 @@ import ConfirmModal, {
   DefaultButtonCreator
 } from 'src/views/components/util/ConfirmModal';
 
-export default class ProjectEditTools extends PureComponent {
-  static contextTypes = {
-    currentUserRef: PropTypes.object
-  };
+const ProjectDescription = dataBind()(
+  ({ projectId }, { missionById, projectById, uidsOfProject, userDisplayName }, { }) => {
+    const project = projectById({ projectId });
 
+    if (!project) {
+      return (<span>???</span>);
+    }
+
+    const mission = missionById({ missionId: project.missionId });
+    const uids = uidsOfProject({ projectId });
+
+
+    const usersString = map(uids, uid => userDisplayName({ uid }) || '?').join(', ');
+    const missionInfo = mission && `${mission.code} - ${mission.title}` || 'mission';
+    const projectDescription = `${missionInfo} (${usersString})`;
+    return (<span> {projectDescription} </span>);
+  }
+);
+
+@dataBind({
+  deleteProject({ projectId }, { delete_projectById }) {
+    return delete_projectById({ projectId });
+  }
+})
+export default class ProjectEditTools extends PureComponent {
   static propTypes = {
     projectId: PropTypes.string.isRequired,
-    entryInfo: PropTypes.string,
 
     changeOrder: PropTypes.func,
 
     editing: PropTypes.bool,
-    toggleEdit: PropTypes.func.isRequired,
-
-    //deleteHeader: PropTypes.string,
-    deleteEntry: PropTypes.func.isRequired,
-
-    isPublic: PropTypes.bool,
-    setPublic: PropTypes.func,
+    toggleEdit: PropTypes.func.isRequired
   };
 
   constructor(...args) {
     super(...args);
 
-    autoBind(this);
-  }
+    this.dataBindMethods(
+      this.deleteButton,
+      this.togglePublicButton
+    );
 
-  get IsAdmin() {
-    const { currentUserRef } = this.context;
-    return currentUserRef && currentUserRef.isAdminDisplayMode() || false;
+    autoBind(this);
   }
 
   changeOrderUp() {
@@ -56,7 +75,7 @@ export default class ProjectEditTools extends PureComponent {
     changeOrder(projectId, 1);
   }
 
-  get ChangeOrderButtons() {
+  changeOrderButtons() {
     const { changeOrder } = this.props;
     if (!changeOrder) return null;
 
@@ -72,59 +91,56 @@ export default class ProjectEditTools extends PureComponent {
     </ButtonProject>);
   }
 
-  get EditButton() {
+  editButton() {
     const { editing, toggleEdit } = this.props;
     return (
-      <Button onClick={toggleEdit} 
+      <Button onClick={toggleEdit}
         className="" bsSize="small" active={editing}>
-          <FAIcon name="edit" />
+        <FAIcon name="edit" />
       </Button>
     );
   }
 
-  get DeleteButton() {
-    const { 
-      projectId,
-      entryInfo, 
-      deleteEntry
+  deleteButton({ }, { deleteProject }, { }) {
+    const {
+      projectId
     } = this.props;
 
     const modalProps = {
       header: 'Delete Project?',
-      body: entryInfo,
       ButtonCreator: DefaultButtonCreator,
-      onConfirm: deleteEntry,
-      confirmArgs: projectId
+      onConfirm: deleteProject
     };
 
     return (
-      <ConfirmModal {...modalProps}  />
+      <ConfirmModal {...modalProps}>
+        <ProjectDescription projectId={projectId} />
+      </ConfirmModal>
     );
   }
 
-  get TogglePublicButton() {
-    const { setPublic, isPublic } = this.props;
-    const icon = isPublic ? 'unlock' : 'lock';
-    const className = isPublic ? 'color-green' : 'color-red';
-    return (
-      <Button onClick={ setPublic(!isPublic) }
-        className={className} bsSize="small" active={false}>
-          <FAIcon name={icon} />
-      </Button>
-    );
-  }
+  // togglePublicButton({}, {}) {
+  //   const icon = isPublic ? 'unlock' : 'lock';
+  //   const className = isPublic ? 'color-green' : 'color-red';
+  //   return (
+  //     <Button onClick={setPublic(!isPublic)}
+  //       className={className} bsSize="small" active={false}>
+  //       <FAIcon name={icon} />
+  //     </Button>
+  //   );
+  // }
 
-  render() {
+  render({ }, { }, { currentUserIsAdmin }) {
     const styles = {
       whiteSpace: 'nowrap',
       overflow: 'hidden'
     };
-    
+
     return (<span style={styles}>
-      { !!this.props.changeOrder && this.ChangeOrderButtons }
-      { !!this.props.setPublic && this.TogglePublicButton }
-      { this.EditButton }
-      { this.IsAdmin && this.DeleteButton }
+      {/* {this.changeOrderButtons()}
+      {this.togglePublicButton()} */}
+      {this.editButton()}
+      {currentUserIsAdmin && this.deleteButton()}
     </span>);
   }
 }

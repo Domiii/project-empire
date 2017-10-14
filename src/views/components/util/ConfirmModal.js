@@ -55,7 +55,12 @@ export default class ConfirmModal extends Component {
       confirmArgs
     } = this.props;
 
-    onConfirm(confirmArgs);
+    if (confirmArgs !== undefined) {
+      onConfirm(confirmArgs);
+    }
+    else {
+      onConfirm();
+    }
     this.close();
   }
 

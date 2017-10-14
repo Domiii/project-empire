@@ -13,7 +13,7 @@ export default {
         return !!currentUid;
       },
 
-      isCurrentUserAdmin({ }, { hasCurrentUserRole }, { }) {
+      isCurrentUserAdminReal({ }, { hasCurrentUserRole }, { }) {
         return hasCurrentUserRole(Roles.Admin);
       },
 
@@ -29,7 +29,7 @@ export default {
         return currentUserDisplayRole && hasDisplayRole(currentUserDisplayRole, role);
       },
 
-      isCurrentUserAdminDisplayRole({ }, { currentUserDisplayRole }, { }) {
+      isCurrentUserAdmin({ }, { currentUserDisplayRole }, { }) {
         return currentUserDisplayRole && hasDisplayRole(currentUserDisplayRole, Roles.Admin);
       },
 

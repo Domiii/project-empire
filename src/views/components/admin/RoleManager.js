@@ -34,49 +34,48 @@ const RoleNames = [
   'GM'
 ];
 
-// create + cache "changeRoleButtons" components
-function RoleChangeArrow({ role1, role2 }) {
-  return isAtLeastRole(role1, role2) ?
-    (<span className="color-green"><FAIcon name="level-up" /></span>) :
-    (<span className="color-red"><FAIcon name="level-down" /></span>);
+function RoleChangeLabel({ newRoleName, oldRole }) {
+  return (<span>
+    {isAtLeastRole(newRoleName, oldRole) ?
+      (<span className="color-green"><FAIcon name="level-up" /></span>) :
+      (<span className="color-red"><FAIcon name="level-down" /></span>)
+    }
+    {newRoleName}
+  </span>);
 }
 
-function ChangeRoleButton({ oldRoleName, newRole, open }) {
+function ChangeRoleButton({ oldRole, newRoleName, open }) {
   return (<Button onClick={open} bsSize="small" className="no-padding">
-    <RoleChangeArrow role1={oldRoleName} role2={newRole} /> {oldRoleName}
+    <RoleChangeLabel oldRole={oldRole} newRole={newRoleName} />
   </Button>);
 }
 
-function makeChangeRoleButtons({}, { setRoleName }) {
-  return zipObject(
-    RoleNames,
-    map(RoleNames, newRoleName => {
-      const changeRole = uid => setRoleName({ uid, role: newRoleName });
+const RoleEditor = dataBind({
+  changeRole({ uid, newRoleName }, { setRoleName }) {
+    return setRoleName({ uid, role: newRoleName });
+  }
+})(({ uid, newRoleName }, { changeRole, userPublic }, { }) => {
+  const user = userPublic({ uid });
 
-      return ({ user, uid }) => (<ConfirmModal
-        key={newRoleName}
-        header={<span>Make user <RoleChangeArrow
-          role1={newRoleName} role2={user.role} /> {newRoleName}?</span>}
-        ButtonCreator={ChangeRoleButton}
-        onConfirm={changeRole}
-        confirmArgs={uid}
+  return (<ConfirmModal
+    key={newRoleName}
+    header={<span>Make user <RoleChangeLabel role1={newRoleName} role2={user.role} />?</span>}
+    ButtonCreator={ChangeRoleButton}
+    onConfirm={changeRole}
 
-        oldRoleName={user.role}
-        newRole={newRoleName}
-      >
-        <span>
-          Promote/demote {user.displayName} to <RoleChangeArrow
-            role1={newRoleName} role2={user.role} /> {newRoleName}?
-          </span>
-      </ConfirmModal>);
-    })
-  );
-}
+    oldRole={user.role}
+    newRoleName={newRoleName}
+  >
+    <span>
+      Promote/demote {user.displayName} t
+      o <RoleChangeLabel newRole={newRoleName} oldRole={user.role} />?
+    </span>
+  </ConfirmModal>);
+});
+
 
 @dataBind({
-  makeChangeRoleButtons,
-  
-  userLists({}, {}, { usersPublic }) {
+  userLists({ }, { }, { usersPublic }) {
     const allUids = Object.keys(usersPublic);
     const sortedUids = sortBy(allUids, uid => usersPublic[uid].role || 1);
     const userLists = map(RoleNames, name => ({ name, role: Roles[name], list: {} }));
@@ -98,22 +97,19 @@ export default class RoleManager extends Component {
   constructor(props) {
     super();
 
-    this.changeRoleButtons = props.makeChangeRoleButtons();
-
     this.dataBindMethods(
       this.getUserList
     );
-    
+
     autoBind(this);
   }
 
   RenderUser({ user, uid }) {
     const otherRoles = RoleNames.filter(name => Roles[name] !== (user.role || 0));
-    const ButtonComps = map(otherRoles, role => this.changeRoleButtons[role]);
     const buttonEls = (
       <span>
-        {map(ButtonComps, (Btn, i) => (
-          <Btn key={otherRoles[i]} user={user} uid={uid} />
+        {map(otherRoles, (newRoleName) => (
+          <RoleEditor key={newRoleName} uid={uid} newRoleName={newRoleName} />
         ))}
       </span>
     );
@@ -127,26 +123,24 @@ export default class RoleManager extends Component {
     </Badge>);
   }
 
-  render({}, {}, { isCurrentUserAdminDisplayRole, userLists }) {
-    if (!isCurrentUserAdminDisplayRole) {
+  render({ }, { }, { isCurrentUserAdmin, userLists }) {
+    if (!isCurrentUserAdmin) {
       return (
         <Alert bsStyle="warning">GM only</Alert>
       );
     }
 
-    return (<div>
-      {
-        map(userLists, (userList) => {
-          const {
+    return (<div>{
+      map(userLists, (userList) => {
+        const {
             name,
-            list
+          list
           } = userList;
 
-          return (<Panel key={name} header={name}>
-            <UserList users={list} renderUser={this.RenderUser} />
-          </Panel>);
-        })
-      }
-    </div>);
+        return (<Panel key={name} header={name}>
+          <UserList uids={Object.keys(list)} renderUser={this.RenderUser} />
+        </Panel>);
+      })
+    }</div>);
   }
 }
