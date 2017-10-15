@@ -156,7 +156,7 @@ function DeleteUserButton({ open }) {
 
 const ExistingUserEl = dataBind({
   deleteUser({ uid }, { deleteUserFromProject }) {
-    return deleteUserFromProject({uid});
+    return deleteUserFromProject({ uid });
   }
 })(
   ({ uid }, { deleteUser }) => {
@@ -186,7 +186,7 @@ function AddUserButton({ open }) {
 
 const AddUserEl = dataBind({
   addUser({ uid }, { addUserToProject }) {
-    return addUserToProject({uid});
+    return addUserToProject({ uid });
   }
 })(
   ({ uid }, { addUser }) => {
@@ -207,9 +207,10 @@ const AddUserEl = dataBind({
 
 export const ProjectUserEditor = dataBind({
 
+
 })(
-  ({ projectId }, { uidsOfProject }) => {
-    const addableUids = findUnassignedUsers();
+  ({ projectId }, { uidsOfProject }, { uidsWithoutProject }) => {
+    const addableUids = uidsWithoutProject();
     const existingUids = Object.keys(uidsOfProject({ projectId }));
 
     return (<Flex row={true} alignItems="start">

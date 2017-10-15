@@ -27,40 +27,6 @@ import LoadIndicator from 'src/views/components/util/loading';
 import ProjectPreview from './ProjectPreview';
 import ProjectEditor from './ProjectEditor';
 
-/*
-
-  const userProjectRef = UserProjectRef(firebase);
-  const userRef = userProjectRef.refs.user;
-  const projectsRef = userProjectRef.refs.project;
-  const missionsRef = MissionsRef(firebase);
-  const missions = missionsRef.val || EmptyObject;
-
-  return {
-    // userInfoRef: UserInfoRef(firebase),
-    projects: projectsRef.val,
-    missions,
-    missionOptions: map(missions, (mission, missionId) => ({
-      value: missionId,
-      label: `${mission.code} - ${mission.title}`
-    })),
-    users: userRef.val,
-    //userProjectRef,
-
-    addProject: project => {
-      project.createdAt = getFirebase().database.ServerValue.TIMESTAMP;
-      return projectsRef.push_project(project);
-    },
-    setProject: projectsRef.set_project,
-    deleteProject: projectsRef.delete_project,
-
-    getUsersByProject: userProjectRef.get_user_by_project,
-    findUnassignedUsers: userProjectRef.findUnassigned_user_entries,
-    addUserToProject: userProjectRef.addEntry,
-    deleteUserFromProject: userProjectRef.deleteEntry
-  };
-}
-*/
-
 
 
 @dataBind({

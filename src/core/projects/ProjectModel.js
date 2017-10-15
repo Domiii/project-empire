@@ -77,6 +77,10 @@ const readers = {
     );
   },
 
+  uidsWithoutProject({ }, { }, { usersPublic }) {
+    // TODO: make this more efficient
+  },
+
   projectReviewers({ projectId }, { projectById, userPublic }, { }) {
     const proj = projectById({ projectId });
     const uid = proj && proj.guardianUid;
