@@ -1,7 +1,6 @@
 import Roles, { hasDisplayRole } from 'src/core/users/Roles';
 
-import React, { PropTypes, PureComponent } from 'react';
-import { connect } from 'redux';
+import React, { PropTypes, Component } from 'react';
 import autoBind from 'react-autobind';
 
 import dataBind from 'src/dbdi/react/dataBind';
@@ -23,7 +22,7 @@ import { FAIcon } from 'src/views/components/util';
 @dataBind({
 
 })
-export default class Header extends PureComponent {
+export default class Header extends Component {
   static contextTypes = {
     router: PropTypes.object.isRequired
   };
@@ -35,15 +34,13 @@ export default class Header extends PureComponent {
   constructor(...args) {
     super(...args);
 
-    autoBind(this);
-  }
+    this.dataBindMethods(
+      this.switchToEn,
+      this.switchToZh,
+      this.toggleAdminView
+    );
 
-  gotoProfile() {
-    const { currentUid } = this.props.dataInject;
-    const { router } = this.context;
-    if (currentUid) {
-      router.replace('/user/' + currentUid);
-    }
+    autoBind(this);
   }
 
   gotoSubmissions(evt) {
@@ -60,28 +57,21 @@ export default class Header extends PureComponent {
     window.open(url, '_blank');
   }
 
-  switchToEn() {
-    const { currentUserRef } = this.context;
-    currentUserRef.set_userLocale('en');
+  switchToEn(evt, { }, { set_userLocale }) {
+    set_userLocale('en');
   }
 
-  switchToZh() {
-    const { currentUserRef } = this.context;
-    currentUserRef.set_locale('zh');
+  switchToZh(evt, { }, { set_userLocale }) {
+    set_userLocale('zh');
   }
 
-  toggleAdminView() {
-    const { currentUserRef } = this.context;
-    currentUserRef.setAdminDisplayMode(!currentUserRef.isAdminDisplayMode());
+  toggleAdminView(evt, { }, { setAdminDisplayMode }, { isCurrentUserAdmin, currentUid }) {
+    setAdminDisplayMode({ enabled: !isCurrentUserAdmin, uid: currentUid });
   }
 
-  render({ }, {}, 
-      {currentUid, currentUser, currentUser_isLoaded, 
-        isCurrentUserAdmin, isCurrentUserAdminReal}) {
-
-    //console.log('header');
-    const { signOut } = this.props;
-
+  render({ signOut }, { },
+    { currentUid, currentUser, currentUser_isLoaded,
+      isCurrentUserAdmin, isCurrentUserAdminReal }) {
     //const isGuardian = hasDisplayRole(currentUserRef, Roles.Guardian);
     const lang = currentUser && currentUser.userLocale || 'en';
 
@@ -89,7 +79,7 @@ export default class Header extends PureComponent {
     const adminToolsEL = isCurrentUserAdminReal && (
       <NavItem className="header-right">
         <Button
-          onClick={this.toggleAdminView} 
+          onClick={this.toggleAdminView}
           bsStyle={isCurrentUserAdmin && 'success' || 'danger'}
           className="header-gavel-button"
           active={isCurrentUserAdmin}>
@@ -120,8 +110,8 @@ export default class Header extends PureComponent {
 
     const profileEl = (currentUser &&
       <MenuItem eventKey="user-drop-profile">
-        <Link to={'/user/' + currentUid}>
-          <span>
+        <LinkContainer to={'/user/' + currentUid}>
+          <Button>
             {
               currentUser.photoURL &&
               <img src={currentUser.photoURL} style={{ width: '2em' }} /> ||
@@ -129,8 +119,8 @@ export default class Header extends PureComponent {
             }
             <span className="padding-half" />
             {currentUser.displayName || '<unnamed user>'}
-          </span>
-        </Link>
+          </Button>
+        </LinkContainer>
       </MenuItem>
     );
 
@@ -151,7 +141,7 @@ export default class Header extends PureComponent {
         <Navbar inverse collapseOnSelect className=" no-margin">
           <Navbar.Header>
             <Navbar.Brand>
-              <Link to="/" onlyActiveOnIndex={true}><span>Home</span></Link>
+              <Link to="/"><span>Home</span></Link>
             </Navbar.Brand>
             <Navbar.Toggle />
           </Navbar.Header>

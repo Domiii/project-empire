@@ -61,10 +61,10 @@ export default class PathDescriptor extends DataDescriptorNode {
   }
 
   _wrapGetPath(getPath) {
-    return function _wrappedGetPath(args, dataInjectProxy, readerProxy, callerNode, accessTracker) {
+    return function _wrappedGetPath(args, readerProxy, injectProxy, callerNode, accessTracker) {
       let path;
       try {
-        path = getPath(args, dataInjectProxy, readerProxy, callerNode, accessTracker);
+        path = getPath(args, readerProxy, injectProxy, callerNode, accessTracker);
       }
       catch (err) {
         console.error('Failed to execute getPath at: ' + this + ' - ' + err.stack);
@@ -83,14 +83,14 @@ export default class PathDescriptor extends DataDescriptorNode {
     const getPathRaw = createPathGetterFromTemplateProps(pathTemplate);
     //const argNames = getPathRaw.pathInfo && getPathRaw.pathInfo.varNames;
     if (!_queryParams) {
-      return (args, dataInjectProxy, readerProxy, callerNode, accessTracker) => {
+      return (args, readerProxy, injectProxy, callerNode, accessTracker) => {
         return getPathRaw(args);
       };
     }
     else {
-      return (args, dataInjectProxy, readerProxy, callerNode, accessTracker) => {
+      return (args, readerProxy, injectProxy, callerNode, accessTracker) => {
         const queryParams = isFunction(_queryParams) ? 
-          _queryParams(args, dataInjectProxy, readerProxy, callerNode, accessTracker) :
+          _queryParams(args, readerProxy, injectProxy, callerNode, accessTracker) :
           queryParams;
         return {
           path: getPathRaw(args),

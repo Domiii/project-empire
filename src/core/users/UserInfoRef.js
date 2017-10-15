@@ -16,7 +16,7 @@ const publicUserMethods = {
     return this.isAdmin(uid) && this.displayRole(uid) >= Roles.Admin;
   },
 
-  setRoleName(uid, role) {
+  setRole(uid, role) {
     const roleNum = Roles[role];
     if (!roleNum) {
       throw new Error('invalid role: ' + role);

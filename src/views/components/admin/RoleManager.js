@@ -51,8 +51,8 @@ function ChangeRoleButton({ oldRole, newRoleName, open }) {
 }
 
 const RoleEditor = dataBind({
-  changeRole({ uid, newRoleName }, { setRoleName }) {
-    return setRoleName({ uid, role: newRoleName });
+  changeRole({ uid, newRoleName }, { setRole }) {
+    return setRole({ uid, role: newRoleName });
   }
 })(({ uid, newRoleName }, { changeRole, userPublic }, { }) => {
   const user = userPublic({ uid });

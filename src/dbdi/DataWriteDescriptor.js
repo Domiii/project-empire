@@ -35,6 +35,10 @@ function processArgumentsNoValue(node, writeArgs) {
   return { queryArgs };
 }
 
+function processArgumentsUndetermined(node, writeArgs) {
+  return { varArgs: writeArgs };
+}
+
 export const writeParameterConfig = Object.freeze({
   push: {
     parameterCount: 2,
@@ -50,6 +54,11 @@ export const writeParameterConfig = Object.freeze({
   },
   delete: {
     parameterCount: 1,
+    processArguments: processArgumentsNoValue
+  },
+  custom: {
+    parameterCount: '?',
+    //processArguments: processArgumentsUndetermined
     processArguments: processArgumentsNoValue
   }
 });
@@ -87,7 +96,7 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
     }
     else if (isFunction(writerCfg)) {
       // custom writer function
-      writeData = writerCfg;
+      writeData = this._wrapCustomWriter(writerCfg);
     }
     else {
       throw new Error('Could not make sense of DataWriteDescriptor config node: ' + JSON.stringify(writerCfg));
@@ -95,8 +104,8 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
     this.writeData = this._wrapAccessFunction(writeData);
   }
 
-  _doGetPath(pathDescriptor, args, dataInjectProxy, readerProxy, callerNode, accessTracker) {
-    const pathOrPaths = pathDescriptor.getPath(args, dataInjectProxy, readerProxy, callerNode, accessTracker);
+  _doGetPath(pathDescriptor, args, readerProxy, injectProxy, callerNode, accessTracker) {
+    const pathOrPaths = pathDescriptor.getPath(args, readerProxy, injectProxy, callerNode, accessTracker);
 
     if (pathOrPaths) {
       if (isArray(pathOrPaths)) {
@@ -111,8 +120,27 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
     throw new Error('Tried to write to path but not all arguments were provided: ' + this.fullName);
   }
 
+  _wrapCustomWriter(writerFn) {
+    return (args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) => {
+      // // TODO check if all dependencies are loaded?
+      // if (!callerNode.areDependenciesLoaded(this)) {
+      //   return null;
+      // }
+
+      const {
+        //varArgs
+        queryArgs
+      } = args;
+
+      this.onWrite && this.onWrite(queryArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
+      return writerFn(queryArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
+      // this.onWrite && this.onWrite(...varArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
+      // return writerFn(...varArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
+    };
+  }
+
   _buildWriteDataFromDescriptor(pathDescriptor) {
-    return (args, dataInjectProxy, readerProxy, writerProxy, callerNode, accessTracker) => {
+    return (args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) => {
       // // TODO check if all dependencies are loaded?
       // if (!callerNode.areDependenciesLoaded(this)) {
       //   return null;
@@ -123,19 +151,18 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
         val
       } = args;
 
-      const path = this._doGetPath(pathDescriptor, queryArgs, dataInjectProxy, readerProxy, callerNode, accessTracker);
-      return this._doWriteData(path, val, queryArgs, dataInjectProxy, readerProxy, writerProxy, callerNode, accessTracker);
+      const path = this._doGetPath(pathDescriptor, queryArgs, readerProxy, injectProxy, callerNode, accessTracker);
+      return this._doWriteData(path, val, queryArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
     };
   }
 
-  _doWriteData(path, val, queryArgs, dataInjectProxy, readerProxy, writerProxy, callerNode, accessTracker) {
+  _doWriteData(path, val, queryArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) {
     const {
       dataProvider
     } = callerNode;
 
     //accessTracker.recordDataWrite(dataProvider, path, val);
-
-    this.onWrite && this.onWrite(queryArgs, val, dataInjectProxy, readerProxy);
+    this.onWrite && this.onWrite(queryArgs, val, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
 
     return dataProvider.actions[this.actionName](path, val);
     //dataProvider.writeData(path, val);

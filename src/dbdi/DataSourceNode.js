@@ -75,11 +75,11 @@ export default class DataSourceNode {
     return !!this._writeDescriptor;
   }
 
-  isDataLoaded(args, injectProxy, readerProxy, accessTracker) {
-    return this.readData(args, injectProxy, readerProxy, accessTracker) !== undefined;
+  isDataLoaded(args, readerProxy, injectProxy, accessTracker) {
+    return this.readData(args, readerProxy, injectProxy, accessTracker) !== undefined;
   }
 
-  readData(args, injectProxy, readerProxy, accessTracker) {
+  readData(args, readerProxy, injectProxy, accessTracker) {
     args = args || EmptyObject;
     if (!this._readDescriptor) {
       throw new Error(`Tried to read data from "${this.fullName}", 
@@ -88,13 +88,13 @@ export default class DataSourceNode {
 
     return this._readDescriptor.readData(
       args,
-      injectProxy,
       readerProxy,
+      injectProxy,
       this,
       accessTracker);
   }
 
-  writeData(args, injectProxy, readerProxy, writerProxy, accessTracker) {
+  writeData(args, readerProxy, injectProxy, writerProxy, accessTracker) {
     args = args || EmptyObject;
     if (!this._writeDescriptor) {
       throw new Error(`Tried to write data to "${this.fullName}",
@@ -103,8 +103,8 @@ export default class DataSourceNode {
 
     return this._writeDescriptor.writeData(
       args,
-      injectProxy,
       readerProxy,
+      injectProxy,
       writerProxy,
       this,
       accessTracker);

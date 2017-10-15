@@ -1,5 +1,4 @@
 import React, { PropTypes } from 'react';
-import { connect } from 'react-redux';
 import {
   //signInWithGithub,
   signInWithGoogle
@@ -23,19 +22,17 @@ export function SignInPage({}) {
   return (
     <div className="g-row sign-in">
       <div className="g-col">
-        <h1 className="sign-in__heading">Sign in</h1>
-        <Button block bsSize="large" bsStyle="primary" onClick={signInWithGoogle}>
-          <FAIcon name="google" /> Google
-        </Button>
+        <center>
+          <Button bsSize="large" bsStyle="primary" onClick={signInWithGoogle}>
+            <FAIcon name="google" /> Sign in with Google
+          </Button>
+        </center>
       </div>
     </div>
   );
 }
 
 SignInPage.propTypes = {
-  // signInWithGithub: PropTypes.func.isRequired,
-  // signInWithGoogle: PropTypes.func.isRequired,
-  // signInWithTwitter: PropTypes.func.isRequired
 };
 
 
@@ -43,8 +40,4 @@ SignInPage.propTypes = {
 //  CONNECT
 //-------------------------------------
 
-export default connect(state => ({
-  // signInWithGithub,
-  // signInWithGoogle,
-  // signInWithTwitter
-}))(SignInPage);
+export default SignInPage;

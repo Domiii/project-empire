@@ -2,12 +2,16 @@ import React, { Component, Children } from 'react';
 import isFunction from 'lodash/isFunction';
 
 
-export function injectIntoClass(Clazz, methodName, methodWrapper) {
-  Object.defineProperty(Clazz.prototype, methodName,
+export function injectIntoClass(Comp, methodName, methodWrapper) {
+  class InjectedComp extends Comp {}
+
+  Object.defineProperty(InjectedComp.prototype, methodName,
     {
-      value: methodWrapper(Clazz.prototype[methodName])
+      value: methodWrapper(Comp.prototype[methodName])
     }
   );
+  
+  return InjectedComp;
 }
 
 
@@ -39,7 +43,7 @@ export function injectRenderArgs(Comp, argsOrFunc) {
       const newArgs = isFunction(argsOrFunc) ? argsOrFunc(props, context) : argsOrFunc;
       //console.log('wrapped render: ' + props.name + `(${JSON.stringify(origArgs)}) → (${JSON.stringify(newArgs)})`);
       try {
-        return origRender.call(this, ...newArgs);
+        return origRender.call(this, ...newArgs, ...origArgs);
       }
       catch (err) {
         console.error('[Component render ERROR]', err.stack);
@@ -51,8 +55,7 @@ export function injectRenderArgs(Comp, argsOrFunc) {
   let ResultComp;
   if (isComponent) {
     // override render method
-    injectIntoClass(Comp, 'render', renderWrapper);
-    ResultComp = Comp;
+    ResultComp = injectIntoClass(Comp, 'render', renderWrapper);
   }
   else {
     // just wrap the function as-is

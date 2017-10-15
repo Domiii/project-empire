@@ -331,13 +331,13 @@ const ProjectControlView = dataBind()(
 );
 
 const ProjectControlList = dataBind()(
-  ({ }, { projectIdsOfUser, currentUid }) => {
+  ({ }, { activeProjectIdsOfUser, currentUid }) => {
     const uid = currentUid();
-    if (!uid || !projectIdsOfUser.isLoaded({ uid })) {
+    if (!uid || !activeProjectIdsOfUser.isLoaded({ uid })) {
       return (<LoadIndicator block size={1.5} />);
     }
 
-    const currentProjectIds = projectIdsOfUser({ uid });
+    const currentProjectIds = activeProjectIdsOfUser({ uid });
     if (isEmpty(currentProjectIds)) {
       return (<Alert bsStyle="warning">
         你目前沒有在進行專案。推薦選擇任務並且找守門人註冊新的～

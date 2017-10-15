@@ -38,8 +38,7 @@ import { injectRenderArgs } from './react-util';
 //   // TODO: proper pub-sub bindings
 // }
 
-
-export default (propsOrPropCb) => _WrappedComponent => {
+export default (propsOrPropCb) => WrappedComponent => {
   class WrapperComponent extends Component {
     static contextTypes = dataBindContextStructure;
     static childContextTypes = dataBindChildContextStructure;
@@ -82,7 +81,9 @@ export default (propsOrPropCb) => _WrappedComponent => {
       this._isMounted = false;
       this._dataSourceTree = getDataSourceTreeFromReactContext(context);
       this._customContext = getCustomContextFromReactContext(context) || {};
-      this._dataAccessTracker = new DataAccessTracker(this._dataSourceTree, this._onNewData);
+      this._dataAccessTracker = new DataAccessTracker(
+        this._dataSourceTree, this._onNewData, 
+        WrappedComponent.name || '<unknown component>');
 
 
       // prepare all the stuff
@@ -97,11 +98,20 @@ export default (propsOrPropCb) => _WrappedComponent => {
         this._dataAccessTracker._injectProxy
       ];
 
-      this.WrappedComponent = injectRenderArgs(_WrappedComponent,
-        this._injectedArguments);
+      // const Wrapper = (...allArgs) => {
+      //   const props = allArgs[allArgs.length-3];
+      //   console.log(allArgs.length, ...allArgs);
+      //   return (<WrappedComponent {...props} />);
+      // };
 
-      Object.assign(this.WrappedComponent.prototype, 
-        this._buildPrototypeExtensions());
+      this.WrappedComponent = injectRenderArgs(
+        WrappedComponent,
+        this._injectedArguments
+      );
+
+      this.WrappedComponent.prototype &&
+        Object.assign(this.WrappedComponent.prototype,
+          this._buildPrototypeExtensions());
     }
 
 
@@ -109,18 +119,34 @@ export default (propsOrPropCb) => _WrappedComponent => {
     // Private methods + properties
     // ################################################
 
+    /**
+     * These methods are added to the prototype of the wrapped component
+     */
     _buildPrototypeExtensions() {
+      const {
+        _injectedArguments
+      } = this;
       return {
         dataBindMethod(methodOrName) {
-          const methodName = isString(methodOrName) ? 
-            methodOrName : 
+          const methodName = isString(methodOrName) ?
+            methodOrName :
             methodOrName.name;
-          
-          return this[methodName] = 
-            partialRight(
-              this[methodName], 
-              ...this._injectedArguments
-            );
+
+          if (!methodName || !isFunction(this[methodName])) {
+            debugger;
+            throw new Error('Could not add data bindings to method: ' +
+              methodOrName + ' - ' + this[methodName]);
+          }
+
+          const origMethod = this[methodName];
+
+          return this[methodName] = (...ownArgs) => {
+            return origMethod(...ownArgs, ..._injectedArguments);
+          };
+          // partialRight(
+          //   this[methodName], 
+          //   ..._injectedArguments
+          // );
         },
 
         dataBindMethods(...methodOrNames) {
@@ -179,7 +205,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
           // }
 
           if (this._isMounted) {
-            console.error(`DI failed: Component requested data "${name}" but it does not exist.`);
+            console.error(`DI failed - Component requested props/context "${name}" but it does not exist`);
           }
           return undefined;
         }
@@ -212,7 +238,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
           }
 
           if (this._isMounted) {
-            console.error(`DI failed: Component requested function "${name}" but it does not exist.`);
+            console.error(`DI failed - Component requested function "${name}" but it does not exist.`);
           }
           return null;
         }
@@ -277,7 +303,8 @@ export default (propsOrPropCb) => _WrappedComponent => {
     // ################################################
 
     get wrappedComponentName() {
-      return _WrappedComponent.name || '<unnamed component>';
+      return WrappedComponent.name || 
+        '<unnamed component>';
     }
 
     getChildContext() {
@@ -326,10 +353,11 @@ export default (propsOrPropCb) => _WrappedComponent => {
       this._shouldUpdate = true;
       //this.forceUpdate();
       this.setState(EmptyObject);
-      //console.log('_onNewData', path);
+      //console.warn(this.wrappedComponentName, '_onNewData');
     }
 
     render() {
+      //console.warn(this.wrappedComponentName, 'render');
       this._shouldUpdate = false;
       const { WrappedComponent } = this;
 

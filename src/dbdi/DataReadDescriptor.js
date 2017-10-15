@@ -1,4 +1,4 @@
-import isPlainObject from 'lodash/isPlainObject';
+import isString from 'lodash/isString';
 import isFunction from 'lodash/isFunction';
 import isArray from 'lodash/isArray';
 
@@ -43,23 +43,21 @@ export default class DataReadDescriptor extends DataDescriptorNode {
   }
 
   _buildReadDataFromDescriptor(pathDescriptor) {
-    return (args, dataInjectProxy, readerProxy, callerNode, accessTracker) => {
+    return (args, readerProxy, injectProxy, callerNode, accessTracker) => {
       // // TODO check if all dependencies are loaded?
       // if (!callerNode.areDependenciesLoaded(this)) {
       //   return null;
       // }
 
-      const pathOrPaths = pathDescriptor.getPath(args, dataInjectProxy, readerProxy, callerNode, accessTracker);
+      const pathOrPaths = pathDescriptor.getPath(args, readerProxy, injectProxy, callerNode, accessTracker);
 
-      if (pathOrPaths) {
-        if (isArray(pathOrPaths)) {
-          const paths = pathOrPaths;
-          return paths.map(path => this._doReadData(path, callerNode, accessTracker));
-        }
-        else {
-          const path = pathOrPaths;
-          return this._doReadData(path, callerNode, accessTracker);
-        }
+      if (isArray(pathOrPaths)) {
+        const paths = pathOrPaths;
+        return paths.map(path => this._doReadData(path, callerNode, accessTracker));
+      }
+      else if (isString(pathOrPaths)) {
+        const path = pathOrPaths;
+        return this._doReadData(path, callerNode, accessTracker);
       }
       return undefined;
     };
@@ -103,14 +101,14 @@ export default class DataReadDescriptor extends DataDescriptorNode {
   /**
    * Check if data is loaded
    */
-  isDataLoaded(args, dataInjectProxy, readerProxy, callerNode, accessTracker) {
+  isDataLoaded(args, readerProxy, injectProxy, callerNode, accessTracker) {
     // TODO: fix this!
 
     // 1) check if all dependencies are loaded
     // if (!this.areDependenciesLoaded(args)) {
     //   return false;
     // }
-    const data = this.readData(args, dataInjectProxy, readerProxy, callerNode, accessTracker);
+    const data = this.readData(args, readerProxy, injectProxy, callerNode, accessTracker);
     return data !== undefined;
   }
 }

@@ -46,6 +46,10 @@ export class App extends Component {
     super(...args);
     this.state = { wasBusy: false };
 
+    // this.dataBindMethods(
+    //   this.componentWillUpdate
+    // );
+
     autoBind(this);
   }
 
@@ -54,7 +58,7 @@ export class App extends Component {
   // }
 
   componentWillUpdate() {
-    const { ensureUserInitialized } = this.prop.writers;
+    const { ensureUserInitialized } = this.props.writers;
 
     ensureUserInitialized();
         

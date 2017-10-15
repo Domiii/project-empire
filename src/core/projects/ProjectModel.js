@@ -10,10 +10,12 @@ import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 
 import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
+import filter from 'lodash/filter';
 import forEach from 'lodash/forEach';
 import isEmpty from 'lodash/isEmpty';
 import sortBy from 'lodash/sortBy';
 import size from 'lodash/size';
+import some from 'lodash/some';
 import times from 'lodash/times';
 import pickBy from 'lodash/pickBy';
 
@@ -59,9 +61,18 @@ const allProjectStageData = {
 };
 
 const readers = {
-  projectsOfUser({ uid }, { projectIdsOfUser, projectById }, { }) {
+  activeProjectsOfUser({ uid }, { activeProjectIdsOfUser, projectById }, { }) {
     return mapValues(
-      projectIdsOfUser(
+      activeProjectIdsOfUser(
+        { uid }) || EmptyObject,
+      (_, projectId) => projectById({ projectId }
+      )
+    );
+  },
+
+  archivedProjectsOfUser({ uid }, { archivedProjectIdsOfUser, projectById }, { }) {
+    return mapValues(
+      archivedProjectIdsOfUser(
         { uid }) || EmptyObject,
       (_, projectId) => projectById({ projectId }
       )
@@ -77,8 +88,23 @@ const readers = {
     );
   },
 
-  uidsWithoutProject({ }, { }, { usersPublic }) {
-    // TODO: make this more efficient
+  uidsWithoutProject({ }, { activeProjectIdsOfUser }, { usersPublic }) {
+    // TODO: make this more efficient (achieve O(k), where k = users without project)
+    if (!usersPublic.isLoaded()) {
+      return undefined;
+    }
+
+    if (!usersPublic) {
+      return null;
+    }
+
+    const uids = Object.keys(usersPublic);
+    if (some(uids, uid => !activeProjectIdsOfUser.isLoaded({uid}))) {
+      // not everything has loaded yet
+      return undefined;
+    }
+
+    return filter(uids, uid => size(activeProjectIdsOfUser({uid})) > 0);
   },
 
   projectReviewers({ projectId }, { projectById, userPublic }, { }) {
@@ -156,18 +182,20 @@ const readers = {
 import zipObject from 'lodash/zipObject';
 //import times from 'lodash/times';
 
-function updateAll({ pathArgs, readers, val }, { update_db }) {
-  const updateObj = zipObject(
-    map(readers, reader => reader.getPath(pathArgs)),
-    times(readers.length, val)
-  );
-  return update_db(updateObj);
-}
-
 const writers = {
+  updateAll({ pathArgs, readers, val }, {}, {}, { update_db }) {
+    const updateObj = zipObject(
+      map(readers, reader => reader.getPath(pathArgs)),
+      times(readers.length, val)
+    );
+    return update_db(updateObj);
+  },
+
   addUserToProject(
     { uid, projectId },
-    { uidOfProject, projectIdOfUser }) {
+    { uidOfProject, projectIdOfUser }, 
+    {}, 
+    { updateAll }) {
     return updateAll({
       pathArgs: { uid, projectId },
       readers: [uidOfProject, projectIdOfUser],
@@ -177,7 +205,9 @@ const writers = {
 
   deleteUserFromProject(
     { uid, projectId },
-    { uidOfProject, projectIdOfUser }) {
+    { uidOfProject, projectIdOfUser }, 
+    {}, 
+    { updateAll }) {
     return updateAll({
       pathArgs: { uid, projectId },
       readers: [uidOfProject, projectIdOfUser],
@@ -202,10 +232,10 @@ export default {
       }
     }
   },
-  projectIdsOfUser: {
+  activeProjectIdsOfUser: {
     path: '/_index/projectUsers/user/$(uid)',
     children: {
-      projectIdOfUser: '$(projectId)'
+      activeProjectIdOfUser: '$(projectId)'
     }
   },
   allProjectData: {

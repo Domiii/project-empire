@@ -100,7 +100,7 @@ export default class DataSourceTree {
   getPlugin(type, cfg) {
     if (isFunction(cfg)) {
       return cfg;
-    } 
+    }
     else if (isString(cfg)) {
       const name = cfg;
       const plugins = this.getPlugins(type);
@@ -108,10 +108,10 @@ export default class DataSourceTree {
       if (!plugin) {
         throw new Error(`Could not find plugin of type "${type}" and name "${name}"`);
       }
-      return plugin; 
+      return plugin;
     }
     else {
-      throw new Error(`Invalid config entry of type "${type}" must be function or string: ` + 
+      throw new Error(`Invalid config entry of type "${type}" must be function or string: ` +
         cfg);
     }
   }
@@ -151,6 +151,15 @@ export default class DataSourceTree {
     );
   }
 
+  _buildDataIsLoadedReadDescriptor(fullName, configNode, pathDescriptor) {
+    // TODO: make this less hackish
+    const readCfg = (args, readers) => {
+      return readers[configNode.name].isLoaded(args);
+    };
+    const readDescriptor = readCfg && new DataReadDescriptor(readCfg, fullName);
+    return readDescriptor;
+  }
+
   _buildDataReadDescriptor(fullName, configNode, pathDescriptor) {
     const readCfg = configNode.reader || pathDescriptor;
     const readDescriptor = readCfg && new DataReadDescriptor(readCfg, fullName);
@@ -164,18 +173,18 @@ export default class DataSourceTree {
       if (configNode.pathConfig) {
         // add default writers at path
         this._buildDefaultWriters(configNode, parent, name, newNodes);
-
-        // add isLoaded node
-        newNodes[name + '_isLoaded'] = this._buildNode(
-          configNode, parent, name,
-          (args, readers) => readers[name].isLoaded(args), 
-          null);
       }
 
       // build node
       const newDataNode = newNodes[name] = this._buildNode(configNode, parent, name,
         this._buildDataReadDescriptor,
         this._dataWriteCustomBuilder);
+
+      // add isLoaded node
+      newNodes[name + '_isLoaded'] = this._buildDataReadDescriptor && this._buildNode(
+        configNode, parent, name,
+        this._buildDataIsLoadedReadDescriptor,
+        null);
 
       // recurse
       this._buildChildren(newDataNode, configNode);
@@ -189,7 +198,7 @@ export default class DataSourceTree {
       return newDataNode;
     });
   }
-  
+
   // #########################################################################
   // Handle Writers
   //
@@ -225,7 +234,7 @@ export default class DataSourceTree {
       };
     }
     else {
-      onWrite = this.getPlugin('onWrite', onWrite);
+      onWrite = onWrite && this.getPlugin('onWrite', onWrite);
     }
 
     return {
@@ -272,8 +281,8 @@ export default class DataSourceTree {
     });
     return newChildren;
   }
-  
-  
+
+
   // #########################################################################
   // Descendant management + hierarchy compression
   // #########################################################################

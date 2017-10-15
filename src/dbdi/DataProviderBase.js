@@ -56,7 +56,7 @@ export default class DataProviderBase {
     return cache;
   }
 
-  registerListener(queryInput, listener) {
+  registerListener(queryInput, listener, who) {
     console.assert(isFunction(listener), '[INTERNAL ERROR] listener must be function.');
 
     const query = this._getOrCreateQueryInputCache(queryInput);
@@ -80,7 +80,7 @@ export default class DataProviderBase {
 
     if (!this._listenerData.get(listener).byPath[localPath]) {
       // register new listener for this path (if not already listening on path)
-      console.warn('registered path: ', localPath);
+      console.warn(who, 'registered path:', localPath);
       const customData = this.onListenerAdd(query, listener);
       this._listenerData.get(listener).byPath[localPath] = {
         query,

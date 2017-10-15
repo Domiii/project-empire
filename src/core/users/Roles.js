@@ -67,7 +67,7 @@ export function hasDisplayRole(a, b) {
   return getDisplayRole(a) >= getDisplayRole(b);
 }
 
-export function isAtLeastRole(a, b) {
+export function hasRole(a, b) {
   return getRole(a) >= getRole(b);
 }
 

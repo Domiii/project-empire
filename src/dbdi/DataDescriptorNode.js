@@ -48,7 +48,7 @@ export default class DataDescriptorNode {
    * 
    * @returns {(string|Array.)} Returns one or more sets of data or paths
    */
-  execute(args, dataInjectProxy, readerProxy, callerNode, accessTracker) {
+  execute(args, readerProxy, injectProxy, callerNode, accessTracker) {
     throw new Error('DescriptorNode did not implement execute: ' + this.constructor.name);
   }
 

@@ -19,9 +19,10 @@ export default class DataAccessTracker {
   _wrappedReaders = {};
   _wrappedWriters = {};
 
-  constructor(dataSourceTree, listener) {
+  constructor(dataSourceTree, listener, name) {
     this._dataSourceTree = dataSourceTree;
     this._listener = listener;
+    this._name = name;
 
     autoBind(this);
 
@@ -70,6 +71,11 @@ export default class DataAccessTracker {
 
   _resolveArgumentHandler = {
     get(target, name) {
+      if (name === '____isWrapperProxy') {
+        // need to hack this, because Proxies are transparently virtualized
+        // https://stackoverflow.com/questions/36372611/how-to-test-if-an-object-is-a-proxy
+        return true;
+      }
       if (target[name] === undefined) {
         console.warn(`Requested argument was not supplied: ${name}`);
       }
@@ -82,6 +88,11 @@ export default class DataAccessTracker {
   };
 
   _wrapArgs(args, node) {
+    if (args && args.____isWrapperProxy) {
+      // already wrapped
+      return args;
+    }
+
     if (args !== undefined && args !== null && !isPlainObject(args)) {
       let moreInfo = '';
       if (isObject(args)) {
@@ -104,11 +115,11 @@ export default class DataAccessTracker {
 
   _wrapReadData(node) {
     const wrappedReadData = (args) => {
-      return node.readData(this._wrapArgs(args, node), this._injectProxy, this._readerProxy, this);
+      return node.readData(this._wrapArgs(args, node), this._readerProxy, this._injectProxy, this);
     };
 
     wrappedReadData.isLoaded = (args) => {
-      return node.isDataLoaded(this._wrapArgs(args, node), this._injectProxy, this._readerProxy, this);
+      return node.isDataLoaded(this._wrapArgs(args, node), this._readerProxy, this._injectProxy, this);
     };
 
     return this._decorateWrapper(wrappedReadData, node);
@@ -122,23 +133,26 @@ export default class DataAccessTracker {
 
     const wrappedWriteData = (...writeArgs) => {
       const allArgs = processArguments(node, writeArgs);
+      //if (allArgs.queryArgs) {
       allArgs.queryArgs = this._wrapArgs(allArgs.queryArgs, node);
-      return node.writeData(allArgs, this._injectProxy, this._readerProxy, this._writerProxy, this);
+      //}
+      return node.writeData(allArgs, this._readerProxy, this._injectProxy, this._writerProxy, this);
     };
 
     return this._decorateWrapper(wrappedWriteData, node);
   }
 
   _decorateWrapper(wrapper, node) {
-    const { pathDescriptor } = node.pathDescriptor;
-    if (pathDescriptor) {
+    const { pathDescriptor } = node;
+    if (!pathDescriptor) {
       wrapper.getPath = () => { return undefined; };
     }
     else {
       wrapper.getPath = (args) => {
-        return pathDescriptor.getPath(args, this._injectProxy, this._readerProxy, this);
+        return pathDescriptor.getPath(args, this._readerProxy, this._injectProxy, this);
       };
     }
+    return wrapper;
   }
 
   // ################################################
@@ -165,14 +179,14 @@ export default class DataAccessTracker {
   resolveReadDataForce(name) {
     const readData = this.resolveReadData(name);
     if (!readData) {
-      throw new Error(`DI failed - reader does not exist: "${name}"`);
+      throw new Error(`DI failed - reader does not exist: "${name}": 
+ ${Object.keys(this._dataSourceTree._root._readDescendants).join(', ')}`);
     }
     return readData;
   }
 
   resolveWriteData(name) {
     if (!this._dataSourceTree.hasWriter(name)) {
-      //throw new Error(`DI failed - writer does not exist: "${name}"`);
       return undefined;
     }
 
@@ -184,8 +198,17 @@ export default class DataAccessTracker {
     return writeData;
   }
 
+  resolveWriteDataForce(name) {
+    const writeData = this.resolveWriteData(name);
+    if (!writeData) {
+      throw new Error(`DI failed - writer does not exist: "${name}": 
+ ${Object.keys(this._dataSourceTree._root._writeDescendants).join(', ')}`);
+    }
+    return writeData;
+  }
+
   recordDataAccess(dataProvider, path) {
-    dataProvider.registerListener(path, this._listener);
+    dataProvider.registerListener(path, this._listener, this._name);
     this._dataProviders.add(dataProvider);
   }
 

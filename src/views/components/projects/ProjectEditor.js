@@ -209,18 +209,35 @@ export const ProjectUserEditor = dataBind({
 
 
 })(
-  ({ projectId }, { uidsOfProject }, { uidsWithoutProject }) => {
-    const addableUids = uidsWithoutProject();
-    const existingUids = Object.keys(uidsOfProject({ projectId }));
+  ({ projectId }, { uidsOfProject, uidsWithoutProject }, { }) => {
+    let existingUsersEl, addableUsersEl;
+    if (uidsOfProject.isLoaded({ projectId })) {
+      const existingUids = Object.keys(uidsOfProject({ projectId }));
+      existingUsersEl = (
+        <UserList uids={existingUids}
+          renderUser={ExistingUserEl} />
+      );
+    }
+    else {
+      existingUsersEl = <LoadIndicator block />;
+    }
+
+    if (uidsWithoutProject.isLoaded()) {
+      addableUsersEl = (
+        <UserList uids={uidsWithoutProject()}
+          renderUser={AddUserEl} />
+      );
+    }
+    else {
+      addableUsersEl = <LoadIndicator block />;
+    }
 
     return (<Flex row={true} alignItems="start">
       <Item>
-        <UserList uids={existingUids}
-          renderUser={ExistingUserEl} />
+        {existingUsersEl}
       </Item>
       <Item>
-        <UserList uids={addableUids}
-          renderUser={AddUserEl} />
+        {addableUsersEl}
       </Item>
     </Flex>);
   }
@@ -231,7 +248,9 @@ export const ProjectUserEditor = dataBind({
   /**
    * DI-decorated action: create or update item
    */
-  onSubmit({ formData }, { projectId, onSave }, { set_projectById, push_projectById }, { }) {
+  onSubmit({ formData }, { projectId, onSave },
+    { set_projectById, push_projectById }, { }) {
+
     // get rid of undefined fields, created by (weird) form editor
     formData = pickBy(formData, val => val !== undefined);
 
@@ -260,11 +279,7 @@ export default class ProjectEditor extends Component {
     autoBind(this);
   }
 
-  render({ }, { projectOfId, onSubmit }, { }) {
-    const {
-      projectId
-    } = this.props;
-
+  render({ projectId }, { projectOfId, onSubmit }, { }) {
     const alreadyExists = !!projectId;
     const project = alreadyExists && projectOfId({ projectId }) || EmptyObject;
 

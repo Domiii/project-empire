@@ -13,7 +13,7 @@ import autoBind from 'react-autobind';
 
 import dataBind from 'src/dbdi/react/dataBind';
 
-import { 
+import {
   Alert, Button, Jumbotron, Well, Panel, Badge
 } from 'react-bootstrap';
 
@@ -29,89 +29,7 @@ import ProjectControlView from 'src/views/components/projects/ProjectControlView
 import { UserBadge } from 'src/views/components/users/UserList';
 
 
-const ProjectStatus = {
-  None: 0,
-  Prep: 1,
-  Go: 2,
-  WrapUp: 3,
-  Done: 4
-};
 
-// TODO: add "project prep" or "project first steps" to help the team hit the ground running
-
-
-// @connect(({ firebase }, props) => {
-//   const auth = firebase.auth;
-//   const currentUid = auth && auth.uid;
-
-//   const userProjectRef = UserProjectRef(firebase);
-
-//   const u2aIdx = userProjectRef.indexRefs.user.val;
-//   let currentProjectId, missionsRef;
-//   if (!!u2aIdx) {
-//     const projectIds = u2aIdx[currentUid] && Object.keys(u2aIdx[currentUid]);
-
-//     currentProjectId = projectIds && projectIds[0] || null;
-
-//     if (currentProjectId) {
-//       // get ready for project-related data
-//       missionsRef = MissionsRef(firebase);
-//     }
-//   }
-
-//   const projectsRef = userProjectRef.refs.project;
-//   const isReady = currentUid && userProjectRef.indexRefs.user.isLoaded;
-
-//   return {
-//     isReady: true
-//     // currentUid,
-//     // currentProjectId,
-    
-//     // isReady,
-
-//     // users: userProjectRef.refs.user.val,
-//     // projects: projectsRef.val,
-    
-//     // missions: missionsRef && missionsRef.val,
-    
-//     // u2aIdx,
-//     // a2uIdx: userProjectRef.indexRefs.project.val,
-
-//     // getUsersByProject: userProjectRef.get_user_by_project
-//   };
-// })
-// @firebaseConnect((props, firebase) => {
-//   // const {
-//   //   currentUid,
-//   //   currentProjectId,
-//   //   projects
-//   // } = props;
-
-//   // if (!!currentUid) {
-//   //   const paths = [
-//   //     UserInfoRef.userList.makeQuery(),
-//   //     ProjectsRef.makeQuery()
-//   //   ];
-
-//   //   const currentProject = projects && projects[currentProjectId];
-//   //   if (!!currentProject) {
-//   //     // get project-related data
-//   //     paths.push(
-//   //       MissionsRef.makeQuery(currentProject.missionId)
-//   //     );
-//   //   }
-
-//   //   UserProjectRef.addIndexQueries(paths, {
-//   //     user: [currentUid]
-//   //   });
-//   //   //console.log(paths, props.projects);
-//   //   return paths;
-//   // }
-//   // else 
-//   {
-//     return EmptyArray;
-//   }
-// })
 @dataBind({
 
 })
@@ -126,83 +44,7 @@ export default class MissionControlPage extends Component {
     autoBind(this);
   }
 
-  get IsAdmin() {
-    const { currentUserRef } = this.context;
-    return currentUserRef && currentUserRef.isAdminDisplayMode() || false;
-  }
-
-  get CurrentUserUid() {
-    const { currentUserRef } = this.context;
-    return currentUserRef && currentUserRef.props.uid;
-  }
-
-  renderMeetings(projectData) {
-    const {
-      meetings
-    } = this.props;
-
-    return (<ProjectMeetingPanel 
-      {...projectData}
-      partyMembers={projectData.users}
-      meetings={meetings}
-            />);
-  }
-
-  render() {
-    const {
-      isReady,
-      currentProjectId,
-      children,
-      users,
-      projects,
-      missions,
-      u2aIdx,
-      a2uIdx,
-
-      userProjectRef,
-      getUsersByProject
-    } = this.props;
-
-    if (!isReady) {
-      // still loading
-      return (<LoadOverlay />);
-    }
-
-    // TODO: 冒險者可以看到自己所有的 project
-
-
-    let currentProjectOverview;
-    
-    // const project = projects && projects[currentProjectId];
-    // if (project) {
-    //   let existingUsers = getUsersByProject(currentProjectId);
-
-
-    //   // TODO: render stuff based on current status
-    //   const projectStatus = ProjectStatus.Go;
-    //   const projectData = {
-    //     projectId: currentProjectId,
-    //     project,
-    //     users: existingUsers,
-    //     reviewer: users && users[project.reviewerUid],
-    //     projectGuardian: users && users[project.guardianUid],
-
-    //     mission: missions && missions[project.missionId]
-    //   };
-
-    //   currentProjectOverview = (<div>
-    //     <ProjectPreview {...projectData} />
-    //     <ProjectControlView projectId={currentProjectId} />
-    //     { /* this.renderMeetings(projectData) */ }
-    //   </div>);
-    // }
-    // else {
-    //   currentProjectOverview = (<div>
-    //     <ProjectControlView />
-    //   </div>);
-    // }
-
-
+  render({ }, { }, { }) {
     return (
       <div>
         <Panel header="目前的任務">

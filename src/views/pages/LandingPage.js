@@ -16,27 +16,13 @@ import { LoadOverlay } from 'src/views/components/overlays';
 
 @dataBind()
 export default class LandingPage extends Component {
-  static contextTypes = {
-    currentUserRef: PropTypes.object.isRequired
-  };
-
   constructor(...args) {
     super(...args);
 
     autoBind(this);
   }
 
-  get IsNotLoadedYet() {
-    const { currentUserRef } = this.context;
-    return !currentUserRef || !currentUserRef.isLoaded;
-  }
-
   render() {
-    if (this.IsNotLoadedYet) {
-      // still loading
-      return (<LoadOverlay />);
-    }
-
     //console.log(this.context.currentUserRef, this.context.currentUserRef.isAdminDisplayMode());
 
     return (

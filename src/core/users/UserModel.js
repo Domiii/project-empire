@@ -1,4 +1,6 @@
-import Roles, { hasRole, hasDisplayRole } from 'src/core/users/Roles';
+import Roles, {
+  hasRole, hasDisplayRole, getRole
+} from 'src/core/users/Roles';
 
 export default {
   allUserRecords: {
@@ -9,35 +11,35 @@ export default {
     // #######################################################################
 
     readers: {
-      isCurrentUserLoggedIn({ }, { currentUid }, { }) {
+      isCurrentUserLoggedIn({ }, { }, { currentUid }) {
         return !!currentUid;
       },
 
       isCurrentUserAdminReal({ }, { hasCurrentUserRole }, { }) {
-        return hasCurrentUserRole(Roles.Admin);
+        return hasCurrentUserRole({ role: Roles.Admin });
       },
 
       isCurrentUserGuardian({ }, { hasCurrentUserDisplayRole }, { }) {
-        return hasCurrentUserDisplayRole(Roles.Guardian);
+        return hasCurrentUserDisplayRole({ role: Roles.Guardian });
       },
 
-      hasCurrentUserRole({ role }, { currentUserRole }, { }) {
+      hasCurrentUserRole({ role }, { }, { currentUserRole }) {
         return currentUserRole && hasRole(currentUserRole, role);
       },
 
-      hasCurrentUserDisplayRole({ role }, { currentUserDisplayRole }, { }) {
+      hasCurrentUserDisplayRole({ role }, { }, { currentUserDisplayRole }) {
         return currentUserDisplayRole && hasDisplayRole(currentUserDisplayRole, role);
       },
 
-      isCurrentUserAdmin({ }, { currentUserDisplayRole }, { }) {
+      isCurrentUserAdmin({ }, { }, { currentUserDisplayRole }) {
         return currentUserDisplayRole && hasDisplayRole(currentUserDisplayRole, Roles.Admin);
       },
 
-      currentUserRole({ }, { currentUser }, { }) {
+      currentUserRole({ }, { }, { currentUser }) {
         return currentUser && currentUser.role;
       },
 
-      currentUserDisplayRole({ }, { currentUser }, { }) {
+      currentUserDisplayRole({ }, { }, { currentUser }) {
         return currentUser && currentUser.displayRole;
       }
     },
@@ -51,13 +53,16 @@ export default {
       /**
        * Store new user data in database after first login
        */
-      ensureUserInitialized({ }, { currentUser },
-        { userPublic, userPrivate }, { setUserData }) {
-        if (!currentUser || !currentUser.uid) return;
+      ensureUserInitialized(
+        { },
+        { userPublic, userPrivate },
+        { currentUserAuthData },
+        { setUserData }) {
+        if (!currentUserAuthData || !currentUserAuthData.uid) return;
 
         const {
           uid
-        } = currentUser;
+        } = currentUserAuthData;
 
         if (!userPublic.isLoaded({ uid }) || !userPrivate.isLoaded({ uid })) {
           // not loaded yet
@@ -69,56 +74,58 @@ export default {
           return;
         }
 
-        setTimeout(() => {
-          const {
+        //setTimeout(() => {
+        const {
             providerData,
-            displayName,
+          displayName,
+          email
+          } = currentUserAuthData;
+
+        // user logged in, but has no record of user data yet
+        // -> get user data and add to userInfo DB
+        // see: https://firebase.google.com/docs/reference/js/firebase.UserInfo
+        let userData = providerData && providerData.length && providerData[0];
+        if (!userData) {
+          userData = {
+            displayName: displayName || '<unknown user>',
             email
-          } = currentUser;
+          };
+        }
 
-          // user logged in, but has no record of user data yet
-          // -> get user data and add to userInfo DB
-          // see: https://firebase.google.com/docs/reference/js/firebase.UserInfo
-          let userData = providerData && providerData.length && providerData[0];
-          if (!userData) {
-            userData = {
-              displayName: displayName || '<unknown user>',
-              email
-            };
-          }
-
-          setUserData(userData);
-        });
+        setUserData({ uid, userData });
+        //});
       },
 
-      setAdminDisplayMode({ enabled }, { }, { }, set_displayRole) {
-        return set_displayRole(enabled ? Roles.Admin : Roles.User);
+      setAdminDisplayMode({ uid, enabled }, { }, { }, { set_userDisplayRole }) {
+        return set_userDisplayRole({ uid }, enabled ? Roles.Admin : Roles.User);
       },
 
       setUserData(
-        { uid, userData }, { },
+        { uid, userData },
         { userPrivateData },
-        { set_userPrivateData, set_userPhotoURL, set_displayName }) {
+        { },
+        { set_userPrivateData, set_userPhotoURL, set_userDisplayName }) {
         console.log('Writing user data: ' + JSON.stringify(userData));
 
         const updates = [];
 
-        if (!userPrivateData({ uid })) {
-          updates.push(set_userPrivateData({ uid }, userData));
+        const userArgs = { uid };
+        if (!userPrivateData(userArgs)) {
+          updates.push(set_userPrivateData(userArgs, userData));
         }
 
         if (userData.photoURL) {
-          updates.push(set_userPhotoURL(userData.photoURL));
+          updates.push(set_userPhotoURL(userArgs, userData.photoURL));
         }
 
         if (userData.displayName) {
-          updates.push(set_displayName(userData.displayName));
+          updates.push(set_userDisplayName(userArgs, userData.displayName));
         }
 
         return Promise.all(updates);
       },
 
-      setRoleName({ uid, role }, { }, { }, { update_userPublic }) {
+      setRole({ uid, role }, { }, { }, { update_userPublic }) {
         const roleNum = getRole(role);
         if (!roleNum) {
           throw new Error('invalid role: ' + role);
@@ -157,8 +164,8 @@ export default {
       usersPublic: {
         path: 'public',
         readers: {
-          currentUser: ({ }, { currentUid }, { userPublic }) =>
-            userPublic({ uid: currentUid })
+          currentUser: ({ }, { userPublic }, { currentUid }) =>
+            currentUid && userPublic({ uid: currentUid })
         },
         children: {
           gms: {

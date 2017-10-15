@@ -1,7 +1,8 @@
-import { getFirebase } from 'react-redux-firebase';
+import firebase from 'firebase';
 
 export function signIn(provider) {
-  return getFirebase().auth().signInWithRedirect(provider);
+  // TODO: support multiple apps
+  return firebase.auth().signInWithRedirect(provider);
 }
 
 // export function signInWithGithub() {
@@ -10,15 +11,16 @@ export function signIn(provider) {
 
 
 export function signInWithGoogle() {
-  return signIn(new getFirebase().auth.GoogleAuthProvider());
+  return signIn(new firebase.auth.GoogleAuthProvider());
 }
 
 // export function signInWithTwitter() {
 //   return authenticate(new getFirebase().auth.TwitterAuthProvider());
 // };
 
-export function isAuthenticated(firebaseApp) {
-  return !!getFirebase().auth().currentUser;
+export function isAuthenticated() {
+  // TODO: support multiple apps
+  return !!firebase.auth().currentUser;
 }
 
 
