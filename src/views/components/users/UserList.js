@@ -16,13 +16,13 @@ export class UserBadge extends Component {
     uid: PropTypes.string.isRequired
   }
 
-  render({}, {userPublic}) {
+  render({ }, { userPublic }) {
     const {
       uid,
       ...otherProps
     } = this.props;
 
-    const user = userPublic({uid});
+    const user = userPublic({ uid });
 
     const clazzes = (otherProps && otherProps.className || '')
       + ' user-tag';
@@ -36,7 +36,7 @@ export class UserBadge extends Component {
 
 export default class UserList extends Component {
   static propTypes = {
-    uids: PropTypes.object.isRequired,
+    uids: PropTypes.array.isRequired,
     renderUser: PropTypes.oneOfType([
       PropTypes.func,
       PropTypes.element
@@ -54,7 +54,7 @@ export default class UserList extends Component {
     return (<span>
       {map(uids, (uid) => (
         <span key={uid}>
-          { <RenderUser uid={uid} /> } {' '}
+          {<RenderUser uid={uid} />} {' '}
         </span>
       ))}
     </span>);

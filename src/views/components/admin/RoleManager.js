@@ -8,7 +8,7 @@ import zipObject from 'lodash/zipObject';
 import { EmptyObject, EmptyArray } from 'src/util';
 
 import UserInfoRef from 'src/core/users/UserInfoRef';
-import Roles, { isAtLeastRole } from 'src/core/users/Roles';
+import Roles, { hasRole } from 'src/core/users/Roles';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -34,45 +34,67 @@ const RoleNames = [
   'GM'
 ];
 
-function RoleChangeLabel({ newRoleName, oldRole }) {
+function RoleChangeLabel({ newRole, oldRole }) {
   return (<span>
-    {isAtLeastRole(newRoleName, oldRole) ?
+    {hasRole(newRole, oldRole) ?
       (<span className="color-green"><FAIcon name="level-up" /></span>) :
       (<span className="color-red"><FAIcon name="level-down" /></span>)
     }
-    {newRoleName}
+    {newRole}
   </span>);
 }
 
-function ChangeRoleButton({ oldRole, newRoleName, open }) {
+function ChangeRoleButton({ oldRole, newRole, open }) {
   return (<Button onClick={open} bsSize="small" className="no-padding">
-    <RoleChangeLabel oldRole={oldRole} newRole={newRoleName} />
+    <RoleChangeLabel oldRole={oldRole} newRole={newRole} />
   </Button>);
 }
 
 const RoleEditor = dataBind({
-  changeRole({ uid, newRoleName }, { setRole }) {
-    return setRole({ uid, role: newRoleName });
+  changeRole({ uid, newRole }, { setRole }) {
+    return setRole({ uid, role: newRole });
   }
-})(({ uid, newRoleName }, { changeRole, userPublic }, { }) => {
+})(({ uid, newRole }, { changeRole, userPublic }, { }) => {
   const user = userPublic({ uid });
 
   return (<ConfirmModal
-    key={newRoleName}
-    header={<span>Make user <RoleChangeLabel role1={newRoleName} role2={user.role} />?</span>}
+    key={newRole}
+    header={<span>Make user <RoleChangeLabel role1={newRole} role2={user.role} />?</span>}
     ButtonCreator={ChangeRoleButton}
     onConfirm={changeRole}
 
     oldRole={user.role}
-    newRoleName={newRoleName}
+    newRole={newRole}
   >
     <span>
       Promote/demote {user.displayName} t
-      o <RoleChangeLabel newRole={newRoleName} oldRole={user.role} />?
+      o <RoleChangeLabel newRole={newRole} oldRole={user.role} />?
     </span>
   </ConfirmModal>);
 });
 
+
+const RenderUser = dataBind({})(
+  ({ uid }, { userPublic }) => {
+    const user = userPublic({ uid });
+    const otherRoles = RoleNames.filter(name => Roles[name] !== (user.role || 0));
+    const buttonEls = (
+      <span>
+        {map(otherRoles, (newRole) => (
+          <RoleEditor key={newRole} uid={uid} newRole={newRole} />
+        ))}
+      </span>
+    );
+
+    return (<Badge>
+      <span className="user-tag">
+        <UserIcon user={user} size="tiny" /> &nbsp;
+        {user.displayName} &nbsp;
+        {buttonEls}
+      </span>
+    </Badge>);
+  }
+);
 
 @dataBind({
   userLists({ }, { }, { usersPublic }) {
@@ -94,36 +116,13 @@ const RoleEditor = dataBind({
   }
 })
 export default class RoleManager extends Component {
-  constructor(props) {
-    super();
-
-    this.dataBindMethods(
-      this.getUserList
-    );
+  constructor(...args) {
+    super(...args);
 
     autoBind(this);
   }
 
-  RenderUser({ user, uid }) {
-    const otherRoles = RoleNames.filter(name => Roles[name] !== (user.role || 0));
-    const buttonEls = (
-      <span>
-        {map(otherRoles, (newRoleName) => (
-          <RoleEditor key={newRoleName} uid={uid} newRoleName={newRoleName} />
-        ))}
-      </span>
-    );
-
-    return (<Badge>
-      <span className="user-tag">
-        <UserIcon user={user} size="tiny" /> &nbsp;
-        {user.displayName} &nbsp;
-        {buttonEls}
-      </span>
-    </Badge>);
-  }
-
-  render({ }, { }, { isCurrentUserAdmin, userLists }) {
+  render({ }, { userLists }, { isCurrentUserAdmin }) {
     if (!isCurrentUserAdmin) {
       return (
         <Alert bsStyle="warning">GM only</Alert>
@@ -131,14 +130,14 @@ export default class RoleManager extends Component {
     }
 
     return (<div>{
-      map(userLists, (userList) => {
+      map(userLists(), (userList) => {
         const {
             name,
           list
           } = userList;
 
         return (<Panel key={name} header={name}>
-          <UserList uids={Object.keys(list)} renderUser={this.RenderUser} />
+          <UserList uids={Object.keys(list)} renderUser={RenderUser} />
         </Panel>);
       })
     }</div>);

@@ -128,6 +128,9 @@ export default (propsOrPropCb) => WrappedComponent => {
       } = this;
       return {
         dataBindMethod(methodOrName) {
+          if (!methodOrName) {
+            throw new Error('invalid argument in dataBindMethod(s): null or undefined');
+          }
           const methodName = isString(methodOrName) ?
             methodOrName :
             methodOrName.name;
