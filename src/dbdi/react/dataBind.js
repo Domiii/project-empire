@@ -143,7 +143,11 @@ export default (propsOrPropCb) => WrappedComponent => {
 
           //const origMethod = this[methodName];
 
-          return this[methodName] = partialRight(
+          // hack: we must override the prototype because else react-autobind won't catch it
+          // NOTE: it's oke because we created a new class in constructor anyway
+          //    (injectRenderArgs returns a new class)
+          const proto = Object.getPrototypeOf(this);
+          return proto[methodName] = partialRight(
             this[methodName], 
             ..._injectedArguments
           );
@@ -185,22 +189,22 @@ export default (propsOrPropCb) => WrappedComponent => {
       this._variableProxy = new Proxy({}, {
         get: (target, name) => {
           // 1) check custom data
-          if (this._customProps[name] !== undefined) {
+          if (name in this._customProps) {
             return this._customProps[name];
           }
 
           // 2) check props
-          if (this.props[name] !== undefined) {
+          if (name in this.props) {
             return this.props[name];
           }
 
           // 3) check context
-          if (this.context[name] !== undefined) {
+          if (name in this.context) {
             return this.context[name];
           }
 
           // 4) check custom context
-          if (this._customContext[name] !== undefined) {
+          if (name in this._customContext) {
             //console.warn('get from customContext: ' + name);
             return this._customContext[name];
           }

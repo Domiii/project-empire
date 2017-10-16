@@ -153,16 +153,18 @@ export default class DataSourceTree {
 
   _buildDataIsLoadedReadDescriptor(fullName, configNode, pathDescriptor) {
     // TODO: make this less hackish
-    const readCfg = (args, readers) => {
+    const reader = (args, readers) => {
       return readers[configNode.name].isLoaded(args);
     };
-    const readDescriptor = readCfg && new DataReadDescriptor(readCfg, fullName);
+    const readDescriptor = reader && new DataReadDescriptor(null, reader, fullName);
     return readDescriptor;
   }
 
   _buildDataReadDescriptor(fullName, configNode, pathDescriptor) {
-    const readCfg = configNode.reader || pathDescriptor;
-    const readDescriptor = readCfg && new DataReadDescriptor(readCfg, fullName);
+    let { reader } = configNode;
+    reader = reader && this.getPlugin('reader', reader);
+    const readDescriptor = (reader || pathDescriptor) && 
+      new DataReadDescriptor(pathDescriptor, reader, fullName);
     return readDescriptor;
   }
 

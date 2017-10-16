@@ -88,9 +88,9 @@ const readers = {
     );
   },
 
-  uidsWithoutProject({ }, { activeProjectIdsOfUser }, { usersPublic }) {
+  uidsWithoutProject({ }, { activeProjectIdsOfUser }, { usersPublic, usersPublic_isLoaded }) {
     // TODO: make this more efficient (achieve O(k), where k = users without project)
-    if (!usersPublic.isLoaded()) {
+    if (!usersPublic_isLoaded) {
       return undefined;
     }
 
@@ -99,12 +99,12 @@ const readers = {
     }
 
     const uids = Object.keys(usersPublic);
-    if (some(uids, uid => !activeProjectIdsOfUser.isLoaded({uid}))) {
+    if (some(uids, uid => !activeProjectIdsOfUser.isLoaded({ uid }))) {
       // not everything has loaded yet
       return undefined;
     }
 
-    return filter(uids, uid => size(activeProjectIdsOfUser({uid})) > 0);
+    return filter(uids, uid => size(activeProjectIdsOfUser({ uid })) > 0);
   },
 
   projectReviewers({ projectId }, { projectById, userPublic }, { }) {
@@ -183,7 +183,7 @@ import zipObject from 'lodash/zipObject';
 //import times from 'lodash/times';
 
 const writers = {
-  updateAll({ pathArgs, readers, val }, {}, {}, { update_db }) {
+  updateAll({ pathArgs, readers, val }, { }, { }, { update_db }) {
     const updateObj = zipObject(
       map(readers, reader => reader.getPath(pathArgs)),
       times(readers.length, val)
@@ -193,8 +193,8 @@ const writers = {
 
   addUserToProject(
     { uid, projectId },
-    { uidOfProject, projectIdOfUser }, 
-    {}, 
+    { uidOfProject, projectIdOfUser },
+    { },
     { updateAll }) {
     return updateAll({
       pathArgs: { uid, projectId },
@@ -205,8 +205,8 @@ const writers = {
 
   deleteUserFromProject(
     { uid, projectId },
-    { uidOfProject, projectIdOfUser }, 
-    {}, 
+    { uidOfProject, projectIdOfUser },
+    { },
     { updateAll }) {
     return updateAll({
       pathArgs: { uid, projectId },
@@ -226,6 +226,9 @@ export default {
     children: {
       uidsOfProject: {
         path: '$(projectId)',
+        reader(res) {
+          return res === null ? EmptyObject : res;
+        },
         children: {
           uidOfProject: '$(uid)'
         }
@@ -303,9 +306,9 @@ export default {
               projectMissionId: 'missionId',
 
               // only one reviewer (GM) for now
-              projectReviewerId: 'reviewerId',
+              projectReviewerUid: 'reviewerUid',
 
-              projectGuardianId: 'guardianId'
+              projectGuardianUid: 'guardianUid'
             }
           }
         }

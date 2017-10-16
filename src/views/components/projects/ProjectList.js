@@ -66,31 +66,30 @@ export default class ProjectList extends Component {
     return sortedProjectIdsOfPage(this.ProjectListArgs);
   }
 
-  toggleAdding() {
+  toggleAdding = () => {
     this.setAdding(!this.state.adding);
   }
 
-  setAdding(adding) {
+  setAdding = (adding) => {
     this.setState({ adding });
   }
 
-  onAddedProject() {
+  onAddedProject = () => {
     this.setAdding(false);
   }
 
-  setPage(page) {
+  setPage = (page) => {
     this.setState({ page });
   }
 
-  makeEditorHeader({ }, { }, { isCurrentUserGuardian, allMissions }) {
+  makeEditorHeader({ }, { }, { isCurrentUserGuardian }) {
     return !isCurrentUserGuardian ? null : (
       <div>
         <Button active={this.IsAdding}
           bsStyle="success" bsSize="small"
-          disabled={isEmpty(allMissions)}
           onClick={this.toggleAdding}>
           <FAIcon name="plus" className="color-green" /> add new project
-        </Button>
+          </Button>
 
         {this.IsAdding &&
           <ProjectEditor projectId={null} onSave={this.onAddedProject} />

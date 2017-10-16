@@ -2,6 +2,8 @@ import Roles, {
   hasRole, hasDisplayRole, getRole
 } from 'src/core/users/Roles';
 
+import pick from 'lodash/pick';
+
 export default {
   allUserRecords: {
     path: 'users',

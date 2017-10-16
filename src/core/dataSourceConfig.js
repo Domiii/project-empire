@@ -1,3 +1,5 @@
+import firebase from 'firebase';
+
 import ProjectModel from 'src/core/projects/ProjectModel';
 import UserModel from 'src/core/users/UserModel';
 import MissionModel from 'src/core/missions/MissionModel';

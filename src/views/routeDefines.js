@@ -46,7 +46,7 @@ export const getRoutes = getState => {
       },
       {
         name: routeNames.USER_PROFILE,
-        path: routeTemplates.USER_PROFILE,
+        path: routeTemplates.USER_PROFILE + '*',
         component: UserProfilePage,
         onEnter: requireAuth(getState)
       },

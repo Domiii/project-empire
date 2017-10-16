@@ -56,42 +56,39 @@ export default class ProjectEditTools extends PureComponent {
     super(...args);
 
     this.dataBindMethods(
-      this.deleteButton,
-      this.togglePublicButton
+      this.deleteButton
     );
-
-    autoBind(this);
   }
 
-  changeOrderUp() {
-    const { projectId, changeOrder } = this.props;
+  // changeOrderUp() {
+  //   const { projectId, changeOrder } = this.props;
 
-    changeOrder(projectId, -1);
-  }
+  //   changeOrder(projectId, -1);
+  // }
 
-  changeOrderDown() {
-    const { projectId, changeOrder } = this.props;
+  // changeOrderDown() {
+  //   const { projectId, changeOrder } = this.props;
 
-    changeOrder(projectId, 1);
-  }
+  //   changeOrder(projectId, 1);
+  // }
 
-  changeOrderButtons() {
-    const { changeOrder } = this.props;
-    if (!changeOrder) return null;
+  // changeOrderButtons() {
+  //   const { changeOrder } = this.props;
+  //   if (!changeOrder) return null;
 
-    return (<ButtonProject>
-      <Button onClick={this.changeOrderUp}
-        className="" bsSize="small" >
-        <FAIcon name="caret-square-o-left" />
-      </Button>
-      <Button onClick={this.changeOrderDown}
-        className="" bsSize="small" >
-        <FAIcon name="caret-square-o-right" />
-      </Button>
-    </ButtonProject>);
-  }
+  //   return (<ButtonProject>
+  //     <Button onClick={this.changeOrderUp}
+  //       className="" bsSize="small" >
+  //       <FAIcon name="caret-square-o-left" />
+  //     </Button>
+  //     <Button onClick={this.changeOrderDown}
+  //       className="" bsSize="small" >
+  //       <FAIcon name="caret-square-o-right" />
+  //     </Button>
+  //   </ButtonProject>);
+  // }
 
-  editButton() {
+  editButton = () => {
     const { editing, toggleEdit } = this.props;
     return (
       <Button onClick={toggleEdit}
@@ -130,7 +127,7 @@ export default class ProjectEditTools extends PureComponent {
   //   );
   // }
 
-  render({ }, { }, { currentUserIsAdmin }) {
+  render({ }, { }, { isCurrentUserAdmin }) {
     const styles = {
       whiteSpace: 'nowrap',
       overflow: 'hidden'
@@ -140,7 +137,7 @@ export default class ProjectEditTools extends PureComponent {
       {/* {this.changeOrderButtons()}
       {this.togglePublicButton()} */}
       {this.editButton()}
-      {currentUserIsAdmin && this.deleteButton()}
+      {isCurrentUserAdmin && this.deleteButton()}
     </span>);
   }
 }

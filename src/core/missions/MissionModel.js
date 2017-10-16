@@ -28,3 +28,7 @@ export default {
     }
   }
 };
+
+
+// when importing (simple way of fixing keys):
+// missions = _.zipObject(_.map(missions, m => m.code.replace('-', '')), Object.values(missions));

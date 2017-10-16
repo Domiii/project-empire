@@ -50,14 +50,16 @@ export const MissionSelect = dataBind({
     }
     onChange(missionId);
   }
-})(({ value }, { onChangeOption }, { missionOptions }) => {
-  if (!missionOptions.isLoaded()) {
+})(({ value }, { onChangeOption, missionOptions }, { allMissions_isLoaded }) => {
+  if (!allMissions_isLoaded) {
     return <LoadIndicator block message="loading missions..." />;
   }
+
+  const options = missionOptions();
   return (<Select
     value={value}
     placeholder="select mission"
-    options={missionOptions}
+    options={options}
     onChange={onChangeOption}
   />);
 });
@@ -79,11 +81,11 @@ const FormSchema = {
       'type': 'string',
       'title': 'Mission'
     },
-    'reviewerId': {
+    'reviewerUid': {
       'type': 'string',
       'title': 'Reviewer (GM)'
     },
-    'guardianId': {
+    'guardianUid': {
       'type': 'string',
       'title': 'Guardian'
     },
@@ -110,7 +112,9 @@ const widgets = {
     </span>);
   },
   user({ value }) {
-    return (value && <UserBadge uid={value} />);
+    return (value &&
+      <UserBadge uid={value} /> ||
+      <span className="color-lightgray">無</span>);
   },
   mission: MissionSelect
 };
@@ -125,11 +129,11 @@ const FormUISchema = {
     'ui:readonly': true,
     'ui:widget': 'momentTime'
   },
-  guardianId: {
+  guardianUid: {
     'ui:readonly': true,
     'ui:widget': 'user'
   },
-  reviewerId: {
+  reviewerUid: {
     'ui:readonly': true,
     'ui:widget': 'user'
   },
@@ -264,24 +268,35 @@ export const ProjectUserEditor = dataBind({
       promise = set_projectById({ projectId }, formData);
     }
 
-    return promise.then(onSave);
+    // when finished call the onSave callback
+    return onSave && promise.then(onSave) || promise;
   }
 })
 export default class ProjectEditor extends Component {
   static propTypes = {
-    projectId: PropTypes.string.isRequired,
+    projectId: PropTypes.string,
     onSave: PropTypes.func
   };
 
   constructor() {
     super();
 
-    autoBind(this);
+    this.dataBindMethods(
+      this.createNewProject
+    );
   }
 
-  render({ projectId }, { projectOfId, onSubmit }, { }) {
+  createNewProject({ }, { }, { currentUid }) {
+    return this.newProject = {
+      guardianUid: currentUid
+    };
+  }
+
+  render({ projectId }, { projectById, onSubmit }, { }) {
     const alreadyExists = !!projectId;
-    const project = alreadyExists && projectOfId({ projectId }) || EmptyObject;
+    const project = alreadyExists && 
+      projectById({ projectId }) ||
+      this.createNewProject();
 
     return (
       <div>
@@ -303,7 +318,7 @@ export default class ProjectEditor extends Component {
           </div>
         </Form>
 
-        <ProjectUserEditor projectId={projectId} />
+        {projectId && <ProjectUserEditor projectId={projectId} />}
       </div>
     );
   }

@@ -109,18 +109,16 @@ export default class Header extends Component {
     }
 
     const profileEl = (currentUser &&
-      <MenuItem eventKey="user-drop-profile">
-        <LinkContainer to={'/user/' + currentUid}>
-          <Button>
-            {
-              currentUser.photoURL &&
-              <img src={currentUser.photoURL} style={{ width: '2em' }} /> ||
-              <FAIcon name="user" />
-            }
-            <span className="padding-half" />
-            {currentUser.displayName || '<unnamed user>'}
-          </Button>
-        </LinkContainer>
+      <MenuItem eventKey="user-drop-profile" href={'/user/' + currentUid}>
+        <span>
+          {
+            currentUser.photoURL &&
+            <img src={currentUser.photoURL} style={{ width: '2em' }} /> ||
+            <FAIcon name="user" />
+          }
+          <span className="padding-half" />
+          {currentUser.displayName || '<unnamed user>'}
+        </span>
       </MenuItem>
     );
 

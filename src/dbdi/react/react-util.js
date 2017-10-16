@@ -3,13 +3,20 @@ import isFunction from 'lodash/isFunction';
 
 
 export function injectIntoClass(Comp, methodName, methodWrapper) {
-  class InjectedComp extends Comp {}
-
-  Object.defineProperty(InjectedComp.prototype, methodName,
-    {
-      value: methodWrapper(Comp.prototype[methodName])
+  class InjectedComp extends Comp {
+    constructor(...args) {
+      super(...args);
     }
-  );
+  }
+
+  // Object.defineProperty(InjectedComp.prototype, methodName,
+  //   {
+  //     value: methodWrapper(Comp.prototype[methodName])
+  //   }
+  // );
+
+  //Object.assign(InjectedComp.prototype, Comp.prototype);
+  InjectedComp.prototype[methodName] = methodWrapper(Comp.prototype[methodName]);
   
   return InjectedComp;
 }

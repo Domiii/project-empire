@@ -1,6 +1,7 @@
 import isString from 'lodash/isString';
 import isFunction from 'lodash/isFunction';
 import isArray from 'lodash/isArray';
+import partial from 'lodash/partial';
 
 import autoBind from 'src/util/auto-bind';
 
@@ -10,12 +11,12 @@ import PathDescriptor from './PathDescriptor';
 export default class DataReadDescriptor extends DataDescriptorNode {
   readData;
 
-  constructor(cfg, name) {
-    super(cfg, name);
+  constructor(pathDescriptor, reader, name) {
+    super({pathDescriptor, reader}, name);
 
     autoBind(this);
 
-    this._buildReadData(cfg);
+    this._buildReadData(pathDescriptor, reader);
   }
 
   get nodeType() {
@@ -26,17 +27,28 @@ export default class DataReadDescriptor extends DataDescriptorNode {
   // Private methods
   // ################################################
 
-  _buildReadData(cfg) {
+  _buildReadData(pathDescriptor, reader) {
     let readData;
-    if (cfg instanceof PathDescriptor) {
+    if (pathDescriptor) {
       // build reader from pathDescriptor
-      readData = this._buildReadDataFromDescriptor(cfg);
+      readData = this._buildReadDataFromDescriptor(pathDescriptor);
     }
-    else if (isFunction(cfg)) {
+
+    if (isFunction(reader)) {
       // custom reader function
-      readData = cfg;
+      if (readData) {
+        var origReadData = this._wrapAccessFunction(readData);
+        readData = (...allArgs) => {
+          const result = origReadData(...allArgs);
+          return reader(result, ...allArgs);
+        };
+      }
+      else {
+        readData = reader;
+      }
     }
-    else {
+    
+    if (!readData) {
       throw new Error('Could not make sense of DataReadDescriptor config node: ' + JSON.stringify(cfg));
     }
     this.readData = this._wrapAccessFunction(readData);

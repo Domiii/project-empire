@@ -61,36 +61,25 @@ export default class ProjectPreview extends Component {
       editing: null
     };
 
+    this.dataBindMethods(
+      this.editorHeader
+    );
+
     autoBind(this);
-  }
-
-  get IsAdmin() {
-    const { currentUserRef } = this.context;
-    return currentUserRef && currentUserRef.isAdminDisplayMode() || false;
-  }
-
-  get IsGuardian() {
-    const { currentUserRef } = this.context;
-    return hasDisplayRole(currentUserRef, 'Guardian');
   }
 
   get IsEditing() {
     return this.state.editing;
   }
 
-  toggleEdit() {
+  toggleEdit = () => {
     this.setState({
       editing: !this.IsEditing
     });
   }
 
-  editorHeader() {
-    const {
-      projectId,
-      readonly
-    } = this.props;
-
-    return (readonly || !this.IsGuardian) ? null : (
+  editorHeader({ projectId, readonly }, { }, { isCurrentUserGuardian }) {
+    return (readonly || !isCurrentUserGuardian) ? null : (
       <div>
         <ProjectEditTools {...{
           projectId,
