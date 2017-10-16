@@ -43,12 +43,33 @@ function RoleChangeLabel({ newRole, oldRole }) {
     {newRole}
   </span>);
 }
+RoleChangeLabel.propTypes = {
+  newRole: PropTypes.oneOfType([
+    PropTypes.number,
+    PropTypes.string
+  ]).isRequired,
+  oldRole: PropTypes.oneOfType([
+    PropTypes.number,
+    PropTypes.string
+  ]).isRequired
+};
 
 function ChangeRoleButton({ oldRole, newRole, open }) {
   return (<Button onClick={open} bsSize="small" className="no-padding">
     <RoleChangeLabel oldRole={oldRole} newRole={newRole} />
   </Button>);
 }
+ChangeRoleButton.propTypes = {
+  oldRole: PropTypes.oneOfType([
+    PropTypes.number,
+    PropTypes.string
+  ]).isRequired,
+  newRole: PropTypes.oneOfType([
+    PropTypes.number,
+    PropTypes.string
+  ]).isRequired,
+  open: PropTypes.func.isRequired
+};
 
 const RoleEditor = dataBind({
   changeRole({ uid, newRole }, { setRole }) {

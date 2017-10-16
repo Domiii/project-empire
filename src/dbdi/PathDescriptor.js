@@ -70,10 +70,10 @@ export default class PathDescriptor extends DataDescriptorNode {
         console.error('Failed to execute getPath at: ' + this + ' - ' + err.stack);
       }
 
-      if (path !== undefined && !isString(path) && !isArray(path)) {
-        // TODO: (low prio) Proper type checking (e.g.: https://github.com/gkz/type-check)
-        throw new Error('getPath did not return string or array-of-string at: ' + this);
-      }
+      // if (path !== undefined && !isArray(path)) { //&& !isString(path)) {
+      //   // TODO: (low prio) Proper type checking (e.g.: https://github.com/gkz/type-check)
+      //   throw new Error('getPath did not return string or array-of-string at: ' + this);
+      // }
       return path;
     };
   }

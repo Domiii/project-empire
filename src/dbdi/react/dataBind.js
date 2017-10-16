@@ -129,7 +129,7 @@ export default (propsOrPropCb) => WrappedComponent => {
       return {
         dataBindMethod(methodOrName) {
           if (!methodOrName) {
-            throw new Error('invalid argument in dataBindMethod(s): null or undefined');
+            throw new Error('invalid argument in dataBindMethod: null or undefined');
           }
           const methodName = isString(methodOrName) ?
             methodOrName :
@@ -141,20 +141,25 @@ export default (propsOrPropCb) => WrappedComponent => {
               methodOrName + ' - ' + this[methodName]);
           }
 
-          const origMethod = this[methodName];
+          //const origMethod = this[methodName];
 
-          return this[methodName] = (...ownArgs) => {
-            return origMethod(...ownArgs, ..._injectedArguments);
-          };
-          // partialRight(
-          //   this[methodName], 
-          //   ..._injectedArguments
-          // );
+          return this[methodName] = partialRight(
+            this[methodName], 
+            ..._injectedArguments
+          );
+          // (...ownArgs) => {
+          //   return origMethod(...ownArgs, ..._injectedArguments);
+          // };
         },
 
         dataBindMethods(...methodOrNames) {
-          return map(methodOrNames, methodOrName =>
-            this.dataBindMethod(methodOrName));
+          return map(methodOrNames, (methodOrName, i) => {
+            if (!methodOrName) {
+              throw new Error(
+                `invalid argument #${i} in dataBindMethod(s): null or undefined`);
+            }
+            return this.dataBindMethod(methodOrName);
+          });
         }
       };
     }

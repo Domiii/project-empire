@@ -42,10 +42,7 @@ export default class ProjectList extends Component {
 
     this.dataBindMethods(
       this.getProjectIds,
-      this.addNewProject,
-      this.onSelectedMissionChanged,
-      this.makeEditorHeader,
-      this.makeProjectsList
+      this.makeEditorHeader
     );
 
     autoBind(this);
@@ -56,7 +53,7 @@ export default class ProjectList extends Component {
   }
 
   get CurrentPage() {
-    return this.stage.page;
+    return this.state.page;
   }
 
   get ProjectListArgs() {

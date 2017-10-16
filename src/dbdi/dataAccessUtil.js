@@ -1,7 +1,7 @@
-import map from 'lodash/map';
+import mapValues from 'lodash/mapValues';
 
 export function getOptionalArguments(args, argsConfig) {
-  return map(argsConfig, (defaultVal, name) => {
+  return mapValues(argsConfig, (defaultVal, name) => {
     if (name in args) {
       return args[name];
     }

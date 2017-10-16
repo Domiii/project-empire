@@ -21,7 +21,7 @@ import ProjectList from 'src/views/components/projects/ProjectList';
 
 
 export default class ProjectPage extends Component {
-  propTypes = {
+  static propTypes = {
     projectIds: PropTypes.object
   };
 
@@ -31,7 +31,7 @@ export default class ProjectPage extends Component {
     autoBind(this);
   }
 
-  render({}, {}, {}) {
+  render() {
     //{ this.IsGuardian && this.makeGuardianEl() }
     return (
       <div>
