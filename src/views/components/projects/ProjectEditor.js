@@ -24,7 +24,6 @@ import { Flex, Item } from 'react-flex';
 import LoadIndicator from 'src/views/components/util/loading';
 import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import UserList, { UserBadge } from 'src/views/components/users/UserList';
-import UserIcon from 'src/views/components/users/UserIcon';
 
 import {
   FAIcon
@@ -159,8 +158,8 @@ function DeleteUserButton({ open }) {
 }
 
 const ExistingUserEl = dataBind({
-  deleteUser({ uid }, { deleteUserFromProject }) {
-    return deleteUserFromProject({ uid });
+  deleteUser({ uid, thisProjectId }, { deleteUserFromProject }) {
+    return deleteUserFromProject({ uid, projectId: thisProjectId });
   }
 })(
   ({ uid }, { deleteUser }) => {
@@ -189,8 +188,8 @@ function AddUserButton({ open }) {
 }
 
 const AddUserEl = dataBind({
-  addUser({ uid }, { addUserToProject }) {
-    return addUserToProject({ uid });
+  addUser({ uid, thisProjectId }, { addUserToProject }) {
+    return addUserToProject({ uid, projectId: thisProjectId });
   }
 })(
   ({ uid }, { addUser }) => {
@@ -217,30 +216,45 @@ export const ProjectUserEditor = dataBind({
     let existingUsersEl, addableUsersEl;
     if (uidsOfProject.isLoaded({ projectId })) {
       const existingUids = Object.keys(uidsOfProject({ projectId }));
-      existingUsersEl = (
-        <UserList uids={existingUids}
-          renderUser={ExistingUserEl} />
-      );
+      if (isEmpty(existingUids)) {
+        existingUsersEl = (<Alert bsStyle="warning" className="no-padding">no users in team</Alert>);
+      }
+      else {
+        existingUsersEl = (
+          <UserList uids={existingUids}
+            renderUser={ExistingUserEl} />
+        );
+      }
     }
     else {
       existingUsersEl = <LoadIndicator block />;
     }
 
     if (uidsWithoutProject.isLoaded()) {
-      addableUsersEl = (
-        <UserList uids={uidsWithoutProject()}
-          renderUser={AddUserEl} />
-      );
+      const addableUids = uidsWithoutProject();
+      if (isEmpty(addableUids)) {
+        addableUsersEl = (
+          <Alert bsStyle="warning" className="no-padding">no more available users</Alert>
+        );
+        // TODO: also allow choosing to "add any user" (not just those without project)
+      }
+      else {
+        addableUsersEl = (
+          <UserList uids={addableUids}
+            renderUser={AddUserEl} />
+        );
+      }
     }
     else {
       addableUsersEl = <LoadIndicator block />;
     }
 
-    return (<Flex row={true} alignItems="start">
-      <Item>
+    return (<Flex row={true} alignItems="center">
+      <Item flex="20">
         {existingUsersEl}
       </Item>
-      <Item>
+      <Item flex="1" />
+      <Item flex="20">
         {addableUsersEl}
       </Item>
     </Flex>);
@@ -312,13 +326,16 @@ export default class ProjectEditor extends Component {
         >
           {/* the Form children are rendered at the bottom of the form */}
           <div>
+            <p><label>edit users</label></p>
+            {projectId && <ProjectUserEditor 
+              setContext={{thisProjectId: projectId}}
+              projectId={projectId} />}
+
             <button type="submit" className="btn btn-info">
               <FAIcon name="save" /> {alreadyExists ? 'Update' : 'Add new'}
             </button>
           </div>
         </Form>
-
-        {projectId && <ProjectUserEditor projectId={projectId} />}
       </div>
     );
   }

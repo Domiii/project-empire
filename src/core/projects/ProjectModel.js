@@ -88,9 +88,10 @@ const readers = {
     );
   },
 
-  uidsWithoutProject({ }, { activeProjectIdsOfUser }, { usersPublic, usersPublic_isLoaded }) {
+  uidsWithoutProject({ }, { }, 
+      { userProjectIdIndex, userProjectIdIndex_isLoaded, usersPublic, usersPublic_isLoaded }) {
     // TODO: make this more efficient (achieve O(k), where k = users without project)
-    if (!usersPublic_isLoaded) {
+    if (!usersPublic_isLoaded || !userProjectIdIndex_isLoaded) {
       return undefined;
     }
 
@@ -99,12 +100,13 @@ const readers = {
     }
 
     const uids = Object.keys(usersPublic);
-    if (some(uids, uid => !activeProjectIdsOfUser.isLoaded({ uid }))) {
-      // not everything has loaded yet
-      return undefined;
+    if (!userProjectIdIndex) {
+      // not a single user is assigned yet
+      return uids;
     }
 
-    return filter(uids, uid => size(activeProjectIdsOfUser({ uid })) > 0);
+    const allUserProjectIds = userProjectIdIndex;
+    return filter(uids, uid => size(allUserProjectIds[uid]) < 1);
   },
 
   projectReviewers({ projectId }, { projectById, userPublic }, { }) {
@@ -184,33 +186,34 @@ import zipObject from 'lodash/zipObject';
 
 const writers = {
   updateAll({ pathArgs, readers, val }, { }, { }, { update_db }) {
+    console.log(readers.length, times(readers.length, val));
     const updateObj = zipObject(
       map(readers, reader => reader.getPath(pathArgs)),
-      times(readers.length, val)
+      times(readers.length, () => val)
     );
     return update_db(updateObj);
   },
 
   addUserToProject(
     { uid, projectId },
-    { uidOfProject, projectIdOfUser },
+    { uidOfProject, activeProjectIdOfUser },
     { },
     { updateAll }) {
     return updateAll({
       pathArgs: { uid, projectId },
-      readers: [uidOfProject, projectIdOfUser],
+      readers: [uidOfProject, activeProjectIdOfUser],
       val: 1
     });
   },
 
   deleteUserFromProject(
     { uid, projectId },
-    { uidOfProject, projectIdOfUser },
+    { uidOfProject, activeProjectIdOfUser },
     { },
     { updateAll }) {
     return updateAll({
       pathArgs: { uid, projectId },
-      readers: [uidOfProject, projectIdOfUser],
+      readers: [uidOfProject, activeProjectIdOfUser],
       val: null
     });
   }
@@ -235,10 +238,18 @@ export default {
       }
     }
   },
-  activeProjectIdsOfUser: {
-    path: '/_index/projectUsers/user/$(uid)',
+  userProjectIdIndex: {
+    path: '/_index/projectUsers/user',
     children: {
-      activeProjectIdOfUser: '$(projectId)'
+      activeProjectIdsOfUser: {
+        path: '$(uid)',
+        reader(res) {
+          return res === null ? EmptyObject : res;
+        },
+        children: {
+          activeProjectIdOfUser: '$(projectId)'
+        }
+      }
     }
   },
   allProjectData: {
@@ -251,7 +262,7 @@ export default {
         readers: {
           sortedProjectIdsOfPage(args, { projectsOfPage }, { }) {
             if (!projectsOfPage.isLoaded(args)) {
-              return EmptyArray;
+              return undefined;
             }
 
             const projects = projectsOfPage(args);

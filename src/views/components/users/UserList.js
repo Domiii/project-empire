@@ -7,6 +7,8 @@ import {
   Badge
 } from 'react-bootstrap';
 
+
+import LoadIndicator from 'src/views/components/util/loading';
 import UserIcon from './UserIcon';
 
 
@@ -21,6 +23,10 @@ export class UserBadge extends Component {
       uid,
       ...otherProps
     } = this.props;
+
+    if (!userPublic.isLoaded({ uid })) {
+      return <LoadIndicator />;
+    }
 
     const user = userPublic({ uid });
 
