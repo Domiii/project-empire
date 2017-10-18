@@ -1,9 +1,23 @@
 import {
   ProjectStageTree,
+  ProjectStatus,
   StageStatus,
-  ContributorGroupNames
+  StageContributorStatus,
+
+  isProjectStatusOver,
+  isStageStatusOver,
+  isStageContributorStatusOver
 } from 'src/core/projects/ProjectDef';
 
+
+/**
+ * TODO:
+ *  implement StagePath (encoding + decoding)
+ *  Store new stageEntry (set status + num) on Reviewer button click
+ *  Fix `stageContributors` (cross-reference against `stageContributions`)
+ *  per-contributor forms CRUD + UI
+ *  Form table overview
+ */
 
 import { EmptyObject, EmptyArray } from 'src/util';
 import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
@@ -19,15 +33,34 @@ import some from 'lodash/some';
 import times from 'lodash/times';
 import pickBy from 'lodash/pickBy';
 
-
-const allStagesStatus = {
-  path: 'sprintStatus',
+/**
+ * Project main data
+ */
+const projectById = {
+  path: '$(projectId)',
+  onWrite: [
+    'updatedAt',
+    'createdAt'
+  ],
   children: {
-    sprintStageStatus: {
-      path: '$(sprintStageId)',
+    projectMissionId: 'missionId',
+
+    // only one reviewer (GM) for now
+    projectReviewerUid: 'reviewerUid',
+
+    projectGuardianUid: 'guardianUid',
+
+    projectStatus: 'status'
+  }
+};
+
+const stageEntries = {
+  path: 'stageEntries',
+  children: {
+    stageEntry: {
+      path: '$(stagePath)',
       children: {
-        stageName: 'name',
-        stageStatus: 'status',
+        stageStatusRaw: 'status',
         stageStartTime: 'startTime',
         stageFinishTime: 'finishTime'
       }
@@ -35,32 +68,85 @@ const allStagesStatus = {
   }
 };
 
-const projectStageContributions = {
+const stageContributions = {
   pathTemplate: 'contributions',
   children: {
-    contribution: {
-      pathTemplate: '$(uid)',
-      children: {
-        stageContributorStatus: 'status',
-        stageContributorData: 'data'
-      }
-    }
-  }
-};
+    stageContributions: {
+      readers: {
+        /**
+         * Final (interpolated) contributor status,
+         * considering all contributing factors
+         */
+        stageContributorStatus(
+          { projectId, stagePath, uid },
+          { stageContributorStatusRaw, get_stageStatus }, { }
+        ) {
+          const userStatus = stageContributorStatusRaw({ projectId, stagePath, uid });
+          const stageStatus = get_stageStatus({ projectId, stagePath });
 
-const allProjectStageData = {
-  path: 'data',
-  children: {
-    projectStageRecord: {
-      path: '$(stageId)',
+          if (isStageContributorStatusOver(userStatus)) {
+            return userStatus;
+          }
+
+          if (isStageStatusOver(stageStatus)) {
+            return StageContributorStatus.Failed;
+          }
+
+          return userStatus || StageContributorStatus.None;
+        }
+      },
+      path: '$(stagePath)',
       children: {
-        projectStageContributions
+        stageContribution: {
+          path: '$(uid)',
+          children: {
+            /**
+             * The contributor status as stored in DB
+             */
+            stageContributorStatusRaw: 'status',
+            stageContributorData: 'data'
+          }
+        }
       }
     }
   }
 };
 
 const readers = {
+  // #########################################################################
+  // Project basics
+  // #########################################################################
+
+  sortedProjectIdsOfPage(args, { projectsOfPage }, { }) {
+    if (!projectsOfPage.isLoaded(args)) {
+      return undefined;
+    }
+
+    const projects = projectsOfPage(args);
+
+    const {
+        orderBy,
+      ascending
+      } = getOptionalArguments(args, {
+        orderBy: 'updatedAt',
+        ascending: false
+      });
+
+    return sortBy(Object.keys(projects || EmptyObject),
+      id => ascending ?
+        projects[id][orderBy] :
+        -projects[id][orderBy]
+    );
+  },
+
+  // #########################################################################
+  // Project teams
+  // #########################################################################
+
+  allUidsNotInProject() {
+
+  },
+
   activeProjectsOfUser({ uid }, { activeProjectIdsOfUser, projectById }, { }) {
     return mapValues(
       activeProjectIdsOfUser(
@@ -88,8 +174,8 @@ const readers = {
     );
   },
 
-  uidsWithoutProject({ }, { }, 
-      { userProjectIdIndex, userProjectIdIndex_isLoaded, usersPublic, usersPublic_isLoaded }) {
+  uidsWithoutProject({ }, { },
+    { userProjectIdIndex, userProjectIdIndex_isLoaded, usersPublic, usersPublic_isLoaded }) {
     // TODO: make this more efficient (achieve O(k), where k = users without project)
     if (!usersPublic_isLoaded || !userProjectIdIndex_isLoaded) {
       return undefined;
@@ -105,8 +191,8 @@ const readers = {
       return uids;
     }
 
-    const allUserProjectIds = userProjectIdIndex;
-    return filter(uids, uid => size(allUserProjectIds[uid]) < 1);
+    // get all uids of users who have no project yet
+    return filter(uids, uid => !size(userProjectIdIndex[uid]));
   },
 
   projectReviewers({ projectId }, { projectById, userPublic }, { }) {
@@ -123,34 +209,39 @@ const readers = {
   // Stages
   // #########################################################################
 
-  getStageStatus({ projectId, stageId }, { projectStageRecord }, { }) {
-    // TODO
+  stageStatus(
+    { projectId, stagePath },
+    { stageStatusRaw, get_projectStatus }, { }
+  ) {
+    const stageStatus = stageStatusRaw({ projectId, stagePath });
+    const projectStatus = get_projectStatus({ projectId, stagePath });
 
-    const node = ProjectStageTree.getNode(stageId);
-    const stageRecord = projectStageRecord({ projectId, stageId });
+    if (isStageStatusOver(stageStatus)) {
+      return stageStatus;
+    }
 
-    if (node.noStatus) {
-      return StageStatus.None;
+    if (isProjectStatusOver(projectStatus)) {
+      // stage is already done, but contributor did not finish their contribution
+      return StageContributorStatus.Failed;
     }
-    if (node.stageDef.id === 'prepare') {
-      return StageStatus.Finished;
-    }
-    return StageStatus.None;
+    return stageStatus || StageContributorStatus.None;
   },
 
-
-  stageContributions({ projectId, stageId }, { projectStageRecord }, { }) {
-    const stage = projectStageRecord({ projectId, stageId });
+  stageContributions({ projectId, stagePath }, { projectStageRecord }, { }) {
+    const stage = projectStageRecord({ projectId, stagePath });
     return stage && stage.contributions;
   },
 
-  stageContributors({ projectId, stageId }, { stageContributorUserList }, { }) {
-    const node = stageId && ProjectStageTree.getNode(stageId);
+  stageContributors({ projectId, stagePath }, { stageContributorUserList }, { }) {
+    const node = stagePath && ProjectStageTree.getNode(stagePath);
 
     if (node && node.stageDef.contributors) {
       // get userList for each contributor group
       const contributorDefinitions = map(node.stageDef.contributors, contributorSet => {
         const { groupName } = contributorSet;
+        
+    // TODO: make use of stage contribution data here!
+
         const userList = stageContributorUserList({ projectId, groupName });
         return Object.assign({}, contributorSet, { userList });
       });
@@ -166,7 +257,6 @@ const readers = {
     { usersOfProject, projectReviewers, gms },
     { }
   ) {
-    // TODO: mix this with stage contribution data!
     switch (groupName) {
       case 'gm':
         return gms();
@@ -259,29 +349,6 @@ export default {
     children: {
       projectList: {
         path: 'list',
-        readers: {
-          sortedProjectIdsOfPage(args, { projectsOfPage }, { }) {
-            if (!projectsOfPage.isLoaded(args)) {
-              return undefined;
-            }
-
-            const projects = projectsOfPage(args);
-
-            const {
-              orderBy,
-              ascending
-            } = getOptionalArguments(args, {
-                orderBy: 'updatedAt',
-                ascending: false
-              });
-
-            return sortBy(Object.keys(projects || EmptyObject),
-              id => ascending ?
-                projects[id][orderBy] :
-                -projects[id][orderBy]
-            );
-          }
-        },
         children: {
           projectsOfPage: {
             path: {
@@ -307,21 +374,7 @@ export default {
               }
             }
           },
-          projectById: {
-            path: '$(projectId)',
-            onWrite: [
-              'updatedAt',
-              'createdAt'
-            ],
-            children: {
-              projectMissionId: 'missionId',
-
-              // only one reviewer (GM) for now
-              projectReviewerUid: 'reviewerUid',
-
-              projectGuardianUid: 'guardianUid'
-            }
-          }
+          projectById
         }
       },
       allProjectStages: {
@@ -330,8 +383,8 @@ export default {
           projectStages: {
             path: '$(projectId)',
             children: {
-              allStagesStatus,
-              allProjectStageData
+              stageEntries,
+              stageContributions
             }
           }
         }

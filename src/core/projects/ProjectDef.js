@@ -40,13 +40,48 @@ export const DefaultPrivs = {
   write: ['reviewer']   // fill out checklist (write data)
 };
 
+export const ProjectStatus = {
+  None: 0,
+  //NotStarted: 1,
+  Started: 2,
+  Finished: 3,
+  Failed: 4,
+  Cancelled: 5
+};
+
+export function isProjectStatusOver(projectStatus) {
+  return projectStatus >= ProjectStatus.Finished;
+}
+
 export const StageStatus = {
   None: 0,
-  NotStarted: 1,
+  //NotStarted: 1,
   Started: 2,
   Finished: 3,
   Failed: 4
 };
+
+/**
+ * Whether given stage status is Failed or Finished
+ */
+export function isStageStatusOver(stageStatus) {
+  return stageStatus >= StageStatus.Finished;
+}
+
+export const StageContributorStatus = {
+  None: 0,
+  //NotStarted: 1,
+  Started: 2,
+  Finished: 3,
+  Failed: 4
+};
+
+/**
+ * Whether given contributor status is Failed or Finished
+ */
+export function isStageContributorStatusOver(contributorStatus) {
+  return contributorStatus >= StageContributorStatus.Finished;
+}
 
 export const ProjectStageTree = new StageDefTree([
   {
@@ -61,7 +96,7 @@ export const ProjectStageTree = new StageDefTree([
   {
     id: 'sprint',
     title: 'Sprint',
-    isLoop: true,
+    isRepeatable: true,
     children: [
       {
         id: 'execution',

@@ -182,6 +182,14 @@ export default class DataSourceTree {
         this._buildDataReadDescriptor,
         this._dataWriteCustomBuilder);
 
+      if (newDataNode.isReader) {
+        // also register under the "get_*" alias
+        const aliasName = 'get_' + name;
+        newNodes[aliasName] = this._buildNode(configNode, parent, aliasName,
+          this._buildDataReadDescriptor,
+          this._dataWriteCustomBuilder);
+      }
+
       // add isLoaded node
       newNodes[name + '_isLoaded'] = this._buildDataReadDescriptor && this._buildNode(
         configNode, parent, name,

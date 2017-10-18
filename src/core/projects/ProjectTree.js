@@ -1,6 +1,8 @@
+import forEach from 'lodash/forEach';
 import isArray from 'lodash/isArray';
 import noop from 'lodash/noop';
 
+import { EmptyObject, EmptyArray } from 'src/util';
 
 export function asArray(objOrArray) {
   if (isArray(objOrArray)) {
@@ -16,7 +18,6 @@ export class StageDefNode {
   stageTree;
   parent;
   stageDef;
-  isLoop;
   depth;
   order;
 
@@ -35,7 +36,7 @@ export class StageDefNode {
    */
   firstChild;
 
-  
+
   childrenById;
   siblingsById;
 
@@ -43,7 +44,6 @@ export class StageDefNode {
     this.stageTree = stageTree;
     this.parent = parent;
     this.stageDef = stageDef;
-    this.isLoop = stageDef.isLoop || false;
     this.depth = depth;
     this.order = order;
     this.childrenById = {};
@@ -54,16 +54,30 @@ export class StageDefNode {
     return this.stageDef.id;
   }
 
-  get IsRoot() {
+  get isRoot() {
     return !this.previous && !this.parent;
   }
 
-  get IsLeaf() {
+  get isLeaf() {
     return !this.next;
   }
 
-  getNode(stageId) {
+  get isRepeatable() {
+    return this.stageDef.isRepeatable || false;
+  }
+
+  getChild(stageId) {
+    if (!this.childrenById[stageId]) {
+      throw new Error('invalid child stageId: ' + stageId);
+    }
+    return this.childrenById[stageId];
+  }
+
+  getSibling(stageId) {
     //return this.childrenById[stageId];
+    if (!this.siblingsById[stageId]) {
+      throw new Error('invalid sibling stageId: ' + stageId);
+    }
     return this.siblingsById[stageId];
   }
 
@@ -74,10 +88,17 @@ export class StageDefNode {
     return arr;
   }
 
+  forEachChild(cb) {
+    this.firstChild && this.firstChild.forEachInLine(cb);
+  }
+
+  mapChildren(cb) {
+    return this.firstChild && this.firstChild.mapLine(cb) || EmptyArray;
+  }
+
 
   /**
    * Run callback on all nodes in sub tree.
-   * Returns set of all visited nodes.
    */
   forEachDFS(cb) {
     const { next, firstChild } = this;
@@ -91,7 +112,9 @@ export class StageDefNode {
     next && next.forEachDFS(cb);
   }
 
-  // iterate over this node and all it's siblings (in order)
+  /**
+   * iterate over this node and all siblings following this node (in order)
+   */
   forEachInLine(cb) {
     if (!cb) return;
 
@@ -128,6 +151,15 @@ export class StageDefNode {
 
     return node;
   }
+
+  decodeStageEntries(pathData) {
+    let path = new StagePath(null, this.root, 0);
+    forEach(pathData, (stageEntry, pathStr) => {
+      const childPath = path.decodeStagePath(pathStr);
+      childPath.stageEntry = stageEntry;
+    });
+    return path;
+  }
 }
 
 // StageDefTree + StagePath are the main data structures for navigating the stagetree
@@ -154,8 +186,7 @@ export class StageDefTree {
   }
 
   getNode(stageId) {
-    //return this.root.getNode(stageId);
-    return this.nodesById[stageId];
+    return this.root.getChild(stageId);
   }
 
   _validateAndSanitizeStages(stageDefs) {
@@ -211,40 +242,111 @@ export class StageDefTree {
  * An actual path of a party traversing a project and all its stages
  */
 export class StagePath {
-  constructor() {
-    this.path = [];
-    this.traversalStack = [];
+  parentPath;
+  node;
+  iteration;
+  children;
+
+  stageEntry;
+
+  constructor(parentPath, node, iteration) {
+    this.parentPath = parentPath;
+    this.node = node;
+    this.iteration = iteration;
+
+    this._buildChildPaths();
+  }
+  
+  // #########################################################################
+  // Private members
+  // #########################################################################
+
+  _buildChildPaths() {
+    this.children = {};
+    this.node.forEachChild(this._addChildStage);
   }
 
-  get lastStage() {
-
+  _addChildStage = (childNode) => {
+    const childPath = this.children[childNode.stageId] = new StagePath(this, childNode);
+    if (childNode.isRepeatable) {
+      // add first iteration as child
+      childPath.children[0] = new StagePath(this, childNode, 0);
+    }
+    return childPath;
   }
 
-  get lastStageDef() {
+  _addNewIteration = (iteration) => {
+    console.assert(!isNaN(this.iteration));
+    return this.children[iteration] = new StagePath(this, this.node, iteration);
+  }
 
+  
+  // #########################################################################
+  // Public members
+  // #########################################################################
+
+  get tree() {
+    return this.node.tree;
+  }
+
+  get isIterationNode() {
+    return !isNaN(this.iteration);
   }
 
   encode() {
-
-  }
-
-  decode() {
-
-  }
-
-  gotoNext(nextNode) {
-    // TODO: loop counters
-    // TODO: when we enter a NEW loop: pushCounter()
-    // TODO: when we enter a loop we have already been in: ++counter 
-    // TODO: when we leave a loop: popCounter()
-    //    the current counter always belongs to the inner most ancestor, going upward
-    if (this.hasEdge(currentNode, nextNode)) {
-      // three possible scenarios for nextNode: nextSibling, firstChild, parent
-      // -> When entering a "firstChild" node of a "loop" node, increase peak() counter by one
+    let path;
+    if (this.isIterationNode) {
+      path = this.iteration;
     }
     else {
-      debugger;
-      throw new Error('invalid stage traversal');
+      path = this.node.stageId;
     }
+
+    if (this.parentPath) {
+      path = this.parentPath.encode() + '_' + path;
+    }
+
+    return path;
+  }
+
+  getChildPath(childStageId) {
+    return this.children[childStageId];
+  }
+
+  decodeStagePath(pathStr) {
+    const parts = pathStr.split('_');
+    return this.addDescendantPath(parts);
+  }
+
+  addDescendantPath(parts) {
+    let path = this;
+    try {
+      for (let iPart = 0; iPart < parts.length; ++iPart) {
+        const part = parts[iPart];
+        const iteration = parseInt(part);
+        if (isNaN(iteration)) {
+          // new stage
+          const childPathId = part;
+          path = this.getChildPath(childPathId);
+          if (!path) {
+            // create new path node
+            path = this._addChildStage(this.node.getChild(childPathId));
+          }
+        }
+        else {
+          // same stage, different iteration
+          path = this._addNewIteration(iteration);
+        }
+      }
+    }
+    catch (err) {
+      throw new Error(`could not parse StagePath "${parts.join('/')}" - ` + err.stack);
+    }
+
+    return path;
+  }
+
+  toString() {
+    return this.encode();
   }
 }
