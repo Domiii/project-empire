@@ -83,7 +83,7 @@ export function isStageContributorStatusOver(contributorStatus) {
   return contributorStatus >= StageContributorStatus.Finished;
 }
 
-export const ProjectStageTree = new StageDefTree([
+export const projectStageTree = new StageDefTree([
   {
     id: 'prepare',
     title: '[進階] 開始執行之前的暖身開會',

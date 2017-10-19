@@ -2,6 +2,8 @@ import forEach from 'lodash/forEach';
 import isArray from 'lodash/isArray';
 import noop from 'lodash/noop';
 
+import { interject } from 'src/util/miscUtil';
+
 import { EmptyObject, EmptyArray } from 'src/util';
 
 export function asArray(objOrArray) {
@@ -64,6 +66,10 @@ export class StageDefNode {
 
   get isRepeatable() {
     return this.stageDef.isRepeatable || false;
+  }
+
+  get hasChildren() {
+    return !!this.firstChild;
   }
 
   getChild(stageId) {
@@ -132,13 +138,16 @@ export class StageDefNode {
   }
 
   mapLine(cb) {
-    const arr = [];
-    this.forEachInLine(node => arr.push(cb(node)));
-    return arr;
+    if (this.hasChildren) {
+      const arr = [];
+      this.forEachInLine(node => arr.push(cb(node)));
+      return arr;
+    }
+    return undefined;
   }
 
   /**
-   * Return the last sibling, following this node
+   * Return the last sibling, after this node
    */
   getLastSibling() {
     let node = this;
@@ -152,14 +161,48 @@ export class StageDefNode {
     return node;
   }
 
-  decodeStageEntries(pathData) {
-    let path = new StagePath(null, this.root, 0);
-    forEach(pathData, (stageEntry, pathStr) => {
-      const childPath = path.decodeStagePath(pathStr);
-      childPath.stageEntry = stageEntry;
+  traverse(path, stageEntries, cb, iteration = undefined) {
+    const children = this.mapLine(node => {
+      const childPath = pathToChild(path, node.stageId);
+      if (node.isRepeatable) {
+        return node.traverseIterations(childPath, stageEntries, cb);
+      }
+      else {
+        return node.traverse(childPath, stageEntries, cb);
+      }
     });
-    return path;
+    const stageEntry = stageEntries[this.stageId];
+    return cb(this, path, stageEntry, children, iteration);
   }
+
+  traverseIterations(basePath, stageEntries, cb) {
+    let iteration = 0;
+    let path;
+    const results = [];
+    while ((path = pathToIteration(basePath, iteration)) && (stageEntries[path])) {
+      results.push(this.traverse(path, stageEntries, cb, iteration));
+      ++iteration;
+    }
+    return results;
+  }
+
+
+  // _chachedPathData;
+  // _cachedPath;
+
+  // decodeStageEntries(pathData) {
+  //   if (this._cachedPath && this._cachedPathData === pathData) {
+  //     return this._cachedPath;
+  //   }
+  //   let path = new StagePath(null, this.root, 0);
+  //   forEach(pathData, (stageEntry, pathStr) => {
+  //     const childPath = path.addDescendantPath(pathStr);
+  //     childPath.stageEntry = stageEntry;
+  //   });
+  //   this._cachedPath = path;
+  //   this._cachedPathData = pathData;
+  //   return path;
+  // }
 }
 
 // StageDefTree + StagePath are the main data structures for navigating the stagetree
@@ -187,6 +230,10 @@ export class StageDefTree {
 
   getNode(stageId) {
     return this.root.getChild(stageId);
+  }
+
+  traverse(stageEntries, cb) {
+    return this.root.traverse('', stageEntries, cb);
   }
 
   _validateAndSanitizeStages(stageDefs) {
@@ -243,20 +290,22 @@ export class StageDefTree {
  */
 export class StagePath {
   parentPath;
+  pathStr;
   node;
   iteration;
   children;
 
   stageEntry;
 
-  constructor(parentPath, node, iteration) {
+  constructor(parentPath, pathStr, node, iteration) {
     this.parentPath = parentPath;
+    this.pathStr = pathStr;
     this.node = node;
     this.iteration = iteration;
 
     this._buildChildPaths();
   }
-  
+
   // #########################################################################
   // Private members
   // #########################################################################
@@ -267,20 +316,22 @@ export class StagePath {
   }
 
   _addChildStage = (childNode) => {
-    const childPath = this.children[childNode.stageId] = new StagePath(this, childNode);
+    const pathStr = this.pathStr + '_' + childNode.stageId;
+    const childPath = this.children[childNode.stageId] = new StagePath(this, pathStr, childNode);
     if (childNode.isRepeatable) {
       // add first iteration as child
-      childPath.children[0] = new StagePath(this, childNode, 0);
+      childPath._addNewIteration(0);
     }
     return childPath;
   }
 
   _addNewIteration = (iteration) => {
     console.assert(!isNaN(this.iteration));
-    return this.children[iteration] = new StagePath(this, this.node, iteration);
+    const pathStr = this.pathStr + '_' + iteration;
+    return this.children[iteration] = new StagePath(this, pathStr, this.node, iteration);
   }
 
-  
+
   // #########################################################################
   // Public members
   // #########################################################################
@@ -290,35 +341,21 @@ export class StagePath {
   }
 
   get isIterationNode() {
+    // NOTE: using this.node here is not enough, since the repeating loop is also
+    //    the node of the parent path
     return !isNaN(this.iteration);
   }
 
   encode() {
-    let path;
-    if (this.isIterationNode) {
-      path = this.iteration;
-    }
-    else {
-      path = this.node.stageId;
-    }
-
-    if (this.parentPath) {
-      path = this.parentPath.encode() + '_' + path;
-    }
-
-    return path;
+    return this.pathStr;
   }
 
   getChildPath(childStageId) {
     return this.children[childStageId];
   }
 
-  decodeStagePath(pathStr) {
+  addDescendantPath(pathStr) {
     const parts = pathStr.split('_');
-    return this.addDescendantPath(parts);
-  }
-
-  addDescendantPath(parts) {
     let path = this;
     try {
       for (let iPart = 0; iPart < parts.length; ++iPart) {
@@ -349,4 +386,12 @@ export class StagePath {
   toString() {
     return this.encode();
   }
+}
+
+export function pathToChild(parentPathStr, stageId) {
+  return parentPathStr + '_' + stageId;
+}
+
+export function pathToIteration(parentPathStr, iteration) {
+  return parentPathStr + '_' + iteration;
 }

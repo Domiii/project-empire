@@ -1,7 +1,7 @@
 import Roles from 'src/core/users/Roles';
 
 import {
-  ProjectStageTree,
+  projectStageTree,
   StageStatus,
   StageContributorStatus,
   isStageStatusOver
@@ -109,6 +109,35 @@ const stageStatusBsStyles = {
   [StageStatus.Finished]: 'success',
   [StageStatus.Failed]: 'danger'
 };
+
+
+const stageRenderers = {
+  prepare: function(node, path, stageEntry, children) {
+
+  },
+  sprint: function(node, path, stageEntry, children, iteration) {
+
+  },
+  execution: function(node, path, stageEntry, children) {
+
+  },
+  partyPrepareMeeting: function(node, path, stageEntry, children) {
+
+  },
+  reviewerPrepareMeeting: function(node, path, stageEntry, children) {
+
+  },
+  holdMeeting: function(node, path, stageEntry, children) {
+
+  },
+  postSprintReflection: function(node, path, stageEntry, children) {
+
+  },
+  wrapup: function(node, path, stageEntry, children) {
+    
+  },
+};
+
 
 
 function StageStatusIcon({ status, ...props }) {
@@ -264,8 +293,7 @@ ProjectStageView.propTypes = {
 const ProjectStageArrow = dataBind()(
   ({ previousNode, thisProjectId }, { stageStatus }) => {
     const projectId = thisProjectId;
-    const stageDef = previousNode.stageDef;
-    const stageId = stageDef.id;
+    const stageId = previousNode.stageId;
     const status = projectId && stageStatus({ projectId, stageId });
     const style = stageStatusStyles[status];
     return (<FAIcon name="arrow-down" size="4em" style={style} />);
@@ -273,22 +301,23 @@ const ProjectStageArrow = dataBind()(
 );
 
 const ProjectStagesView = dataBind()(
-  ({ stagePath }, { }) => {
+  ({ parentNode, parentPath }, { }) => {
 
     // TODO: add in stageEntry data from stagePath
     // TODO: allow adding entries for path
 
     // interject node views with arrows
-    const stageNode = stagePath.node;
     return (
       <Flex column justifyContent="center" alignItems="center">
         {
-          stageNode.mapLine(node => {
+          parentNode.mapLine(node => {
+            const stagePath = parentPath.children[node.stageId];
             return (<div key={node.stageId} className="full-width">
               {
                 <Item className="full-width">
                   <ProjectStageView
                     stageNode={node}
+                    stagePath={stagePath}
                   />
                 </Item>
               }
@@ -305,7 +334,7 @@ const ProjectStagesView = dataBind()(
   }
 );
 ProjectStagesView.propTypes = {
-  stagePath: PropTypes.object.isRequired
+  parentPath: PropTypes.object.isRequired
 };
 
 
@@ -325,21 +354,23 @@ ProjectStagesView.propTypes = {
 // TODO: forms
 
 
-
-const LoadedProjectControlView = dataBind()(
-  ({ thisProjectId }, { stageEntries }) => {
-    const rootPath = ProjectStageTree.decodeStageEntries(stageEntries({ projectId: thisProjectId }));
-    return (<div>
-      <ProjectStagesView stagePath={rootPath} />
-    </div>);
+const ProjectTree = dataBind()(
+  ({ thisProjectId }, { get_stageEntries }) => {
+    const stageEntries = get_stageEntries({ projectId: thisProjectId });
+    return projectStageTree.traverse(stageEntries, genStageNode);
   }
 );
 
-
+function genStageNode(node, path, stageEntry, children) {
+  return (<div>
+    
+  </div>);
+}
 
 const ProjectControlView = dataBind()(
-  ({ projectId }, { projectById }) => {
-    if (!projectById.isLoaded({ projectId })) {
+  ({ projectId }, { projectById, get_stageEntries }) => {
+    if (!projectById.isLoaded({ projectId }) || 
+    !get_stageEntries.isLoaded({ projectId })) {
       return (<LoadIndicator block />);
     }
 
@@ -349,7 +380,7 @@ const ProjectControlView = dataBind()(
       thisProject
     };
 
-    return <LoadedProjectControlView setContext={newContext} />;
+    return <ProjectTree setContext={newContext} />;
   }
 );
 
