@@ -53,7 +53,7 @@ export class StageDefNode {
   }
 
   get stageId() {
-    return this.stageDef.id;
+    return this.stageDef && this.stageDef.id || '';
   }
 
   get isRoot() {
@@ -65,7 +65,7 @@ export class StageDefNode {
   }
 
   get isRepeatable() {
-    return this.stageDef.isRepeatable || false;
+    return this.stageDef && this.stageDef.isRepeatable || false;
   }
 
   get hasChildren() {
@@ -162,7 +162,7 @@ export class StageDefNode {
   }
 
   traverse(path, stageEntries, cb, iteration = undefined) {
-    const children = this.mapLine(node => {
+    const children = this.mapChildren(node => {
       const childPath = pathToChild(path, node.stageId);
       if (node.isRepeatable) {
         return node.traverseIterations(childPath, stageEntries, cb);
@@ -171,17 +171,22 @@ export class StageDefNode {
         return node.traverse(childPath, stageEntries, cb);
       }
     });
-    const stageEntry = stageEntries[this.stageId];
+    const stageEntry = stageEntries && stageEntries[this.stageId];
     return cb(this, path, stageEntry, children, iteration);
   }
 
   traverseIterations(basePath, stageEntries, cb) {
     let iteration = 0;
-    let path;
+    let path = pathToIteration(basePath, iteration++);
     const results = [];
-    while ((path = pathToIteration(basePath, iteration)) && (stageEntries[path])) {
-      results.push(this.traverse(path, stageEntries, cb, iteration));
-      ++iteration;
+    results.push(this.traverse(path, stageEntries, cb, iteration));
+    if (stageEntries) {
+      while (
+        (path = pathToIteration(basePath, iteration++)) && 
+        (stageEntries[path])
+      ) {
+        results.push(this.traverse(path, stageEntries, cb, iteration));
+      }
     }
     return results;
   }
@@ -212,7 +217,8 @@ export class StageDefTree {
 
   constructor(stageDefs) {
     this.nodesById = {};
-    this.root = this._createSubTree(stageDefs, this.nodesById);
+    this.root = new StageDefNode(this, null, null, 0, 0);
+    this._createSubTree(stageDefs, this.nodesById, this.root, 1);
     this._validateAndSanitizeStages();
   }
 
@@ -239,7 +245,9 @@ export class StageDefTree {
   _validateAndSanitizeStages(stageDefs) {
     // TODO: responsible, parent, etc...
     this.forEachDFS(node => {
-      node.stageDef.contributors = asArray(node.stageDef.contributors);
+      if (node.stageDef) {
+        node.stageDef.contributors = asArray(node.stageDef.contributors);
+      }
     });
   }
 

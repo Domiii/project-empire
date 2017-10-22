@@ -112,29 +112,29 @@ const stageStatusBsStyles = {
 
 
 const stageRenderers = {
-  prepare: function(node, path, stageEntry, children) {
+  prepare(node, path, stageEntry, children) {
 
   },
-  sprint: function(node, path, stageEntry, children, iteration) {
+  sprint(node, path, stageEntry, children, iteration) {
 
   },
-  execution: function(node, path, stageEntry, children) {
+  execution(node, path, stageEntry, children) {
 
   },
-  partyPrepareMeeting: function(node, path, stageEntry, children) {
+  partyPrepareMeeting(node, path, stageEntry, children) {
 
   },
-  reviewerPrepareMeeting: function(node, path, stageEntry, children) {
+  reviewerPrepareMeeting(node, path, stageEntry, children) {
 
   },
-  holdMeeting: function(node, path, stageEntry, children) {
+  holdMeeting(node, path, stageEntry, children) {
 
   },
-  postSprintReflection: function(node, path, stageEntry, children) {
+  postSprintReflection(node, path, stageEntry, children) {
 
   },
-  wrapup: function(node, path, stageEntry, children) {
-    
+  wrapup(node, path, stageEntry, children) {
+
   },
 };
 
@@ -173,6 +173,7 @@ const StageContributorIcon = dataBind()(
       );
     }
     else if (!isUserLoaded) {
+      // still loading
       return (<LoadIndicator />);
     }
     else {
@@ -253,14 +254,18 @@ StageStatusBar.propTypes = {
 // ###########################################################################
 
 const ProjectStageView = dataBind()(
-  ({ stageNode, thisProjectId }, { stageStatus }) => {
-    const projectId = thisProjectId;
+  ({ stageNode, stageEntry, thisProjectId, children }, { }) => {
+    //const projectId = thisProjectId;
     const stageDef = stageNode.stageDef;
-    const stageId = stageDef.id;
+    //const stageId = stageNode.stageId;
+    if (!stageDef) {
+      return <div>{children}</div>;
+    }
+
     const title = stageDef.title;
 
     const order = stageNode.order;
-    const status = projectId && stageStatus({ projectId, stageId });
+    const status = stageEntry && stageEntry.status || StageStatus.None;
     const bsStyle = stageStatusBsStyles[status];
 
     const header = (
@@ -275,67 +280,28 @@ const ProjectStageView = dataBind()(
     );
 
     return (<div>
-      <Panel header={header} className="no-margin no-shadow no-border project-stage-panel"
+      <Panel header={header}
+        className="no-margin no-shadow no-border project-stage-panel"
         bsStyle={bsStyle}>
-        {stageNode.firstChild && (
-          <div>
-            <ProjectStagesView stageNode={stageNode.firstChild} />
-          </div>
-        )}
+        {children}
       </Panel>
     </div>);
   }
 );
 ProjectStageView.propTypes = {
-  stageNode: PropTypes.object.isRequired
+  stageNode: PropTypes.object.isRequired,
+  stageEntry: PropTypes.object
 };
 
 const ProjectStageArrow = dataBind()(
-  ({ previousNode, thisProjectId }, { stageStatus }) => {
+  ({ previousNode, stageEntry, thisProjectId }, { }) => {
     const projectId = thisProjectId;
     const stageId = previousNode.stageId;
-    const status = projectId && stageStatus({ projectId, stageId });
+    const status = stageEntry && stageEntry.status || StageStatus.None;
     const style = stageStatusStyles[status];
     return (<FAIcon name="arrow-down" size="4em" style={style} />);
   }
 );
-
-const ProjectStagesView = dataBind()(
-  ({ parentNode, parentPath }, { }) => {
-
-    // TODO: add in stageEntry data from stagePath
-    // TODO: allow adding entries for path
-
-    // interject node views with arrows
-    return (
-      <Flex column justifyContent="center" alignItems="center">
-        {
-          parentNode.mapLine(node => {
-            const stagePath = parentPath.children[node.stageId];
-            return (<div key={node.stageId} className="full-width">
-              {
-                <Item className="full-width">
-                  <ProjectStageView
-                    stageNode={node}
-                    stagePath={stagePath}
-                  />
-                </Item>
-              }
-              {!!node.next &&
-                <Item style={{ display: 'flex' }} justifyContent="center" flex="1" >
-                  <ProjectStageArrow previousNode={node} />
-                </Item>
-              }
-            </div>);
-          })
-        }
-      </Flex>
-    );
-  }
-);
-ProjectStagesView.propTypes = {
-  parentPath: PropTypes.object.isRequired
-};
 
 
 // ###########################################################################
@@ -362,15 +328,28 @@ const ProjectTree = dataBind()(
 );
 
 function genStageNode(node, path, stageEntry, children) {
-  return (<div>
-    
+  return (<div key={node.stageId} className="full-width">
+    <Flex column justifyContent="center" alignItems="center">
+      <Item className="full-width">
+        <ProjectStageView stageNode={node}
+          stageEntry={stageEntry}>
+          {children}
+        </ProjectStageView>
+      </Item>
+      {!!node.next &&
+        <Item style={{ display: 'flex' }} justifyContent="center" flex="1" >
+          <ProjectStageArrow previousNode={node}
+            stageEntry={stageEntry} />
+        </Item>
+      }
+    </Flex>
   </div>);
 }
 
 const ProjectControlView = dataBind()(
   ({ projectId }, { projectById, get_stageEntries }) => {
-    if (!projectById.isLoaded({ projectId }) || 
-    !get_stageEntries.isLoaded({ projectId })) {
+    if (!projectById.isLoaded({ projectId }) ||
+      !get_stageEntries.isLoaded({ projectId })) {
       return (<LoadIndicator block />);
     }
 
