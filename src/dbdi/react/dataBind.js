@@ -364,7 +364,9 @@ export default (propsOrPropCb) => WrappedComponent => {
     _onNewData(path, val) {
       this._shouldUpdate = true;
       //this.forceUpdate();
-      this.setState(EmptyObject);
+      if (this._isMounted) {
+        this.setState(EmptyObject);
+      }
       //console.warn(this.wrappedComponentName, '_onNewData');
     }
 

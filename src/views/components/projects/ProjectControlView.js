@@ -67,19 +67,19 @@ const stageStatusStyles = {
 };
 
 const contributorStatusStyles = {
-  [StageStatus.None]: {
+  [StageContributorStatus.None]: {
     color: 'gray'
   },
-  [StageStatus.NotStarted]: {
+  [StageContributorStatus.NotStarted]: {
     color: 'gray'
   },
-  [StageStatus.Started]: {
+  [StageContributorStatus.Started]: {
     color: 'blue'
   },
-  [StageStatus.Finished]: {
+  [StageContributorStatus.Finished]: {
     color: 'green'
   },
-  [StageStatus.Failed]: {
+  [StageContributorStatus.Failed]: {
     color: 'red'
   }
 };
@@ -139,47 +139,53 @@ const stageRenderers = {
 };
 
 
-
-function StageStatusIcon({ status, ...props }) {
+function StageContributorStatusIcon({ status, ...props }) {
   const iconCfg = constributorStatusIcons[status];
   const style = contributorStatusStyles[status];
   return (<FAIcon {...iconCfg} style={style} {...props} />);
 }
-StageStatusIcon.propTypes = {
+StageContributorStatusIcon.propTypes = {
   status: PropTypes.number.isRequired
 };
 
 const StageContributorIcon = dataBind()(
-  ({ projectId, stageId, groupName, uid }, { userPublic, stageContributorStatus }) => {
-
-    const isStatusLoaded = !uid || stageContributorStatus.isLoaded({ projectId, stageId, uid });
-    const isUserLoaded = !uid || userPublic.isLoaded({ projectId, stageId, uid });
-    const userStatus = stageContributorStatus({ projectId, stageId, uid }) || 0;
+  ({ projectId, stagePath, groupName, uid }, { userPublic, stageContributorStatus }) => {
+    const isStatusLoaded = !uid || stageContributorStatus.isLoaded({ projectId, stagePath, uid });
+    const isUserLoaded = !uid || userPublic.isLoaded({ uid });
+    const userStatus = isUserLoaded && stageContributorStatus({ projectId, stagePath, uid }) || 0;
     const user = isUserLoaded && uid && userPublic({ uid });
 
     const statusIconEl = (
       !isStatusLoaded ?
         <LoadIndicator className="project-contributor-status-icon" /> :
-        <StageStatusIcon status={userStatus} className="project-contributor-status-icon" />
+        <StageContributorStatusIcon status={userStatus} className="project-contributor-status-icon" />
     );
 
-    const classes = 'project-contributor project-contributor-' + groupName;
-    if (!uid) {
-      // unknown user
+    if (!isUserLoaded) {
+      // still loading
       return (
-        <FAIcon className={classes} name="user-secret" >
-          {statusIconEl}
-        </FAIcon>
+        <div className={classes}>
+          <LoadIndicator />
+        </div>
       );
     }
-    else if (!isUserLoaded) {
-      // still loading
-      return (<LoadIndicator />);
+
+    const classes = 'project-contributor project-contributor-' + groupName;
+    if (!user) {
+      // unknown user
+      return (
+        <div className={classes}>
+          <FAIcon className={classes} name="user-secret" >
+            {statusIconEl}
+          </FAIcon>
+        </div>
+      );
     }
     else {
       // user icon
       return (
         <div className={classes}>
+          {user}
           <UserIcon user={user} />
           {statusIconEl}
         </div>
@@ -194,10 +200,9 @@ const StageContributorIcon = dataBind()(
 
 
 const StageStatusBar = dataBind()(
-  ({ thisProjectId, stageNode }, { stageContributors }) => {
+  ({ thisProjectId, stagePath }, { stageContributors }) => {
     const projectId = thisProjectId;
-    const { stageId } = stageNode;
-    let contributors = projectId && stageContributors({ projectId, stageId: stageNode.stageId });
+    let contributors = projectId && stageContributors({ projectId, stagePath });
 
     // render all groups of contributors
     return (<div>
@@ -213,7 +218,7 @@ const StageStatusBar = dataBind()(
           (user, uid) => (<Item key={uid} flex="none">
             <StageContributorIcon
               projectId={projectId}
-              stageId={stageId}
+              stagePath={stagePath}
               uid={uid}
               groupName={groupName}
             />
@@ -227,7 +232,7 @@ const StageStatusBar = dataBind()(
             (<StageContributorIcon
               key={i + userEls.length}
               projectId={projectId}
-              stageId={stageId}
+              stagePath={stagePath}
               uid={null}
               groupName={groupName}
             />)
@@ -244,7 +249,7 @@ const StageStatusBar = dataBind()(
   }
 );
 StageStatusBar.propTypes = {
-  stageNode: PropTypes.object.isRequired
+  stagePath: PropTypes.string.isRequired
 };
 
 
@@ -254,18 +259,20 @@ StageStatusBar.propTypes = {
 // ###########################################################################
 
 const ProjectStageView = dataBind()(
-  ({ stageNode, stageEntry, thisProjectId, children }, { }) => {
+  ({ stageNode, stagePath, thisProjectId, children }, { get_stageStatus }) => {
     //const projectId = thisProjectId;
     const stageDef = stageNode.stageDef;
     //const stageId = stageNode.stageId;
+
     if (!stageDef) {
+      // root node
       return <div>{children}</div>;
     }
 
     const title = stageDef.title;
 
     const order = stageNode.order;
-    const status = stageEntry && stageEntry.status || StageStatus.None;
+    const status = get_stageStatus({ projectId: thisProjectId, stagePath }) || StageStatus.None;
     const bsStyle = stageStatusBsStyles[status];
 
     const header = (
@@ -274,7 +281,7 @@ const ProjectStageView = dataBind()(
           <span>{`${order + 1}. ${title}`}</span>
         </Item>
         <Item>
-          <StageStatusBar stageNode={stageNode} />
+          <StageStatusBar stagePath={stagePath} />
         </Item>
       </Flex>
     );
@@ -289,15 +296,13 @@ const ProjectStageView = dataBind()(
   }
 );
 ProjectStageView.propTypes = {
-  stageNode: PropTypes.object.isRequired,
-  stageEntry: PropTypes.object
+  stageNode: PropTypes.object.isRequired
 };
 
 const ProjectStageArrow = dataBind()(
-  ({ previousNode, stageEntry, thisProjectId }, { }) => {
-    const projectId = thisProjectId;
-    const stageId = previousNode.stageId;
-    const status = stageEntry && stageEntry.status || StageStatus.None;
+  ({ thisProjectId, previousStagePath }, { get_stageStatus }) => {
+    const stageStatus = get_stageStatus({ projectId: thisProjectId, stagePath: previousStagePath });
+    const status = stageStatus || StageStatus.None;
     const style = stageStatusStyles[status];
     return (<FAIcon name="arrow-down" size="4em" style={style} />);
   }
@@ -311,15 +316,6 @@ const ProjectStageArrow = dataBind()(
 
 
 
-// TODO: [ProjectStageTree]
-// TODO: data tree + format tree have the same shape
-// TODO: in case of repeatable nodes, data tree holds array instead of single object
-// TODO: contributor data is still by UID
-// TODO: in case more people than signOffCount from groupName give feedback, just show them all?
-// TODO: write operations
-// TODO: forms
-
-
 const ProjectTree = dataBind()(
   ({ thisProjectId }, { get_stageEntries }) => {
     const stageEntries = get_stageEntries({ projectId: thisProjectId });
@@ -327,19 +323,20 @@ const ProjectTree = dataBind()(
   }
 );
 
-function genStageNode(node, path, stageEntry, children) {
+function genStageNode(node, stagePath, stageEntry, children) {
   return (<div key={node.stageId} className="full-width">
     <Flex column justifyContent="center" alignItems="center">
       <Item className="full-width">
-        <ProjectStageView stageNode={node}
+        <ProjectStageView
+          stageNode={node}
+          stagePath={stagePath}
           stageEntry={stageEntry}>
           {children}
         </ProjectStageView>
       </Item>
       {!!node.next &&
         <Item style={{ display: 'flex' }} justifyContent="center" flex="1" >
-          <ProjectStageArrow previousNode={node}
-            stageEntry={stageEntry} />
+          <ProjectStageArrow previousStagePath={stagePath} />
         </Item>
       }
     </Flex>

@@ -99,6 +99,9 @@ export class StageDefNode {
   }
 
   mapChildren(cb) {
+    if (!this.hasChildren) {
+      return undefined;
+    }
     return this.firstChild && this.firstChild.mapLine(cb) || EmptyArray;
   }
 
@@ -138,12 +141,9 @@ export class StageDefNode {
   }
 
   mapLine(cb) {
-    if (this.hasChildren) {
-      const arr = [];
-      this.forEachInLine(node => arr.push(cb(node)));
-      return arr;
-    }
-    return undefined;
+    const arr = [];
+    this.forEachInLine(node => arr.push(cb(node)));
+    return arr;
   }
 
   /**
@@ -213,12 +213,12 @@ export class StageDefNode {
 // StageDefTree + StagePath are the main data structures for navigating the stagetree
 export class StageDefTree {
   root;
-  nodesById;
+  allNodesById;
 
   constructor(stageDefs) {
-    this.nodesById = {};
+    this.allNodesById = {};
     this.root = new StageDefNode(this, null, null, 0, 0);
-    this._createSubTree(stageDefs, this.nodesById, this.root, 1);
+    this._createSubTree(stageDefs, this.allNodesById, this.root, 1);
     this._validateAndSanitizeStages();
   }
 
@@ -235,7 +235,18 @@ export class StageDefTree {
   }
 
   getNode(stageId) {
-    return this.root.getChild(stageId);
+    return this.allNodesById[stageId];
+  }
+
+  getNodeByPath(stagePath) {
+    let stageId;
+    let idx = stagePath.lastIndexOf('_');
+    stageId = stagePath.substring(idx+1);
+    if (!isNaN(parseInt(stageId))) {
+      const idx2 = stagePath.lastIndexOf('_', idx-1);
+      stageId = stagePath.substring(idx2+1, idx);
+    }
+    return this.getNode(stageId);
   }
 
   traverse(stageEntries, cb) {
@@ -397,9 +408,9 @@ export class StagePath {
 }
 
 export function pathToChild(parentPathStr, stageId) {
-  return parentPathStr + '_' + stageId;
+  return (parentPathStr && (parentPathStr + '_') || '') + stageId;
 }
 
 export function pathToIteration(parentPathStr, iteration) {
-  return parentPathStr + '_' + iteration;
+  return (parentPathStr && (parentPathStr + '_') || '') + iteration;
 }

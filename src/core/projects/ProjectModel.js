@@ -1,5 +1,5 @@
 import {
-  ProjectStageTree,
+  projectStageTree,
   ProjectStatus,
   StageStatus,
   StageContributorStatus,
@@ -214,14 +214,14 @@ const readers = {
     { stageStatusRaw, get_projectStatus }, { }
   ) {
     const stageStatus = stageStatusRaw({ projectId, stagePath });
-    const projectStatus = get_projectStatus({ projectId, stagePath });
+    const projectStatus = get_projectStatus({ projectId });
 
     if (isStageStatusOver(stageStatus)) {
       return stageStatus;
     }
 
     if (isProjectStatusOver(projectStatus)) {
-      // stage is already done, but contributor did not finish their contribution
+      // project is already done, but stage has not been finished by team
       return StageContributorStatus.Failed;
     }
     return stageStatus || StageContributorStatus.None;
@@ -233,7 +233,7 @@ const readers = {
   },
 
   stageContributors({ projectId, stagePath }, { stageContributorUserList }, { }) {
-    const node = stagePath && ProjectStageTree.getNode(stagePath);
+    const node = stagePath && projectStageTree.getNodeByPath(stagePath);
 
     if (node && node.stageDef.contributors) {
       // get userList for each contributor group
