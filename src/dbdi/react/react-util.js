@@ -17,14 +17,10 @@ export function injectIntoClass(Comp, methodName, methodWrapper) {
 
   //Object.assign(InjectedComp.prototype, Comp.prototype);
   InjectedComp.prototype[methodName] = methodWrapper(Comp.prototype[methodName]);
-  
+
   return InjectedComp;
 }
 
-
-
-let _lastWrapperId = 0;
-const _errorState = {};
 
 /**
  * Note: This might behave differently for stateful and stateless components.
@@ -48,22 +44,12 @@ export function injectRenderArgs(Comp, argsOrFunc) {
   }
 
   function renderWrapper(origRender) {
-    const wrapperId = ++_lastWrapperId;
     return function __wrappedRender(...origArgs) {
-      try {
-        const props = this && this.props || origArgs[0];
-        const context = this && this.context || origArgs[1];
-        const newArgs = isFunction(argsOrFunc) ? argsOrFunc(props, context) : argsOrFunc;
-        //console.log('wrapped render: ' + props.name + `(${JSON.stringify(origArgs)}) → (${JSON.stringify(newArgs)})`);
-        return origRender.call(this, ...newArgs, ...origArgs);
-      }
-      catch (err) {
-        if (!_errorState[wrapperId]) {
-          console.error('[Component render ERROR]', err.stack);
-          _errorState[wrapperId] = (<pre style={{color: 'red'}}>[Component render ERROR] {err.stack}</pre>);
-        }
-        return _errorState[wrapperId];
-      }
+      const props = this && this.props || origArgs[0];
+      const context = this && this.context || origArgs[1];
+      const newArgs = isFunction(argsOrFunc) ? argsOrFunc(props, context) : argsOrFunc;
+      //console.log('wrapped render: ' + props.name + `(${JSON.stringify(origArgs)}) → (${JSON.stringify(newArgs)})`);
+      return origRender.call(this, ...newArgs, ...origArgs);
     };
   }
 

@@ -1,7 +1,8 @@
 import _ from 'lodash';
 
 import autoBind from 'react-autobind';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { 
   ButtonGroup, Button
 } from 'react-bootstrap';

@@ -1,7 +1,8 @@
 import map from 'lodash/map';
 import isEmpty from 'lodash/isEmpty';
 
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
 import Moment from 'react-moment';
 import {

@@ -4,7 +4,8 @@ import sortBy from 'lodash/sortBy';
 
 import GroupsRef, { UserGroupRef } from 'src/core/groups/GroupsRef';
 
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
 
 import dataBind from 'src/dbdi/react/dataBind';

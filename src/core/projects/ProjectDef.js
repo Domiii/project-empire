@@ -88,7 +88,7 @@ export const projectStageTree = new StageDefTree([
     id: 'prepare',
     title: '[進階] 開始執行之前的暖身開會',
     level: 2, // advanced option, only for those who want to be serious about stuff
-    checklists: [
+    forms: [
       // TODO: how to prepare for a collaborative mission properly?
     ],
     contributors: contributorSet('party', 1)
@@ -109,7 +109,7 @@ export const projectStageTree = new StageDefTree([
         id: 'partyPrepareMeeting',
         title: '團隊 準備 團隊鑑定',
         contributors: contributorSet('party'),
-        checklists: [
+        forms: [
           {
             id: 'partyPrepareMeeting',
             read: ['reviewer'],
@@ -121,7 +121,7 @@ export const projectStageTree = new StageDefTree([
         id: 'reviewerPrepareMeeting',
         title: '支持者 準備 團隊鑑定',
         contributors: contributorSet('reviewer', 1),
-        checklists: [
+        forms: [
           {
             id: 'reviewerPrepareMeeting',
             read: ['reviewer'],
@@ -133,7 +133,7 @@ export const projectStageTree = new StageDefTree([
         id: 'holdMeeting',
         title: '團隊鑑定',
         contributors: contributorSet('reviewer', 1),
-        checklists: [
+        forms: [
           {
             id: 'reviewerMeetingRecords',
             read: ['reviewer'],
@@ -150,7 +150,7 @@ export const projectStageTree = new StageDefTree([
         title: '[進階] 團隊鑑定過後',
         contributors: contributorSet('party'),
         level: 2,
-        checklists: [
+        forms: [
           {
             id: 'reviewerPostSpringReflection',
             read: ['all'],

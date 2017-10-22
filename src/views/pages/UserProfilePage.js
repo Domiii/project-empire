@@ -1,6 +1,7 @@
 import { UserInfo } from 'src/core/users';
 
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
 import dataBind from 'src/dbdi/react/dataBind';
 

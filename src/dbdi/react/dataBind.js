@@ -38,7 +38,39 @@ import { injectRenderArgs } from './react-util';
 //   // TODO: proper pub-sub bindings
 // }
 
+let _lastWrapperId = 0;
+const _errorState = {};
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  componentDidCatch(err, info) {
+    // Display fallback UI
+    this.setState({ hasError: true });
+
+    // You can also log the error to an error reporting service
+    const { wrapperId } = this.props;
+    if (!_errorState[wrapperId]) {
+      console.error('[Component render ERROR]', info, '\n ', err.stack);
+      _errorState[wrapperId] = (<pre style={{color: 'red'}}>[Component render ERROR] {err.stack}</pre>);
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      // You can render any custom fallback UI
+      const { wrapperId } = this.props;
+      return _errorState[wrapperId];
+    }
+    return this.props.children;
+  }
+}
+
 export default (propsOrPropCb) => WrappedComponent => {
+  const wrapperId = ++_lastWrapperId;
   class WrapperComponent extends Component {
     static contextTypes = dataBindContextStructure;
     static childContextTypes = dataBindChildContextStructure;
@@ -375,14 +407,16 @@ export default (propsOrPropCb) => WrappedComponent => {
       this._shouldUpdate = false;
       const { WrappedComponent } = this;
 
-      return (<WrappedComponent
-        {...this.props}
-        {...this._customProps}
-        {...this._customFunctions}
-        readers={this._dataAccessTracker._readerProxy}
-        writers={this._dataAccessTracker._writerProxy}
-        dataInject={this._dataAccessTracker._injectProxy}
-      />);
+      return (<ErrorBoundary>
+        <WrappedComponent
+          {...this.props}
+          {...this._customProps}
+          {...this._customFunctions}
+          readers={this._dataAccessTracker._readerProxy}
+          writers={this._dataAccessTracker._writerProxy}
+          dataInject={this._dataAccessTracker._injectProxy}
+        />
+      </ErrorBoundary>);
     }
   }
 

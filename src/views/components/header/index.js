@@ -1,6 +1,7 @@
 import Roles, { hasDisplayRole } from 'src/core/users/Roles';
 
-import React, { PropTypes, Component } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
 
 import dataBind from 'src/dbdi/react/dataBind';
