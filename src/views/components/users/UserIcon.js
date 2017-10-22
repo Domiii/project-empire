@@ -2,6 +2,12 @@ import isNumber from 'lodash/isNumber';
 
 import React from 'react';
 import PropTypes from 'prop-types';
+import ImageLoader from 'src/views/components/util/react-imageloader';
+import LoadIndicator from 'src/views/components/util/loading';
+
+function preloader() {
+ return <LoadIndicator />;
+}
 
 const UserIconSizes = {
   tiny: '1em'
@@ -25,7 +31,15 @@ export default function UserIcon({user, size, ...moreProps}) {
       style.maxHeight = size;
     }
   }
-  return (<img {...moreProps} src={user.photoURL} className={clazz} style={style} />);
+  return (
+    <ImageLoader
+      src={user.photoURL}
+      preloader={preloader}
+      className={clazz}
+      style={style}>
+      {user.photoURL}
+    </ImageLoader>
+  );
 }
 UserIcon.propTypes = {
   user: PropTypes.object.isRequired,
