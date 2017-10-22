@@ -20,7 +20,7 @@ import pickBy from 'lodash/pickBy';
 
 import React, { Component, Children } from 'react';
 import PropTypes from 'prop-types';
-import { Flex, Item } from 'react-flex';
+import Flexbox from 'flexbox-react';
 
 import {
   Panel, Button, Alert, Well
@@ -185,7 +185,6 @@ const StageContributorIcon = dataBind()(
       // user icon
       return (
         <div className={classes}>
-          {user}
           <UserIcon user={user} />
           {statusIconEl}
         </div>
@@ -215,14 +214,14 @@ const StageStatusBar = dataBind()(
 
         // first: all already known users
         const userEls = map(userList,
-          (user, uid) => (<Item key={uid} flex="none">
+          (user, uid) => (<Flexbox key={uid} flex="none">
             <StageContributorIcon
               projectId={projectId}
               stagePath={stagePath}
               uid={uid}
               groupName={groupName}
             />
-          </Item>)
+          </Flexbox>)
         );
 
         // then: all missing users
@@ -240,10 +239,10 @@ const StageStatusBar = dataBind()(
         }
 
         // render icons of the actual users in group
-        return (<Flex row key={iSet} justifyContent="flex-end" alignItems="center">
+        return (<Flexbox flexDirection="row" key={iSet} justifyContent="flex-end" alignItems="center">
           {userEls}
           {unknownEls}
-        </Flex>);
+        </Flexbox>);
       })}
     </div>);
   }
@@ -266,7 +265,7 @@ const ProjectStageView = dataBind()(
 
     if (!stageDef) {
       // root node
-      return <div>{children}</div>;
+      return <div className="full-width">{children}</div>;
     }
 
     const title = stageDef.title;
@@ -276,23 +275,23 @@ const ProjectStageView = dataBind()(
     const bsStyle = stageStatusBsStyles[status];
 
     const header = (
-      <Flex row justifyContent="space-between" alignItems="center">
-        <Item>
+      <Flexbox justifyContent="space-between" alignItems="center">
+        <Flexbox>
           <span>{`${order + 1}. ${title}`}</span>
-        </Item>
-        <Item>
+        </Flexbox>
+        <Flexbox>
           <StageStatusBar stagePath={stagePath} />
-        </Item>
-      </Flex>
+        </Flexbox>
+      </Flexbox>
     );
 
-    return (<div>
+    return (
       <Panel header={header}
-        className="no-margin no-shadow no-border project-stage-panel"
+        className="full-width no-margin no-shadow no-border project-stage-panel"
         bsStyle={bsStyle}>
         {children}
       </Panel>
-    </div>);
+    );
   }
 );
 ProjectStageView.propTypes = {
@@ -319,28 +318,32 @@ const ProjectStageArrow = dataBind()(
 const ProjectTree = dataBind()(
   ({ thisProjectId }, { get_stageEntries }) => {
     const stageEntries = get_stageEntries({ projectId: thisProjectId });
-    return projectStageTree.traverse(stageEntries, genStageNode);
+    return (<div className="full-width" data-name="ProjectTree">
+      { projectStageTree.traverse(stageEntries, genStageNode) }
+    </div>);
   }
 );
 
 function genStageNode(node, stagePath, stageEntry, children) {
-  return (<div key={node.stageId} className="full-width">
-    <Flex column justifyContent="center" alignItems="center">
-      <Item className="full-width">
+  return (
+    <Flexbox key={node.stageId} className="full-width"
+      flexDirection="column" 
+      justifyContent="center" alignItems="center">
+      <Flexbox className="full-width">
         <ProjectStageView
           stageNode={node}
           stagePath={stagePath}
           stageEntry={stageEntry}>
           {children}
         </ProjectStageView>
-      </Item>
+      </Flexbox>
       {!!node.next &&
-        <Item style={{ display: 'flex' }} justifyContent="center" flex="1" >
+        <Flexbox style={{ display: 'flex' }} justifyContent="center">
           <ProjectStageArrow previousStagePath={stagePath} />
-        </Item>
+        </Flexbox>
       }
-    </Flex>
-  </div>);
+    </Flexbox>
+  );
 }
 
 const ProjectControlView = dataBind()(
@@ -374,9 +377,9 @@ const ProjectControlList = dataBind()(
       </Alert>);
     }
     else {
-      return (<div>{
+      return (<div data-name="ProjectControlView" className="full-width">{
         map(currentProjectIds, (_, projectId) =>
-          (<ProjectControlView key={projectId} projectId={projectId} />)
+          (<ProjectControlView data-name="ProjectControlView" key={projectId} projectId={projectId} />)
         )
       }</div>);
     }

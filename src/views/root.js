@@ -1,22 +1,27 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Router } from 'react-router';
+import { Router, browserHistory } from 'react-router';
 import { getRoutes } from './routeDefines';
 import DataSourceProvider from 'src/dbdi/react/DataSourceProvider';
 import dataSourceConfig from 'src/core/dataSourceConfig';
 
-export default function Root({history, store}) {
+import { EmptyObject, EmptyArray } from 'src/util';
+
+// TODO: fix this
+function getState() {
+  return EmptyObject;
+}
+
+export default function Root({}) {
   return (
     // ##########################################################################
     // Wrap everything in DataSourceProvider, and go!
     // ##########################################################################  
     <DataSourceProvider {...dataSourceConfig}>
-      <Router history={history} routes={getRoutes(store.getState)} />
+      <Router history={browserHistory} routes={getRoutes(getState)} />
     </DataSourceProvider>
   );
 }
 
 Root.propTypes = {
-  history: PropTypes.object.isRequired,
-  store: PropTypes.object.isRequired
 };

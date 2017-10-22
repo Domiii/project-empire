@@ -1,4 +1,5 @@
 
+import { getOptionalArgument } from 'src/dbdi/dataAccessUtil';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
@@ -16,10 +17,10 @@ import Moment from 'react-moment';
 import {
   Alert, Button, Badge
 } from 'react-bootstrap';
+import Flexbox from 'flexbox-react';
 
 import Form from 'react-jsonschema-form';
 import Select from 'react-select';
-import { Flex, Item } from 'react-flex';
 
 import LoadIndicator from 'src/views/components/util/loading';
 import ConfirmModal from 'src/views/components/util/ConfirmModal';
@@ -249,15 +250,15 @@ export const ProjectUserEditor = dataBind({
       addableUsersEl = <LoadIndicator block />;
     }
 
-    return (<Flex row={true} alignItems="center">
-      <Item flex="20">
+    return (<Flexbox flexDirection="row" alignItems="center">
+      <Flexbox flex="20">
         {existingUsersEl}
-      </Item>
-      <Item flex="1" />
-      <Item flex="20">
+      </Flexbox>
+      <Flexbox flex="1" />
+      <Flexbox flex="20">
         {addableUsersEl}
-      </Item>
-    </Flex>);
+      </Flexbox>
+    </Flexbox>);
   }
   );
 
@@ -266,11 +267,15 @@ export const ProjectUserEditor = dataBind({
   /**
    * DI-decorated action: create or update item
    */
-  onSubmit({ formData }, { projectId, onSave },
+  onSubmit({ formData }, vars,
     { set_projectById, push_projectById }, { }) {
+    // get required and optional arguments
+    const { projectId } = vars;
+    const onSave = getOptionalArgument(vars, 'onSave');
 
     // get rid of undefined fields, created by (weird) form editor
     formData = pickBy(formData, val => val !== undefined);
+
 
     let promise;
     if (!projectId) {

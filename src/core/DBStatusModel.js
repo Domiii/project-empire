@@ -1,11 +1,9 @@
-import { makeRefWrapper } from 'src/firebaseUtil';
-
-const DBStatusRef  = makeRefWrapper({
+const DBStatusRef = {
   pathTemplate: '/dbState',
 
   methods: {
     onBeforeWrite() {
-      return 
+      return;
     }
   },
 
@@ -20,6 +18,6 @@ const DBStatusRef  = makeRefWrapper({
       }
     }
   }
-});
+};
 
 export default DBStatusRef;

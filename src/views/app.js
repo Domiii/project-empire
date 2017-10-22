@@ -1,6 +1,6 @@
 import firebase from 'firebase';
 
-import DBStatusRef from 'src/core/DBStatusRef';
+import DBStatusModel from 'src/core/DBStatusModel';
 
 import isEqual from 'lodash/isEqual';
 
@@ -27,8 +27,6 @@ export class App extends Component {
   };
 
   static propTypes = {
-    //dBStatusRef: PropTypes.object.isRequired,
-
     children: PropTypes.object
   };
 

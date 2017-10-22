@@ -7,7 +7,8 @@ import takeRight from 'lodash/takeRight';
 import { EmptyObject, EmptyArray } from 'src/util';
 
 /**
- * Thanks go to react-redux-firebase!
+ * First version credit goes to react-redux-firebase!
+ * TODO: Make this more performant + stabler
  * 
  * @see https://github.com/prescottprue/react-redux-firebase/tree/master/src/utils/query.js#L123
  * 

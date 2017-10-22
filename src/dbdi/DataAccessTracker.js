@@ -179,6 +179,7 @@ export default class DataAccessTracker {
   resolveReadDataForce(name) {
     const readData = this.resolveReadData(name);
     if (!readData) {
+      debugger;
       throw new Error(`DI failed - reader does not exist: "${name}": 
  ${Object.keys(this._dataSourceTree._root._readDescendants).join(', ')}`);
     }

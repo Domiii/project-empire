@@ -22,13 +22,3 @@ export function isAuthenticated() {
   // TODO: support multiple apps
   return !!firebase.auth().currentUser;
 }
-
-
-export {
-  makeRefWrapper,
-  addChildrenToRefWrapper
-} from './RefWrapper';
-
-export {
-  m2mIndex
-} from './explicitIndices';

@@ -1,4 +1,3 @@
-import React from 'react';
 import { isAuthenticated } from 'src/firebaseUtil';
 
 import { routeNames, routeTemplates } from './routes';

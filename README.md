@@ -15,9 +15,6 @@
 ## TODO
 
 
-### New data injection model for `react-redux-firebase`
-
-
 #### Motivation
 `rrf v2.0` does not use `immutable` anymore, so `reselect` won't be of any help with data caching.
 

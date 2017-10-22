@@ -7,7 +7,6 @@ import zipObject from 'lodash/zipObject';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
-import UserInfoRef from 'src/core/users/UserInfoRef';
 import Roles, { hasRole } from 'src/core/users/Roles';
 
 import React, { Component } from 'react';

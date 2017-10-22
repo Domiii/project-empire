@@ -17,8 +17,6 @@ import autoBind from 'src/util/auto-bind';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
-// TODO: use to import old RefWrapper-style configs
-
 /**
  * A DataSource is responsible for providing data read + write operations to any part of a web app.
  * 

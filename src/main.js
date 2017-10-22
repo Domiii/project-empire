@@ -4,7 +4,6 @@ import 'bootstrap/dist/css/bootstrap-theme.css';
 
 import 'font-awesome/css/font-awesome.min.css';
 
-import 'react-flex/index.css';
 import 'react-select/dist/react-select.css';
 
 // import our own main CSS
@@ -14,28 +13,24 @@ import 'src/views/styles/styles.scss';
 // import 'moment/locale/en';
 // import 'moment/locale/zh-tw';
 
+
 // import JS
 // import 'bootstrap';   // bootstrap JS
+import { version } from 'package.json';
+import firebase from 'firebase';
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { AppContainer } from 'react-hot-loader';
-import { browserHistory } from 'react-router';
 import { 
-  syncHistoryWithStore
-} from 'react-router-redux';
-import { 
-  firebaseConfigs, 
-  reduxFirebaseConfig
+  firebaseConfigs
 } from 'src/config/firebase.cfg';
 
 
-import configureStore from './core/store';
 import Root from './views/root';
 
-import firebase from 'firebase';
-import { getFirebase } from 'react-redux-firebase';
-
 import { LoadOverlay } from 'src/views/components/overlays';
+
 
 // choose config
 let firebaseConfig;
@@ -48,8 +43,8 @@ else {
 }
 
 // GO!
-const store = configureStore(firebaseConfig, reduxFirebaseConfig);
-const syncedHistory = syncHistoryWithStore(browserHistory, store);
+firebase.initializeApp(firebaseConfig);
+window.version = version
 const rootElement = document.getElementById('root');
 
 
@@ -70,13 +65,13 @@ ReactDOM.render(
 
 
 // Wait until after authentication has finished before rendering the root
-getFirebase().auth().onAuthStateChanged(function onAuthStateChanged(authData) {
+firebase.auth().onAuthStateChanged(function onAuthStateChanged(authData) {
   // done! Let's kick this thing into gear!
   
   // try {
   ReactDOM.render(
     <AppContainer>
-      <Root history={syncedHistory} store={store} />
+      <Root />
     </AppContainer>,
     rootElement
   );

@@ -8,3 +8,10 @@ export function getOptionalArguments(args, argsConfig) {
     return defaultVal;
   });
 }
+
+export function getOptionalArgument(args, name, defaultVal) {
+  if (name in args) {
+    return args[name];
+  }
+  return defaultVal;
+}

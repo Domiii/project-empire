@@ -1,12 +1,10 @@
-import ProjectsRef, { UserProjectRef } from 'src/core/projects/ProjectsRef';
-import MissionsRef from 'src/core/missions/MissionsRef';
-import Roles, { hasDisplayRole, isGuardian } from 'src/core/users/Roles';
+//import Roles, { hasDisplayRole, isGuardian } from 'src/core/users/Roles';
 
 import isEmpty from 'lodash/isEmpty';
 import map from 'lodash/map';
 import sortBy from 'lodash/sortBy';
 
-import { EmptyObject, EmptyArray } from 'src/util';
+//import { EmptyObject, EmptyArray } from 'src/util';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -17,7 +15,6 @@ import dataBind from 'src/dbdi/react/dataBind';
 import {
   Button, ListGroup, Alert
 } from 'react-bootstrap';
-import { Flex, Item } from 'react-flex';
 
 import { LoadOverlay } from 'src/views/components/overlays';
 

@@ -1,7 +1,3 @@
-import ProjectsRef, { UserProjectRef } from 'src/core/projects/ProjectsRef';
-import UserInfoRef from 'src/core/users/UserInfoRef';
-import MissionsRef from 'src/core/missions/MissionsRef';
-
 import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
 

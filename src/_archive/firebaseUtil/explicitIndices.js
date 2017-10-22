@@ -18,7 +18,7 @@ import { EmptyObject, EmptyArray } from 'src/util';
 import { 
   makeRefWrapper,
   addChildrenToRefWrapper
-} from 'src/firebaseUtil';
+} from './RefWrapper';
 
 const staticConfig = {
   indexRoot: '/_index'

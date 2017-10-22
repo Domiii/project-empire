@@ -1,6 +1,3 @@
-import GroupsRef, { UserGroupRef } from 'src/core/groups/GroupsRef';
-import UserInfoRef from 'src/core/users/UserInfoRef';
-
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';

@@ -1,9 +1,3 @@
-import ProjectsRef, { UserProjectRef } from 'src/core/projects/ProjectsRef';
-import UserInfoRef from 'src/core/users/UserInfoRef';
-import MissionsRef from 'src/core/missions/MissionsRef';
-
-import { hasDisplayRole } from 'src/core/users/Roles';
-
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import dataBind from 'src/dbdi/react/dataBind';
