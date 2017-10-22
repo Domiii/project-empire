@@ -12,15 +12,18 @@ import dataBind from 'src/dbdi/react/dataBind';
 
 import Moment from 'react-moment';
 import {
-  Alert, Badge,
+  Alert, Button,
   Well, Panel
 } from 'react-bootstrap';
+import Flexbox from 'flexbox-react';
 
 
 import ProjectEditor from './ProjectEditor';
 import ProjectEditTools from './ProjectEditTools';
+import { ProjectControlView } from './ProjectControlView';
 import UserList, { UserBadge } from 'src/views/components/users/UserList';
 import LoadIndicator from 'src/views/components/util/loading';
+import { FAIcon } from 'src/views/components/util';
 
 
 export const ProjectTeam = dataBind({})(
@@ -72,6 +75,14 @@ export default class ProjectPreview extends Component {
     return this.state.editing;
   }
 
+  get ShowDetails() {
+    return this.state.showDetails;
+  }
+
+  toggleShowDetails = () => {
+    this.setState({ showDetails: !this.ShowDetails });
+  }
+
   toggleEdit = () => {
     this.setState({
       editing: !this.IsEditing
@@ -79,8 +90,9 @@ export default class ProjectPreview extends Component {
   }
 
   editorHeader({ projectId, readonly }, { }, { isCurrentUserGuardian }) {
+    const { showDetails } = this.state;
     return (readonly || !isCurrentUserGuardian) ? null : (
-      <div>
+      <Flexbox alignItems="center" justifyContent="flex-end">
         <ProjectEditTools {...{
           projectId,
 
@@ -89,7 +101,13 @@ export default class ProjectPreview extends Component {
           editing: this.IsEditing,
           toggleEdit: this.toggleEdit
         }} />
-      </div>
+
+        <Button onClick={this.toggleShowDetails}
+          bsStyle="primary"
+          bsSize="small" active={showDetails}>
+          <FAIcon name="cubes" />
+        </Button>
+      </Flexbox>
     );
   }
 
@@ -154,9 +172,13 @@ export default class ProjectPreview extends Component {
 
           <div className="margin-half" />
 
-          {!this.IsEditing ? null : (
+          {this.IsEditing && (
             <ProjectEditor {...{ projectId }} />
           )}
+          {this.ShowDetails &&
+            <ProjectControlView projectId={projectId} />
+          }
+
         </div>
       </Panel>
     </div>);

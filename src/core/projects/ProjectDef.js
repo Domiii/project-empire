@@ -166,7 +166,7 @@ export const projectStageTree = new StageDefTree([
   },
   {
     id: 'wrapup',
-    title: '專案總點：一起思考過程喜歡與不喜歡的～',
-    contributors: contributorSet('party', 1)
+    title: '專案終點：一起思考過程喜歡與不喜歡的～',
+    contributors: [contributorSet('party', 1), contributorSet('reviewer', 1)]
   }
 ]);

@@ -43,7 +43,18 @@ export default {
 
       currentUserDisplayRole({ }, { }, { currentUser }) {
         return currentUser && currentUser.displayRole;
-      }
+      },
+
+
+      
+
+      userHasRole({ uid, role }, { userPublic }, { }) {
+        const user = userPublic({uid});
+        if (!user) {
+          return user;
+        }
+        return hasRole(user.role, role);
+      },
     },
 
 

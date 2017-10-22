@@ -93,9 +93,9 @@ export default class ImageLoader extends React.Component {
   }
 
   renderImg() {
-    const {src, imgProps} = this.props;
+    const {src, style, className, imgProps} = this.props;
     let props = {src};
-    return <img {...props} {...imgProps} />;
+    return <img {...props} {...imgProps} style={style} className={className} />;
   }
 
   render() {

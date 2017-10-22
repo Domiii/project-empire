@@ -1,3 +1,6 @@
+import Roles, {
+} from 'src/core/users/Roles';
+
 import {
   projectStageTree,
   ProjectStatus,
@@ -60,7 +63,9 @@ const stageEntries = {
     stageEntry: {
       path: '$(stagePath)',
       children: {
-        stageStatusRaw: 'status',
+        stageStatusRaw: {
+          path: 'status'
+        },
         stageStartTime: 'startTime',
         stageFinishTime: 'finishTime'
       }
@@ -68,8 +73,8 @@ const stageEntries = {
   }
 };
 
-const stageContributions = {
-  pathTemplate: 'contributions',
+const allStageContributions = {
+  path: 'contributions',
   children: {
     stageContributions: {
       readers: {
@@ -227,23 +232,16 @@ const readers = {
     return stageStatus || StageContributorStatus.None;
   },
 
-  stageContributions({ projectId, stagePath }, { projectStageRecord }, { }) {
-    const stage = projectStageRecord({ projectId, stagePath });
-    return stage && stage.contributions;
-  },
+  stageContributors({ projectId, stagePath }, { stageContributorUids }, { }) {
+    const node = projectStageTree.getNodeByPath(stagePath);
 
-  stageContributors({ projectId, stagePath }, { stageContributorUserList }, { }) {
-    const node = stagePath && projectStageTree.getNodeByPath(stagePath);
-
-    if (node && node.stageDef.contributors) {
+    if (node.stageDef.contributors) {
       // get userList for each contributor group
       const contributorDefinitions = map(node.stageDef.contributors, contributorSet => {
-        const { groupName } = contributorSet;
-        
-    // TODO: make use of stage contribution data here!
+        const { groupName, signOffCount } = contributorSet;
 
-        const userList = stageContributorUserList({ projectId, groupName });
-        return Object.assign({}, contributorSet, { userList });
+        const uids = stageContributorUids({ projectId, stagePath, groupName, signOffCount });
+        return Object.assign({}, contributorSet, { uids });
       });
 
       // sort
@@ -252,22 +250,100 @@ const readers = {
     return null;
   },
 
-  stageContributorUserList(
-    { projectId, groupName },
-    { usersOfProject, projectReviewers, gms },
-    { }
-  ) {
+  isStageContributor({ uid, projectId, stagePath }, { isInContributorGroup }) {
+    const node = projectStageTree.getNodeByPath(stagePath);
+
+    if (node && node.stageDef.contributors) {
+      // get userList for each contributor group
+      let res = some(node.stageDef.contributors, contributorSet => {
+        const { groupName } = contributorSet;
+        return isInContributorGroup({uid, projectId, groupName});
+      });
+      if (!res) {
+        // might not have finished loading yet
+        if (some(node.stageDef.contributors, contributorSet => {
+          const { groupName } = contributorSet;
+          return !isInContributorGroup.isLoaded({uid, projectId, groupName});
+        })) {
+          return undefined;
+        }
+      }
+      return res;
+    }
+    return false;
+  },
+
+  isInContributorGroup({ uid, projectId, groupName },
+    { userHasRole, usersOfProject, projectReviewers }) {
     switch (groupName) {
       case 'gm':
-        return gms();
-      case 'party':
-        return usersOfProject({ projectId });
-      case 'reviewer':
-        return projectReviewers({ projectId });
+        return userHasRole({ uid, role: Roles.GM });
+      case 'party': {
+        const users = usersOfProject({ projectId });
+        if (!users) {
+          return users;
+        }
+        return !!users[uid];
+      }
+      case 'reviewer': {
+        const users = projectReviewers({ projectId });
+        if (!users) {
+          return users;
+        }
+        return !!users[uid];
+      }
       default:
         console.error('invalid groupName in stage definition: ' + groupName);
-        return EmptyObject;
+        return false;
     }
+  },
+
+  stageContributorGroupUsers({ projectId, groupName },
+    { usersOfProject, projectReviewers, gms }) {
+    let allUsers;
+    switch (groupName) {
+      case 'gm':
+        allUsers = gms();
+        break;
+      case 'party':
+        allUsers = usersOfProject({ projectId });
+        break;
+      case 'reviewer':
+        allUsers = projectReviewers({ projectId });
+        break;
+      default:
+        console.error('invalid groupName in stage definition: ' + groupName);
+        allUsers = EmptyObject;
+        break;
+    }
+    return allUsers;
+  },
+
+  stageContributorUids(
+    { signOffCount, projectId, stagePath, groupName },
+    { get_stageContributions, stageContributorGroupUsers },
+    { }
+  ) {
+    //const node = projectStageTree.getNodeByPath(stagePath);
+    if (signOffCount && !get_stageContributions.isLoaded({ projectId, stagePath })) {
+      return undefined;
+    }
+
+    const uids = Object.keys(stageContributorGroupUsers({ projectId, groupName }));
+    if (!signOffCount) {
+      // all potential users must contribute
+      return uids;
+    }
+
+    if (signOffCount >= uids.length) {
+      // all potential users must contribute
+      return uids;
+    }
+
+    // we only know of the contributors who already contributed
+    const stageContributions = get_stageContributions({ projectId, stagePath });
+    //console.error(signOffCount, size(stageContributions), stageContributions);
+    return stageContributions && Object.keys(stageContributions) || null;
   }
 };
 
@@ -384,7 +460,7 @@ export default {
             path: '$(projectId)',
             children: {
               stageEntries,
-              stageContributions
+              allStageContributions
             }
           }
         }

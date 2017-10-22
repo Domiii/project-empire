@@ -76,7 +76,7 @@ export default class DataAccessTracker {
         // https://stackoverflow.com/questions/36372611/how-to-test-if-an-object-is-a-proxy
         return true;
       }
-      if (target[name] === undefined) {
+      if (!(name in target)) {
         console.warn(`Requested argument was not supplied: ${name}`);
       }
       return target[name];

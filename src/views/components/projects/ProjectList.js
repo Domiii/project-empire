@@ -39,7 +39,7 @@ export default class ProjectList extends Component {
 
     this.dataBindMethods(
       this.getProjectIds,
-      this.makeEditorHeader
+      this.makeListHeader
     );
 
     autoBind(this);
@@ -66,7 +66,7 @@ export default class ProjectList extends Component {
   toggleAdding = () => {
     this.setAdding(!this.state.adding);
   }
-
+  
   setAdding = (adding) => {
     this.setState({ adding });
   }
@@ -79,7 +79,7 @@ export default class ProjectList extends Component {
     this.setState({ page });
   }
 
-  makeEditorHeader({ }, { }, { isCurrentUserGuardian }) {
+  makeListHeader({ }, { }, { isCurrentUserGuardian }) {
     return !isCurrentUserGuardian ? null : (
       <div>
         <Button active={this.IsAdding}
@@ -122,7 +122,7 @@ export default class ProjectList extends Component {
     }
 
     return (<div>
-      {this.makeEditorHeader()}
+      {this.makeListHeader()}
       {projectListEl}
     </div>);
   }

@@ -4,7 +4,7 @@ import set from 'lodash/set';
 import some from 'lodash/some';
 
 export function _makePathVariable(val, varName, variableTransform) {
-  if (isPlainObject(val)) {
+  if (isPlainObject(val) && variableTransform) {
     // use index transformation for variable
     return variableTransform(val, varName);
   }
