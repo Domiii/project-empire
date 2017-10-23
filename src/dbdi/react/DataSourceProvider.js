@@ -24,8 +24,8 @@ export default class DataSourceProvider extends Component {
   static propTypes = {
     dataProviders: PropTypes.object.isRequired,
     dataStructureConfig: PropTypes.object.isRequired,
-    plugins: PropTypes.object.isRequired,
-    children: PropTypes.object.isRequired
+    children: PropTypes.object.isRequired,
+    plugins: PropTypes.object
   };
 
   constructor(props, context) {

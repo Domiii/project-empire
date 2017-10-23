@@ -26,7 +26,8 @@ import sortBy from 'lodash/sortBy';
 import size from 'lodash/size';
 import some from 'lodash/some';
 import times from 'lodash/times';
-import pickBy from 'lodash/pickBy';
+import intersection from 'lodash/intersection';
+import sumBy from 'lodash/sumBy';
 
 /**
  * Project main data
@@ -322,21 +323,33 @@ const readers = {
       return undefined;
     }
 
-    const uids = Object.keys(stageContributorGroupUsers({ projectId, groupName }));
-    if (!signOffCount) {
-      // all potential users must contribute
-      return uids;
+    // TODO: optimize if signOffCount significantly smaller than set of potential contributors
+
+    const allPotentialUsers = stageContributorGroupUsers({ projectId, groupName });
+    if (!allPotentialUsers) {
+      return allPotentialUsers;
     }
 
-    if (signOffCount >= uids.length) {
+    const potentialContributorUids = Object.keys(allPotentialUsers);
+    if (!signOffCount) {
       // all potential users must contribute
-      return uids;
+      return potentialContributorUids;
+    }
+
+    if (signOffCount >= potentialContributorUids.length) {
+      // all potential users must contribute
+      return potentialContributorUids;
     }
 
     // we only know of the contributors who already contributed
     const stageContributions = get_stageContributions({ projectId, stagePath });
     //console.error(signOffCount, size(stageContributions), stageContributions);
-    return stageContributions && Object.keys(stageContributions) || null;
+
+    if (stageContributions) {
+      const contributedUids = Object.keys(stageContributions);
+      return intersection(contributedUids, potentialContributorUids);
+    }
+    return null;
   }
 };
 
@@ -377,7 +390,7 @@ const writers = {
     });
   },
 
-  update_projectStatus(
+  updateProjectStatus(
     { uid, projectId, status },
     { projectStatus, projectFinishTime },
     { },
@@ -388,19 +401,45 @@ const writers = {
       [projectStatus.getPath({ projectId })]: status,
       [projectFinishTime.getPath({ projectId })]: firebase.database.ServerValue.TIMESTAMP
     };
-    
+
     return update_db(updates);
   },
 
-  update_stageContributorStatus() {
+  updateStageContributorStatus(
+    { uid, projectId, stagePath, contributorStatus },
+    { get_stageContributions, isInContributorGroup },
+    { },
+    { }
+  ) {
+    if (isStageContributorStatusOver(contributorStatus)) {
+      // check if stageStatus has changed
+      const node = projectStageTree.getNodeByPath(stagePath);
+      const stageContributions = get_stageContributions({ projectId, stagePath });
 
+      //sumBy(contributors, (contributorSet) => {
+      if (node.stageDef.contributors) {
+        sumBy(node.stageDef.contributors, (contributorSet) => {
+          const {
+            groupName,
+            signOffCount
+          } = contributorSet;
+
+          isInContributorGroup({ uid, projectId, groupName });
+
+          // check if signatures are sufficient
+          if (signOffCount && signOffCount > uids.length) {
+            hi
+          }
+        });
+      }
+    }
   },
 
-  update_stageStatus(
+  updateStageStatus(
     { uid, projectId, stagePath, status },
     { stageStatusRaw, stageFinishTime },
     { },
-    { update_stageStatus, update_projectStatus, update_db }) {
+    { updateStageStatus, updateProjectStatus, update_db }) {
     const updates = {};
 
     // TODO: generate notification entry
@@ -413,17 +452,17 @@ const writers = {
     const promises = [];
 
     //if (isStageStatusOver(status)) {
-      const node = projectStageTree.getNodeByPath(stagePath);
+    const node = projectStageTree.getNodeByPath(stagePath);
 
-      if (node.isRoot) {
-        // last stage in project -> update project status
-        promises.push(update_projectStatus({ uid, projectId, status: status }));
-      }
-      else if (node.isLastInLine) {
-        // last stage in line -> update parent stage status as well
-        const parentPath = projectStageTree.getParentPathOfPath(stagePath);
-        promises.push(update_stageStatus({ uid, projectId, stagePath: parentPath, status }));
-      }
+    if (node.isRoot) {
+      // last stage in project -> update project status
+      promises.push(updateProjectStatus({ uid, projectId, status: status }));
+    }
+    else if (node.isLastInLine) {
+      // last stage in line -> update parent stage status as well
+      const parentPath = projectStageTree.getParentPathOfPath(stagePath);
+      promises.push(updateStageStatus({ uid, projectId, stagePath: parentPath, status }));
+    }
 
     //}
     return Promise.all([update_db(updates), ...promises]);

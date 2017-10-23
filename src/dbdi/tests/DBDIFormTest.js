@@ -56,7 +56,7 @@ const dataConfig = {
       dataProvider: 'firebase',
       path: 'test',
       readers: {
-        sortedItemIds({ }, { itemList }, { }) {
+        sortedItemIds({ }, { }, { itemList }) {
           if (!itemList) return;
           const ids = Object.keys(itemList);
           return sortBy(ids, (itemId) => -itemList[itemId].updatedAt);

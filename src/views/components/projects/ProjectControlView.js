@@ -214,6 +214,8 @@ const StageStatusBar = dataBind()(
           uids
         } = contributorSet;
 
+        const knownUserCount = size(uids);
+
         // first: all already known users
         const userEls = map(uids,
           (uid) => (
@@ -229,10 +231,10 @@ const StageStatusBar = dataBind()(
 
         // then: all missing users
         let unknownEls;
-        if (signOffCount > 0 && signOffCount > userEls.length) {
-          unknownEls = times(signOffCount - userEls.length, (i) =>
+        if (signOffCount && signOffCount > knownUserCount) {
+          unknownEls = times(signOffCount - knownUserCount, (i) =>
             (<StageContributorIcon
-              key={i + userEls.length}
+              key={i + knownUserCount}
               projectId={projectId}
               stagePath={stagePath}
               uid={null}
@@ -268,24 +270,33 @@ function getToggleStatus(oldStatus) {
 
 const ActiveStageContent = dataBind({
   toggleStageStatus(evt, { thisProjectId, stagePath },
-    { get_stageStatus, update_stageStatus }) {
+    { get_stageStatus, updateStageStatus }) {
     const oldStatus = get_stageStatus({ projectId: thisProjectId, stagePath }) || StageStatus.None;
 
     const newStatus = getToggleStatus(oldStatus);
-    update_stageStatus({ projectId: thisProjectId, stagePath }, newStatus);
+    updateStageStatus({ projectId: thisProjectId, stagePath }, newStatus);
   },
 
   setNone(evt, { thisProjectId, stagePath },
-    { update_stageStatus }) {
-    update_stageStatus({ projectId: thisProjectId, stagePath, status: StageStatus.None });
+    { updateStageStatus },
+    { currentUid }) {
+    const uid = currentUid;
+    const projectId = thisProjectId;
+    updateStageStatus({ projectId, uid, stagePath, status: StageStatus.None });
   },
   setFinished(evt, { thisProjectId, stagePath },
-    { update_stageStatus }) {
-    update_stageStatus({ projectId: thisProjectId, stagePath, status: StageStatus.Finished });
+    { updateStageStatus },
+    { currentUid }) {
+    const uid = currentUid;
+    const projectId = thisProjectId;
+    updateStageStatus({ projectId, uid, stagePath, status: StageStatus.Finished });
   },
   setFailed(evt, { thisProjectId, stagePath },
-    { update_stageStatus }) {
-    update_stageStatus({ projectId: thisProjectId, stagePath, status: StageStatus.Failed });
+    { updateStageStatus },
+    { currentUid }) {
+    const uid = currentUid;
+    const projectId = thisProjectId;
+    updateStageStatus({ projectId, uid, stagePath, status: StageStatus.Failed });
   },
 
   setContributorNone(evt, { thisProjectId, stagePath },
@@ -317,7 +328,7 @@ const ActiveStageContent = dataBind({
     setFinished, setNone, setFailed,
     setContributorFinished, setContributorNone, setContributorFailed
   }, {
-    currentUid
+    currentUid, isCurrentUserGuardian
   }) => {
     const stageNode = projectStageTree.getNodeByPath(stagePath);
     const uid = currentUid;
@@ -327,37 +338,36 @@ const ActiveStageContent = dataBind({
     return (<div>
       {children}
 
-      { !stageNode.hasChildren && 
-        <div>
-          {isStageContributor && 
+      {!stageNode.hasChildren &&
+        <div className="right-bound">
+          {isStageContributor &&
             <div>
               <Button onClick={setContributorNone} bsStyle="info">
-                Reset own status
+                <FAIcon name="undo" /> Reset
               </Button>
 
               <Button onClick={setContributorFinished} bsStyle="success">
-                Finish own
-              </Button>
-
-              <Button onClick={setContributorFailed} bsStyle="danger">
-                Fail own
+                <FAIcon name="check" /> Done
               </Button>
             </div>
           }
 
-          <div>
-            <Button onClick={setNone} bsStyle="info">
-              Reset status
-            </Button>
+          {isCurrentUserGuardian &&
+            <div>
+              {isCurrentUserGuardian}
+              <Button onClick={setNone} bsStyle="info">
+                Reset status
+              </Button>
 
-            <Button onClick={setFinished} bsStyle="success">
-              Finish
-            </Button>
+              <Button onClick={setFinished} bsStyle="success">
+                Finish
+              </Button>
 
-            <Button onClick={setFailed} bsStyle="danger">
-              Fail
-            </Button>
-          </div>
+              <Button onClick={setFailed} bsStyle="danger">
+                Fail
+              </Button>
+            </div>
+          }
         </div>
       }
     </div>);
@@ -420,6 +430,7 @@ DONE:
 * write stageEndTime when ending stage
 * when updating last stage in node, update parent status as well
 * When last stage is "finished", also finish entire project
+* Fix handling of multiple groups of contributors
 
 TODO:
 * Display forms of stages
@@ -427,11 +438,11 @@ TODO:
   * GM can overview all form results
 * Add Conditions for "finishing" stages
   * determine stage status from aggregation of individual user statuses (if not overridden)
-* Fix handling of multiple groups of contributors
 * handle project archiving properly
 * allow project team editing to add "any user" (not just users w/o project)
 * feature: Admin can change own user for debugging (through FirebaseAuthDataProvider)
 * basic performance optimizations
+* feature: add iterations for repeatable nodes
      */
 
     return (

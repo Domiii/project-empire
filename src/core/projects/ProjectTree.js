@@ -309,7 +309,6 @@ export class StageDefTree {
         idx = idx2;
       }
       while (i < 1);
-      console.log(stagePath, ' - ', stagePath.substring(0, idx));
       return stagePath.substring(0, idx);
     }
     catch (err) {
