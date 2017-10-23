@@ -65,7 +65,7 @@ class ErrorBoundary extends React.Component {
       const { wrapperId } = this.props;
       return _errorState[wrapperId];
     }
-    return this.props.children;
+    return Children.only(this.props.children);
   }
 }
 
@@ -115,7 +115,7 @@ export default (propsOrPropCb) => WrappedComponent => {
       this._customContext = getCustomContextFromReactContext(context) || {};
       this._dataAccessTracker = new DataAccessTracker(
         this._dataSourceTree, this._onNewData, 
-        WrappedComponent.name || '<unknown component>');
+        WrappedComponent.name || '<unnamed component>');
 
 
       // prepare all the stuff

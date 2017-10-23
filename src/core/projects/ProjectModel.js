@@ -1,3 +1,5 @@
+import firebase from 'firebase';
+
 import Roles, {
 } from 'src/core/users/Roles';
 
@@ -11,16 +13,6 @@ import {
   isStageStatusOver,
   isStageContributorStatusOver
 } from 'src/core/projects/ProjectDef';
-
-
-/**
- * TODO:
- *  implement StagePath (encoding + decoding)
- *  Store new stageEntry (set status + num) on Reviewer button click
- *  Fix `stageContributors` (cross-reference against `stageContributions`)
- *  per-contributor forms CRUD + UI
- *  Form table overview
- */
 
 import { EmptyObject, EmptyArray } from 'src/util';
 import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
@@ -53,7 +45,8 @@ const projectById = {
 
     projectGuardianUid: 'guardianUid',
 
-    projectStatus: 'status'
+    projectStatus: 'status',
+    projectFinishTime: 'finishTime'
   }
 };
 
@@ -257,13 +250,13 @@ const readers = {
       // get userList for each contributor group
       let res = some(node.stageDef.contributors, contributorSet => {
         const { groupName } = contributorSet;
-        return isInContributorGroup({uid, projectId, groupName});
+        return isInContributorGroup({ uid, projectId, groupName });
       });
       if (!res) {
         // might not have finished loading yet
         if (some(node.stageDef.contributors, contributorSet => {
           const { groupName } = contributorSet;
-          return !isInContributorGroup.isLoaded({uid, projectId, groupName});
+          return !isInContributorGroup.isLoaded({ uid, projectId, groupName });
         })) {
           return undefined;
         }
@@ -382,6 +375,58 @@ const writers = {
       readers: [uidOfProject, activeProjectIdOfUser],
       val: null
     });
+  },
+
+  update_projectStatus(
+    { uid, projectId, status },
+    { projectStatus, projectFinishTime },
+    { },
+    { update_db }
+  ) {
+    // TODO: handle archiving properly
+    const updates = {
+      [projectStatus.getPath({ projectId })]: status,
+      [projectFinishTime.getPath({ projectId })]: firebase.database.ServerValue.TIMESTAMP
+    };
+    
+    return update_db(updates);
+  },
+
+  update_stageContributorStatus() {
+
+  },
+
+  update_stageStatus(
+    { uid, projectId, stagePath, status },
+    { stageStatusRaw, stageFinishTime },
+    { },
+    { update_stageStatus, update_projectStatus, update_db }) {
+    const updates = {};
+
+    // TODO: generate notification entry
+    // TODO: generalize batch writing through updates
+
+    // update this status
+    updates[stageStatusRaw.getPath({ projectId, stagePath })] = status;
+    updates[stageFinishTime.getPath({ projectId, stagePath })] = firebase.database.ServerValue.TIMESTAMP;
+
+    const promises = [];
+
+    //if (isStageStatusOver(status)) {
+      const node = projectStageTree.getNodeByPath(stagePath);
+
+      if (node.isRoot) {
+        // last stage in project -> update project status
+        promises.push(update_projectStatus({ uid, projectId, status: status }));
+      }
+      else if (node.isLastInLine) {
+        // last stage in line -> update parent stage status as well
+        const parentPath = projectStageTree.getParentPathOfPath(stagePath);
+        promises.push(update_stageStatus({ uid, projectId, stagePath: parentPath, status }));
+      }
+
+    //}
+    return Promise.all([update_db(updates), ...promises]);
   }
 };
 

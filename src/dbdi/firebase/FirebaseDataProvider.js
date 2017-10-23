@@ -24,11 +24,12 @@ import {
  *  implicit (one-to-one + one-to-many) indices
  *  explicit (many-to-many) indices
  *  groupBy
- */ 
+ */
 
 export default class FirebaseDataProvider extends DataProviderBase {
   _database;
   firebaseCache = {};
+  loadedPaths = {};
 
   constructor(app) {
     super();
@@ -53,8 +54,12 @@ export default class FirebaseDataProvider extends DataProviderBase {
 
   _onNewData(query, snap) {
     const val = snap.val();
-    console.log('R [', query.remotePath, '] ', val);
-    setDataIn(this.firebaseCache, query.localPath, val);
+    this.loadedPaths[query.localPath] = 1;
+    //console.log('R [', query.remotePath, '] ', val);
+
+    if (val !== undefined && val !== null) {
+      setDataIn(this.firebaseCache, query.localPath, val);
+    }
 
     this.notifyNewData(query, val);
   }
@@ -92,10 +97,19 @@ export default class FirebaseDataProvider extends DataProviderBase {
   onListenerRemove(query, listener, hook) {
     const ref = this._getRef(query);
     ref.off('value', hook);
+    if (!query._useCount) {
+      // set path as unloaded
+      delete this.loadedPaths[query.localPath];
+    }
   }
 
   isDataLoaded(queryInput) {
-    return this.readData(queryInput) !== undefined;
+    const query = this.getQueryByQueryInput(queryInput);
+    if (!query) {
+      return undefined;
+    }
+
+    return !!this.loadedPaths[query.localPath];
   }
 
   readData(queryInput) {
@@ -104,7 +118,11 @@ export default class FirebaseDataProvider extends DataProviderBase {
       return undefined;
     }
 
-    let allData = getDataIn(this.firebaseCache, query.localPath, undefined);
+    if (!this.loadedPaths[query.localPath]) {
+      return undefined;
+    }
+
+    let allData = getDataIn(this.firebaseCache, query.localPath, null);
 
     // should not be necessary, since we already subscribed to only this subset of data anyway!
 
@@ -436,7 +454,7 @@ export class FirebaseAuthProvider extends DataProviderBase {
 //       this._onError('updateChild', ref, err);
 //     }
 //   }
-  
+
 //     // see: https://firebase.google.com/docs/reference/js/firebase.database.Reference#transaction
 //     // transactionChild(cb) {
 //     //   // TODO: add write hooks!!!
@@ -477,7 +495,7 @@ export class FirebaseAuthProvider extends DataProviderBase {
 //   delete() {
 //     return this.setChild(path, null);
 //   }
-  
+
 //   /*
 //     const pathTemplate = pathJoin(parentPathTemplate, childPath);
 //     const getPath = createPathGetterFromTemplateArray(pathTemplate, variableTransform);

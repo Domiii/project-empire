@@ -111,29 +111,29 @@ const stageStatusBsStyles = {
 };
 
 
-const stageRenderers = {
-  prepare(node, path, stageEntry, children) {
+const customStageRenderers = {
+  prepare(node, previousPath, path, stageEntry, children) {
 
   },
-  sprint(node, path, stageEntry, children, iteration) {
+  sprint(node, previousPath, path, stageEntry, children, iteration) {
 
   },
-  execution(node, path, stageEntry, children) {
+  execution(node, previousPath, path, stageEntry, children) {
 
   },
-  partyPrepareMeeting(node, path, stageEntry, children) {
+  partyPrepareMeeting(node, previousPath, path, stageEntry, children) {
 
   },
-  reviewerPrepareMeeting(node, path, stageEntry, children) {
+  reviewerPrepareMeeting(node, previousPath, path, stageEntry, children) {
 
   },
-  holdMeeting(node, path, stageEntry, children) {
+  holdMeeting(node, previousPath, path, stageEntry, children) {
 
   },
-  postSprintReflection(node, path, stageEntry, children) {
+  postSprintReflection(node, previousPath, path, stageEntry, children) {
 
   },
-  wrapup(node, path, stageEntry, children) {
+  wrapup(node, previousPath, path, stageEntry, children) {
 
   },
 };
@@ -149,10 +149,12 @@ StageContributorStatusIcon.propTypes = {
 };
 
 const StageContributorIcon = dataBind()(
-  ({ projectId, stagePath, groupName, uid }, { userPublic, stageContributorStatus }) => {
+  ({ projectId, stagePath, groupName, uid },
+    { userPublic, stageContributorStatus }) => {
     const isStatusLoaded = !uid || stageContributorStatus.isLoaded({ projectId, stagePath, uid });
     const isUserLoaded = !uid || userPublic.isLoaded({ uid });
-    const userStatus = isUserLoaded && stageContributorStatus({ projectId, stagePath, uid }) || 0;
+    const userStatus = isUserLoaded && uid && stageContributorStatus({ projectId, stagePath, uid }) ||
+      StageContributorStatus.None;
     const user = isUserLoaded && uid && userPublic({ uid });
 
     const statusIconEl = (
@@ -264,25 +266,26 @@ function getToggleStatus(oldStatus) {
   return isDone ? StageStatus.None : StageStatus.Finished;
 }
 
-const ProjectStageView = dataBind({
+const ActiveStageContent = dataBind({
   toggleStageStatus(evt, { thisProjectId, stagePath },
-    { get_stageStatus, set_stageStatusRaw }) {
+    { get_stageStatus, update_stageStatus }) {
     const oldStatus = get_stageStatus({ projectId: thisProjectId, stagePath }) || StageStatus.None;
 
     const newStatus = getToggleStatus(oldStatus);
-    set_stageStatusRaw({ projectId: thisProjectId, stagePath }, newStatus);
+    update_stageStatus({ projectId: thisProjectId, stagePath }, newStatus);
   },
+
   setNone(evt, { thisProjectId, stagePath },
-    { set_stageStatusRaw }) {
-    set_stageStatusRaw({ projectId: thisProjectId, stagePath }, StageStatus.None);
+    { update_stageStatus }) {
+    update_stageStatus({ projectId: thisProjectId, stagePath, status: StageStatus.None });
   },
   setFinished(evt, { thisProjectId, stagePath },
-    { set_stageStatusRaw }) {
-    set_stageStatusRaw({ projectId: thisProjectId, stagePath }, StageStatus.Finished);
+    { update_stageStatus }) {
+    update_stageStatus({ projectId: thisProjectId, stagePath, status: StageStatus.Finished });
   },
   setFailed(evt, { thisProjectId, stagePath },
-    { set_stageStatusRaw }) {
-    set_stageStatusRaw({ projectId: thisProjectId, stagePath }, StageStatus.Failed);
+    { update_stageStatus }) {
+    update_stageStatus({ projectId: thisProjectId, stagePath, status: StageStatus.Failed });
   },
 
   setContributorNone(evt, { thisProjectId, stagePath },
@@ -309,11 +312,68 @@ const ProjectStageView = dataBind({
     set_stageContributorStatusRaw({ uid, projectId, stagePath }, StageContributorStatus.Failed);
   }
 })(
-  ({ stageNode, stagePath, thisProjectId, children },
-    { get_stageStatus, get_isStageContributor,
-      setFinished, setNone, setFailed,
-      setContributorFinished, setContributorNone, setContributorFailed },
-    { currentUid }) => {
+  ({ thisProjectId, stagePath, children }, {
+    get_isStageContributor,
+    setFinished, setNone, setFailed,
+    setContributorFinished, setContributorNone, setContributorFailed
+  }, {
+    currentUid
+  }) => {
+    const stageNode = projectStageTree.getNodeByPath(stagePath);
+    const uid = currentUid;
+    const projectId = thisProjectId;
+    const isStageContributor = get_isStageContributor({ uid, projectId, stagePath });
+
+    return (<div>
+      {children}
+
+      { !stageNode.hasChildren && 
+        <div>
+          {isStageContributor && 
+            <div>
+              <Button onClick={setContributorNone} bsStyle="info">
+                Reset own status
+              </Button>
+
+              <Button onClick={setContributorFinished} bsStyle="success">
+                Finish own
+              </Button>
+
+              <Button onClick={setContributorFailed} bsStyle="danger">
+                Fail own
+              </Button>
+            </div>
+          }
+
+          <div>
+            <Button onClick={setNone} bsStyle="info">
+              Reset status
+            </Button>
+
+            <Button onClick={setFinished} bsStyle="success">
+              Finish
+            </Button>
+
+            <Button onClick={setFailed} bsStyle="danger">
+              Fail
+            </Button>
+          </div>
+        </div>
+      }
+    </div>);
+  }
+  );
+ActiveStageContent.propTypes = {
+  //previousStagePath: PropTypes.string,
+  stagePath: PropTypes.string
+};
+
+const ProjectStageView = dataBind({
+})(
+  ({ previousStagePath, stagePath, thisProjectId, children },
+    { get_stageStatus, get_stageEntry },
+    { }) => {
+    const stageNode = projectStageTree.getNodeByPath(stagePath);
     const stageDef = stageNode.stageDef;
 
     if (!stageDef) {
@@ -323,12 +383,22 @@ const ProjectStageView = dataBind({
 
     const title = stageDef.title;
     const order = stageNode.order;
-    const uid = currentUid;
     const projectId = thisProjectId;
-    const status = get_stageStatus({ projectId, stagePath }) || StageStatus.None;
-    const bsStyle = stageStatusBsStyles[status];
-    const newStatus = getToggleStatus(status);
-    const isStageContributor = get_isStageContributor({ uid, projectId, stagePath });
+    const previousStageStatus = get_stageStatus({ projectId, stagePath: previousStagePath });
+    const stageEntry = get_stageEntry({ projectId, stagePath });
+    const status = stageEntry && stageEntry.status || StageStatus.None;
+
+    let bsStyle;
+    const isActive = stageNode.isFirstChild ||
+      //stageEntry ||
+      isStageStatusOver(previousStageStatus);
+
+    if (isActive) {
+      bsStyle = stageStatusBsStyles[status];
+    }
+    else {
+      bsStyle = 'default';
+    }
 
     const header = (
       <Flexbox justifyContent="space-between" alignItems="center">
@@ -345,53 +415,42 @@ const ProjectStageView = dataBind({
     ///className="full-width no-margin no-shadow no-border project-stage-panel"
 
     /*
-     * TODO: update stageFinishTime
-     * TODO: when updating last child, update parent status as well
-     * TODO: determine stage status from aggregation of individual user statuses
-     * TODO: add forms
-     * TODO: add proper buttons for different actors in stage
-     * TODO: proper layout
-     * TODO: When "finish" stage is "finished", also finish entire project
+DONE:
+* Fix tree rendering
+* write stageEndTime when ending stage
+* when updating last stage in node, update parent status as well
+* When last stage is "finished", also finish entire project
+
+TODO:
+* Display forms of stages
+  * Contributors can fill out forms (under right circumstances)
+  * GM can overview all form results
+* Add Conditions for "finishing" stages
+  * determine stage status from aggregation of individual user statuses (if not overridden)
+* Fix handling of multiple groups of contributors
+* handle project archiving properly
+* allow project team editing to add "any user" (not just users w/o project)
+* feature: Admin can change own user for debugging (through FirebaseAuthDataProvider)
+* basic performance optimizations
      */
 
     return (
       <Panel header={header}
         className="full-width no-margin project-stage-panel"
         bsStyle={bsStyle}>
-        <div>
-          <Button onClick={setNone} bsStyle="info">
-            Reset status
-          </Button>
-
-          <Button onClick={setFinished} bsStyle="success">
-            Finish
-          </Button>
-
-          <Button onClick={setFailed} bsStyle="danger">
-            Fail
-          </Button>
-        </div>
-        {isStageContributor && <div>
-          <Button onClick={setContributorNone} bsStyle="info">
-            Reset own status
-          </Button>
-
-          <Button onClick={setContributorFinished} bsStyle="success">
-            Finish own
-          </Button>
-
-          <Button onClick={setContributorFailed} bsStyle="danger">
-            Fail own
-          </Button>
-        </div>}
-
-        {children}
+        {isActive &&
+          <ActiveStageContent
+            stagePath={stagePath}>
+            {children}
+          </ActiveStageContent>
+        }
       </Panel>
     );
   }
   );
 ProjectStageView.propTypes = {
-  stageNode: PropTypes.object.isRequired
+  previousStagePath: PropTypes.string,
+  stagePath: PropTypes.string
 };
 
 const ProjectStageArrow = dataBind()(
@@ -415,25 +474,25 @@ const ProjectTree = dataBind()(
   ({ thisProjectId }, { get_stageEntries }) => {
     const stageEntries = get_stageEntries({ projectId: thisProjectId });
     return (<div className="full-width" data-name="ProjectTree">
-      {projectStageTree.traverse(stageEntries, genStageNode)}
+      {projectStageTree.traverse(stageEntries, renderStageNode)}
     </div>);
   }
 );
 
-function genStageNode(node, stagePath, stageEntry, children) {
-  const customRender = stageRenderers[node.stageId];
+function renderStageNode(node, previousStagePath, stagePath, stageEntry, children) {
+  const customRender = customStageRenderers[node.stageId];
   return (
-    <Flexbox key={node.stageId} className="full-width"
+    <Flexbox key={stagePath} className="full-width"
       flexDirection="column"
       justifyContent="center" alignItems="center">
       <Flexbox className="full-width">
         <ProjectStageView
-          stageNode={node}
+          previousStagePath={previousStagePath}
           stagePath={stagePath}
           stageEntry={stageEntry}>
 
           {customRender &&
-            customRender(node, stagePath, stageEntry, children)}
+            customRender(node, previousStagePath, stagePath, stageEntry, children)}
 
           {children}
         </ProjectStageView>

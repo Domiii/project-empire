@@ -1,5 +1,7 @@
 import forEach from 'lodash/forEach';
 import isArray from 'lodash/isArray';
+import isFunction from 'lodash/isFunction';
+import last from 'lodash/last';
 import noop from 'lodash/noop';
 
 import { interject } from 'src/util/miscUtil';
@@ -15,6 +17,19 @@ export function asArray(objOrArray) {
   }
   return [];
 }
+
+export const StageTransitionTypes = {
+  Start: 1,
+  NextInLine: 2,
+  ParentToChild: 3,
+  /**
+   * NOTE: For purposes of linearization, these edges get sacrificed
+   * If we wanted to keep this transition, traversal
+   * would generate a chain of edges between two "visitable" nodes.
+   */
+  ChildToParent: 4,
+  NextIteration: 5
+};
 
 export class StageDefNode {
   stageTree;
@@ -60,12 +75,16 @@ export class StageDefNode {
     return !this.previous && !this.parent;
   }
 
-  get isLeaf() {
+  get isLastInLine() {
     return !this.next;
   }
 
   get isRepeatable() {
     return this.stageDef && this.stageDef.isRepeatable || false;
+  }
+
+  get isFirstChild() {
+    return !this.previous;
   }
 
   get hasChildren() {
@@ -161,34 +180,44 @@ export class StageDefNode {
     return node;
   }
 
-  traverse(path, stageEntries, cb, iteration = undefined) {
+  traverse(parentPreviousPath, path, stageEntries, cb, iteration = undefined) {
+    const stageEntry = stageEntries && stageEntries[path];
+    let previousPath = path;
     const children = this.mapChildren(node => {
       const childPath = pathToChild(path, node.stageId);
+      let results;
       if (node.isRepeatable) {
-        return node.traverseIterations(childPath, stageEntries, cb);
+        [previousPath, results] = 
+          node.traverseIterations(previousPath, childPath, stageEntries, cb);
       }
       else {
-        return node.traverse(childPath, stageEntries, cb);
+        results = node.traverse(previousPath, childPath, stageEntries, cb);
+        previousPath = childPath;
       }
+      return results;
     });
-    const stageEntry = stageEntries && stageEntries[this.stageId];
-    return cb(this, path, stageEntry, children, iteration);
+    return cb(this, parentPreviousPath, path, stageEntry, children, iteration);
   }
 
-  traverseIterations(basePath, stageEntries, cb) {
+  traverseIterations(previousPath, basePath, stageEntries, cb) {
     let iteration = 0;
-    let path = pathToIteration(basePath, iteration++);
+    let path = pathToIteration(basePath, iteration);
     const results = [];
-    results.push(this.traverse(path, stageEntries, cb, iteration));
+
+    // at least generate one iteration
+    results.push(this.traverse(previousPath, path, stageEntries, cb, iteration));
     if (stageEntries) {
+      // check for more iterations
       while (
-        (path = pathToIteration(basePath, iteration++)) && 
+        (previousPath = path) &&
+        (path = pathToIteration(basePath, ++iteration)) && 
         (stageEntries[path])
       ) {
-        results.push(this.traverse(path, stageEntries, cb, iteration));
+        results.push(this.traverse(previousPath, path, stageEntries, cb, iteration));
       }
+      --iteration;
     }
-    return results;
+    return [pathToIteration(basePath, iteration), results];
   }
 
 
@@ -216,8 +245,9 @@ export class StageDefTree {
   allNodesById;
 
   constructor(stageDefs) {
-    this.allNodesById = {};
-    this.root = new StageDefNode(this, null, null, 0, 0);
+    this.allNodesById = {
+      '': this.root = new StageDefNode(this, null, null, 0, 0)
+    };
     this._createSubTree(stageDefs, this.allNodesById, this.root, 1);
     this._validateAndSanitizeStages();
   }
@@ -235,22 +265,60 @@ export class StageDefTree {
   }
 
   getNode(stageId) {
-    return this.allNodesById[stageId];
+    const node = this.allNodesById[stageId];
+    if (!node) {
+      throw new Error(`invalid ProjectTree Node "${stageId}"`);
+    }
+    return node;
   }
 
+  /**
+   * Get the node that is last in the given path
+   */
   getNodeByPath(stagePath) {
-    let stageId;
-    let idx = stagePath.lastIndexOf('_');
-    stageId = stagePath.substring(idx+1);
-    if (!isNaN(parseInt(stageId))) {
-      const idx2 = stagePath.lastIndexOf('_', idx-1);
-      stageId = stagePath.substring(idx2+1, idx);
+    // get stageId
+    try {
+      let stageId;
+      let idx = stagePath.lastIndexOf('_');
+      stageId = stagePath.substring(idx+1);
+      if (!isNaN(parseInt(stageId))) {
+        // iteration node
+        const idx2 = stagePath.lastIndexOf('_', idx-1);
+        stageId = stagePath.substring(idx2+1, idx);
+      }
+      return this.getNode(stageId);
     }
-    return this.getNode(stageId);
+    catch (err) {
+      throw new Error(`could not getNodeByPath for "${stagePath}"`);
+    }
+  }
+
+  getParentPathOfPath(stagePath) {
+    try {
+      let i = 0;
+      let idx = stagePath.length;
+      let idx2 = idx;
+      do {
+        idx2 = stagePath.lastIndexOf('_', idx-1);
+        const stageId = stagePath.substring(idx2+1, idx);
+        if (isNaN(parseInt(stageId))) {
+          // not an iteration -> stepping stone in hierarchy
+          console.assert(this.getNode(stageId));
+          ++i;
+        }
+        idx = idx2;
+      }
+      while (i < 1);
+      console.log(stagePath, ' - ', stagePath.substring(0, idx));
+      return stagePath.substring(0, idx);
+    }
+    catch (err) {
+      throw new Error(`could not getParentPathOfPath for "${stagePath}"`);
+    }
   }
 
   traverse(stageEntries, cb) {
-    return this.root.traverse('', stageEntries, cb);
+    return this.root.traverse('', '', stageEntries, cb);
   }
 
   _validateAndSanitizeStages(stageDefs) {

@@ -146,18 +146,18 @@ export const projectStageTree = new StageDefTree([
         ]
       },
       {
-        id: 'postSprintReflection',
-        title: '[進階] 團隊鑑定過後',
+        id: 'sprintWrapup',
+        title: '🏁 Sprint 的終點 🏁',
         contributors: contributorSet('party'),
         level: 2,
         forms: [
           {
-            id: 'reviewerPostSpringReflection',
+            id: 'reviewerSprintWrapup',
             read: ['all'],
             write: ['reviewer']
           },
           {
-            id: 'partyPostSpringReflection',
+            id: 'partySprintWrapup',
             write: ['party']
           }
         ]
