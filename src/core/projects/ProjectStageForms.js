@@ -27,5 +27,5 @@ const partyPrepareMeeting = {
 
 
 export default {
-
+  partyPrepareMeeting
 };

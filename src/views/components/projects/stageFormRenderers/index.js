@@ -1,6 +1,6 @@
-import 'merge' from 'lodash/merge';
-import 'forEach' from 'lodash/forEach';
-import 'map' from 'lodash/map';
+import merge from 'lodash/merge';
+import forEach from 'lodash/forEach';
+import map from 'lodash/map';
 
 import React from 'react';
 import Form from 'react-jsonschema-form';
@@ -14,16 +14,16 @@ const _stageFormRenderAll = {
 
 
 const defaultFormRenderSettings = {
-
-  schema={ FormSchema }
-    liveValidate={ true}
-    uiSchema={ FormUISchema }
-    fields={ CustomFields }
-    formData={ data }
-    showErrorList={ false}
-    onChange={ itemLog('changed') }
-    onError={ itemLog('errors') }
-    onSubmit={ onSubmit }
+  formData: data,
+  schema: FormSchema,
+  uiSchema: FormUISchema,
+  
+  fields: CustomFields,
+  liveValidate: true,
+  showErrorList: false,
+  // onChange: itemLog('changed'),
+  // onError: itemLog('errors'),
+  onSubmit: onSubmit
 };
 
 
@@ -46,7 +46,7 @@ function defaultFormRender(settings) {
       }
     </div>
   </Form>);
-};
+}
 
 
 

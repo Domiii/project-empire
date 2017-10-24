@@ -7,6 +7,8 @@ import {
   isStageStatusOver
 } from 'src/core/projects/ProjectDef';
 
+import ProjectStageForms from 'src/core/projects/ProjectStageForms';
+
 import autoBind from 'src/util/auto-bind';
 
 import map from 'lodash/map';
@@ -36,6 +38,7 @@ import LoadIndicator from 'src/views/components/util/loading';
 import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import UserIcon from 'src/views/components/users/UserIcon';
 
+//import stageFormRenderers from './stageFormRenderers';
 
 
 // ###########################################################################
@@ -433,6 +436,9 @@ DONE:
 * Fix handling of multiple groups of contributors
 
 TODO:
+* Condense mission overview into a single row
+    * When too long, use slider/scrolling
+    * Separate between: line of stage progression + separate ContributorStatuses (and their stats)
 * Display forms of stages
   * Contributors can fill out forms (under right circumstances)
   * GM can overview all form results
@@ -454,6 +460,15 @@ TODO:
             stagePath={stagePath}>
             {children}
           </ActiveStageContent>
+        }
+        {
+          map(stageNode.forms, form => {
+            const {
+              id
+            } = form;
+            const formData = ProjectStageForms[id];
+            return ;
+          })
         }
       </Panel>
     );
