@@ -80,7 +80,7 @@ export default class DataProviderBase {
 
     if (!this._listenerData.get(listener).byPath[localPath]) {
       // register new listener for this path (if not already listening on path)
-      console.warn(who, 'registered path:', localPath);
+      //console.warn(who, 'registered path:', localPath);
       const customData = this.onListenerAdd(query, listener);
       this._listenerData.get(listener).byPath[localPath] = {
         query,

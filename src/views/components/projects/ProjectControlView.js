@@ -7,7 +7,7 @@ import {
   isStageStatusOver
 } from 'src/core/projects/ProjectDef';
 
-import ProjectStageForms from 'src/core/projects/ProjectStageForms';
+//import ProjectStageForms from 'src/core/projects/ProjectStageForms';
 
 import autoBind from 'src/util/auto-bind';
 
@@ -442,6 +442,8 @@ TODO:
 * Display forms of stages
   * Contributors can fill out forms (under right circumstances)
   * GM can overview all form results
+* forms: always allow additional meta choices: "don't make sense" 不合理, "don't care" 不管, "don't understand" 不懂, "not now" 再說
+* forms: always be able to add an "other/comment" option
 * Add Conditions for "finishing" stages
   * determine stage status from aggregation of individual user statuses (if not overridden)
 * handle project archiving properly
@@ -466,8 +468,8 @@ TODO:
             const {
               id
             } = form;
-            const formData = ProjectStageForms[id];
-            return ;
+            // const formData = ProjectStageForms[id];
+            // return ;
           })
         }
       </Panel>

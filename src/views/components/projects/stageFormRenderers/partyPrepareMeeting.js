@@ -1,6 +1,22 @@
+import schema from 'src/core/projects/projectStageForms/partyPrepareMeeting';
+
 import React from 'react';
 
+const uiSchema = {
+};
 
-export default function partyPrepareMeeting() {
-  return null;
-}
+const fields = {
+  //DescriptionField
+};
+
+export default {
+  settings: {
+    schema,
+    uiSchema,
+    fields
+  },
+
+  // render: function partyPrepareMeeting() {
+    
+  // }
+};

@@ -25,6 +25,7 @@ import DataSourceProvider from 'src/dbdi/react/DataSourceProvider';
 import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/loading';
 import ConfirmModal from 'src/views/components/util/ConfirmModal';
+import Markdown from 'src/views/components/markdown';
 
 
 
@@ -97,16 +98,29 @@ const FormSchema = {
   ],
   'properties': {
     'title': {
-      'type': 'string',
-      'title': 'Title'
+      'title': 'Title',
+      'type': 'string'
     },
     'good': {
-      'type': 'boolean',
-      'title': 'Good'
+      'title': 'Good',
+      'type': 'boolean'
+    },
+    'spirituality': {
+      title: 'Spirituality',
+      description: '<center><img src="https://i.imgur.com/xiQCNe7.png" /></center>',
+      type: 'number',
+      enum: [1, 2, 3],
+      enumNames: ['one', 'two', 'three']
+    },
+    'difficulty': {
+      title: 'Difficulty',
+      type: 'number',
+      minimum: 1,
+      maximum: 4,
     },
     'other': {
-      'type': 'string',
-      'title': 'Other'
+      'title': 'Notes',
+      'type': 'string'
     },
     'updatedAt': {
       'title': 'Last Updated',
@@ -122,13 +136,32 @@ const FormSchema = {
 // ##########################################################################
 
 const FormUISchema = {
-  'updatedAt': {
+  spirituality: {
+    'ui:widget': 'radio',
+    'ui:options': {
+      inline: true
+    }
+  },
+  difficulty: {
+    'ui:widget': 'range',
+    'ui:options': {
+      inline: true
+    }
+  },
+  updatedAt: {
     'ui:readonly': true,
     'ui:field': 'momentTime'
   }
 };
 
 const CustomFields = {
+  DescriptionField(props) {
+    const { id, description } = props;
+    return (
+      <Markdown id={id} className="field-description" source={description} />
+    );
+  },
+
   momentTime: ({ formData, schema: { title } }) => {
     return (!formData && <span /> || <span>
       <label>{title}</label>{' '}
