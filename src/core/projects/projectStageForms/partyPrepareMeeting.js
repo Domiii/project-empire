@@ -8,7 +8,7 @@ const partyPrepareMeeting = {
 
   ],
   properties: {
-    // TODO: not sufficiently distinct (see metOwnExpectations)
+    // TODO: this question item is not sufficiently distinct (see metOwnExpectations)
     // 'overallSatisfaction': {
     //   type: 'number',
     //   title: '目前為止，你在做這個任務的心情狀態是？（1 = 很糟不開心，4 = ）',
@@ -87,6 +87,4 @@ const partyPrepareMeeting = {
 };
 
 
-export default {
-  partyPrepareMeeting
-};
+export default partyPrepareMeeting;

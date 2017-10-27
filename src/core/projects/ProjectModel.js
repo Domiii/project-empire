@@ -267,6 +267,27 @@ const readers = {
     return false;
   },
 
+  contributorGroupName({ uid, projectId },
+    { usersOfProject, userHasRole, projectReviewers }) {
+    
+    let users;
+    users = usersOfProject({ projectId });
+    if (users && users[uid]) {
+      return 'party';
+    }
+
+    users = projectReviewers({ projectId });
+    if (users && !!users[uid]) {
+      return 'reviewer';
+    }
+
+    if (userHasRole({ uid, role: Roles.GM })) {
+      return 'gm';
+    }
+
+    return null;
+  },
+
   isInContributorGroup({ uid, projectId, groupName },
     { userHasRole, usersOfProject, projectReviewers }) {
     switch (groupName) {

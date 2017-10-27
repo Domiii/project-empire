@@ -38,7 +38,7 @@ import LoadIndicator from 'src/views/components/util/loading';
 import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import UserIcon from 'src/views/components/users/UserIcon';
 
-//import stageFormRenderers from './stageFormRenderers';
+import stageFormRenderers from './stageFormRenderers';
 
 
 // ###########################################################################
@@ -436,15 +436,16 @@ DONE:
 * Fix handling of multiple groups of contributors
 
 TODO:
-* Condense mission overview into a single row
-    * When too long, use slider/scrolling
-    * Separate between: line of stage progression + separate ContributorStatuses (and their stats)
 * Display forms of stages
   * Contributors can fill out forms (under right circumstances)
   * GM can overview all form results
-* forms: always allow additional meta choices: "don't make sense" 不合理, "don't care" 不管, "don't understand" 不懂, "not now" 再說
-* forms: always be able to add an "other/comment" option
-* Add Conditions for "finishing" stages
+* forms: conditional items (e.g. some items only show when in team)
+* forms: always add meta choices: "don't make sense" 不合理, "don't care" 不管, "don't understand" 不懂, "not now" 再說
+* forms: always add an "other/comment" 註解 option
+* Condense mission overview into a single row
+    * When too long, use slider/scrolling
+    * Separate between: line of stage progression + separate ContributorStatuses (and their stats)
+* Add proper conditions for "finishing" stages
   * determine stage status from aggregation of individual user statuses (if not overridden)
 * handle project archiving properly
 * allow project team editing to add "any user" (not just users w/o project)
@@ -508,7 +509,6 @@ const ProjectTree = dataBind()(
 );
 
 function renderStageNode(node, previousStagePath, stagePath, stageEntry, children) {
-  const customRender = customStageRenderers[node.stageId];
   return (
     <Flexbox key={stagePath} className="full-width"
       flexDirection="column"
@@ -516,11 +516,7 @@ function renderStageNode(node, previousStagePath, stagePath, stageEntry, childre
       <Flexbox className="full-width">
         <ProjectStageView
           previousStagePath={previousStagePath}
-          stagePath={stagePath}
-          stageEntry={stageEntry}>
-
-          {customRender &&
-            customRender(node, previousStagePath, stagePath, stageEntry, children)}
+          stagePath={stagePath}>
 
           {children}
         </ProjectStageView>
@@ -533,6 +529,33 @@ function renderStageNode(node, previousStagePath, stagePath, stageEntry, childre
     </Flexbox>
   );
 }
+
+const StageContent = dataBind(function StageContent(
+  { node, stagePath, previousStagePath, thisProjectId, children },
+  { contributorGroupName, get_stageEntry },
+  { currentUid }
+) {
+  const uid = currentUid;
+  const projectId = thisProjectId;
+  const stageEntry = get_stageEntry({ projectId, stagePath });
+  const customRender = customStageRenderers[node.stageId];
+  const groupName = contributorGroupName({ uid, projectId });
+  const formNames = node.forms[groupName];
+  const formEls = map(formNames, name => (
+    // TODO: add formData to ProjectModel
+    <Flexbox>
+      {stageFormRenderers[name]({ formData })}
+    </Flexbox>
+  ));
+
+  return (<Flexbox>
+    {customRender &&
+      customRender(node, previousStagePath, stagePath, stageEntry, children)
+    }
+
+    {formEls}
+  </Flexbox>);
+});
 
 export const ProjectControlView = dataBind()(
   ({ projectId }, { projectById, get_stageEntries }) => {

@@ -150,25 +150,25 @@ const FormUISchema = {
   },
   updatedAt: {
     'ui:readonly': true,
-    'ui:field': 'momentTime'
+    'ui:widget': 'momentTime'
   }
 };
 
 const CustomFields = {
-  DescriptionField(props) {
-    const { id, description } = props;
+  DescriptionField({ id, description }) {
     return (
       <Markdown id={id} className="field-description" source={description} />
     );
-  },
-
-  momentTime: ({ formData, schema: { title } }) => {
-    return (!formData && <span /> || <span>
-      <label>{title}</label>{' '}
-      <Moment fromNow>{formData}</Moment> (
-        <Moment format="MMMM Do YYYY, h:mm:ss a">{formData}</Moment>)
-    </span>);
   }
+};
+
+const CustomWidgets = {
+  momentTime({ value }) {
+    return (!value && <span /> || <span>
+      <Moment fromNow>{value}</Moment> (
+        <Moment format="MMMM Do YYYY, hh:mm:ss">{value}</Moment>)
+    </span>);
+  },
 };
 
 
@@ -204,7 +204,7 @@ const ItemList = dataBind()(
       <h3>Your list currently has {size(items)} items</h3>
       {map(sortedIds, itemId => {
         const item = items[itemId];
-        return (<Panel 
+        return (<Panel
           key={itemId} bsStyle={item.good ? 'success' : 'danger'}
           header={`(${++i}) ${item.title}`}>
           <ItemEditor itemId={itemId} />
@@ -237,7 +237,7 @@ const ItemEditor = dataBind({
   /**
    * DI-decorated action: create or update item
    */
-  onSubmit({ formData }, { itemId }, { set_item, push_item }, {}) {
+  onSubmit({ formData }, { itemId }, { set_item, push_item }, { }) {
     // get rid of undefined fields, created by (weird) form editor
     formData = pickBy(formData, val => val !== undefined);
 
@@ -254,7 +254,7 @@ const ItemEditor = dataBind({
   /**
    * DI-decorated action: delete item
    */
-  doDelete({ itemId }, { delete_item }, {}) {
+  doDelete({ itemId }, { delete_item }, { }) {
     return delete_item({ itemId });
   }
 })(
@@ -270,6 +270,7 @@ const ItemEditor = dataBind({
         liveValidate={true}
         uiSchema={FormUISchema}
         fields={CustomFields}
+        widgets={CustomWidgets}
         formData={data}
         showErrorList={false}
         onChange={itemLog('changed')}
