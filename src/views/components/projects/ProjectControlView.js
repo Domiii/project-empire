@@ -448,22 +448,28 @@ DONE:
 * Fix handling of multiple groups of contributors
 
 TODO:
+* Conditional form items
+  * Allow form schema items to be functions to determine what to insert
+  * Form schema builder: Provide dbdi injection to those functions
+* Prepare all form files + forms
 * Display forms of stages
   * Contributors can fill out forms (under right circumstances)
   * GM can overview all form results
-* forms: conditional items (e.g. some items only show when in team)
 * forms: always add meta choices: "don't make sense" 不合理, "don't care" 不管, "don't understand" 不懂, "not now" 再說
 * forms: always add an "other/comment" 註解 option
 * Condense mission overview into a single row
-    * When too long, use slider/scrolling
-    * Separate between: line of stage progression + separate ContributorStatuses (and their stats)
+  * When too long, use slider/scrolling
+  * Separate between: line of stage progression + separate ContributorStatuses (and their stats)
+* StageContentView:
+  * What to show in stages where there is no forms or where the form is not the main point?
+  * How to aggregate all relevant (previously composed) data in the current stage?
 * Add proper conditions for "finishing" stages
   * determine stage status from aggregation of individual user statuses (if not overridden)
+* feature: add iterations for repeatable nodes
 * handle project archiving properly
 * allow project team editing to add "any user" (not just users w/o project)
 * feature: Admin can change own user for debugging (through FirebaseAuthDataProvider)
 * basic performance optimizations
-* feature: add iterations for repeatable nodes
      */
 
     return (
