@@ -67,6 +67,18 @@ const stageEntries = {
   }
 };
 
+const allStageFormsData = {
+  path: 'allStageFormData',
+  children: {
+    stageFormsData: {
+      path: '$(stagePath)',
+      children: {
+        stageFormData: '$(formName)/$(uid)'
+      }
+    }
+  }
+};
+
 const allStageContributions = {
   path: 'contributions',
   children: {
@@ -565,6 +577,7 @@ export default {
             path: '$(projectId)',
             children: {
               stageEntries,
+              allStageFormsData,
               allStageContributions
             }
           }

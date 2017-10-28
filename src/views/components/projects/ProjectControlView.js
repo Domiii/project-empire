@@ -38,7 +38,7 @@ import LoadIndicator from 'src/views/components/util/loading';
 import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import UserIcon from 'src/views/components/users/UserIcon';
 
-import stageFormRenderers from './stageFormRenderers';
+import { getStageFormRenderer } from './stageFormRenderers';
 
 
 // ###########################################################################
@@ -204,8 +204,9 @@ const StageContributorIcon = dataBind()(
 
 
 const StageStatusBar = dataBind()(
-  ({ thisProjectId, stagePath }, { stageContributors }) => {
+  ({ thisProjectId, thisStagePath }, { stageContributors }) => {
     const projectId = thisProjectId;
+    const stagePath = thisStagePath;
     let contributors = projectId && stageContributors({ projectId, stagePath });
 
     // render all groups of contributors
@@ -272,73 +273,84 @@ function getToggleStatus(oldStatus) {
 }
 
 const ActiveStageContent = dataBind({
-  toggleStageStatus(evt, { thisProjectId, stagePath },
+  toggleStageStatus(evt, { thisProjectId, thisStagePath },
     { get_stageStatus, updateStageStatus }) {
-    const oldStatus = get_stageStatus({ projectId: thisProjectId, stagePath }) || StageStatus.None;
+    const projectId = thisProjectId;
+    const stagePath = thisStagePath;
+    const oldStatus = get_stageStatus({ projectId, stagePath }) || StageStatus.None;
 
     const newStatus = getToggleStatus(oldStatus);
     updateStageStatus({ projectId: thisProjectId, stagePath }, newStatus);
   },
 
-  setNone(evt, { thisProjectId, stagePath },
+  setNone(evt, { thisProjectId, thisStagePath },
     { updateStageStatus },
     { currentUid }) {
     const uid = currentUid;
     const projectId = thisProjectId;
+    const stagePath = thisStagePath;
     updateStageStatus({ projectId, uid, stagePath, status: StageStatus.None });
   },
-  setFinished(evt, { thisProjectId, stagePath },
+  setFinished(evt, { thisProjectId, thisStagePath },
     { updateStageStatus },
     { currentUid }) {
     const uid = currentUid;
     const projectId = thisProjectId;
+    const stagePath = thisStagePath;
     updateStageStatus({ projectId, uid, stagePath, status: StageStatus.Finished });
   },
-  setFailed(evt, { thisProjectId, stagePath },
+  setFailed(evt, { thisProjectId, thisStagePath },
     { updateStageStatus },
     { currentUid }) {
     const uid = currentUid;
     const projectId = thisProjectId;
+    const stagePath = thisStagePath;
     updateStageStatus({ projectId, uid, stagePath, status: StageStatus.Failed });
   },
 
-  setContributorNone(evt, { thisProjectId, stagePath },
+  setContributorNone(evt, { thisProjectId, thisStagePath },
     { set_stageContributorStatusRaw },
     { currentUid }) {
     const uid = currentUid;
     const projectId = thisProjectId;
+    const stagePath = thisStagePath;
     set_stageContributorStatusRaw({ uid, projectId, stagePath }, StageContributorStatus.None);
   },
-  setContributorFinished(evt, { thisProjectId, stagePath },
+  setContributorFinished(evt, { thisProjectId, thisStagePath },
     { set_stageContributorStatusRaw },
     { currentUid }) {
 
     const uid = currentUid;
     const projectId = thisProjectId;
+    const stagePath = thisStagePath;
     set_stageContributorStatusRaw({ uid, projectId, stagePath }, StageContributorStatus.Finished);
   },
-  setContributorFailed(evt, { thisProjectId, stagePath },
+  setContributorFailed(evt, { thisProjectId, thisStagePath },
     { set_stageContributorStatusRaw },
     { currentUid }) {
 
     const uid = currentUid;
     const projectId = thisProjectId;
+    const stagePath = thisStagePath;
     set_stageContributorStatusRaw({ uid, projectId, stagePath }, StageContributorStatus.Failed);
   }
 })(
-  ({ thisProjectId, stagePath, children }, {
+  ({ thisProjectId, thisStagePath, children }, {
     get_isStageContributor,
     setFinished, setNone, setFailed,
     setContributorFinished, setContributorNone, setContributorFailed
   }, {
     currentUid, isCurrentUserGuardian
   }) => {
+    const stagePath = thisStagePath;
     const stageNode = projectStageTree.getNodeByPath(stagePath);
     const uid = currentUid;
     const projectId = thisProjectId;
     const isStageContributor = get_isStageContributor({ uid, projectId, stagePath });
 
     return (<div>
+      <StageContent />
+
       {children}
 
       {!stageNode.hasChildren &&
@@ -383,11 +395,11 @@ ActiveStageContent.propTypes = {
 
 const ProjectStageView = dataBind({
 })(
-  ({ previousStagePath, stagePath, thisProjectId, children },
+  ({ thisNode, thisPreviousStagePath, thisStagePath, thisProjectId, children },
     { get_stageStatus, get_stageEntry },
     { }) => {
-    const stageNode = projectStageTree.getNodeByPath(stagePath);
-    const stageDef = stageNode.stageDef;
+    const stageDef = thisNode.stageDef;
+    const stagePath = thisStagePath;
 
     if (!stageDef) {
       // root node
@@ -395,14 +407,14 @@ const ProjectStageView = dataBind({
     }
 
     const title = stageDef.title;
-    const order = stageNode.order;
+    const order = thisNode.order;
     const projectId = thisProjectId;
-    const previousStageStatus = get_stageStatus({ projectId, stagePath: previousStagePath });
+    const previousStageStatus = get_stageStatus({ projectId, stagePath: thisPreviousStagePath });
     const stageEntry = get_stageEntry({ projectId, stagePath });
     const status = stageEntry && stageEntry.status || StageStatus.None;
 
     let bsStyle;
-    const isActive = stageNode.isFirstChild ||
+    const isActive = thisNode.isFirstChild ||
       //stageEntry ||
       isStageStatusOver(previousStageStatus);
 
@@ -419,7 +431,7 @@ const ProjectStageView = dataBind({
           <span>{`${order + 1}. ${title}`}</span>
         </Flexbox>
         <Flexbox>
-          <StageStatusBar stagePath={stagePath} />
+          <StageStatusBar />
         </Flexbox>
       </Flexbox>
     );
@@ -459,13 +471,12 @@ TODO:
         className="full-width no-margin project-stage-panel"
         bsStyle={bsStyle}>
         {isActive &&
-          <ActiveStageContent
-            stagePath={stagePath}>
+          <ActiveStageContent>
             {children}
           </ActiveStageContent>
         }
         {
-          map(stageNode.forms, form => {
+          map(thisNode.forms, form => {
             const {
               id
             } = form;
@@ -478,13 +489,12 @@ TODO:
   }
   );
 ProjectStageView.propTypes = {
-  previousStagePath: PropTypes.string,
-  stagePath: PropTypes.string
 };
 
 const ProjectStageArrow = dataBind()(
-  ({ thisProjectId, previousStagePath }, { get_stageStatus }) => {
-    const stageStatus = get_stageStatus({ projectId: thisProjectId, stagePath: previousStagePath });
+  ({ thisProjectId, thisPreviousStagePath }, { get_stageStatus }) => {
+    const projectId = thisProjectId;
+    const stageStatus = get_stageStatus({ projectId, stagePath: thisPreviousStagePath });
     const status = stageStatus || StageStatus.None;
     const style = stageStatusStyles[status];
     return (<FAIcon name="arrow-down" size="4em" style={style} />);
@@ -515,8 +525,11 @@ function renderStageNode(node, previousStagePath, stagePath, stageEntry, childre
       justifyContent="center" alignItems="center">
       <Flexbox className="full-width">
         <ProjectStageView
-          previousStagePath={previousStagePath}
-          stagePath={stagePath}>
+          setContext={{
+            thisStagePath: stagePath,
+            thisPreviousStagePath: previousStagePath,
+            thisNode: node
+          }}>
 
           {children}
         </ProjectStageView>
@@ -530,30 +543,50 @@ function renderStageNode(node, previousStagePath, stagePath, stageEntry, childre
   );
 }
 
-const StageContent = dataBind(function StageContent(
-  { node, stagePath, previousStagePath, thisProjectId, children },
-  { contributorGroupName, get_stageEntry },
+const StageForm = dataBind({
+  onSubmit({ formData }, { itemId }, { set_item, push_item }, { }) {
+    
+  }
+})(function StageForm(
+  { formName, thisStagePath, thisProjectId },
+  { get_stageFormData, onSubmit },
+  { currentUid }
+) {
+  //const node = projectStageTree.getNodeByPath(stagePath)
+  const uid = currentUid;
+  const projectId = thisProjectId;
+  const stagePath = thisStagePath;
+  const formData = get_stageFormData({ projectId, stagePath, formName, uid });
+  
+  return getStageFormRenderer(formName)({ formData, onSubmit });
+});
+
+const StageContent = dataBind({
+})(function StageContent(
+  { thisNode, thisStagePath, thisPreviousStagePath, thisProjectId, children },
+  { contributorGroupName },
   { currentUid }
 ) {
   const uid = currentUid;
   const projectId = thisProjectId;
-  const stageEntry = get_stageEntry({ projectId, stagePath });
-  const customRender = customStageRenderers[node.stageId];
+  const stagePath = thisStagePath;
+  //const previousStagePath = thisPreviousStagePath;
+  const node = thisNode;
+  //const customRender = customStageRenderers[node.stageId];
   const groupName = contributorGroupName({ uid, projectId });
   const formNames = node.forms[groupName];
-  const formEls = map(formNames, name => (
-    // TODO: add formData to ProjectModel
+  const formEls = map(formNames, formName => (
     <Flexbox>
-      {stageFormRenderers[name]({ formData })}
+      <StageForm formName={formName} />
     </Flexbox>
   ));
 
+  // {customRender &&
+  //   customRender(node, previousStagePath, stagePath, stageEntry, children)
+  // }
   return (<Flexbox>
-    {customRender &&
-      customRender(node, previousStagePath, stagePath, stageEntry, children)
-    }
-
     {formEls}
+    {children}
   </Flexbox>);
 });
 

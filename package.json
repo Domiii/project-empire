@@ -24,7 +24,9 @@
     "prebuild": "run-s clean",
     "server": "cross-env NODE_ENV=development nodemon -w 'server/**/*.*' server/main.js",
     "server:dev": "cross-env NODE_ENV=development webpack-dev-server --progress",
-    "start": "npm run server:dev"
+    "start": "npm run server:dev",
+    "test": "mocha-webpack",
+    "test:watch": "npm run test -- --watch"
   },
   "dependencies": {
     "babel-polyfill": "^6.0.0",
