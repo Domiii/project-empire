@@ -42,6 +42,11 @@ let _lastWrapperId = 0;
 const _errorState = {};
 
 class ErrorBoundary extends React.Component {
+  propTypes = {
+    wrapperId: PropTypes.number.isRequired,
+    children: PropTypes.object.isRequired
+  };
+
   constructor(props) {
     super(props);
     this.state = { hasError: false };
@@ -127,6 +132,9 @@ export default (propsOrPropCb) => WrappedComponent => {
       this._injectedArguments = [
         this._variableProxy,
         this._functionProxy,
+
+        // Note: the inject proxy only injects from confirmed readers.
+        //  Custom funcs cannot currently be used for injection.
         this._dataAccessTracker._injectProxy
       ];
 
@@ -210,6 +218,10 @@ export default (propsOrPropCb) => WrappedComponent => {
          */
         setContext: (newContext) => {
           merge(this._customContext, newContext);
+        },
+
+        getProps: () => {
+          return this.props;
         }
       };
     }
@@ -407,7 +419,7 @@ export default (propsOrPropCb) => WrappedComponent => {
       this._shouldUpdate = false;
       const { WrappedComponent } = this;
 
-      return (<ErrorBoundary>
+      return (<ErrorBoundary wrapperId={wrapperId}>
         <WrappedComponent
           {...this.props}
           {...this._customProps}

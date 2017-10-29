@@ -8,6 +8,8 @@ import dataProviders from './dataProviders.js';
 
 import merge from 'lodash/merge';
 
+import DataSourceTree from 'src/dbdi/DataSourceTree';
+
 const dataStructureConfig = {
   auth: {
     dataProvider: 'firebaseAuth',
@@ -46,10 +48,4 @@ const plugins = {
   }
 };
 
-
-
-export default {
-  dataProviders,
-  dataStructureConfig,
-  plugins
-};
+export default new DataSourceTree(dataProviders, dataStructureConfig, plugins);
