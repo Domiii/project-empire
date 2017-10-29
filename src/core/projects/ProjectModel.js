@@ -185,6 +185,14 @@ const readers = {
     );
   },
 
+  projectPartySize({ projectId }, { uidsOfProject }) {
+    const uids = uidsOfProject({projectId});
+    if (uids === undefined) {
+      return undefined;
+    }
+    return size(uids);
+  },
+
   uidsWithoutProject({ }, { },
     { userProjectIdIndex, userProjectIdIndex_isLoaded, usersPublic, usersPublic_isLoaded }) {
     // TODO: make this more efficient (achieve O(k), where k = users without project)
@@ -281,7 +289,7 @@ const readers = {
 
   contributorGroupName({ uid, projectId },
     { usersOfProject, userHasRole, projectReviewers }) {
-    
+
     let users;
     users = usersOfProject({ projectId });
     if (users && users[uid]) {

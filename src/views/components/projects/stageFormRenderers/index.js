@@ -1,3 +1,5 @@
+import FormSchemaBuilder from 'src/core/forms/FormSchemaBuilder';
+
 import merge from 'lodash/merge';
 import mapValues from 'lodash/mapValues';
 import map from 'lodash/map';
@@ -9,6 +11,8 @@ import Form from 'react-jsonschema-form';
 import {
   Label
 } from 'react-bootstrap';
+
+import dataBind from 'src/dbdi/react/dataBind';
 
 import Markdown from 'src/views/components/markdown';
 
@@ -139,9 +143,6 @@ function DefaultFormRender(allProps) {
     { allProps.children || defaultFormChildren() }
   </Form>);
 }
-DefaultFormRender.propTypes = {
-  formData: PropTypes.object.isRequired
-};
 
 
 
@@ -155,13 +156,40 @@ const renderersRaw = mapValues(_stageFormRenderAll, info => info && info.render 
 const stageFormRenderers = map(renderersRaw, (FormRender, name) => {
   FormRender = FormRender || DefaultFormRender;
   const settings = renderSettings[name] || {};
+  let { schema, uiSchema, schemaTemplate, ...moreSettings } = settings;
+  let schemaBuilder;
+  if (schemaTemplate) {
+    schemaBuilder = new FormSchemaBuilder(schemaTemplate);
+  }
 
-  return (props) => (
-    <FormRender
-      {...settings}
-      {...props}
-    />
-  );
+  uiSchema = uiSchema || {};
+
+  const Comp = dataBind({
+  })((...allArgs) => {
+    const {
+      _,
+      funcs: { getProps }
+    } = allArgs;
+
+    const pureProps = getProps();
+
+    if (schemaBuilder) {
+      schema = schemaBuilder.build(uiSchema, ...allArgs);
+    }
+
+    return (<FormRender
+      schema={schema}
+      uiSchema={uiSchema}
+      {...moreSettings}
+      {...pureProps}
+    />);
+  });
+  Comp.propTypes = {
+    formData: PropTypes.object.isRequired,
+    onSubmit: PropTypes.func.isRequired
+  };
+
+  return Comp;
 });
 
 export function getStageFormRenderer(name) {

@@ -12,13 +12,9 @@ import {
 import autoBind from 'src/util/auto-bind';
 
 import map from 'lodash/map';
-import mapValues from 'lodash/mapValues';
-import forEach from 'lodash/forEach';
 import isEmpty from 'lodash/isEmpty';
-import sortBy from 'lodash/sortBy';
 import size from 'lodash/size';
 import times from 'lodash/times';
-import pickBy from 'lodash/pickBy';
 
 import React, { Component, Children } from 'react';
 import PropTypes from 'prop-types';
@@ -453,8 +449,8 @@ TODO:
   * Form schema builder: Provide dbdi injection to those functions
 * Prepare all form files + forms
 * Display forms of stages
-  * Contributors can fill out forms (under right circumstances)
-  * GM can overview all form results
+* Contributors can fill out forms (under right circumstances)
+* GM can overview all form results
 * forms: always add meta choices: "don't make sense" 不合理, "don't care" 不管, "don't understand" 不懂, "not now" 再說
 * forms: always add an "other/comment" 註解 option
 * Condense mission overview into a single row

@@ -10,7 +10,7 @@ let forms = {
   partySprintWrapup
 };
 
-export const uiSchema = {};
+export const uiSchemas = {};
 
 
 
@@ -19,7 +19,7 @@ export const uiSchema = {};
  * part of the UI, not the model, in the "jsonschema-form" library.
  */
 forms = mapValues(forms, (form, formName) => 
-  fixSchema(form, uiSchema[formName] = {}));
+  fixSchema(form, uiSchemas[formName] = {}));
 
 
 export default forms;

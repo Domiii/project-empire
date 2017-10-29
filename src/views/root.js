@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { Router, browserHistory } from 'react-router';
 import { getRoutes } from './routeDefines';
 import DataSourceProvider from 'src/dbdi/react/DataSourceProvider';
-import dataSourceConfig from 'src/core/dataSourceConfig';
+import dataSourceTree from 'src/core/dataSourceTree';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
@@ -13,11 +13,12 @@ function getState() {
 }
 
 export default function Root({}) {
+  
   return (
     // ##########################################################################
     // Wrap everything in DataSourceProvider, and go!
     // ##########################################################################  
-    <DataSourceProvider {...dataSourceConfig}>
+    <DataSourceProvider dataSourceTree={dataSourceTree}>
       <Router history={browserHistory} routes={getRoutes(getState)} />
     </DataSourceProvider>
   );

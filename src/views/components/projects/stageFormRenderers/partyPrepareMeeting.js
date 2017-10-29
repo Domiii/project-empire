@@ -1,4 +1,4 @@
-import schema from 'src/core/projects/projectStageForms/partyPrepareMeeting';
+import schemaTemplate from 'src/core/projects/projectStageForms/partyPrepareMeeting';
 
 import React from 'react';
 
@@ -6,12 +6,12 @@ const uiSchema = {
 };
 
 const fields = {
-  //DescriptionField
 };
 
 export default {
   settings: {
-    schema,
+    schemaTemplate,
+    //schema,
     uiSchema,
     fields
   },

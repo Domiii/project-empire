@@ -4,20 +4,6 @@ import isArray from 'lodash/isArray';
 
 
 
-
-function isUserInGroup(user, groupName) {
-
-}
-
-function isCurrentUserInGroup(user, groupName) {
-
-}
-
-function getStageStakeHolders(groups, count) {
-  // TODO: support multiple sets of "stake holders"
-
-}
-
 function contributorSet(groupName, signOffCount) {
   return { 
     groupName,
