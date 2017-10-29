@@ -1,8 +1,10 @@
 import forEach from 'lodash/forEach';
+import mapValues from 'lodash/mapValues';
 import isArray from 'lodash/isArray';
 import isFunction from 'lodash/isFunction';
 import last from 'lodash/last';
 import noop from 'lodash/noop';
+import uniq from 'lodash/uniq';
 
 import { interject } from 'src/util/miscUtil';
 
@@ -57,6 +59,8 @@ export class StageDefNode {
   childrenById;
   siblingsById;
 
+  formsByGroupName;
+
   constructor(stageTree, parent, stageDef, depth, order) {
     this.stageTree = stageTree;
     this.parent = parent;
@@ -65,6 +69,21 @@ export class StageDefNode {
     this.order = order;
     this.childrenById = {};
     this.siblingsById = {};
+
+    this.formsByGroupName = {};
+    if (stageDef && stageDef.forms) {
+      forEach(stageDef.forms || EmptyArray, form => {
+        const write = form.write || [''];
+        forEach(write, groupName => {
+          let arr = this.formsByGroupName[groupName];
+          if (!arr) {
+            arr = this.formsByGroupName[groupName] = [];
+          }
+          arr.push(form);
+        });
+      });
+      this.formsByGroupName = mapValues(this.formsByGroupName, uniq);
+    }
   }
 
   get stageId() {
@@ -89,6 +108,11 @@ export class StageDefNode {
 
   get hasChildren() {
     return !!this.firstChild;
+  }
+
+  getForms(groupName) {
+    return this.formsByGroupName[groupName] ||
+      this.formsByGroupName[''];
   }
 
   getChild(stageId) {
@@ -187,7 +211,7 @@ export class StageDefNode {
       const childPath = pathToChild(path, node.stageId);
       let results;
       if (node.isRepeatable) {
-        [previousPath, results] = 
+        [previousPath, results] =
           node.traverseIterations(previousPath, childPath, stageEntries, cb);
       }
       else {
@@ -210,7 +234,7 @@ export class StageDefNode {
       // check for more iterations
       while (
         (previousPath = path) &&
-        (path = pathToIteration(basePath, ++iteration)) && 
+        (path = pathToIteration(basePath, ++iteration)) &&
         (stageEntries[path])
       ) {
         results.push(this.traverse(previousPath, path, stageEntries, cb, iteration));
@@ -280,11 +304,11 @@ export class StageDefTree {
     try {
       let stageId;
       let idx = stagePath.lastIndexOf('_');
-      stageId = stagePath.substring(idx+1);
+      stageId = stagePath.substring(idx + 1);
       if (!isNaN(parseInt(stageId))) {
         // iteration node
-        const idx2 = stagePath.lastIndexOf('_', idx-1);
-        stageId = stagePath.substring(idx2+1, idx);
+        const idx2 = stagePath.lastIndexOf('_', idx - 1);
+        stageId = stagePath.substring(idx2 + 1, idx);
       }
       return this.getNode(stageId);
     }
@@ -299,8 +323,8 @@ export class StageDefTree {
       let idx = stagePath.length;
       let idx2 = idx;
       do {
-        idx2 = stagePath.lastIndexOf('_', idx-1);
-        const stageId = stagePath.substring(idx2+1, idx);
+        idx2 = stagePath.lastIndexOf('_', idx - 1);
+        const stageId = stagePath.substring(idx2 + 1, idx);
         if (isNaN(parseInt(stageId))) {
           // not an iteration -> stepping stone in hierarchy
           console.assert(this.getNode(stageId));

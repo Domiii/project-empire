@@ -8,6 +8,7 @@ import isFunction from 'lodash/isFunction';
 import isPlainObject from 'lodash/isPlainObject';
 import isEmpty from 'lodash/isEmpty';
 import isString from 'lodash/isString';
+import toString from 'lodash/toString';
 
 import fpGroupBy from 'lodash/fp/groupBy';
 import fpMap from 'lodash/fp/map';
@@ -42,7 +43,7 @@ let _lastWrapperId = 0;
 const _errorState = {};
 
 class ErrorBoundary extends React.Component {
-  propTypes = {
+  static propTypes = {
     wrapperId: PropTypes.number.isRequired,
     children: PropTypes.object.isRequired
   };
@@ -117,7 +118,7 @@ export default (propsOrPropCb) => WrappedComponent => {
       this._shouldUpdate = false;
       this._isMounted = false;
       this._dataSourceTree = getDataSourceTreeFromReactContext(context);
-      this._customContext = getCustomContextFromReactContext(context) || {};
+      this._customContext = Object.assign({}, getCustomContextFromReactContext(context) || {});
       this._dataAccessTracker = new DataAccessTracker(
         this._dataSourceTree, this._onNewData, 
         WrappedComponent.name || '<unnamed component>');
@@ -217,7 +218,7 @@ export default (propsOrPropCb) => WrappedComponent => {
          *    Need to provide a pub-sub solution using a custom DataProvider instead.
          */
         setContext: (newContext) => {
-          merge(this._customContext, newContext);
+          Object.assign(this._customContext, newContext);
         },
 
         getProps: () => {
@@ -261,7 +262,7 @@ export default (propsOrPropCb) => WrappedComponent => {
           // }
 
           if (this._isMounted) {
-            console.error(`DI failed - Component requested props/context "${name}" but it does not exist`);
+            console.error(`DI failed - Component requested props/context "${toString(name)}" but it does not exist`);
           }
           return undefined;
         }
@@ -294,7 +295,7 @@ export default (propsOrPropCb) => WrappedComponent => {
           }
 
           if (this._isMounted) {
-            console.error(`DI failed - Component requested function "${name}" but it does not exist.`);
+            console.error(`DI failed - Component requested function "${toString(name)}" but it does not exist.`);
           }
           return null;
         }
@@ -380,7 +381,7 @@ export default (propsOrPropCb) => WrappedComponent => {
     }
 
     componentWillMount() {
-      console.log('dataBind.componentDidMount');
+      //console.log('dataBind.componentWillMount');
 
       const newContext = this.props.setContext;
       if (newContext) {
@@ -394,10 +395,11 @@ export default (propsOrPropCb) => WrappedComponent => {
     }
 
     componentDidMount() {
-      console.log('dataBind.componentDidMount');
+      //console.log('dataBind.componentDidMount');
     }
 
     componentWillUnmount() {
+      //console.log('dataBind.componentWillUnmount');
       this._dataAccessTracker.unmount();
 
       this._customChildContext = {}; // reset context

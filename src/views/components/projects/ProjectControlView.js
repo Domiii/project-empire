@@ -9,7 +9,7 @@ import {
 
 //import ProjectStageForms from 'src/core/projects/ProjectStageForms';
 
-import autoBind from 'src/util/auto-bind';
+import { EmptyObject, EmptyArray } from 'src/util';
 
 import map from 'lodash/map';
 import isEmpty from 'lodash/isEmpty';
@@ -254,7 +254,6 @@ const StageStatusBar = dataBind()(
   }
 );
 StageStatusBar.propTypes = {
-  stagePath: PropTypes.string.isRequired
 };
 
 
@@ -268,7 +267,7 @@ function getToggleStatus(oldStatus) {
   return isDone ? StageStatus.None : StageStatus.Finished;
 }
 
-const ActiveStageContent = dataBind({
+const StageButtons = dataBind({
   toggleStageStatus(evt, { thisProjectId, thisStagePath },
     { get_stageStatus, updateStageStatus }) {
     const projectId = thisProjectId;
@@ -331,7 +330,7 @@ const ActiveStageContent = dataBind({
     set_stageContributorStatusRaw({ uid, projectId, stagePath }, StageContributorStatus.Failed);
   }
 })(
-  ({ thisProjectId, thisStagePath, children }, {
+  ({ thisProjectId, thisStagePath }, {
     get_isStageContributor,
     setFinished, setNone, setFailed,
     setContributorFinished, setContributorNone, setContributorFailed
@@ -345,10 +344,6 @@ const ActiveStageContent = dataBind({
     const isStageContributor = get_isStageContributor({ uid, projectId, stagePath });
 
     return (<div>
-      <StageContent />
-
-      {children}
-
       {!stageNode.hasChildren &&
         <div className="right-bound">
           {isStageContributor &&
@@ -384,9 +379,8 @@ const ActiveStageContent = dataBind({
     </div>);
   }
   );
-ActiveStageContent.propTypes = {
-  //previousStagePath: PropTypes.string,
-  stagePath: PropTypes.string
+StageButtons.propTypes = {
+  //previousStagePath: PropTypes.string
 };
 
 const ProjectStageView = dataBind({
@@ -442,11 +436,11 @@ DONE:
 * when updating last stage in node, update parent status as well
 * When last stage is "finished", also finish entire project
 * Fix handling of multiple groups of contributors
+* Allow form schema items to be functions to determine what to insert
+* Form schema builder: Provide dbdi injection to those functions
 
 TODO:
-* Conditional form items
-  * Allow form schema items to be functions to determine what to insert
-  * Form schema builder: Provide dbdi injection to those functions
+* Fix form reset problem (use onChange to save + add 完成 button)
 * Prepare all form files + forms
 * Display forms of stages
 * Contributors can fill out forms (under right circumstances)
@@ -473,19 +467,10 @@ TODO:
         className="full-width no-margin project-stage-panel"
         bsStyle={bsStyle}>
         {isActive &&
-          <ActiveStageContent>
-            {children}
-          </ActiveStageContent>
+          <StageButtons />
         }
-        {
-          map(thisNode.forms, form => {
-            const {
-              id
-            } = form;
-            // const formData = ProjectStageForms[id];
-            // return ;
-          })
-        }
+        <StageContent />
+        {children}
       </Panel>
     );
   }
@@ -494,9 +479,9 @@ ProjectStageView.propTypes = {
 };
 
 const ProjectStageArrow = dataBind()(
-  ({ thisProjectId, thisPreviousStagePath }, { get_stageStatus }) => {
+  ({ thisProjectId, previousStagePath }, { get_stageStatus }) => {
     const projectId = thisProjectId;
-    const stageStatus = get_stageStatus({ projectId, stagePath: thisPreviousStagePath });
+    const stageStatus = get_stageStatus({ projectId, stagePath: previousStagePath });
     const status = stageStatus || StageStatus.None;
     const style = stageStatusStyles[status];
     return (<FAIcon name="arrow-down" size="4em" style={style} />);
@@ -532,7 +517,6 @@ function renderStageNode(node, previousStagePath, stagePath, stageEntry, childre
             thisPreviousStagePath: previousStagePath,
             thisNode: node
           }}>
-
           {children}
         </ProjectStageView>
       </Flexbox>
@@ -547,7 +531,7 @@ function renderStageNode(node, previousStagePath, stagePath, stageEntry, childre
 
 const StageForm = dataBind({
   onSubmit({ formData }, { itemId }, { set_item, push_item }, { }) {
-    
+
   }
 })(function StageForm(
   { formName, thisStagePath, thisProjectId },
@@ -558,17 +542,19 @@ const StageForm = dataBind({
   const uid = currentUid;
   const projectId = thisProjectId;
   const stagePath = thisStagePath;
-  const formData = get_stageFormData({ projectId, stagePath, formName, uid });
-  
-  return getStageFormRenderer(formName)({ formData, onSubmit });
+  const formData = get_stageFormData({ projectId, stagePath, formName, uid }) || EmptyObject;
+  const FormRender = getStageFormRenderer(formName);
+
+  return <FormRender {...{ formData, onSubmit }} />;
 });
 
 const StageContent = dataBind({
 })(function StageContent(
-  { thisNode, thisStagePath, thisPreviousStagePath, thisProjectId, children },
+  { thisNode, thisStagePath, thisPreviousStagePath, thisProjectId },
   { contributorGroupName },
   { currentUid }
 ) {
+
   const uid = currentUid;
   const projectId = thisProjectId;
   const stagePath = thisStagePath;
@@ -576,10 +562,10 @@ const StageContent = dataBind({
   const node = thisNode;
   //const customRender = customStageRenderers[node.stageId];
   const groupName = contributorGroupName({ uid, projectId });
-  const formNames = node.forms[groupName];
-  const formEls = map(formNames, formName => (
-    <Flexbox>
-      <StageForm formName={formName} />
+  const forms = node.getForms(groupName);
+  const formEls = map(forms, ({ id }) => (
+    <Flexbox key={id}>
+      <StageForm formName={id} />
     </Flexbox>
   ));
 
@@ -588,7 +574,6 @@ const StageContent = dataBind({
   // }
   return (<Flexbox>
     {formEls}
-    {children}
   </Flexbox>);
 });
 

@@ -19,6 +19,14 @@ export default class Markdown extends PureComponent {
   }
 
   render() {
-    return (<ReactMarkdown className="markdown" source={this.props.source || ''} renderers={this.renderers} />);
+    const {
+      source,
+      ...moreProps
+    } = this.props;
+    const className = 'markdown ' + (moreProps && moreProps.className || '');
+    return (<ReactMarkdown className={className} 
+      source={source || ''} 
+      renderers={this.renderers} 
+    />);
   }
 }

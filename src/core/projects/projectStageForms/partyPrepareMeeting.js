@@ -5,7 +5,7 @@ const partyPrepareMeeting = {
   properties: [
     {
       id: 'individualBasics',
-      title: '個人基本狀態',
+      title: '個人狀態',
       type: 'object',
       properties: [
         {
@@ -89,16 +89,33 @@ const partyPrepareMeeting = {
             'mindful 居多～'
           ]
         },
+
+        {
+          id: 'complaints',
+          type: 'string',
+          isOptional: true,
+          title: '你這禮拜有什麼想抱怨的也要討論嗎？',
+          description: ''
+        },
+
+        {
+          id: 'meetingTimeWish',
+          type: 'number',
+          title: '你要在何時進行團隊鑑定呢？',
+          description: '',
+          enum: [1, 2],
+          enumNames: ['週三', '週五']
+        },
       ]
     },
 
     {
       id: 'groupWork',
-      title: '團隊基本狀態',
+      title: '團隊狀態',
       type: 'object',
       if({ thisProjectId }, { projectPartySize }) {
         const projectId = thisProjectId;
-        return projectPartySize({ projectId });
+        return projectPartySize({ projectId }) > 1;
       },
       properties: [
         {
@@ -112,26 +129,7 @@ const partyPrepareMeeting = {
           type: 'string',
           title: '你覺得你在團隊任務中的貢獻是什麼？',
           description: '負責炒熱氣氛嗎？還是主導討論？還是提出idea？還是工具人苦幹實幹？還是做簡報？還是拍影片？還是後製？還是畫圖？還是寫企劃書？'
-        },
-
-        // 
-
-        {
-          id: 'meetingTimeWish',
-          type: 'number',
-          title: '你要在何時進行團隊鑑定呢？',
-          description: '',
-          enum: [1, 2],
-          enumNames: ['週三', '週五']
-        },
-
-        {
-          id: 'complaints',
-          type: 'string',
-          isOptional: true,
-          title: '你這禮拜有什麼想抱怨的也要討論嗎？',
-          description: ''
-        },
+        }
       ]
     },
 
@@ -146,7 +144,7 @@ const partyPrepareMeeting = {
           type: 'number',
           isOptional: true,
           title: '心理學家最新研究發現：有效的學習方式跟是否願意跨出舒適圈很有關係，' +
-            '你覺得這次選擇的任務的時候，是做自己擅長的，還是會挑戰自己，選擇自己不擅長的呢？',
+          '你覺得這次選擇的任務的時候，是做自己擅長的，還是會挑戰自己，選擇自己不擅長的呢？',
           description: '<center><img src="https://i.imgur.com/txYBUta.png" /></center>',
           enum: [1, 2, 3, 4],
           enumNames: [

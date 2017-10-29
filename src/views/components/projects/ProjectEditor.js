@@ -24,7 +24,8 @@ import Select from 'react-select';
 
 import LoadIndicator from 'src/views/components/util/loading';
 import ConfirmModal from 'src/views/components/util/ConfirmModal';
-import UserList, { UserBadge } from 'src/views/components/users/UserList';
+import UserList from 'src/views/components/users/UserList';
+import UserBadge from 'src/views/components/users/UserBadge';
 
 import {
   FAIcon

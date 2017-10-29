@@ -219,10 +219,6 @@ button:active { outline:none !important; }
 
 .footer  { order: 3; }
 
-.markdown {
-  font-size: 1.4em;
-}
-
 /**
  * #######################################################
  * App-specific classes: User Profile
@@ -297,7 +293,7 @@ button:active { outline:none !important; }
 }
 
 .markdown * {
-  max-width: 100%;
+  max-width: 100% !important;
 }
 
 

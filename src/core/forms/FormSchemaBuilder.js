@@ -44,14 +44,23 @@ function unravelProperties(o, uiSchema) {
  * Build schema from template with custom node building functions
  * and conditionals.
  */
-export function buildSchemaFromTemplate(template, allBuilderArgs) {
-  if (!isPlainObject(template)) {
-    return template;
+export function buildSchemaFromTemplate(o, allBuilderArgs) {
+  const isArr = isArray(o);
+  if (!isPlainObject(o) && !isArr) {
+    return o;
   }
 
-  let result = {};
+  let result = isArr ? [] : {};
+  function addToResult(k, v) {
+    if (isArr) {
+      result.push(v);
+    }
+    else {
+      result[k] = v;
+    }
+  }
 
-  forEach(template, (v, k) => {
+  forEach(o, (v, k) => {
     if (isFunction(v)) {
       // custom node
       v = v(...allBuilderArgs);
@@ -59,7 +68,7 @@ export function buildSchemaFromTemplate(template, allBuilderArgs) {
 
     // check for conditional node
     if (!v || !v.if || v.if(...allBuilderArgs)) {
-      result[k] = buildSchemaFromTemplate(v, allBuilderArgs);
+      addToResult(k, buildSchemaFromTemplate(v, allBuilderArgs));
     }
   });
 
@@ -119,8 +128,6 @@ export function normalizeSchema(o, uiSchema) {
   return normalizedSchema;
 }
 
-
-// TODO: add proper caching
 
 export default class FormSchemaBuilder {
   template;

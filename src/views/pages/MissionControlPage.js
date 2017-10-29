@@ -22,7 +22,8 @@ import { FAIcon } from 'src/views/components/util';
 import ProjectPreview from 'src/views/components/projects/ProjectPreview';
 import ProjectControlView from 'src/views/components/projects/ProjectControlView';
 //import { ProjectMeetingPanel } from 'src/views/components/projects/MeetingView';
-import { UserBadge } from 'src/views/components/users/UserList';
+
+//import UserBadge from 'src/views/components/users/UserBadge';
 
 
 

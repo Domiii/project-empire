@@ -7,6 +7,7 @@ import map from 'lodash/map';
 import React from 'react';
 import PropTypes from 'prop-types';
 import Form from 'react-jsonschema-form';
+import Moment from 'react-moment';
 
 import {
   Label, Button
@@ -15,6 +16,8 @@ import {
 import dataBind from 'src/dbdi/react/dataBind';
 
 import Markdown from 'src/views/components/markdown';
+
+import UserBadge from 'src/views/components/users/UserBadge';
 
 import partyPrepareMeeting from './partyPrepareMeeting';
 
@@ -38,7 +41,7 @@ function FieldTemplate(props) {
     classNames,
     label,
     children,
-    errors,
+    //errors,
     help,
     description,
     hidden,
@@ -51,11 +54,14 @@ function FieldTemplate(props) {
 
   return (
     <div className={classNames}>
-      {displayLabel && <Label label={label} required={required} id={id} />}
-      {displayLabel && description ? description : null}
-      {children}
-      {errors}
-      {help}
+      {displayLabel && (
+        <label className="full-width" required={required} id={id} >
+          {label} {description} {children}
+        </label>
+      )}
+      {!displayLabel && children}
+      {/* errors */}
+      {help && help}
     </div>
   );
 }
@@ -94,7 +100,7 @@ FieldTemplate.defaultProps = {
 function DescriptionField(props) {
   const { id, description } = props;
   return (
-    <Markdown id={id} className="field-description" source={description} />
+    <Markdown id={id} className="field-description color-gray" source={description} />
   );
 }
 
@@ -107,13 +113,40 @@ const fields = {
   DescriptionField
 };
 
+const widgets = {
+  momentTime({ value }) {
+    return (!value && <span /> || <span>
+      <Moment fromNow>{value}</Moment> (
+        <Moment format="MMMM Do YYYY, hh:mm:ss">{value}</Moment>)
+    </span>);
+  },
+  user({ value }) {
+    return (value &&
+      <UserBadge uid={value} /> ||
+      <span className="color-lightgray">無</span>);
+  },
+  //mission: MissionSelect
+};
+
 const defaultFormRenderSettings = {
   // schema: FormSchema,
-  // uiSchema: FormUISchema,
 
+  uiSchema: {
+    createdAt: {
+      'ui:readonly': true,
+      'ui:widget': 'momentTime'
+    },
+    updatedAt: {
+      'ui:readonly': true,
+      'ui:widget': 'momentTime'
+    },
+  },
+
+  widgets,
   fields,
   liveValidate: true,
   showErrorList: false,
+  FieldTemplate
   // onChange: itemLog('changed'),
   // onError: itemLog('errors'),
 };
@@ -129,7 +162,7 @@ function defaultFormChildren() {
 function DefaultFormRender(allProps) {
   return (<Form {...allProps}>
     {/* the Form children are the control elements, rendered at the bottom of the form */}
-    { allProps.children || defaultFormChildren() }
+    {allProps.children || defaultFormChildren()}
   </Form>);
 }
 
@@ -142,7 +175,7 @@ function DefaultFormRender(allProps) {
 const renderSettings = mapValues(_stageFormRenderAll, info => merge({}, info && info.settings, defaultFormRenderSettings));
 const renderersRaw = mapValues(_stageFormRenderAll, info => info && info.render || DefaultFormRender);
 
-const stageFormRenderers = map(renderersRaw, (FormRender, name) => {
+const stageFormRenderers = mapValues(renderersRaw, (FormRender, name) => {
   FormRender = FormRender || DefaultFormRender;
   const settings = renderSettings[name] || {};
   let { schema, uiSchema, schemaTemplate, ...moreSettings } = settings;
@@ -155,22 +188,29 @@ const stageFormRenderers = map(renderersRaw, (FormRender, name) => {
 
   const Comp = dataBind({
   })((...allArgs) => {
-    const {
+    const [
       _,
-      funcs: { getProps }
-    } = allArgs;
+      { getProps }
+    ] = allArgs;
 
     const pureProps = getProps();
+    const {
+      formData,
+      onSubmit,
+      otherProps
+    } = pureProps;
 
     if (schemaBuilder) {
-      schema = schemaBuilder.build(uiSchema, ...allArgs);
+      schema = schemaBuilder.build(uiSchema, allArgs);
     }
 
     return (<FormRender
+      formData={formData}
+      onSubmit={onSubmit}
       schema={schema}
       uiSchema={uiSchema}
       {...moreSettings}
-      {...pureProps}
+      {...otherProps}
     />);
   });
   Comp.propTypes = {

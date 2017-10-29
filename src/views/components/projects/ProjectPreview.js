@@ -21,7 +21,8 @@ import Flexbox from 'flexbox-react';
 import ProjectEditor from './ProjectEditor';
 import ProjectEditTools from './ProjectEditTools';
 import { ProjectControlView } from './ProjectControlView';
-import UserList, { UserBadge } from 'src/views/components/users/UserList';
+import UserList from 'src/views/components/users/UserList';
+import UserBadge from 'src/views/components/users/UserBadge';
 import LoadIndicator from 'src/views/components/util/loading';
 import { FAIcon } from 'src/views/components/util';
 
