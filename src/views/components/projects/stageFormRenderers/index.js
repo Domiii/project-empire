@@ -7,7 +7,7 @@ import PropTypes from 'prop-types';
 import Form from 'react-jsonschema-form';
 
 import {
-  Label
+  Label, Button
 } from 'react-bootstrap';
 
 import Markdown from 'src/views/components/markdown';
@@ -112,24 +112,13 @@ const defaultFormRenderSettings = {
   showErrorList: false,
   // onChange: itemLog('changed'),
   // onError: itemLog('errors'),
-  onSubmit
 };
 
 function defaultFormChildren() {
   return (<div>
-    <button type="submit" className="btn btn-info">
-      {alreadyExists ? 'Update' : 'Add new'}
-    </button>
-    {alreadyExists &&
-      <ConfirmModal
-        header="Confirm DELETE"
-        ButtonCreator={ItemDeleteButton}
-        onConfirm={doDelete}>
-
-        <span>{data.title}</span>
-
-      </ConfirmModal>
-    }
+    <Button block type="submit" bsStyle="info">
+      Submit
+    </Button>
   </div>);
 }
 

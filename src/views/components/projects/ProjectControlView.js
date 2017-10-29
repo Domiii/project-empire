@@ -544,7 +544,7 @@ const StageContent = dataBind(function StageContent(
   const formEls = map(formNames, name => (
     // TODO: add formData to ProjectModel
     <Flexbox>
-      {stageFormRenderers[name]({ formData })}
+      {stageFormRenderers[name]({ formData, onSubmit })}
     </Flexbox>
   ));
 
