@@ -14,6 +14,43 @@
 
 ## TODO
 
+Recently DONE:
+* Fix tree rendering
+* write stageEndTime when ending stage
+* when updating last stage in node, update parent status as well
+* When last stage is "finished", also finish entire project
+* Fix handling of multiple groups of contributors
+* Allow form schema items to be functions to determine what to insert
+* Form schema builder: Provide dbdi injection to those functions
+* Display forms of stages
+* Move all "project control" components into their own files
+
+TODO:
+* Determine + keep track of "currently active stage"
+    * get/set activeStage
+    * isActiveStage
+* Add proper conditions for "finishing" stages
+  * determine stage status from aggregation of individual user statuses
+  * when updating contributor status, also re-evaluate stage status
+  * hasStageReviewerPrivilege: stage status override by reviewer/gm
+  * enable/disable forms + form buttons under given conditions
+* Condense mission overview into a single row
+  * When too long, use slider/scrolling
+  * add row on top with one ProjectContributorStatus per contributor
+* StageContentView:
+  * What to show in stages where there is no forms or where the form is not the main point?
+  * How to aggregate all relevant (previously composed) data in the current stage?
+* Fix form reset problem (use onChange to save + add 完成 button)
+* Prepare all form files + forms
+* form frontend: disabled forms
+* form frontend: GM can overview all form results
+* forms: always add meta choices: "don't make sense" 不合理, "don't care" 不管, "don't understand" 不懂, "not now" 再說
+* forms: always add an "other/comment" 註解 option
+* feature: add iterations for repeatable nodes
+* handle project archiving properly
+* allow project team editing to add "any user" (not just users w/o project)
+* feature: Admin can change own user for debugging (through FirebaseAuthDataProvider)
+* basic performance optimizations
 
 #### Motivation
 `rrf v2.0` does not use `immutable` anymore, so `reselect` won't be of any help with data caching.

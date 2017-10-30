@@ -4,7 +4,7 @@ import merge from 'lodash/merge';
 import mapValues from 'lodash/mapValues';
 import map from 'lodash/map';
 
-import React from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Form from 'react-jsonschema-form';
 import Moment from 'react-moment';
@@ -154,7 +154,7 @@ const defaultFormRenderSettings = {
 function defaultFormChildren() {
   return (<div>
     <Button block type="submit" bsStyle="info">
-      Submit
+      完成
     </Button>
   </div>);
 }
@@ -166,6 +166,10 @@ function DefaultFormRender(allProps) {
   </Form>);
 }
 
+
+// ###########################################################################
+// FormWrapper
+// ###########################################################################
 
 
 // ###########################################################################
@@ -186,44 +190,59 @@ const stageFormRenderers = mapValues(renderersRaw, (FormRender, name) => {
 
   uiSchema = uiSchema || {};
 
-  const Comp = dataBind({
-  })((...allArgs) => {
-    const [
-      _,
-      { getProps }
-    ] = allArgs;
+  /**
+   * Stateful form wrapper for managing auto-save et al 
+   */
+  @dataBind({})
+  class FormWrapper extends Component {
+    static propTypes = {
+      formData: PropTypes.object.isRequired,
+      onSubmit: PropTypes.func.isRequired
+    };
 
-    const pureProps = getProps();
-    const {
-      formData,
-      onSubmit,
-      otherProps
-    } = pureProps;
-
-    if (schemaBuilder) {
-      schema = schemaBuilder.build(uiSchema, allArgs);
+    constructor(...args) {
+      super(...args);
     }
 
-    return (<FormRender
-      formData={formData}
-      onSubmit={onSubmit}
-      schema={schema}
-      uiSchema={uiSchema}
-      {...moreSettings}
-      {...otherProps}
-    />);
-  });
-  Comp.propTypes = {
-    formData: PropTypes.object.isRequired,
-    onSubmit: PropTypes.func.isRequired
-  };
+    render(...allArgs) {
+      const [
+        _,
+        { getProps }
+      ] = allArgs;
 
-  return Comp;
+      const pureProps = getProps();
+      const {
+        formData,
+        onSubmit,
+        otherProps
+      } = pureProps;
+
+      if (schemaBuilder) {
+        schema = schemaBuilder.build(uiSchema, allArgs);
+      }
+
+      return (<FormRender
+        formData={formData}
+        onSubmit={onSubmit}
+        schema={schema}
+        uiSchema={uiSchema}
+        {...moreSettings}
+        {...otherProps}
+      />);
+    }
+  }
+  return FormWrapper;
 });
+
+function createInvalidFormRender(name) {
+  return () => (<pre className="color-red">
+    invalid form name: {name}
+  </pre>);
+}
 
 export function getStageFormRenderer(name) {
   if (!stageFormRenderers[name]) {
-    throw new Error(`Tried to get invalid StageFormRenderer "${name}"`);
+    return createInvalidFormRender(name);
   }
   return stageFormRenderers[name];
 }

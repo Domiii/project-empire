@@ -177,7 +177,6 @@ export default (propsOrPropCb) => WrappedComponent => {
             methodOrName.name;
 
           if (!methodName || !isFunction(this[methodName])) {
-            debugger;
             throw new Error('Could not add data bindings to method: ' +
               methodOrName + ' - ' + this[methodName]);
           }

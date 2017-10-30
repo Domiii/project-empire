@@ -3,6 +3,14 @@ import schemaTemplate from 'src/core/projects/projectStageForms/partyPrepareMeet
 import React from 'react';
 
 const uiSchema = {
+  createdAt: {
+    'ui:readonly': true,
+    'ui:widget': 'momentTime'
+  },
+  updatedAt: {
+    'ui:readonly': true,
+    'ui:widget': 'momentTime'
+  },
   individualBasics: {
     complaints: {
       'ui:widget': 'textarea',

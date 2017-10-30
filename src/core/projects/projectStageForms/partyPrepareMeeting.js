@@ -4,20 +4,20 @@ const partyPrepareMeeting = {
   type: 'object',
   properties: [
     {
+      id: 'createdAt',
+      'title': 'Created',
+      'type': 'number'
+    },
+    {
+      id: 'updatedAt',
+      'title': 'Last Updated',
+      'type': 'number'
+    },
+    {
       id: 'individualBasics',
       title: '個人狀態',
       type: 'object',
       properties: [
-        {
-          id: 'createdAt',
-          'title': 'Created',
-          'type': 'number'
-        },
-        {
-          id: 'updatedAt',
-          'title': 'Last Updated',
-          'type': 'number'
-        },
         // TODO: this question item is not sufficiently distinct (see metOwnExpectations)
         // 'overallSatisfaction': {
         //   type: 'number',
