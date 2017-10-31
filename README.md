@@ -27,8 +27,8 @@ Recently DONE:
 
 TODO:
 * Determine + keep track of "currently active stage"
-    * get/set activeStage
-    * isActiveStage
+* check if currently active stage is ascendant of current stage?
+  (ez fix: is current stagePath prefix of activeStagePath)
 * Add proper conditions for "finishing" stages
   * determine stage status from aggregation of individual user statuses
   * when updating contributor status, also re-evaluate stage status

@@ -3,6 +3,8 @@ import FirebaseDataProvider, {
   FirebaseAuthProvider
 } from 'src/dbdi/firebase/FirebaseDataProvider';
 
+import DataSourceTree from 'src/dbdi/DataSourceTree';
+
 import { EmptyObject, EmptyArray } from 'src/util';
 
 import map from 'lodash/map';
@@ -33,48 +35,46 @@ import Markdown from 'src/views/components/markdown';
 // Remote (and in the future also local) data providers + data structure
 // #########################################################
 
-const dataConfig = {
-  dataProviders: {
-    firebase: new FirebaseDataProvider(),
-    firebaseAuth: new FirebaseAuthProvider()
-    //temp: new ...(),
-    //webCache: ...
-  },
+const dataProviders = {
+  firebase: new FirebaseDataProvider(),
+  firebaseAuth: new FirebaseAuthProvider()
+  //temp: new ...(),
+  //webCache: ...
+};
 
-  /**
-    * The data tree represents all data made accessible via `DataSourceProvider`
-    */
-  dataStructureConfig: {
-    auth: {
-      dataProvider: 'firebaseAuth',
+/**
+  * The data tree represents all data made accessible via `DataSourceProvider`
+  */
+const dataStructureConfig = {
+  auth: {
+    dataProvider: 'firebaseAuth',
       children: {
-        // currentUser represents everything provided by `firebaseAuth` provider
-        currentUser: '',
+      // currentUser represents everything provided by `firebaseAuth` provider
+      currentUser: '',
         currentUid: 'uid'
+    }
+  },
+  testData: {
+    dataProvider: 'firebase',
+      path: 'test',
+        readers: {
+      sortedItemIds({}, {}, { itemList }) {
+        if (!itemList) return;
+        const ids = Object.keys(itemList);
+        return sortBy(ids, (itemId) => -itemList[itemId].updatedAt);
       }
     },
-    testData: {
-      dataProvider: 'firebase',
-      path: 'test',
-      readers: {
-        sortedItemIds({ }, { }, { itemList }) {
-          if (!itemList) return;
-          const ids = Object.keys(itemList);
-          return sortBy(ids, (itemId) => -itemList[itemId].updatedAt);
-        }
-      },
-      children: {
-        itemList: {
-          path: 'items',
+    children: {
+      itemList: {
+        path: 'items',
           children: {
-            item: {
-              path: '$(itemId)',
+          item: {
+            path: '$(itemId)',
               onWrite(queryArgs, val) {
-                val && (val.updatedAt = firebase.database.ServerValue.TIMESTAMP);
-              },
-              children: {
-                // some child data here
-              }
+              val && (val.updatedAt = firebase.database.ServerValue.TIMESTAMP);
+            },
+            children: {
+              // some child data here
             }
           }
         }
@@ -302,8 +302,11 @@ const ItemEditor = dataBind({
 // Wrap everything in DataSourceProvider, and go!
 // ##########################################################################
 
+//const dataSourceTree = new DataSourceTree(dataProviders, dataStructureConfig, plugins);
+const dataSourceTree = new DataSourceTree(dataProviders, dataStructureConfig);
+
 const WrappedView = ({ }) => (
-  <DataSourceProvider {...dataConfig}>
+  <DataSourceProvider dataSourceTree={dataSourceTree}>
     <ItemList />
   </DataSourceProvider>
 );

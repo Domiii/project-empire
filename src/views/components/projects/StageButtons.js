@@ -121,15 +121,15 @@ const StageButtons = dataBind({
           {canReview &&
             <div>
               <Button onClick={setNone} bsStyle="info">
-                Reset status
+                Reset stage
               </Button>
 
               <Button onClick={setFinished} bsStyle="success">
-                Finish
+                Finish stage
               </Button>
 
               <Button onClick={setFailed} bsStyle="danger">
-                Fail
+                Fail stage
               </Button>
             </div>
           }

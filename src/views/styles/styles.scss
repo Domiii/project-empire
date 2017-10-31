@@ -278,6 +278,10 @@ button:active { outline:none !important; }
   bottom: 0;
 }
 
+.stage-progress-bar {
+  overflow-x: scroll;
+}
+
 .project-stage-arrow {
   font-size: 5em;
 }

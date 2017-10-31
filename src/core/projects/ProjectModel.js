@@ -46,6 +46,8 @@ const projectById = {
 
     projectGuardianUid: 'guardianUid',
 
+    activeStagePath: 'activeStagePath',
+
     projectStatus: 'status',
     projectFinishTime: 'finishTime'
   }
@@ -186,7 +188,7 @@ const readers = {
   },
 
   projectPartySize({ projectId }, { uidsOfProject }) {
-    const uids = uidsOfProject({projectId});
+    const uids = uidsOfProject({ projectId });
     if (uids === undefined) {
       return undefined;
     }
@@ -391,6 +393,14 @@ const readers = {
       return intersection(contributedUids, potentialContributorUids);
     }
     return null;
+  },
+
+  hasStageReviewerPrivilege(
+    { uid, projectId, stagePath },
+    { },
+    { }
+  ) {
+
   }
 };
 
