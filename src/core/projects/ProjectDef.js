@@ -72,7 +72,7 @@ export function isStageContributorStatusOver(contributorStatus) {
 export const projectStageTree = new StageDefTree([
   {
     id: 'prepare',
-    title: '[進階] 開始執行之前的暖身開會',
+    title: '專案起點',
     level: 2, // advanced option, only for those who want to be serious about stuff
     forms: [
       // TODO: how to prepare for a collaborative mission properly?
@@ -133,7 +133,7 @@ export const projectStageTree = new StageDefTree([
       },
       {
         id: 'sprintWrapup',
-        title: '🏁 Sprint 的終點 🏁',
+        title: 'Sprint 終點',
         contributors: contributorSet('party'),
         level: 2,
         forms: [
@@ -152,7 +152,8 @@ export const projectStageTree = new StageDefTree([
   },
   {
     id: 'wrapup',
-    title: '專案終點：一起思考過程喜歡與不喜歡的～',
+    shortTitle: '🏁 專案終點 🏁',
+    title: '專案終點：一起反思過程',
     contributors: [contributorSet('party', 1), contributorSet('reviewer', 1)]
   }
 ]);

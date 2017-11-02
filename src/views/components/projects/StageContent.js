@@ -9,7 +9,7 @@ import StageForm from './StageForm';
 
 const StageContent = dataBind({
 })(function StageContent(
-  { thisNode, thisStagePath, thisPreviousStagePath, thisProjectId },
+  { thisNode, thisStagePath, thisProjectId },
   { contributorGroupName },
   { currentUid }
 ) {

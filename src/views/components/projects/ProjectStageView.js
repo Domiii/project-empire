@@ -25,30 +25,20 @@ import StageContent from './StageContent';
 
 const ProjectStageView = dataBind({
 })((
-  { thisNode, thisPreviousStagePath, thisStagePath, thisProjectId, children },
-  { get_stageStatus, get_stageEntry },
+  { thisNode, thisStagePath, thisProjectId },
+  { get_stageStatus, get_stageEntry, isAscendantOfActiveStage },
   { }
 ) => {
   const stageDef = thisNode.stageDef;
   const stagePath = thisStagePath;
 
-  if (!stageDef) {
-    // root node
-    return <div className="full-width">{children}</div>;
-  }
-
-  const title = stageDef.title;
-  const order = thisNode.order;
+  const { title, order } = stageDef;
   const projectId = thisProjectId;
-  const previousStageStatus = get_stageStatus({ projectId, stagePath: thisPreviousStagePath });
   const stageEntry = get_stageEntry({ projectId, stagePath });
   const status = stageEntry && stageEntry.status || StageStatus.None;
+  const isActive = isAscendantOfActiveStage({ projectId, stagePath });
 
   let bsStyle;
-  const isActive = thisNode.isFirstChild ||
-    //stageEntry ||
-    isStageStatusOver(previousStageStatus);
-
   if (isActive) {
     bsStyle = stageStatusBsStyles[status];
   }
@@ -79,7 +69,6 @@ const ProjectStageView = dataBind({
         <StageButtons />
       }
       <StageContent />
-      {children}
     </Panel>
   );
 });

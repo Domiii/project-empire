@@ -278,13 +278,33 @@ button:active { outline:none !important; }
   bottom: 0;
 }
 
-.stage-progress-bar {
-  overflow-x: scroll;
+.stage-progress-bar-container {
+  overflow-x: auto;
 }
 
 .project-stage-arrow {
   font-size: 5em;
 }
+
+.stage-progress-icon {
+  border-radius: 8px;
+  min-width: 5em;
+}
+
+.stage-progress-icon.root {
+  border: none;
+};
+
+.stage-progress-icon.active {
+  border: 4px solid rgba(255, 208, 0, 0.774);
+};
+
+.stage-progress-icon.with-children {
+  border: 1px solid black;
+  border-radius: 0;
+  padding: 4px;
+};
+
 
 /**
  * #######################################################

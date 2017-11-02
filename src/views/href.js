@@ -1,18 +1,15 @@
 import { routePaths } from './routes';
 
-export function hrefXXView(ownerId, xId, mode) {
+export function hrefProjectControl(projectId, stagePath) {
   const url = [];
 
-  url.push(routePaths.CONCEPT_VIEW);
-  if (ownerId && xId) {
-    url.push(`${ownerId}/${xId}`);
-  }
-  else if (!mode) {
-    return '/';
+  url.push(routePaths.MISSION_CONTROL);
+  if (projectId) {
+    url.push(`${projectId}`);
+    if (stagePath) {
+      url.push(`${stagePath}`);
+    }
   }
 
-  if (mode) {
-    url.push(mode);
-  }
   return url.join('/');
 }

@@ -23,13 +23,13 @@ export const routePaths = {
 };
 
 export const routeTemplates = {
-  ROOT: `${routeNames.ROOT}`,
-  SIGN_IN: `${routeNames.SIGN_IN}`,
-  USER_PROFILE: `${routeNames.USER_PROFILE}`,
-  MISSION_CONTROL: `${routeNames.MISSION_CONTROL}`,
-  GM: `${routeNames.GM}`,
-  PROJECTS: `${routeNames.PROJECTS}`,
-  GROUPS: `${routeNames.GROUPS}`,
+  ROOT: `${routePaths.ROOT}`,
+  SIGN_IN: `${routePaths.SIGN_IN}`,
+  USER_PROFILE: `${routePaths.USER_PROFILE}`,
+  MISSION_CONTROL: `${routePaths.MISSION_CONTROL}/:projectId?/:stagePath?`,
+  GM: `${routePaths.GM}`,
+  PROJECTS: `${routePaths.PROJECTS}`,
+  GROUPS: `${routePaths.GROUPS}`,
 
-  TEST: `${routeNames.TEST}`
+  TEST: `${routePaths.TEST}`
 };

@@ -4,7 +4,6 @@ import Moment from 'react-moment';
 import {
   ListGroup, ListGroupItem, Well
 } from 'react-bootstrap';
-import { Link } from 'react-router';
 import { FAIcon } from 'src/views/components/util';
 import classNames from 'classnames';
 

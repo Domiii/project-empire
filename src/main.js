@@ -44,7 +44,6 @@ else {
 
 // GO!
 firebase.initializeApp(firebaseConfig);
-window.version = version
 const rootElement = document.getElementById('root');
 
 
@@ -53,7 +52,7 @@ console.log(`starting app using database "${firebaseConfig.projectId}"`);
 
 if (module.hot) {
   module.hot.accept('./views/root', () => {
-    render(require('./views/root').default);
+    ReactDOM.render(require('./views/root').default);
   });
 }
 

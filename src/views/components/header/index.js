@@ -6,7 +6,7 @@ import autoBind from 'react-autobind';
 
 import dataBind from 'src/dbdi/react/dataBind';
 
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 
 
 import {

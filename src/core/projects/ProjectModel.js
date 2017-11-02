@@ -5,8 +5,6 @@ import Roles, {
 
 import {
   projectStageTree,
-  ProjectStatus,
-  StageStatus,
   StageContributorStatus,
 
   isProjectStatusOver,
@@ -46,7 +44,14 @@ const projectById = {
 
     projectGuardianUid: 'guardianUid',
 
-    activeStagePath: 'activeStagePath',
+    activeStagePath: {
+      path: 'activeStagePath',
+
+      reader(res) {
+        if (res === undefined) return res;
+        return !res && projectStageTree.root.firstChild.stageId || res;
+      },
+    },
 
     projectStatus: 'status',
     projectFinishTime: 'finishTime'
@@ -85,29 +90,6 @@ const allStageContributions = {
   path: 'contributions',
   children: {
     stageContributions: {
-      readers: {
-        /**
-         * Final (interpolated) contributor status,
-         * considering all contributing factors
-         */
-        stageContributorStatus(
-          { projectId, stagePath, uid },
-          { stageContributorStatusRaw, get_stageStatus }, { }
-        ) {
-          const userStatus = stageContributorStatusRaw({ projectId, stagePath, uid });
-          const stageStatus = get_stageStatus({ projectId, stagePath });
-
-          if (isStageContributorStatusOver(userStatus)) {
-            return userStatus;
-          }
-
-          if (isStageStatusOver(stageStatus)) {
-            return StageContributorStatus.Failed;
-          }
-
-          return userStatus || StageContributorStatus.None;
-        }
-      },
       path: '$(stagePath)',
       children: {
         stageContribution: {
@@ -150,6 +132,16 @@ const readers = {
         projects[id][orderBy] :
         -projects[id][orderBy]
     );
+  },
+
+  isAscendantOfActiveStage(
+    { projectId, stagePath },
+    { get_activeStagePath },
+    { }
+  ) {
+    const activeStagePath = get_activeStagePath({ projectId }) || '';
+    //console.log(`${activeStagePath}.startsWith(${stagePath})`);
+    return activeStagePath.startsWith(stagePath);
   },
 
   // #########################################################################
@@ -394,13 +386,35 @@ const readers = {
     }
     return null;
   },
+  /**
+   * Final (interpolated) contributor status,
+   * considering all contributing factors
+   */
+  stageContributorStatus(
+    { projectId, stagePath, uid },
+    { stageContributorStatusRaw, get_stageStatus }, { }
+  ) {
+    const userStatus = stageContributorStatusRaw({ projectId, stagePath, uid });
+    const stageStatus = get_stageStatus({ projectId, stagePath });
+
+    if (isStageContributorStatusOver(userStatus)) {
+      return userStatus;
+    }
+
+    if (isStageStatusOver(stageStatus)) {
+      return StageContributorStatus.Failed;
+    }
+
+    return userStatus || StageContributorStatus.None;
+  },
 
   hasStageReviewerPrivilege(
     { uid, projectId, stagePath },
     { },
-    { }
+    { isCurrentUserGuardian }
   ) {
-
+    // for now, only guardians and above are allowed to help review/moderate projects
+    return isCurrentUserGuardian;
   }
 };
 

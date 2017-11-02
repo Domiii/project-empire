@@ -206,8 +206,8 @@ export class StageDefNode {
 
   traverse(parentPreviousPath, path, stageEntries, cb, iteration = undefined) {
     const stageEntry = stageEntries && stageEntries[path];
-    let previousPath = path;
-    const children = this.mapChildren(node => {
+    let previousPath = parentPreviousPath;
+    const makeChildren = !this.hasChildren ? null : () => this.mapChildren(node => {
       const childPath = pathToChild(path, node.stageId);
       let results;
       if (node.isRepeatable) {
@@ -220,7 +220,7 @@ export class StageDefNode {
       }
       return results;
     });
-    return cb(this, parentPreviousPath, path, stageEntry, children, iteration);
+    return cb(this, parentPreviousPath, path, stageEntry, makeChildren, iteration);
   }
 
   traverseIterations(previousPath, basePath, stageEntries, cb) {
