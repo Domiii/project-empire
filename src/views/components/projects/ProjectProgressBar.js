@@ -5,6 +5,10 @@ import {
   isStageStatusOver
 } from 'src/core/projects/ProjectDef';
 
+import {
+  isAscendantPath
+} from 'src/core/projects/ProjectTree';
+
 import { EmptyObject, EmptyArray } from 'src/util';
 
 import map from 'lodash/map';
@@ -42,12 +46,13 @@ const StageProgressIcon = withRouter(dataBind({
   { isAscendantOfActiveStage, get_stageStatus, get_stageEntry },
   { }
 ) {
-  const { selectedProjectId, selectedStagePath } = match.params;
+  const { projectId: selectedProjectId, stagePath: selectedStagePath } = match.params;
   const projectId = thisProjectId;
   const stagePath = thisStagePath;
   const previousStagePath = thisPreviousStagePath;
   const isActiveStage = isAscendantOfActiveStage({ projectId, stagePath });
-  const isSelectedStage = selectedProjectId === projectId && selectedStagePath === stagePath;
+  const isSelectedStage = stagePath && 
+    selectedProjectId === projectId && isAscendantPath(stagePath, selectedStagePath);
   const previousStatus = previousStagePath && get_stageStatus({ projectId, stagePath: previousStagePath });
   const stageEntry = get_stageEntry({ projectId, stagePath });
   const stageStatus = stageEntry && stageEntry.status || StageStatus.None;
@@ -63,7 +68,7 @@ const StageProgressIcon = withRouter(dataBind({
   }
 
   const renderChildren = makeChildren && 
-    hasStageStarted && !hasStageFinished || isSelectedStage;
+    ((hasStageStarted && !hasStageFinished) || isSelectedStage);
 
   let className = '';
   if (thisNode.isRoot) {

@@ -12,6 +12,10 @@ import {
   isStageContributorStatusOver
 } from 'src/core/projects/ProjectDef';
 
+import {
+  isAscendantPath
+} from 'src/core/projects/ProjectTree';
+
 import { EmptyObject, EmptyArray } from 'src/util';
 import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 
@@ -141,7 +145,7 @@ const readers = {
   ) {
     const activeStagePath = get_activeStagePath({ projectId }) || '';
     //console.log(`${activeStagePath}.startsWith(${stagePath})`);
-    return activeStagePath.startsWith(stagePath);
+    return isAscendantPath(stagePath, activeStagePath);
   },
 
   // #########################################################################

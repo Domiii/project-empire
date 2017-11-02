@@ -505,3 +505,7 @@ export function pathToChild(parentPathStr, stageId) {
 export function pathToIteration(parentPathStr, iteration) {
   return (parentPathStr && (parentPathStr + '_') || '') + iteration;
 }
+
+export function isAscendantPath(parent, child) {
+  return child.startsWith(parent);
+}

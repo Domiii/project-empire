@@ -32,15 +32,16 @@ const ProjectStageView = dataBind({
   const stageDef = thisNode.stageDef;
   const stagePath = thisStagePath;
 
-  const { title, order } = stageDef;
+  const { title } = stageDef;
   const projectId = thisProjectId;
   const stageEntry = get_stageEntry({ projectId, stagePath });
-  const status = stageEntry && stageEntry.status || StageStatus.None;
+  const stageStatus = stageEntry && stageEntry.status || StageStatus.None;
   const isActive = isAscendantOfActiveStage({ projectId, stagePath });
+  const hasStageFinished = isStageStatusOver(stageStatus);
 
   let bsStyle;
   if (isActive) {
-    bsStyle = stageStatusBsStyles[status];
+    bsStyle = stageStatusBsStyles[stageStatus];
   }
   else {
     bsStyle = 'default';
@@ -49,7 +50,7 @@ const ProjectStageView = dataBind({
   const header = (
     <Flexbox justifyContent="space-between" alignItems="center">
       <Flexbox>
-        <span>{`${order + 1}. ${title}`}</span>
+        <span>{`${title}`}</span>
       </Flexbox>
       <Flexbox>
         <StageStatusBar />
@@ -65,7 +66,7 @@ const ProjectStageView = dataBind({
     <Panel header={header}
       className="full-width no-margin project-stage-panel"
       bsStyle={bsStyle}>
-      {isActive &&
+      { (isActive || hasStageFinished) &&
         <StageButtons />
       }
       <StageContent />

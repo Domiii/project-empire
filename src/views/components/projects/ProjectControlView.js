@@ -2,6 +2,10 @@ import {
   projectStageTree
 } from 'src/core/projects/ProjectDef';
 
+import {
+  pathToChild
+} from 'src/core/projects/ProjectTree';
+
 import { EmptyObject, EmptyArray } from 'src/util';
 
 import map from 'lodash/map';
@@ -98,6 +102,11 @@ const ProjectControlList = withRouter(dataBind()((
     }
     else {
       // show selected project
+      const node = projectStageTree.getNodeByPath(stagePath);
+      if (node.hasChildren) {
+        const newStagePath = pathToChild(stagePath, node.firstChild.stageId);
+        return <Redirect to={hrefProjectControl(projectId, newStagePath)} />;
+      }
       projectEls = (<ProjectControlView data-name="ProjectControlView"
         projectId={projectId}
         selectedStagePath={stagePath}

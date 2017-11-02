@@ -24,19 +24,19 @@ Recently DONE:
 * Form schema builder: Provide dbdi injection to those functions
 * Display forms of stages
 * Move all "project control" components into their own files
+* Determine + keep track of "currently active stage"
+* check if given stage is ascendant of current stage?
+* hasStageReviewerPrivilege: stage status override by reviewer/gm
+* ProgressStatusBar
 
 TODO:
-* Determine + keep track of "currently active stage"
-* check if currently active stage is ascendant of current stage?
-  (ez fix: is current stagePath prefix of activeStagePath)
 * Add proper conditions for "finishing" stages
   * determine stage status from aggregation of individual user statuses
-  * when updating contributor status, also re-evaluate stage status
-  * hasStageReviewerPrivilege: stage status override by reviewer/gm
+  * when updating contributor status, also update stage status
+  * when updating stage status, also update activeStagePath
+  * when user triggers change in activeStagePath and route matches that stagePath → redirect to new active stage
   * enable/disable forms + form buttons under given conditions
-* Condense mission overview into a single row
-  * When too long, use slider/scrolling
-  * add row on top with one ProjectContributorStatus per contributor
+* add row below ProjectProgressBar with one ProjectContributorStatus per contributor
 * StageContentView:
   * What to show in stages where there is no forms or where the form is not the main point?
   * How to aggregate all relevant (previously composed) data in the current stage?
@@ -51,6 +51,7 @@ TODO:
 * allow project team editing to add "any user" (not just users w/o project)
 * feature: Admin can change own user for debugging (through FirebaseAuthDataProvider)
 * basic performance optimizations
+* When ProgressStatusBar is too long, slide to proper position
 
 #### Motivation
 `rrf v2.0` does not use `immutable` anymore, so `reselect` won't be of any help with data caching.
