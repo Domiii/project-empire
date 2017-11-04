@@ -36,11 +36,15 @@ TODO:
   * when updating stage status, also update activeStagePath
   * when user triggers change in activeStagePath and route matches that stagePath → redirect to new active stage
   * enable/disable forms + form buttons under given conditions
+  * add 完成 buttons to forms to update contributor status
+  * disable 完成 buttons when form is not valid yet
 * add row below ProjectProgressBar with one ProjectContributorStatus per contributor
 * StageContentView:
   * What to show in stages where there is no forms or where the form is not the main point?
   * How to aggregate all relevant (previously composed) data in the current stage?
-* Fix form reset problem (use onChange to save + add 完成 button)
+* fix form reset problem, use `onChange` to:
+  * store React state to store changed version
+  * auto-save form content (e.g. Google Docs auto-saves after a change has occured and then no change has occured for 3s)
 * Prepare all form files + forms
 * form frontend: disabled forms
 * form frontend: GM can overview all form results
