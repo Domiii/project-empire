@@ -11,6 +11,11 @@ import merge from 'lodash/merge';
 import DataSourceTree from 'src/dbdi/DataSourceTree';
 
 const dataStructureConfig = {
+  // readers: {
+  //   failIfNotLoaded({ readers }) {
+  //     return 
+  //   }
+  // },
   auth: {
     dataProvider: 'firebaseAuth',
     children: {

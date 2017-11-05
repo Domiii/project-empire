@@ -117,14 +117,14 @@ export default class DataReadDescriptor extends DataDescriptorNode {
   /**
    * Check if data is loaded
    */
-  isDataLoaded(args, readerProxy, injectProxy, callerNode, accessTracker) {
+  isDataLoaded(...allArgs) {
     // TODO: fix this!
 
     // 1) check if all dependencies are loaded
     // if (!this.areDependenciesLoaded(args)) {
     //   return false;
     // }
-    const data = this.readData(args, readerProxy, injectProxy, callerNode, accessTracker);
+    const data = this.readData(...allArgs);
     return data !== undefined;
   }
 }

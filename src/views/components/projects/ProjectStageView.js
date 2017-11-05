@@ -61,12 +61,23 @@ const ProjectStageView = dataBind({
 
   ///className="full-width no-margin no-shadow no-border project-stage-panel"
 
-
+  let alertEl;
+  if (hasStageFinished) {
+    alertEl = (<Alert bsStyle="warning">
+      This stage has already finished.
+    </Alert>);
+  }
+  else if (!isActive) {
+    alertEl = (<Alert bsStyle="warning">
+      This stage has not started yet.
+    </Alert>);
+  }
   return (
     <Panel header={header}
       className="full-width no-margin project-stage-panel"
       bsStyle={bsStyle}>
-      { (isActive || hasStageFinished) &&
+      {alertEl}
+      {(isActive || hasStageFinished) &&
         <StageButtons />
       }
       <StageContent />

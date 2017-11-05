@@ -95,12 +95,12 @@ export default class DataSourceTree {
     return this._plugins[type];
   }
 
-  getPlugin(type, cfg) {
-    if (isFunction(cfg)) {
-      return cfg;
+  getPlugin(type, readerOrPluginName) {
+    if (isFunction(readerOrPluginName)) {
+      return readerOrPluginName;
     }
-    else if (isString(cfg)) {
-      const name = cfg;
+    else if (isString(readerOrPluginName)) {
+      const name = readerOrPluginName;
       const plugins = this.getPlugins(type);
       const plugin = plugins && plugins[name];
       if (!plugin) {
@@ -110,7 +110,7 @@ export default class DataSourceTree {
     }
     else {
       throw new Error(`Invalid config entry of type "${type}" must be function or string: ` +
-        cfg);
+        readerOrPluginName);
     }
   }
 
@@ -149,21 +149,31 @@ export default class DataSourceTree {
     );
   }
 
-  _buildDataIsLoadedReadDescriptor(fullName, configNode, pathDescriptor) {
-    // TODO: make this less hackish
-    const reader = (args, readers) => {
-      return readers[configNode.name].isLoaded(args);
-    };
-    const readDescriptor = reader && new DataReadDescriptor(null, reader, fullName);
-    return readDescriptor;
-  }
-
   _buildDataReadDescriptor(fullName, configNode, pathDescriptor) {
     let { reader } = configNode;
     reader = reader && this.getPlugin('reader', reader);
-    const readDescriptor = (reader || pathDescriptor) && 
+    const readDescriptor = (reader || pathDescriptor) &&
       new DataReadDescriptor(pathDescriptor, reader, fullName);
     return readDescriptor;
+  }
+
+  _buildDataReadForceDescriptor(fullName, configNode, pathDescriptor) {
+    const origDescriptor = this._buildDataReadDescriptor(fullName, configNode, pathDescriptor);
+    const reader = (...allArgs) => {
+      if (!origDescriptor.isDataLoaded(...allArgs)) {
+        throw new Error('Force read failed. Data not loaded yet at data node: ' + fullName);
+      }
+      return origDescriptor.readData(...allArgs);
+    };
+    return new DataReadDescriptor(null, reader, fullName);
+  }
+
+  _buildDataIsLoadedReadDescriptor(fullName, configNode, pathDescriptor) {
+    const origDescriptor = this._buildDataReadDescriptor(fullName, configNode, pathDescriptor);
+    const reader = (...allArgs) => {
+      return origDescriptor.isDataLoaded(...allArgs);
+    };
+    return new DataReadDescriptor(null, reader, fullName);
   }
 
   _buildHybridDataNodes(parent, cfgChildren) {
@@ -182,17 +192,24 @@ export default class DataSourceTree {
 
       if (newDataNode.isReader) {
         // also register under the "get_*" alias
-        const aliasName = 'get_' + name;
-        newNodes[aliasName] = this._buildNode(configNode, parent, aliasName,
+        let readerName = 'get_' + name;
+        newNodes[readerName] = this._buildNode(configNode, parent, readerName,
           this._buildDataReadDescriptor,
-          this._dataWriteCustomBuilder);
-      }
+          null);
 
-      // add isLoaded node
-      newNodes[name + '_isLoaded'] = this._buildDataReadDescriptor && this._buildNode(
-        configNode, parent, name,
-        this._buildDataIsLoadedReadDescriptor,
-        null);
+        // add isLoaded node
+        readerName = name + '_isLoaded';
+        newNodes[readerName] = this._buildDataReadDescriptor && this._buildNode(
+          configNode, parent, readerName,
+          this._buildDataIsLoadedReadDescriptor,
+          null);
+
+        // add the "force_*" reader
+        readerName = 'force_' + name;
+        newNodes[readerName] = this._buildNode(configNode, parent, readerName,
+          this._buildDataReadForceDescriptor,
+          null);
+      }
 
       // recurse
       this._buildChildren(newDataNode, configNode);
