@@ -31,9 +31,8 @@ Recently DONE:
 
 TODO:
 * Add proper conditions for "finishing" stages
-  * determine stage status from aggregation of individual user statuses
   * when updating contributor status, also update stage status
-  * when updating stage status, also update activeStagePath
+  * when updating stage status of active stage, also update activeStagePath
   * when user triggers change in activeStagePath and route matches that stagePath → redirect to new active stage
   * enable/disable forms + form buttons under given conditions
   * add 完成 buttons to forms to update contributor status

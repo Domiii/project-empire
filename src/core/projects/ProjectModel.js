@@ -5,6 +5,7 @@ import Roles, {
 
 import {
   projectStageTree,
+  StageStatus,
   StageContributorStatus,
 
   isProjectStatusOver,
@@ -17,7 +18,7 @@ import {
 } from 'src/core/projects/ProjectTree';
 
 import { EmptyObject, EmptyArray } from 'src/util';
-import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
+import { getOptionalArgument, getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 
 import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
@@ -30,6 +31,7 @@ import some from 'lodash/some';
 import times from 'lodash/times';
 import intersection from 'lodash/intersection';
 import sumBy from 'lodash/sumBy';
+import reduce from 'lodash/reduce';
 
 /**
  * Project main data
@@ -98,6 +100,10 @@ const allStageContributions = {
       children: {
         stageContribution: {
           path: '$(uid)',
+          onWrite: [
+            'createdAt',
+            'updatedAt'
+          ],
           children: {
             /**
              * The contributor status as stored in DB
@@ -326,7 +332,7 @@ const readers = {
         return !!users[uid];
       }
       default:
-        console.error('invalid groupName in stage definition: ' + groupName);
+        console.error('unknown groupName in stage definition: ' + groupName);
         return false;
     }
   },
@@ -396,7 +402,8 @@ const readers = {
    */
   stageContributorStatus(
     { projectId, stagePath, uid },
-    { stageContributorStatusRaw, get_stageStatus }, { }
+    { stageContributorStatusRaw, get_stageStatus },
+    { }
   ) {
     const userStatus = stageContributorStatusRaw({ projectId, stagePath, uid });
     const stageStatus = get_stageStatus({ projectId, stagePath });
@@ -419,6 +426,26 @@ const readers = {
   ) {
     // for now, only guardians and above are allowed to help review/moderate projects
     return isCurrentUserGuardian;
+  },
+
+  stageContributorFinishCount(
+    args,
+    { force_stageContributions, force_isInContributorGroup },
+    { }
+  ) {
+    // TODO: fix forcing to automatically propagate
+    const { projectId, stagePath, groupName } = args;
+    const ignoreUid = getOptionalArgument(args, 'ignoreUid');
+    const stageContributions = force_stageContributions({ projectId, stagePath });
+
+    return sumBy(stageContributions, ({ status }, contributorUid) => {
+      if (ignoreUid !== contributorUid &&
+        force_isInContributorGroup({ uid: contributorUid, projectId, groupName }) &&
+        isStageContributorStatusOver(status)) {
+        return 1;
+      }
+      return 0;
+    });
   }
 };
 
@@ -475,33 +502,63 @@ const writers = {
   },
 
   updateStageContributorStatus(
-    { uid, projectId, stagePath, contributorStatus },
-    { get_stageContributions, isInContributorGroup },
+    { uid, projectId, stagePath, newStatus },
+    { force_stageContribution,
+      force_isInContributorGroup,
+      stageContributorFinishCount },
     { },
-    { }
+    { updateStageStatus, set_stageContribution, set_activeStagePath }
   ) {
-    if (isStageContributorStatusOver(contributorStatus)) {
-      // check if stageStatus has changed
-      const node = projectStageTree.getNodeByPath(stagePath);
-      const stageContributions = get_stageContributions({ projectId, stagePath });
-
-      //sumBy(contributors, (contributorSet) => {
-      if (node.stageDef.contributors) {
-        sumBy(node.stageDef.contributors, (contributorSet) => {
-          const {
-            groupName,
-            signOffCount
-          } = contributorSet;
-
-          isInContributorGroup({ uid, projectId, groupName });
-
-          // check if signatures are sufficient
-          if (signOffCount && signOffCount > uids.length) {
-            hi
-          }
-        });
-      }
+    const node = projectStageTree.getNodeByPath(stagePath);
+    if (!node.stageDef.contributors) {
+      throw new Error('tried to call updateStageContributorStatus on node without contributors: ' + stagePath);
     }
+
+    const isContributorDone = isStageContributorStatusOver(newStatus);
+    const contribution = force_stageContribution({ projectId, stagePath, uid });
+    const oldStatus = contribution.status;
+    const wasContributorDone = isStageContributorStatusOver(oldStatus);
+
+    contribution.status = newStatus;
+    const promises = [
+      set_stageContribution({ projectId, stagePath, uid }, contribution)
+    ];
+    
+
+    if (isContributorDone !== wasContributorDone) {
+      // check if stageStatus has changed
+      const isStageDone = reduce(node.stageDef.contributors, (isDone, contributorSet) => {
+        const {
+          groupName,
+          signOffCount
+        } = contributorSet;
+
+        if (!isDone) { return false; }
+
+        // sum up original count
+        let currentCount = stageContributorFinishCount({ projectId, stagePath, groupName, ignoreUid: uid });
+
+        // check if we add this contributor's status to count
+        if (isContributorDone && force_isInContributorGroup({ uid, projectId, groupName })) {
+          currentCount += 1;
+        }
+
+        // check if signatures are sufficient
+        return currentCount >= signOffCount;
+      }, true);
+
+      //if (isStageDone) {
+
+      //}
+      const newStatus = isStageDone ? StageStatus.Finished : StageStatus.None;
+      promises.push(updateStageStatus({ uid, projectId, stagePath, status: newStatus }));
+
+      // TODO: figure out next stagePath!?
+
+      //promises.push(set_activeStagePath({projectId}, ));
+    }
+
+    return Promise.all(promises);
   },
 
   updateStageStatus(

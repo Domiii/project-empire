@@ -60,30 +60,33 @@ const StageButtons = dataBind({
   },
 
   setContributorNone(evt, { thisProjectId, thisStagePath },
-    { set_stageContributorStatusRaw },
+    { updateStageContributorStatus },
     { currentUid }) {
     const uid = currentUid;
     const projectId = thisProjectId;
     const stagePath = thisStagePath;
-    set_stageContributorStatusRaw({ uid, projectId, stagePath }, StageContributorStatus.None);
+    const newStatus = StageContributorStatus.None;
+    updateStageContributorStatus({ uid, projectId, stagePath, newStatus});
   },
   setContributorFinished(evt, { thisProjectId, thisStagePath },
-    { set_stageContributorStatusRaw },
+    { updateStageContributorStatus },
     { currentUid }) {
 
     const uid = currentUid;
     const projectId = thisProjectId;
     const stagePath = thisStagePath;
-    set_stageContributorStatusRaw({ uid, projectId, stagePath }, StageContributorStatus.Finished);
+    const newStatus = StageContributorStatus.Finished;
+    updateStageContributorStatus({ uid, projectId, stagePath, newStatus});
   },
   setContributorFailed(evt, { thisProjectId, thisStagePath },
-    { set_stageContributorStatusRaw },
+    { updateStageContributorStatus },
     { currentUid }) {
 
     const uid = currentUid;
     const projectId = thisProjectId;
     const stagePath = thisStagePath;
-    set_stageContributorStatusRaw({ uid, projectId, stagePath }, StageContributorStatus.Failed);
+    const newStatus = StageContributorStatus.Failed;
+    updateStageContributorStatus({ uid, projectId, stagePath, newStatus});
   }
 })(
   ({ thisProjectId, thisStagePath }, {
