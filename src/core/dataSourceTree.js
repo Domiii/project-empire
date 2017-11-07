@@ -1,21 +1,41 @@
 import firebase from 'firebase';
 
-import ProjectModel from 'src/core/projects/ProjectModel';
+import ProjectModel from 'src/core/projects/projectModel';
 import UserModel from 'src/core/users/UserModel';
 import MissionModel from 'src/core/missions/MissionModel';
 
 import dataProviders from './dataProviders.js';
 
+import map from 'lodash/map';
 import merge from 'lodash/merge';
+import times from 'lodash/times';
+import zipObject from 'lodash/zipObject';
 
 import DataSourceTree from 'src/dbdi/DataSourceTree';
 
-const dataStructureConfig = {
+const utility = {
   // readers: {
   //   failIfNotLoaded({ readers }) {
   //     return 
   //   }
   // },
+
+  writers: {
+    updateAll(
+      { pathArgs, readers, val }, { }, { }, { update_db }
+    ) {
+      console.log(readers.length, times(readers.length, val));
+      const updateObj = zipObject(
+        map(readers, reader => reader.getPath(pathArgs)),
+        times(readers.length, () => val)
+      );
+      return update_db(updateObj);
+    }
+  }
+};
+
+const dataStructureConfig = {
+  utility,
   auth: {
     dataProvider: 'firebaseAuth',
     children: {

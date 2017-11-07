@@ -39,7 +39,7 @@ export default class DataStructureConfig {
  */
 export class DataStructureConfigNode {
   name;
-  
+
   parent;
   children = {};
 
@@ -68,7 +68,7 @@ export class DataStructureConfigNode {
    * Will simply use the pathConfig to create a reader if none is given.
    */
   reader;
-  
+
   /**
    * A custom writer configuration for this node.
    * Will simply use the pathConfig to create writer if none is given.
@@ -158,16 +158,18 @@ export class DataStructureConfigNode {
 
   _checkSpecializedChildrenStructure(children, otherChildren, childrenName) {
     // want a plain object
-    console.assert(isPlainObject(otherChildren), 
+    console.assert(isPlainObject(otherChildren),
       `invalid "${childrenName}" node is not plain object in DataStructureConfigNode: ` + this.name);
 
-    // check for naming conflict
-    const readerNames = Object.keys(otherChildren);
-    const childNames = Object.keys(this.children);
-    const overlap = intersection(readerNames, childNames);
-    if (!isEmpty(overlap)) {
-      throw new Error(`invalid "${childrenName}" definitions have name conflict with ` +
-        `"children" in DataStructureConfigNode "${this.name}": ${overlap.join(', ')} exist in both`);
+    if (children) {
+      // check for naming conflict
+      const readerNames = Object.keys(otherChildren);
+      const childNames = Object.keys(children);
+      const overlap = intersection(readerNames, childNames);
+      if (!isEmpty(overlap)) {
+        throw new Error(`invalid "${childrenName}" definitions have name conflict with ` +
+          `"children" in DataStructureConfigNode "${this.name}": ${overlap.join(', ')} exist in both`);
+      }
     }
   }
 
@@ -177,7 +179,7 @@ export class DataStructureConfigNode {
       this.reader = cfg.read || cfg.reader;
     }
   }
-  
+
   _parseReaders(cfg) {
     if (cfg.readers) {
       // multiple readers that are actually children of this node
@@ -190,7 +192,7 @@ export class DataStructureConfigNode {
       const readerNodes = mapValues(readers, (reader, name) =>
         new DataStructureConfigNode(name, this.parent, { reader })
       );
-      Object.assign(this.children, readerNodes);
+      this.children = Object.assign({}, this.children, readerNodes);
     }
   }
 
@@ -211,10 +213,10 @@ export class DataStructureConfigNode {
       this._checkSpecializedChildrenStructure(this.children, writers, 'readers');
 
       // add writer-only children
-      const newNodes = mapValues(writers, (writer, name) =>
+      const writerNodes = mapValues(writers, (writer, name) =>
         new DataStructureConfigNode(name, this.parent, { writer })
       );
-      Object.assign(this.children, newNodes);
+      this.children = Object.assign({}, this.children, writerNodes);
     }
   }
 
