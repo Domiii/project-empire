@@ -5,7 +5,7 @@ import isArray from 'lodash/isArray';
 
 
 function contributorSet(groupName, signOffCount) {
-  return { 
+  return {
     groupName,
     signOffCount
   };

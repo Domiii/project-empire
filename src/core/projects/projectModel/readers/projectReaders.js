@@ -1,6 +1,6 @@
 import {
   isAscendantPath
-} from 'src/core/projects/ProjectTree';
+} from 'src/core/projects/ProjectPath';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 import { getOptionalArgument, getOptionalArguments } from 'src/dbdi/dataAccessUtil';

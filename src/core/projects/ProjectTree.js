@@ -1,3 +1,11 @@
+import {
+  pathToIteration,
+  pathGetParentPath,
+  pathToChild,
+  pathGetStageId,
+  pathToNextIteration
+} from './ProjectPath';
+
 import forEach from 'lodash/forEach';
 import mapValues from 'lodash/mapValues';
 import isArray from 'lodash/isArray';
@@ -9,6 +17,7 @@ import uniq from 'lodash/uniq';
 import { interject } from 'src/util/miscUtil';
 
 import { EmptyObject, EmptyArray } from 'src/util';
+
 
 export function asArray(objOrArray) {
   if (isArray(objOrArray)) {
@@ -314,6 +323,32 @@ export class StageDefTree {
       throw new Error(`could not getNodeByPath for "${stagePath}"`);
     }
   }
+  
+  /**
+   * For repeating nodes, if next iteration exists, go to that, 
+   * else go to next node in line
+   */
+  getNextPathByPath(stagePath, allStagePaths) {
+    const node = this.getNodeByPath(stagePath);
+    if (node.isRepeatable) {
+      const path = pathToNextIteration(stagePath);
+      if (!path || !!allStagePaths[path]) {
+        return path;
+      }
+    }
+
+    let nextNode = node.next;
+    if (!nextNode) {
+      // no more sibling → go up one
+      nextNode = node.parent;
+      nextNode = nextNode && nextNode.next;
+    }
+    if (nextNode.firstChild) {
+      // TODO: finish the recursion
+      return nextNode.firstChild;
+    }
+    return nextNode;
+  }
 
   traverse(stageEntries, cb) {
     return this.root.traverse('', '', stageEntries, cb);
@@ -367,60 +402,4 @@ export class StageDefTree {
     firstNode.siblingsById = newNodesById;
     return firstNode;
   }
-}
-
-//
-// Path functions
-//
-
-export function pathToChild(parentPathStr, stageId) {
-  return (parentPathStr && (parentPathStr + '_') || '') + stageId;
-}
-
-export function pathToIteration(parentPathStr, iteration) {
-  return (parentPathStr && (parentPathStr + '_') || '') + iteration;
-}
-
-export function pathGetParentPath(stagePath) {
-  try {
-    let i = 0;
-    let idx = stagePath.length;
-    let idx2 = idx;
-    do {
-      idx2 = stagePath.lastIndexOf('_', idx - 1);
-      const stageId = stagePath.substring(idx2 + 1, idx);
-      if (isNaN(parseInt(stageId))) {
-        // not an iteration -> stepping stone in hierarchy
-        console.assert(this.getNode(stageId));
-        ++i;
-      }
-      idx = idx2;
-    }
-    while (i < 1);
-    return stagePath.substring(0, idx);
-  }
-  catch (err) {
-    throw new Error(`could not getParentPathOfPath for "${stagePath}"`);
-  }
-}
-
-export function pathGetStageId(stagePath) {
-  let stageId;
-  let idx = stagePath.lastIndexOf('_');
-  stageId = stagePath.substring(idx + 1);
-  if (!isNaN(parseInt(stageId))) {
-    // iteration node
-    const idx2 = stagePath.lastIndexOf('_', idx - 1);
-    stageId = stagePath.substring(idx2 + 1, idx);
-  }
-  return stageId;
-}
-
-export function nextStagePath(stagePath, allStagePaths) {
-  // for repeating nodes, if next iteration exists, go to that, else go to next node
-  // TODO
-}
-
-export function isAscendantPath(parent, child) {
-  return child.startsWith(parent);
 }
