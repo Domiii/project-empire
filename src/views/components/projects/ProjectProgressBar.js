@@ -2,7 +2,8 @@ import {
   projectStageTree,
   StageStatus,
   StageContributorStatus,
-  isStageStatusOver
+  isStageStatusOver,
+  isProjectStatusOver
 } from 'src/core/projects/ProjectDef';
 
 import {
@@ -43,21 +44,22 @@ const StageProgressIcon = withRouter(dataBind({
     thisPreviousStagePath, thisNode,
     makeChildren, iteration,
     match },
-  { isAscendantOfActiveStage, get_stageStatus, get_stageEntry },
+  { isAscendantOfActiveStage, get_activeStagePath, 
+    get_stageStatus, get_stageEntry, get_projectStatus },
   { }
 ) {
   const { projectId: selectedProjectId, stagePath: selectedStagePath } = match.params;
   const projectId = thisProjectId;
   const stagePath = thisStagePath;
   const previousStagePath = thisPreviousStagePath;
-  const isActiveStage = isAscendantOfActiveStage({ projectId, stagePath });
-  const isSelectedStage = stagePath && 
+  //const isActiveStage = isAscendantOfActiveStage({ projectId, stagePath });
+  const isSelectedStage = stagePath &&
     selectedProjectId === projectId && isAscendantPath(stagePath, selectedStagePath);
   const previousStatus = previousStagePath && get_stageStatus({ projectId, stagePath: previousStagePath });
   const stageEntry = get_stageEntry({ projectId, stagePath });
   const stageStatus = stageEntry && stageEntry.status || StageStatus.None;
-  const hasStageStarted = !previousStagePath || isStageStatusOver(previousStatus);
   const hasStageFinished = isStageStatusOver(stageStatus);
+  const hasStageStarted = !previousStagePath || isStageStatusOver(previousStatus);
 
   let bsStyle;
   if (hasStageStarted) {
@@ -67,18 +69,23 @@ const StageProgressIcon = withRouter(dataBind({
     bsStyle = 'default';
   }
 
-  const renderChildren = makeChildren && 
+  const renderChildren = makeChildren &&
     ((hasStageStarted && !hasStageFinished) || isSelectedStage);
 
   let className = '';
   if (thisNode.isRoot) {
     className = 'root';
   }
-  else if (isActiveStage) {
-    className = 'active';
-  }
-  else if (renderChildren) {
-    className = 'with-children';
+  else {
+    const projectStatus = get_projectStatus({ projectId });
+    const hasProjectFinished = isProjectStatusOver(projectStatus);
+    const isActiveLeaf = stagePath === get_activeStagePath({ projectId });
+    if (isActiveLeaf && !hasProjectFinished) {
+      className = 'active';
+    }
+    else if (renderChildren) {
+      className = 'with-children';
+    }
   }
 
   const { stageDef } = thisNode;
@@ -98,6 +105,7 @@ const StageProgressIcon = withRouter(dataBind({
 
   return (
     <div className={'stage-progress-icon ' + className}>
+      { /* thisNode.hasChildren && `${previousStagePath} ${previousStatus}` */ }
       {iconEl}
       {renderChildren &&
         <Flexbox className="stage-progress-bar full-width"

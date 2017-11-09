@@ -3,18 +3,30 @@ import firebase from 'firebase';
 import {
   projectStageTree,
   StageStatus,
-  
+
   isStageStatusOver,
   isStageContributorStatusOver
 } from 'src/core/projects/ProjectDef';
 
 import {
-  pathToParent
+  pathToParent,
+  pathToNextIteration
 } from 'src/core/projects/ProjectPath';
 
 import reduce from 'lodash/reduce';
 
 export default {
+  addStageIteration(
+    { uid, projectId, stagePath },
+    { },
+    { },
+    { updateStageStatus }
+  ) {
+    const newPath = pathToNextIteration(stagePath);
+    const newStatus = StageStatus.None;
+    return updateStageStatus({ uid, projectId, stagePath: newPath, status: newStatus });
+  },
+
   /**
    * updateStageContributorStatus
    */
@@ -24,7 +36,7 @@ export default {
       force_isInContributorGroup,
       stageContributorFinishCount },
     { },
-    { updateStageStatus, set_stageContribution, set_activeStagePath }
+    { updateStageStatus, set_stageContribution }
   ) {
     const node = projectStageTree.getNodeByPath(stagePath);
     if (!node.stageDef.contributors) {
@@ -90,7 +102,7 @@ export default {
     const node = projectStageTree.getNodeByPath(stagePath);
     const activeStagePath = force_activeStagePath({ projectId });
     const needsPathUpdate = activeStagePath === stagePath || !activeStagePath;
-    
+
     // update activeStagePath
     if (isStageStatusOver(status) && needsPathUpdate) {
       const nextStagePath = force_nextStagePath({ projectId, stagePath });

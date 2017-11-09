@@ -18,6 +18,7 @@ Feature: Project Control
 * add iterations for repeatable nodes (when? where? what about delete?)
   * custom StageButtons for "sprint -> meeting" node: let reviewer/GM determine current status
   * add "Project is done" + "Project needs more work" + "Project has been cancelled" buttons
+* fix `ProjectProgressBar` layout (when width > container width)
 * when user triggers change in activeStagePath and route matches that stagePath → redirect to new active stage?
 * enable/disable forms + form buttons under given conditions
 * add 完成 buttons to forms to update contributor status
