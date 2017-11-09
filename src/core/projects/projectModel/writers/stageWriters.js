@@ -8,6 +8,10 @@ import {
   isStageContributorStatusOver
 } from 'src/core/projects/ProjectDef';
 
+import {
+  pathToParent
+} from 'src/core/projects/ProjectPath';
+
 import reduce from 'lodash/reduce';
 
 export default {
@@ -16,7 +20,7 @@ export default {
    */
   updateStageContributorStatus(
     { uid, projectId, stagePath, newStatus },
-    { force_stageContribution,
+    { get_stageContribution,
       force_isInContributorGroup,
       stageContributorFinishCount },
     { },
@@ -28,7 +32,7 @@ export default {
     }
 
     const isContributorDone = isStageContributorStatusOver(newStatus);
-    const contribution = force_stageContribution({ projectId, stagePath, uid });
+    const contribution = get_stageContribution({ projectId, stagePath, uid }) || {};
     const oldStatus = contribution.status;
     const wasContributorDone = isStageContributorStatusOver(oldStatus);
 
@@ -60,15 +64,8 @@ export default {
         return currentCount >= signOffCount;
       }, true);
 
-      //if (isStageDone) {
-
-      //}
       const newStatus = isStageDone ? StageStatus.Finished : StageStatus.None;
       promises.push(updateStageStatus({ uid, projectId, stagePath, status: newStatus }));
-
-      // TODO: figure out next stagePath!?
-
-      //promises.push(set_activeStagePath({projectId}, ));
     }
 
     return Promise.all(promises);
@@ -78,7 +75,7 @@ export default {
     { uid, projectId, stagePath, status },
     { stageStatusRaw, stageFinishTime, force_activeStagePath, force_nextStagePath },
     { },
-    { updateStageStatus, updateProjectStatus, update_db, set_activeStagePath }) {
+    { updateStageStatus, updateProjectStatus, update_db }) {
     const updates = {};
 
     // TODO: generate notification entry
@@ -92,9 +89,10 @@ export default {
 
     const node = projectStageTree.getNodeByPath(stagePath);
     const activeStagePath = force_activeStagePath({ projectId });
+    const needsPathUpdate = activeStagePath === stagePath || !activeStagePath;
     
     // update activeStagePath
-    if (isStageStatusOver(status) && activeStagePath === stagePath) {
+    if (isStageStatusOver(status) && needsPathUpdate) {
       const nextStagePath = force_nextStagePath({ projectId, stagePath });
       updates[force_activeStagePath.getPath({ projectId })] = nextStagePath;
     }
@@ -105,7 +103,7 @@ export default {
     }
     else if (node.isLastInLine) {
       // last stage in line -> update parent stage status as well
-      const parentPath = projectStageTree.getParentPathOfPath(stagePath);
+      const parentPath = pathToParent(stagePath);
       promises.push(updateStageStatus({ uid, projectId, stagePath: parentPath, status }));
     }
 

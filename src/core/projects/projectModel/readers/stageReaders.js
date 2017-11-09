@@ -222,7 +222,6 @@ export default {
     { force_stageContributions, force_isInContributorGroup },
     { }
   ) {
-    // TODO: fix forcing to automatically propagate
     const { projectId, stagePath, groupName } = args;
     const ignoreUid = getOptionalArgument(args, 'ignoreUid');
     const stageContributions = force_stageContributions({ projectId, stagePath });
@@ -242,10 +241,13 @@ export default {
    */
   nextStagePath(
     { projectId, stagePath },
-    { },
+    { get_stageEntries },
     { }
   ) {
-    // 
-    
+    const stageEntries = get_stageEntries({ projectId });
+    if (stageEntries === undefined) {
+      return undefined;
+    }
+    return projectStageTree.getNextPathByPath(stagePath, stageEntries);
   }
 };

@@ -15,13 +15,23 @@ import {
 import dataBind from 'src/dbdi/react/dataBind';
 
 import FAIcon from 'src/views/components/util/FAIcon';
-
+import LoadIndicator from 'src/views/components/util/loading';
 
 
 function getToggleStatus(oldStatus) {
   const isDone = isStageStatusOver(oldStatus);
   return isDone ? StageStatus.None : StageStatus.Finished;
 }
+
+const CustomStageButtons = {
+  sprintMeeting: dataBind()(function sprintMeeting(
+    {},
+    {},
+    {}
+  ) {
+
+  })
+};
 
 const StageButtons = dataBind({
   toggleStageStatus(evt, { thisProjectId, thisStagePath },
@@ -66,7 +76,7 @@ const StageButtons = dataBind({
     const projectId = thisProjectId;
     const stagePath = thisStagePath;
     const newStatus = StageContributorStatus.None;
-    updateStageContributorStatus({ uid, projectId, stagePath, newStatus});
+    updateStageContributorStatus({ uid, projectId, stagePath, newStatus });
   },
   setContributorFinished(evt, { thisProjectId, thisStagePath },
     { updateStageContributorStatus },
@@ -76,7 +86,7 @@ const StageButtons = dataBind({
     const projectId = thisProjectId;
     const stagePath = thisStagePath;
     const newStatus = StageContributorStatus.Finished;
-    updateStageContributorStatus({ uid, projectId, stagePath, newStatus});
+    updateStageContributorStatus({ uid, projectId, stagePath, newStatus });
   },
   setContributorFailed(evt, { thisProjectId, thisStagePath },
     { updateStageContributorStatus },
@@ -86,14 +96,15 @@ const StageButtons = dataBind({
     const projectId = thisProjectId;
     const stagePath = thisStagePath;
     const newStatus = StageContributorStatus.Failed;
-    updateStageContributorStatus({ uid, projectId, stagePath, newStatus});
+    updateStageContributorStatus({ uid, projectId, stagePath, newStatus });
   }
 })(
   ({ thisProjectId, thisStagePath }, {
+    stageContributions,
     get_isStageContributor,
     get_hasStageReviewerPrivilege,
     setFinished, setNone, setFailed,
-    setContributorFinished, setContributorNone, setContributorFailed
+    setContributorFinished, setContributorNone
   }, {
     currentUid
   }) => {
@@ -103,8 +114,18 @@ const StageButtons = dataBind({
     const projectId = thisProjectId;
 
     const queryArgs = { uid, projectId, stagePath };
-    const isStageContributor = get_isStageContributor(queryArgs);
     const canReview = get_hasStageReviewerPrivilege(queryArgs);
+    const isStageContributor = get_isStageContributor(queryArgs);
+    if (!canReview && !isStageContributor) {
+      // nothing to do here
+      return <span />;
+    }
+
+    // we need this in order to be able to press the buttons
+    if (!stageContributions.isLoaded({ projectId, stagePath })) {
+      return (<LoadIndicator block />);
+    }
+
 
     return (<div>
       {!stageNode.hasChildren &&

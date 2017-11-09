@@ -12,17 +12,20 @@ export function pathToIteration(parentPathStr, iteration) {
   return (parentPathStr && (parentPathStr + '_') || '') + iteration;
 }
 
-export function pathGetParentPath(stagePath) {
+export function pathToParent(stagePath) {
   try {
     let i = 0;
     let idx = stagePath.length;
     let idx2 = idx;
     do {
       idx2 = stagePath.lastIndexOf('_', idx - 1);
+      if (idx2 < 0) {
+        return '';
+      }
       const stageId = stagePath.substring(idx2 + 1, idx);
       if (isNaN(parseInt(stageId))) {
         // not an iteration -> stepping stone in hierarchy
-        console.assert(this.getNode(stageId));
+        //console.assert(this.getNode(stageId));
         ++i;
       }
       idx = idx2;
@@ -31,7 +34,7 @@ export function pathGetParentPath(stagePath) {
     return stagePath.substring(0, idx);
   }
   catch (err) {
-    throw new Error(`could not getParentPathOfPath for "${stagePath}"`);
+    throw new Error(`could not getParentPathOfPath for "${stagePath}" - ${err.stack}`);
   }
 }
 

@@ -15,13 +15,12 @@
 ## TODO
 
 Feature: Project Control
-* Data model data structure: "list of iterations" for repeatable stage nodes
 * add iterations for repeatable nodes (when? where? what about delete?)
-* Add proper conditions for "finishing" stages
-  * when updating stage status of active stage, also update activeStagePath
-  * when user triggers change in activeStagePath and route matches that stagePath → redirect to new active stage?
-  * enable/disable forms + form buttons under given conditions
-  * add 完成 buttons to forms to update contributor status
+  * custom StageButtons for "sprint -> meeting" node: let reviewer/GM determine current status
+  * add "Project is done" + "Project needs more work" + "Project has been cancelled" buttons
+* when user triggers change in activeStagePath and route matches that stagePath → redirect to new active stage?
+* enable/disable forms + form buttons under given conditions
+* add 完成 buttons to forms to update contributor status
   * disable 完成 buttons when form is not valid yet
 * add row below ProjectProgressBar with one ProjectContributorStatus per contributor
 * fix form reset problem, use `onChange` to:

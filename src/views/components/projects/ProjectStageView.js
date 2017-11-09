@@ -1,6 +1,7 @@
 import {
   StageStatus,
-  isStageStatusOver
+  isStageStatusOver,
+  isProjectStatusOver
 } from 'src/core/projects/ProjectDef';
 
 import {
@@ -26,7 +27,7 @@ import StageContent from './StageContent';
 const ProjectStageView = dataBind({
 })((
   { thisNode, thisStagePath, thisProjectId },
-  { get_stageStatus, get_stageEntry, isAscendantOfActiveStage },
+  { get_projectStatus, get_stageEntry, isAscendantOfActiveStage },
   { }
 ) => {
   const stageDef = thisNode.stageDef;
@@ -38,6 +39,8 @@ const ProjectStageView = dataBind({
   const stageStatus = stageEntry && stageEntry.status || StageStatus.None;
   const isActive = isAscendantOfActiveStage({ projectId, stagePath });
   const hasStageFinished = isStageStatusOver(stageStatus);
+  const projectStatus = get_projectStatus({ projectId });
+  const hasProjectFinished = isProjectStatusOver(projectStatus);
 
   let bsStyle;
   if (isActive) {
@@ -62,7 +65,12 @@ const ProjectStageView = dataBind({
   ///className="full-width no-margin no-shadow no-border project-stage-panel"
 
   let alertEl;
-  if (hasStageFinished) {
+  if (hasProjectFinished) {
+    alertEl = (<Alert bsStyle="warning">
+      This project has already finished.
+    </Alert>);
+  }
+  else if (hasStageFinished) {
     alertEl = (<Alert bsStyle="warning">
       This stage has already finished.
     </Alert>);
@@ -77,7 +85,7 @@ const ProjectStageView = dataBind({
       className="full-width no-margin project-stage-panel"
       bsStyle={bsStyle}>
       {alertEl}
-      {(isActive || hasStageFinished) &&
+      {(isActive || hasStageFinished || hasProjectFinished) &&
         <StageButtons />
       }
       <StageContent />

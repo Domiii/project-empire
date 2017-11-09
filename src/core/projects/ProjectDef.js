@@ -116,7 +116,7 @@ export const projectStageTree = new StageDefTree([
         ]
       },
       {
-        id: 'holdMeeting',
+        id: 'sprintMeeting',
         title: '團隊鑑定',
         contributors: contributorSet('reviewer', 1),
         forms: [

@@ -1,6 +1,6 @@
 import {
   pathToIteration,
-  pathGetParentPath,
+  pathToParent,
   pathToChild,
   pathGetStageId,
   pathToNextIteration
@@ -41,6 +41,15 @@ export const StageTransitionTypes = {
   ChildToParent: 4,
   NextIteration: 5
 };
+
+export function getFirstPathToNode(parentPath, node) {
+  let path = pathToChild(parentPath, node.stageId);
+  if (node.isRepeatable) {
+    // want first iteration instead
+    path += '_0';
+  }
+  return path;
+}
 
 export class StageDefNode {
   stageTree;
@@ -215,7 +224,7 @@ export class StageDefNode {
 
   getParentPathOfPath(stagePath) {
     // there is a global function for this (not context-sensitive)
-    return pathGetParentPath(stagePath);
+    return pathToParent(stagePath);
   }
 
   traverse(parentPreviousPath, path, stageEntries, cb, iteration = undefined) {
@@ -310,11 +319,28 @@ export class StageDefTree {
     return node;
   }
 
+  getNextNode(node) {
+    // TODO
+    // let nextNode = node.next;
+    // if (!nextNode) {
+    //   // no more sibling → go up one
+    //   nextNode = node.parent;
+    //   nextNode = nextNode && nextNode.next;
+    //   if (nextNode.firstChild) {
+    //     return nextNode.firstChild;
+    //   }
+    // }
+    // return nextNode;
+  }
+
   /**
    * Get the node that is last in the given path
    */
   getNodeByPath(stagePath) {
     // get stageId
+    if (!stagePath) {
+      return this.root;
+    }
     try {
       const stageId = pathGetStageId(stagePath);
       return this.getNode(stageId);
@@ -328,26 +354,42 @@ export class StageDefTree {
    * For repeating nodes, if next iteration exists, go to that, 
    * else go to next node in line
    */
-  getNextPathByPath(stagePath, allStagePaths) {
+  getNextPathByPath(stagePath, stageEntries) {
+    let newPath;
     const node = this.getNodeByPath(stagePath);
     if (node.isRepeatable) {
-      const path = pathToNextIteration(stagePath);
-      if (!path || !!allStagePaths[path]) {
-        return path;
+      // check if the next node is next iteration
+      newPath = pathToNextIteration(stagePath);
+      if (!newPath || (stageEntries && !!stageEntries[newPath])) {
+        return newPath;
       }
     }
-
-    let nextNode = node.next;
-    if (!nextNode) {
-      // no more sibling → go up one
-      nextNode = node.parent;
+    
+    // go to parent
+    let parentPath = pathToParent(stagePath);
+    let nextNode = node;
+    if (!node.next) {
+      do {
+        // no more sibling → go to parent's sibling instead
+        nextNode = nextNode.parent;
+        parentPath = pathToParent(parentPath);
+      } while (nextNode && !nextNode.next);
       nextNode = nextNode && nextNode.next;
     }
-    if (nextNode.firstChild) {
-      // TODO: finish the recursion
-      return nextNode.firstChild;
+    else {
+      nextNode = node.next;
     }
-    return nextNode;
+    
+    newPath = parentPath;
+    if (nextNode) {
+      // go to first leaf
+      do {
+        newPath = getFirstPathToNode(newPath, nextNode);
+        nextNode = nextNode.firstChild;
+      }
+      while (nextNode);
+    }
+    return newPath;
   }
 
   traverse(stageEntries, cb) {

@@ -1,3 +1,5 @@
+import firebase from 'firebase';
+
 export default {
   addUserToProject(
     { uid, projectId },
