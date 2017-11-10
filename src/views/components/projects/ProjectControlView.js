@@ -3,7 +3,8 @@ import {
 } from 'src/core/projects/ProjectDef';
 
 import {
-  pathToChild
+  pathToChild,
+  isAscendantPath
 } from 'src/core/projects/ProjectPath';
 
 import { EmptyObject, EmptyArray } from 'src/util';
@@ -65,7 +66,7 @@ export const ProjectControlView = dataBind()(
 
 const ProjectControlList = withRouter(dataBind()((
   { match },
-  { activeProjectIdsOfUser, currentUid, activeStagePath }
+  { activeProjectIdsOfUser, currentUid, get_activeStagePath }
 ) => {
   const uid = currentUid();
   const { projectId, stagePath } = match.params;
@@ -87,11 +88,11 @@ const ProjectControlList = withRouter(dataBind()((
       if (size(currentProjectIds) === 1) {
         // there is only one project → redirect (once loaded)!
         for (let projectId in currentProjectIds) {
-          if (!activeStagePath.isLoaded({ projectId })) {
+          if (!get_activeStagePath.isLoaded({ projectId })) {
             // single project (but not loaded yet)
             return (<LoadIndicator block size={1.5} />);
           }
-          return <Redirect to={hrefProjectControl(projectId, activeStagePath({ projectId }))} />;
+          return (<Redirect to={hrefProjectControl(projectId, get_activeStagePath({ projectId }))} />);
         }
       }
 
@@ -104,7 +105,16 @@ const ProjectControlList = withRouter(dataBind()((
       // show selected project
       const node = projectStageTree.getNodeByPath(stagePath);
       if (node.hasChildren) {
-        const newStagePath = pathToChild(stagePath, node.firstChild.stageId);
+        let newStagePath;
+        const activeStagePath = get_activeStagePath({ projectId });
+        if (isAscendantPath(stagePath, activeStagePath)) {
+          // select active path
+          newStagePath = activeStagePath;
+        }
+        else {
+          // select first child
+          newStagePath = pathToChild(stagePath, node.firstChild.stageId);
+        }
         return <Redirect to={hrefProjectControl(projectId, newStagePath)} />;
       }
       projectEls = (<ProjectControlView data-name="ProjectControlView"

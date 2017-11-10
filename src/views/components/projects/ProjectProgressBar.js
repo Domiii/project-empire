@@ -54,11 +54,12 @@ const StageProgressIcon = withRouter(dataBind({
   const previousStagePath = thisPreviousStagePath;
   //const isActiveStage = isAscendantOfActiveStage({ projectId, stagePath });
   const isSelectedStage = stagePath &&
-    selectedProjectId === projectId && isAscendantPath(stagePath, selectedStagePath);
+    selectedProjectId === projectId && 
+    isAscendantPath(stagePath, selectedStagePath);
   const previousStatus = previousStagePath && get_stageStatus({ projectId, stagePath: previousStagePath });
   const stageEntry = get_stageEntry({ projectId, stagePath });
   const stageStatus = stageEntry && stageEntry.status || StageStatus.None;
-  const hasStageFinished = isStageStatusOver(stageStatus);
+  //const hasStageFinished = isStageStatusOver(stageStatus);
   const hasStageStarted = !previousStagePath || isStageStatusOver(previousStatus);
 
   let bsStyle;
@@ -69,8 +70,7 @@ const StageProgressIcon = withRouter(dataBind({
     bsStyle = 'default';
   }
 
-  const renderChildren = makeChildren &&
-    ((hasStageStarted && !hasStageFinished) || isSelectedStage);
+  const renderChildren = makeChildren && isSelectedStage;
 
   let className = '';
   if (thisNode.isRoot) {
