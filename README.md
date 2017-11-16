@@ -51,14 +51,11 @@ Feature: Proper mission lists + editing
 Feature: React Performance
 * basic performance optimizations
 
-Feature: Monitor yourself
-* 注意要素。平時要（主動）講出來：
-  * 自己的當時（大／小）目標？
-  * 目標只要做到 baseline 還是特別認真？
-  * 可以找誰討論？有哪一個 expert 可以平時找討論？
-* 定義 『態度的品質』：
-  * 雷到別人
-  * 展示很不願意溝通的態度
+Feature: Learning structures
+* Feedback/Hints
+* Questions
+* Promises
+  * Conversion from hint/feedback to promise
 * Once a day, offer to check/monitor yourself
 * Check goal vs. strategy/implementation alignment
 * Allow "supporters"/mentors to record their observations of students

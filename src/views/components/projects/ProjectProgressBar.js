@@ -48,11 +48,13 @@ const StageProgressIcon = withRouter(dataBind({
     get_stageStatus, get_stageEntry, get_projectStatus },
   { }
 ) {
-  const { projectId: selectedProjectId, stagePath: selectedStagePath } = match.params;
+  const { 
+    projectId: selectedProjectId, 
+    stagePath: selectedStagePath
+  } = match.params;
   const projectId = thisProjectId;
   const stagePath = thisStagePath;
   const previousStagePath = thisPreviousStagePath;
-  //const isActiveStage = isAscendantOfActiveStage({ projectId, stagePath });
   const isSelectedStage = stagePath &&
     selectedProjectId === projectId && 
     isAscendantPath(stagePath, selectedStagePath);
@@ -70,16 +72,24 @@ const StageProgressIcon = withRouter(dataBind({
     bsStyle = 'default';
   }
 
-  const renderChildren = makeChildren && isSelectedStage;
+  const renderChildren = makeChildren && (
+    isSelectedStage ||
+    thisNode.isRoot
+  );
 
   let className = '';
   if (thisNode.isRoot) {
     className = 'root';
   }
   else {
+    //const isActiveStage = isAscendantOfActiveStage({ projectId, stagePath });
+    const activeStagePath = get_activeStagePath({ projectId });
     const projectStatus = get_projectStatus({ projectId });
     const hasProjectFinished = isProjectStatusOver(projectStatus);
-    const isActiveLeaf = stagePath === get_activeStagePath({ projectId });
+    const isActiveLeaf = stagePath === activeStagePath || (
+      !renderChildren &&
+      isAscendantPath(stagePath, activeStagePath)
+    );
     if (isActiveLeaf && !hasProjectFinished) {
       className = 'active';
     }

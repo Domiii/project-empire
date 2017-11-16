@@ -114,5 +114,5 @@ export function isPathToLastIteration(stagePath, allStagePaths) {
 }
 
 export function isAscendantPath(parent, child) {
-  return child.startsWith(parent);
+  return child && child.startsWith(parent);
 }

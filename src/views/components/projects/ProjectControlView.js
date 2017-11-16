@@ -49,8 +49,6 @@ export const ProjectControlView = dataBind()(
 
     //return <ProjectTree setContext={newContext} />;
 
-
-
     return (<div>
       <ProjectProgressBar setContext={newContext} />
       {selectedStagePath &&
