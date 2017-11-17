@@ -40,6 +40,42 @@ Feature: Project Control
 * feature: Admin can change own user for debugging (through FirebaseAuthDataProvider)
 * When ProgressStatusBar is too long, slide to proper position
 
+### Feature: Learning structures
+
+* Feedback/hints, promises, questions, reflection checklists
+* Mostly used between mentor/mentee
+  * (can be used between non-mentor stake holders; but requires at least one of the two participants to insist on it and use it for further value?)
+* Can convert feedback/hint/question to promise
+* Once a day, offer to check/monitor yourself
+* Check goal vs. strategy/implementation alignment
+* Allow "supporters"/mentors/coaches to record their observations of learners
+* Allow learners to keep a learner/reflection journal
+* Building your own learning structures (with or without software support) requires at least one strong leader and simple SOPs for mentors to help learners build up the scaffolding and habit formation
+
+Feature: Promises
+* Can make a promise to others (or self)
+* Promise status: Done, Failed, Active
+* Priority
+  * According to who? Target or creator?
+* Needs target or other (privileged) collaborator to counter check
+  * Done, Failed, Cancelled
+* UI
+  * Notification: Promise
+  * List promises by me
+  * List promises for me
+  * Sort promises by createdAt / updatedAt / priority?
+  * Filter: Active/Archived
+  * Paging for promises
+
+
+Feature: Hints
+* Can give hint to others
+* Hint status: New, Useful, 
+
+Feature: Promises (Advanced)
+* Can make a promise as a group
+* Can make a promise toward a group
+
 Feature: LFG
 * 
 
@@ -51,14 +87,6 @@ Feature: Proper mission lists + editing
 Feature: React Performance
 * basic performance optimizations
 
-Feature: Learning structures
-* Feedback/Hints
-* Questions
-* Promises
-  * Conversion from hint/feedback to promise
-* Once a day, offer to check/monitor yourself
-* Check goal vs. strategy/implementation alignment
-* Allow "supporters"/mentors to record their observations of students
 
 Feature: Skills, Rubrics + Evaluation
 * 
