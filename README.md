@@ -43,8 +43,8 @@
 ### Feature: Learning structures
 
 * Feedback/hint
-  * Types of feedback
-    * e.g. reference (inspirational, learn, etc.), habit, <CustomFeedbackTypeTemplate>
+  * Types of feedback:
+    * reference material (inspirational, learn, etc.), habit, <CustomFeedbackTypeTemplate>
   * User story: A sends feedback F to B. B now sees F as "active/received". A sees the feedback as "active/sent".
     * B can react to the feedback:
       * [Emotions](https://simple.wikipedia.org/wiki/List_of_emotions)
@@ -67,7 +67,11 @@
     * feedback is shown in multiple places: under Project team, as well as own reflection list
   * TODO: repeated feedback? (including a "gave up" flag)
 * Promise
-  * A can promise P to B.
+  * Can make promises to individuals or project teams
+  * <ProjectTemplates>
+  * Promiser can change status: InProgress -> Done, GiveUp
+  * receiver of promise gets to evaluate fulfillment of promise
+    * Fulfilled, Cancelled, Failed
 * TimeUse - In reaction to given timeslot T:
   * Overall Feeling: "Cool", "今天很感動，覺得突破自己了", "今天很感動，覺得有很感動的事情發生", "今天很感動", "普通", <OtherEmotions>
   * GoalSetting
@@ -86,13 +90,16 @@
         * Consumption vs. Creation?
       * Unproductive, recharge batteries
   * Time between timeslot + record createdAt
-  * Mentor/coach double checks in next meeting, queries + records the source of "strong emotions", so as to give learner a chance to share their feeling of success (+ prevent false positives)
-* Project -> Change to "Goal"
-  * can be collaborative
-  * can be based on templates (missions)
+  * Mentor/coach double checks in next meeting (or in class?), queries + records the source of "strong emotions", so as to give learner a chance to share their feeling of success (+ prevent false positives)
+* Project
+  * need to simplify
 * Meeting
   * Can be with individual or project team
   * Can issue feedback to individual or project team
+    * When with projects, need to check who participated
+  * GM (or all?) can see list of recent meetings and who participated
+    * list of all learners and their most recent meeting
+  * reminder when someone didn't have a meeting in too long (e.g. 2 weeks)
   * SOP #1:
     * Go through goals
       * What were your goals?
