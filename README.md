@@ -14,7 +14,7 @@
 
 ## TODO
 
-Feature: Project Control
+### Feature: Project Control
 * add iterations for repeatable nodes (when? where? what about delete?)
   * custom StageButtons for "sprint -> meeting" node: let reviewer/GM determine current status
   * add "Project is done" + "Project needs more work" + "Project has been cancelled" buttons
@@ -42,15 +42,80 @@ Feature: Project Control
 
 ### Feature: Learning structures
 
-* Feedback/hints, promises, questions, reflection checklists
-* Mostly used between mentor/mentee
-  * (can be used between non-mentor stake holders; but requires at least one of the two participants to insist on it and use it for further value?)
-* Can convert feedback/hint/question to promise
-* Once a day, offer to check/monitor yourself
-* Check goal vs. strategy/implementation alignment
-* Allow "supporters"/mentors/coaches to record their observations of learners
-* Allow learners to keep a learner/reflection journal
-* Building your own learning structures (with or without software support) requires at least one strong leader and simple SOPs for mentors to help learners build up the scaffolding and habit formation
+* Feedback/hint
+  * Types of feedback
+    * e.g. reference (inspirational, learn, etc.), habit, <CustomFeedbackTypeTemplate>
+  * User story: A sends feedback F to B. B now sees F as "active/received". A sees the feedback as "active/sent".
+    * B can react to the feedback:
+      * [Emotions](https://simple.wikipedia.org/wiki/List_of_emotions)
+      * Actions:
+        * "Don't care"
+        * "Don't understand" (w/ comment)
+        * "Parts are unclear" (w/ comment)
+        * "Make promise"
+          * Will do!
+          * Will try
+          * <CustomPromiseReactionTemplate>
+    * F will now be "archived/reacted" to B.
+    * A can see the reaction immediately in their "active/replied"
+      * A can attach an emotion to the reaction
+      * A can decide to comment + archive it after talking to B the next time.
+      * F will now be "archived/checked" to A.
+  * Team feedback
+    * everyone gets to react to feedback
+    * can see reaction status of everyone in group
+    * feedback is shown in multiple places: under Project team, as well as own reflection list
+  * TODO: repeated feedback? (including a "gave up" flag)
+* Promise
+  * A can promise P to B.
+* TimeUse - In reaction to given timeslot T:
+  * Overall Feeling: "Cool", "今天很感動，覺得突破自己了", "今天很感動，覺得有很感動的事情發生", "今天很感動", "普通", <OtherEmotions>
+  * GoalSetting
+  * GoalHoning (essentially the same as "promises to self")
+  * Challenge
+  * Achievement: "I feel I have achieved a lot!", "I feel I have achieved something", "I feel I have not achieved as much as I wanted", "I don't feel any feeling of achievement"
+  * Getting stuck (checkboxes): "I was not stuck", "I was stuck but persisted", "I was stuck and got distracted"
+  * Guidance: "I have received enough guidance", "I want more guidance", "Guidance was Ok", "There was no guidance, but I did not need any", "I don't care"
+  * ActivityList, for each Activity:
+    * Related to project...
+    * ActivityTemplate
+      * Productive
+        * Discussion
+        * Scheduled meeting
+        * Focused learning/work
+        * Consumption vs. Creation?
+      * Unproductive, recharge batteries
+  * Time between timeslot + record createdAt
+  * Mentor/coach double checks in next meeting, queries + records the source of "strong emotions", so as to give learner a chance to share their feeling of success (+ prevent false positives)
+* Project -> Change to "Goal"
+  * can be collaborative
+  * can be based on templates (missions)
+* Meeting
+  * Can be with individual or project team
+  * Can issue feedback to individual or project team
+  * SOP #1:
+    * Go through goals
+      * What were your goals?
+      * What did you actually finish
+      * Content discussion
+    * Go through previous Feedback, Promises + TimeUse, and wrap them up
+    * Give Feedback
+    * next Goals + Promises
+* ReflectionChecklist (Question)
+* LearningObservation
+  * Templates, e.g.: 卡住而分心, 連開始都沒開始, 一開始先休息, 幾乎都在休息
+* List of LearnerSuccess/LearnerStuck/LearnerFail
+  
+
+#### Feature: Learning Structures - Concepts
+  * Mostly used between GM/learner
+    * (can be used between non-mentor stake holders; but requires at least one of the two participants to insist on it and use it for further value?)
+  * Can convert feedback/hint/question to promise
+  * Once a day, offer to check/monitor yourself
+  * Check goal vs. strategy/implementation alignment
+  * Allow "supporters"/mentors/coaches to record their observations of learners
+  * Allow learners to keep a learner/reflection journal
+  * Building your own learning structures (with or without software support) requires at least one strong leader and simple SOPs for mentors to help learners build up the scaffolding and habit formation
 
 Feature: Promises
 * Can make a promise to others (or self)
@@ -75,6 +140,8 @@ Feature: Hints
 Feature: Promises (Advanced)
 * Can make a promise as a group
 * Can make a promise toward a group
+
+### More Features
 
 Feature: LFG
 * 
