@@ -44,7 +44,7 @@
 
 * Feedback/hint
   * Types of feedback:
-    * reference material (inspirational, learn, etc.), habit, <CustomFeedbackTypeTemplate>
+    * reference material (inspirational, learn, etc.), habit, list of `FeedbackTypeTemplate`
   * User story: A sends feedback F to B. B now sees F as "active/received". A sees the feedback as "active/sent".
     * B can react to the feedback:
       * [Emotions](https://simple.wikipedia.org/wiki/List_of_emotions)
@@ -52,10 +52,9 @@
         * "Don't care"
         * "Don't understand" (w/ comment)
         * "Parts are unclear" (w/ comment)
-        * "Make promise"
+        * "Make promise" -> list of `PromiseReactionTemplate`, e.g.:
           * Will do!
           * Will try
-          * <CustomPromiseReactionTemplate>
     * F will now be "archived/reacted" to B.
     * A can see the reaction immediately in their "active/replied"
       * A can attach an emotion to the reaction
@@ -72,7 +71,7 @@
   * Promiser can change status: InProgress -> Done, GiveUp
   * receiver of promise gets to evaluate fulfillment of promise
     * Fulfilled, Cancelled, Failed
-* TimeUse - In reaction to given timeslot T:
+* DailyReflection - In reaction to given timeslot T:
   * Overall Feeling: "Cool", "今天很感動，覺得突破自己了", "今天很感動，覺得有很感動的事情發生", "今天很感動", "普通", <OtherEmotions>
   * GoalSetting
   * GoalHoning (essentially the same as "promises to self")
