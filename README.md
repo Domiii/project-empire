@@ -14,32 +14,6 @@
 
 ## TODO
 
-### Feature: Project Control
-* add iterations for repeatable nodes (when? where? what about delete?)
-  * custom StageButtons for "sprint -> meeting" node: let reviewer/GM determine current status
-  * add "Project is done" + "Project needs more work" + "Project has been cancelled" buttons
-* fix `ProjectProgressBar` layout (when width > container width)
-* when user triggers change in activeStagePath and route matches that stagePath → redirect to new active stage?
-* enable/disable forms + form buttons under given conditions
-* add 完成 buttons to forms to update contributor status
-  * disable 完成 buttons when form is not valid yet
-* add row below ProjectProgressBar with one ProjectContributorStatus per contributor
-* fix form reset problem, use `onChange` to:
-  * store React state to store changed version
-  * auto-save form content (e.g. Google Docs auto-saves after a change has occured and then no change has occured for 3s)
-* form frontend: disabled forms
-* form frontend: GM can overview all form results
-* StageContentView:
-  * What to show in stages where there is no forms or where the form is not the main point?
-  * How to aggregate all relevant (previously composed) data in the current stage?
-* Prepare all form files + forms
-* forms: always add meta choices: "don't make sense" 不合理, "don't care" 不管, "don't understand" 不懂, "not now" 再說
-* forms: always add an "other/comment" 註解 option
-* handle project archiving properly
-* allow project team editing to add "any user" (not just users w/o project)
-* feature: Admin can change own user for debugging (through FirebaseAuthDataProvider)
-* When ProgressStatusBar is too long, slide to proper position
-
 ### Feature: Learning structures
 
 * Feedback/hint
@@ -75,10 +49,19 @@
   * Overall Feeling: "Cool", "今天很感動，覺得突破自己了", "今天很感動，覺得有很感動的事情發生", "今天很感動", "普通", <OtherEmotions>
   * GoalSetting
   * GoalHoning (essentially the same as "promises to self")
-  * Challenge
+  * SDL Strategies
+    * Get in the mood (actively)
+    * Talk to someone about your project (with some depth, not just superficially)
+    * Ask yourself at least one meaningful question related to your project
+    * Ask someone else at least one meaningful question related to their project
+    * Remind someone if they are distracted (including yourself?); ask them why
+    * At least persist for 10 minutes (keep going if you feel like it)
+    * `CustomSDLStrategies`
   * Achievement: "I feel I have achieved a lot!", "I feel I have achieved something", "I feel I have not achieved as much as I wanted", "I don't feel any feeling of achievement"
   * Getting stuck (checkboxes): "I was not stuck", "I was stuck but persisted", "I was stuck and got distracted"
+  * Did you overcome something particularly difficult?
   * Guidance: "I have received enough guidance", "I want more guidance", "Guidance was Ok", "There was no guidance, but I did not need any", "I don't care"
+  * Ask at least one meaningful question related to what you did today or your emotions today.
   * ActivityList, for each Activity:
     * Related to project...
     * ActivityTemplate
@@ -87,9 +70,10 @@
         * Scheduled meeting
         * Focused learning/work
         * Consumption vs. Creation?
-      * Unproductive, recharge batteries
-  * Time between timeslot + record createdAt
+      * Unproductive, recharge batteries, take break
   * Mentor/coach double checks in next meeting (or in class?), queries + records the source of "strong emotions", so as to give learner a chance to share their feeling of success (+ prevent false positives)
+  * Analyze:
+    * Time between timeslot + record createdAt
 * Project
   * need to simplify
 * Meeting
@@ -102,9 +86,9 @@
   * SOP #1:
     * Go through goals
       * What were your goals?
-      * What did you actually finish
+      * What were your successes, failures and lessons learned? (problem: what about individual s/f/l)? Help recording.
       * Content discussion
-    * Go through previous Feedback, Promises + TimeUse, and wrap them up
+    * Go through previous Feedback, Promises + DailyReflections (problem: these are individual, need to first sum them up and discuss with the team), and wrap them up
     * Give Feedback
     * next Goals + Promises
 * ReflectionChecklist (Question)
@@ -146,6 +130,32 @@ Feature: Hints
 Feature: Promises (Advanced)
 * Can make a promise as a group
 * Can make a promise toward a group
+
+### Feature: Project Control
+* add iterations for repeatable nodes (when? where? what about delete?)
+  * custom StageButtons for "sprint -> meeting" node: let reviewer/GM determine current status
+  * add "Project is done" + "Project needs more work" + "Project has been cancelled" buttons
+* fix `ProjectProgressBar` layout (when width > container width)
+* when user triggers change in activeStagePath and route matches that stagePath → redirect to new active stage?
+* enable/disable forms + form buttons under given conditions
+* add 完成 buttons to forms to update contributor status
+  * disable 完成 buttons when form is not valid yet
+* add row below ProjectProgressBar with one ProjectContributorStatus per contributor
+* fix form reset problem, use `onChange` to:
+  * store React state to store changed version
+  * auto-save form content (e.g. Google Docs auto-saves after a change has occured and then no change has occured for 3s)
+* form frontend: disabled forms
+* form frontend: GM can overview all form results
+* StageContentView:
+  * What to show in stages where there is no forms or where the form is not the main point?
+  * How to aggregate all relevant (previously composed) data in the current stage?
+* Prepare all form files + forms
+* forms: always add meta choices: "don't make sense" 不合理, "don't care" 不管, "don't understand" 不懂, "not now" 再說
+* forms: always add an "other/comment" 註解 option
+* handle project archiving properly
+* allow project team editing to add "any user" (not just users w/o project)
+* feature: Admin can change own user for debugging (through FirebaseAuthDataProvider)
+* When ProgressStatusBar is too long, slide to proper position
 
 ### More Features
 
