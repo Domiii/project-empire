@@ -20,7 +20,8 @@ export default dataBind()(function MeetingView(
       * Lesson learned?
       * Everyone ask at least one deep question (curious/want_to_learn_more)
       * Method + satisfaction of collaboration?
-      * Content discussion
+      * Sharing + self-evaluation of current status of work
+      * More in-depth content discussion
       * Go through previous Feedback, Promises + DailyReflections (problem: these are individual, need to first sum them up and discuss with the team), and wrap them up
         * Show all open Feedback/Promises related to project
         * [optional] Show all open feedback+promises related to each participant?
