@@ -139,7 +139,7 @@ const defaultFormRenderSettings = {
     updatedAt: {
       'ui:readonly': true,
       'ui:widget': 'momentTime'
-    },
+    }
   },
 
   widgets,
@@ -180,7 +180,7 @@ const renderSettings = mapValues(_stageFormRenderAll, info => merge({}, info && 
 const renderersRaw = mapValues(_stageFormRenderAll, info => info && info.render || DefaultFormRender);
 
 const stageFormRenderers = mapValues(renderersRaw, (FormRender, name) => {
-  FormRender = FormRender || DefaultFormRender;
+  FormRender = merge({}, FormRender, DefaultFormRender);
   const settings = renderSettings[name] || {};
   let { schema, uiSchema, schemaTemplate, ...moreSettings } = settings;
   let schemaBuilder;

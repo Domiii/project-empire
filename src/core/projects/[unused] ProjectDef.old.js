@@ -80,15 +80,73 @@ export const projectStageTree = new StageDefTree([
     contributors: contributorSet('party', 1)
   },
   {
-    id: 'milestoneMeeting',
-    title: 'MM',
+    id: 'sprint',
+    title: 'Sprint',
     isRepeatable: true,
-    contributors: [contributorSet('party'), contributorSet('reviewer', 1)],
-    forms: [
+    children: [
       {
-        id: 'projectMeeting',
-        read: ['party'],
-        write: ['reviewer']
+        id: 'execution',
+        title: '執行階段',
+        contributors: contributorSet('party'),
+        description: '就做一做～',
+        noStatus: true
+      },
+      {
+        id: 'partyPrepareMeeting',
+        title: '團隊 準備 團隊鑑定',
+        contributors: contributorSet('party'),
+        forms: [
+          {
+            id: 'partyPrepareMeeting',
+            read: ['reviewer'],
+            write: ['party']
+          }
+        ]
+      },
+      {
+        id: 'reviewerPrepareMeeting',
+        title: '支持者 準備 團隊鑑定',
+        contributors: contributorSet('reviewer', 1),
+        forms: [
+          {
+            id: 'reviewerPrepareMeeting',
+            read: ['reviewer'],
+            write: ['reviewer']
+          }
+        ]
+      },
+      {
+        id: 'sprintMeeting',
+        title: '團隊鑑定',
+        contributors: contributorSet('reviewer', 1),
+        forms: [
+          {
+            id: 'reviewerMeetingRecords',
+            read: ['reviewer'],
+            write: ['reviewer']
+          },
+          {
+            id: 'partyMeetingRecords',
+            write: ['party']
+          }
+        ]
+      },
+      {
+        id: 'sprintWrapup',
+        title: 'Sprint 終點',
+        contributors: contributorSet('party'),
+        level: 2,
+        forms: [
+          {
+            id: 'reviewerSprintWrapup',
+            read: ['all'],
+            write: ['reviewer']
+          },
+          {
+            id: 'partySprintWrapup',
+            write: ['party']
+          }
+        ]
       }
     ]
   },

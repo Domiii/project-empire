@@ -16,9 +16,80 @@
 
 ### Feature: Learning structures
 
+* Overview
+  * DailyReflection status
+  * Active Projects + Meeting status
+  * Active Feedback (to me) + Promises (by me)
+  * Active Feedback (by me) + Promises (to me)
+  * Archive (Projects, DailyReflection, Feedback (rcv) + Promises (snd), Feedback (snd) + Promises (rcv))
+  * TODO: My Stats / Overall Stats
+* Project
+  * Project type: PersonalGoal + PersonalInterests (?)
+    * 參與別人的過程 (問他們做什麼，多多了解他們的東西 or 問他們提出一個跟某個主題有關的問題)
+    * Explore （探索）
+    * Ask questions, be curious （問問題，啟發好奇心）
+    * Try things out （體驗）
+    * Inspiration compilation（靈感庫）
+    * Rapid Prototyping: 每個禮拜至少做出一（兩）個迷你作品
+      * 包含： “Model then modify”
+  * Project type: Mission
+  * Project type: 大專案？
+  * Project type: 自主學習／共學？
+* Meeting
+  * reminder when a project didn't have a meeting in too long (e.g. 1 week (yellow) 2+ weeks (red))
+  * list of all learners and their most recent meeting
+* DailyReflection - In reaction to given timeslot T:
+  * Motivation:
+    * GM 如果要幫你個人化你自己的學習的話，那他們就需要更清楚知道你的狀況才有辦法的
+    * 你不想要別人批評你，評鑑你的話，就需要開始學會自己評自己才有辦法提升解決問題與自主人生能力
+  * Method:
+    * learner 平時自動提醒要填
+      * learner 至少一個禮拜一次（四）
+      * learner 可以自己決定要不要填自主學習時間的 feedback
+    * learner 看到自己反思的紀錄 與　最近的紀錄狀況（有沒有認真做）
+    * learner 可以看到最新關於 reflection 的 feedback
+    * learner 先看清楚目前的狀態 (project status, personal goals(?), feedbacks, promises) 再填
+    * Reviewer + GM
+      * 可以看到其他人的紀錄
+      * 針對 DailyReflection 給 feedback
+  * Data:
+    * Overall Feeling: "Cool", "今天很感動，覺得突破自己了", "今天很感動，覺得有很感動的事情發生", "今天很感動", "普通", <OtherEmotions>
+    * GoalSetting
+    * GoalHoning (essentially the same as "promises to self")
+    * SDL Strategies
+      * Get in the mood (actively)
+      * Talk to someone about your project (with some depth, not just superficially)
+      * Ask yourself at least one meaningful question related to your project
+      * Ask someone else at least one meaningful question related to their project
+      * Remind someone if they are distracted (including yourself?); ask them why
+      * At least persist for 10 minutes (keep going if you feel like it)
+      * `CustomSDLStrategies`
+    * Achievement: "I feel I have achieved a lot!", "I feel I have achieved something", "I feel I have not achieved as much as I wanted", "I don't feel any feeling of achievement"
+    * Getting stuck (checkboxes): "I was not stuck", "I was stuck but persisted", "I was stuck and got distracted"
+    * Did you overcome something particularly difficult?
+    * Guidance: "I have received enough guidance", "I want more guidance", "Guidance was Ok", "There was no guidance, but I did not need any", "I don't care"
+    * Ask at least one meaningful question related to what you did today or your emotions today.
+    * ActivityList, for each Activity:
+      * Related to project...
+      * ActivityTemplate
+        * Productive
+          * Discussion
+          * Scheduled meeting
+          * Focused learning/work
+          * Consumption vs. Creation?
+        * Unproductive, recharge batteries, take break
+  * TODO: Different people might have different priorities for their reflections
+  * Mentor/coach double checks in next meeting (or in class?), queries + records the source of "strong emotions", so as to give learner a chance to share their feeling of success (+ prevent false positives)
+    * "Evaluation of reflection" (e.g.:  what is the purpose of your reflection? is it a good reflection? what makes a good reflection? etc...)
+  * Analyze:
+    * Time between timeslot + record createdAt
 * Feedback/hint
   * Types of feedback:
     * reference material (inspirational, learn, etc.), habit, list of `FeedbackTypeTemplate`
+    * question + possible goal (e.g. to make )?
+    * LearningObservation (e.g.: 卡住而分心, 連開始都沒開始, 一開始先休息, 幾乎都在休息)
+  * Feedback can be in reaction to:
+    * Meeting, Project (w/o meeting), Feedback, Promise, DailyReflection
   * User story: A sends feedback F to B. B now sees F as "active/received". A sees the feedback as "active/sent".
     * B can react to the feedback:
       * [Emotions](https://simple.wikipedia.org/wiki/List_of_emotions)
@@ -31,13 +102,12 @@
           * Will try
     * F will now be "archived/reacted" to B.
     * A can see the reaction immediately in their "active/replied"
-      * A can attach an emotion to the reaction
       * A can decide to comment + archive it after talking to B the next time.
-      * F will now be "archived/checked" to A.
+        * F will now be "archived/checked" to A.
   * Team feedback
     * everyone gets to react to feedback
     * can see reaction status of everyone in group
-    * feedback is shown in multiple places: under Project team, as well as own reflection list
+    * feedback is shown in multiple places: under Project team, as well as own feedback list
   * TODO: repeated feedback? (including a "gave up" flag)
 * Promise
   * Can make promises to individuals or project teams
@@ -45,56 +115,7 @@
   * Promiser can change status: InProgress -> Done, GiveUp
   * receiver of promise gets to evaluate fulfillment of promise
     * Fulfilled, Cancelled, Failed
-* DailyReflection - In reaction to given timeslot T:
-  * Overall Feeling: "Cool", "今天很感動，覺得突破自己了", "今天很感動，覺得有很感動的事情發生", "今天很感動", "普通", <OtherEmotions>
-  * GoalSetting
-  * GoalHoning (essentially the same as "promises to self")
-  * SDL Strategies
-    * Get in the mood (actively)
-    * Talk to someone about your project (with some depth, not just superficially)
-    * Ask yourself at least one meaningful question related to your project
-    * Ask someone else at least one meaningful question related to their project
-    * Remind someone if they are distracted (including yourself?); ask them why
-    * At least persist for 10 minutes (keep going if you feel like it)
-    * `CustomSDLStrategies`
-  * Achievement: "I feel I have achieved a lot!", "I feel I have achieved something", "I feel I have not achieved as much as I wanted", "I don't feel any feeling of achievement"
-  * Getting stuck (checkboxes): "I was not stuck", "I was stuck but persisted", "I was stuck and got distracted"
-  * Did you overcome something particularly difficult?
-  * Guidance: "I have received enough guidance", "I want more guidance", "Guidance was Ok", "There was no guidance, but I did not need any", "I don't care"
-  * Ask at least one meaningful question related to what you did today or your emotions today.
-  * ActivityList, for each Activity:
-    * Related to project...
-    * ActivityTemplate
-      * Productive
-        * Discussion
-        * Scheduled meeting
-        * Focused learning/work
-        * Consumption vs. Creation?
-      * Unproductive, recharge batteries, take break
-  * Mentor/coach double checks in next meeting (or in class?), queries + records the source of "strong emotions", so as to give learner a chance to share their feeling of success (+ prevent false positives)
-  * Analyze:
-    * Time between timeslot + record createdAt
-* Project
-  * need to simplify
-* Meeting
-  * Can be with individual or project team
-  * Can issue feedback to individual or project team
-    * When with projects, need to check who participated
-  * GM (or all?) can see list of recent meetings and who participated
-    * list of all learners and their most recent meeting
-  * reminder when someone didn't have a meeting in too long (e.g. 2 weeks)
-  * SOP #1:
-    * Go through goals
-      * What were your goals?
-      * What were your successes, failures and lessons learned? (problem: what about individual s/f/l)? Help recording.
-      * Content discussion
-    * Go through previous Feedback, Promises + DailyReflections (problem: these are individual, need to first sum them up and discuss with the team), and wrap them up
-    * Give Feedback
-    * next Goals + Promises
-* ReflectionChecklist (Question)
-* LearningObservation
-  * Templates, e.g.: 卡住而分心, 連開始都沒開始, 一開始先休息, 幾乎都在休息
-* List of LearnerSuccess/LearnerStuck/LearnerFail
+* ReflectionChecklist (Question) (as Feedback or for "analyze self")
   
 
 #### Feature: Learning Structures - Concepts

@@ -174,7 +174,6 @@ const partyPrepareMeeting = {
           isOptional: true,
           title: '這一兩週做任務的過程中，你能不能具體的講出學習到什麼？'
         }
-
       ]
     }
   ]
