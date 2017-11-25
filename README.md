@@ -17,8 +17,13 @@
 ### Feature: Learning structures
 
 * Overview
+  * Actions:
+    * (all) Project List, give Feedback, make Promise
+    * Help team, offer to write for them: DailyReflection, Promise, Feedback
+  * currently active meeting
   * DailyReflection status
-  * Active Projects + Meeting status
+  * Active Projects + status
+    * Start Meeting
   * Active Feedback (to me) + Promises (by me)
   * Active Feedback (by me) + Promises (to me)
   * Archive (Projects, DailyReflection, Feedback (rcv) + Promises (snd), Feedback (snd) + Promises (rcv))
@@ -84,31 +89,6 @@
   * Analyze:
     * Time between timeslot + record createdAt
 * Feedback/hint
-  * Types of feedback:
-    * reference material (inspirational, learn, etc.), habit, list of `FeedbackTypeTemplate`
-    * question + possible goal (e.g. to make )?
-    * LearningObservation (e.g.: 卡住而分心, 連開始都沒開始, 一開始先休息, 幾乎都在休息)
-  * Feedback can be in reaction to:
-    * Meeting, Project (w/o meeting), Feedback, Promise, DailyReflection
-  * User story: A sends feedback F to B. B now sees F as "active/received". A sees the feedback as "active/sent".
-    * B can react to the feedback:
-      * [Emotions](https://simple.wikipedia.org/wiki/List_of_emotions)
-      * Actions:
-        * "Don't care"
-        * "Don't understand" (w/ comment)
-        * "Parts are unclear" (w/ comment)
-        * "Make promise" -> list of `PromiseReactionTemplate`, e.g.:
-          * Will do!
-          * Will try
-    * F will now be "archived/reacted" to B.
-    * A can see the reaction immediately in their "active/replied"
-      * A can decide to comment + archive it after talking to B the next time.
-        * F will now be "archived/checked" to A.
-  * Team feedback
-    * everyone gets to react to feedback
-    * can see reaction status of everyone in group
-    * feedback is shown in multiple places: under Project team, as well as own feedback list
-  * TODO: repeated feedback? (including a "gave up" flag)
 * Promise
   * Can make promises to individuals or project teams
   * <ProjectTemplates>
