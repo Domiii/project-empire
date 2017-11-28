@@ -14,6 +14,64 @@
 
 ## TODO
 
+### Feature: Building student learner profiles
+
+#### learner profile 內容/data
+* OverallFeel: "Cool", "今天很感動，覺得突破自己了", "今天很感動，覺得有很感動的事情發生", "今天很感動", "普通", <OtherEmotions>
+* Goal
+  * What is learners's goal?
+  * Is student on the path to their goal? How is that?
+* 自我反省:
+  * 頻率： １＝完全不會主動反省，需要在老師引導下才會做一些反思，但也不一定會內化到下一次需要反思的時刻當中；或是覺得事情當中自己沒有什麼問題，沒有什麼可以值得反省的
+  * 夠全面嗎？
+* 合作
+  * 有沒有找朋友聊天？
+  * 有沒有夥伴？
+  * 有沒有找人討論？（是 (1) 夥伴 (2) GM (3) 網友 (4) 其他人)
+  * 有沒有主動去找夥伴？
+  * 有沒有在等夥伴過去？
+  * 夥伴有沒有忙到無法參與（造成這個人卡住）？
+  * 
+* 時間管理
+  * (1) 在工作時效率非常低落 (2) 在工作時效率不好 (3) 在工作時效率不錯 (4) 在工作時非常有效率
+  * 做事跟休息的比例？
+* 解決問題
+  * 有沒有卡住？
+    * 卡住有沒有主動找辦法解決？
+    * 有沒有卡住而分心？
+    * 卡住有沒有等待到有人主動去提醒他協助他才繼續做？
+* 擁抱失敗:
+  * 這個學期的大錯覺	有沒有遇到比較大的問題	有沒有因為這個狀況而學到東西，改變想法或方法
+* SDL Strategies
+  * Get in the mood (actively)
+  * Talk to someone about your project (with some depth, not just superficially)
+  * Ask yourself at least one meaningful question related to your project
+  * Ask someone else at least one meaningful question related to their project
+  * Remind someone if they are distracted (including yourself?); ask them why
+  * At least persist for 10 minutes (keep going if you feel like it)
+  * `CustomSDLStrategies`
+* Achievement: "I feel I have achieved a lot!", "I feel I have achieved something", "I feel I have not achieved as much as I wanted", "I don't feel any feeling of achievement"
+* Getting stuck (checkboxes): "I was not stuck", "I was stuck but persisted", "I was stuck and got distracted"
+* Did you overcome something particularly difficult?
+* Guidance: "I have received enough guidance", "I want more guidance", "Guidance was Ok", "There was no guidance, but I did not need any", "I don't care"
+* Ask at least one meaningful question related to what you did today or your emotions today.
+* ActivityList, for each Activity:
+  * Related to project...
+  * ActivityTemplate
+    * Productive
+      * Discussion
+      * Scheduled meeting
+      * Focused learning/work
+      * Consumption vs. Creation?
+    * Unproductive, recharge batteries, take break
+
+#### learner profile META
+
+* 針對每一項：
+  * 額外 comment
+  * 夠不夠完整？
+
+
 ### Feature: Learning structures
 
 * Overview
