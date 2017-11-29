@@ -5,6 +5,7 @@ export const routeNames = {
   MISSION_CONTROL: 'mymissions',
   GM: 'gm',
   PROJECTS: 'projects',
+  LEARNER_STATUS: 'learnerstatus',
   GROUPS: 'groups',
 
   TEST: 'test'
@@ -17,6 +18,7 @@ export const routePaths = {
   MISSION_CONTROL: `/${routeNames.MISSION_CONTROL}`,
   GM: `/${routeNames.GM}`,
   PROJECTS: `/${routeNames.PROJECTS}`,
+  LEARNER_STATUS: `/${routeNames.LEARNER_STATUS}`,
   GROUPS: `/${routeNames.GROUPS}`,
 
   TEST: `/${routeNames.TEST}`
@@ -29,6 +31,7 @@ export const routeTemplates = {
   MISSION_CONTROL: `${routePaths.MISSION_CONTROL}/:projectId?/:stagePath?`,
   GM: `${routePaths.GM}`,
   PROJECTS: `${routePaths.PROJECTS}`,
+  LEARNER_STATUS: `${routeNames.LEARNER_STATUS}/:uid`,
   GROUPS: `${routePaths.GROUPS}`,
 
   TEST: `${routePaths.TEST}`

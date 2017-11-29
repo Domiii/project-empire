@@ -13,3 +13,17 @@ export function hrefProjectControl(projectId, stagePath) {
 
   return url.join('/');
 }
+
+export function hrefLearnerStatus(uid) {
+  const url = [];
+
+  url.push(routePaths.MISSION_CONTROL);
+  if (projectId) {
+    url.push(`${projectId}`);
+    if (stagePath) {
+      url.push(`${stagePath}`);
+    }
+  }
+
+  return url.join('/');
+}

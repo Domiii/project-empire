@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import autoBind from 'react-autobind';
 import dataBind from 'src/dbdi/react/dataBind';
 
 import {
@@ -20,8 +19,6 @@ import RoleManager from 'src/views/components/admin/RoleManager';
 export default class GMPage extends Component {
   constructor(...args) {
     super(...args);
-
-    autoBind(this);
   }
 
   render({ }, { }, { isCurrentUserAdmin, currentUser_isLoaded }) {

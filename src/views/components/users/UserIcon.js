@@ -10,7 +10,10 @@ function preloader() {
 }
 
 const UserIconSizes = {
-  tiny: '1em'
+  tiny: '1em',
+  small: '2em',
+  large: '3em',
+  huge: '4em'
 };
 
 export default function UserIcon({user, size, ...moreProps}) {

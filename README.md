@@ -16,45 +16,87 @@
 
 ### Feature: Building student learner profiles
 
+#### LearnerStatusList
+* 
+
+#### LearnerEntryList
+* query: uid
+* 
+
 #### learner profile 內容/data
-* OverallFeel: "Cool", "今天很感動，覺得突破自己了", "今天很感動，覺得有很感動的事情發生", "今天很感動", "普通", <OtherEmotions>
-* Goal
-  * What is learners's goal?
-  * Is student on the path to their goal? How is that?
-* 自我反省:
-  * 頻率： １＝完全不會主動反省，需要在老師引導下才會做一些反思，但也不一定會內化到下一次需要反思的時刻當中；或是覺得事情當中自己沒有什麼問題，沒有什麼可以值得反省的
-  * 夠全面嗎？
+* 自我反省 + 情緒:
+  * 今天（一開始的時候）有沒有先停止，認真想了一下今天要做甚麼？
+  * 今天一開始有沒有花時間來探索自己的情緒？
+  * How do you feel today? (很感動, 很開心, 負面情緒存在, 生氣, 難過, 害怕, 心裡有點累、空泛, 大錯覺（遇到一個很失敗很失望的感覺）, 普通/冷淡, <OtherEmotions>)
+  * 如果發現自己情緒差的話:
+    * 有沒有勇敢的面對？
+    * 有沒有找人聊天討論？
+    * 負面的情緒有沒有很明顯被別人影響到？
+      * 有的話，知道是誰嗎？
+  * [Advanced]
+    * 頻率： １＝完全不會主動反省，需要在老師引導下才會做一些反思，但也不一定會內化到下一次需要反思的時刻當中；或是覺得事情當中自己沒有什麼問題，沒有什麼可以值得反省的
+    * 夠全面嗎？
 * 合作
   * 有沒有找朋友聊天？
   * 有沒有夥伴？
   * 有沒有找人討論？（是 (1) 夥伴 (2) GM (3) 網友 (4) 其他人)
-  * 有沒有主動去找夥伴？
-  * 有沒有在等夥伴過去？
+  * 主動去找夥伴或被動等待夥伴過來才下手？
   * 夥伴有沒有忙到無法參與（造成這個人卡住）？
-  * 
-* 時間管理
-  * (1) 在工作時效率非常低落 (2) 在工作時效率不好 (3) 在工作時效率不錯 (4) 在工作時非常有效率
+  * 有沒有一個人的時間？
+    * 一個人的分心狀態有增加或減少？
+* Goal + Challenges + 解決問題方法 + 時間管理
+  * What was your goal today?
+  * 你今天有沒有往你的目標前進？
+  * 今天／這禮拜有沒有投入到全心投入？(是什麼？)
+  * 有沒有一些明確的產出？(是什麼？)
+  * 有沒有對 部落/guild/團隊/同學/學校/社會/家人 做明顯貢獻？
+  * 引導狀態: (1) 提供給我的引道有夠完整  (2) 從學習環境與夥伴得到的引導不足，但我沒有遇到甚麼問題  (3) 從學習環境與夥伴得到的引導不足，我需要更多
+  * 今天有沒有挑戰自己？有沒有面臨大問題？
+    * 有沒有因為這個狀況而學到東西，改變想法或方法？
+  * 有沒有克服大難題？有沒有覺得突破自己？
+  * 今天有多少成就感？ (1) 很有成就感～  (2) 沒有達成我原來想要的多  (3) 沒有
   * 做事跟休息的比例？
-* 解決問題
+  * 在做事情時： (1) 效率非常低落 (2) 效率不好 (3) 效率不錯 (4) 非常有效率
+  * 學習
+    * 有沒有學到新東西的感覺？
+      * 學到甚麼？ [hint: 這個非常需要 GM 的引導]
   * 有沒有卡住？
     * 卡住有沒有主動找辦法解決？
-    * 有沒有卡住而分心？
-    * 卡住有沒有等待到有人主動去提醒他協助他才繼續做？
-* 擁抱失敗:
-  * 這個學期的大錯覺	有沒有遇到比較大的問題	有沒有因為這個狀況而學到東西，改變想法或方法
-* SDL Strategies
-  * Get in the mood (actively)
-  * Talk to someone about your project (with some depth, not just superficially)
-  * Ask yourself at least one meaningful question related to your project
-  * Ask someone else at least one meaningful question related to their project
+    * 卡住後有沒有分心？還是繼續想辦法？
+    * 卡住後有沒有等待到有人主動去提醒他協助他才繼續做？
+* 如果是新手／還不成熟的話：
+  * 有沒有進入狀態？有沒有事情做？
+  * 有沒有 GM 陪半／小老師／leader 主動幫他？誰？
+    * 有沒有效？
+  * 有 team 要一起努力的部分，是不是故意逃避做貢獻？
+* 支持者/GM 評量：
+  * 跟這個人有辦法進行有深度的溝通還是目前還拒絕不太願意？
+    * 只有某幾個人有辦法還是他都好溝通？
+      * 跟誰足夠有建立關係？（還是一個人都沒有？）
+  * 這個紀錄可靠，滿完整的
+
+
+#### learner profile META
+
+* 針對每一項：
+  * 額外 comment
+  * 夠不夠完整？
+  
+
+#### 每日推薦的小活動
+
+* Talk to someone about your project (with some depth, not just superficially)
+* Ask someone else at least one meaningful question related to their project
+* Ask someone else at least one meaningful question related to their personal life
+* Before deciding to take a break, at least work for 10 minutes (keep going if you feel like it)
+* 找更多東西加到靈感庫
+* [Advanced]
   * Remind someone if they are distracted (including yourself?); ask them why
-  * At least persist for 10 minutes (keep going if you feel like it)
-  * `CustomSDLStrategies`
-* Achievement: "I feel I have achieved a lot!", "I feel I have achieved something", "I feel I have not achieved as much as I wanted", "I don't feel any feeling of achievement"
-* Getting stuck (checkboxes): "I was not stuck", "I was stuck but persisted", "I was stuck and got distracted"
-* Did you overcome something particularly difficult?
-* Guidance: "I have received enough guidance", "I want more guidance", "Guidance was Ok", "There was no guidance, but I did not need any", "I don't care"
-* Ask at least one meaningful question related to what you did today or your emotions today.
+  * Get in the mood (actively; figure out together how to "get in the mood")
+  * Ask yourself at least one meaningful question related to your project
+  * Ask yourself at least one meaningful question related to your personal life
+* `CustomSDLActivities`
+
 * ActivityList, for each Activity:
   * Related to project...
   * ActivityTemplate
@@ -64,12 +106,6 @@
       * Focused learning/work
       * Consumption vs. Creation?
     * Unproductive, recharge batteries, take break
-
-#### learner profile META
-
-* 針對每一項：
-  * 額外 comment
-  * 夠不夠完整？
 
 
 ### Feature: Learning structures
