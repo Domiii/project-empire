@@ -216,6 +216,7 @@ export const ProjectUserEditor = dataBind({
 })(
   ({ projectId }, { uidsOfProject, uidsWithoutProject }, { }) => {
     let existingUsersEl, addableUsersEl;
+    const addableUids = uidsWithoutProject(); // make sure loading starts even if others haven't loaded yet
     if (uidsOfProject.isLoaded({ projectId })) {
       const existingUids = Object.keys(uidsOfProject({ projectId }));
       if (isEmpty(existingUids)) {
@@ -233,7 +234,6 @@ export const ProjectUserEditor = dataBind({
     }
 
     if (uidsWithoutProject.isLoaded()) {
-      const addableUids = uidsWithoutProject();
       if (isEmpty(addableUids)) {
         addableUsersEl = (
           <Alert bsStyle="warning" className="no-padding">no more available users</Alert>

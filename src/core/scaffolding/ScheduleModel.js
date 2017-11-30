@@ -8,6 +8,7 @@
 const readers = {
   currentScheduleCycleId(
     { },
+    { },
     { currentSchedule }
   ) {
     if (!currentSchedule.isLoaded()) {
@@ -15,7 +16,7 @@ const readers = {
     }
 
     const now = Date.now();
-    const { startTime, cycleOffset, cycleTime } = currentSchedule();
+    const { startTime, cycleOffset, cycleTime } = currentSchedule;
     const dt = now - startTime + cycleOffset;
     return Math.floor(dt/cycleTime) + 1;
   },

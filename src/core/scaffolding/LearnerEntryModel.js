@@ -48,6 +48,17 @@ function learnerEntryNode(prefix) {
               }
             }
           },
+          learnerEntriesOfCycleByAllUsers(
+            { cycleId },
+            { learnerEntriesOfCycle, usersPublic },
+            { }
+          ) {
+            if (!learnerEntriesOfCycle.isLoaded({ cycleId }) | !usersPublic.isLoaded()) {
+              return undefined;
+            }
+
+            
+          },
           learnerEntryStatus: {
             path: '$(learnerEntryId)',
             children: {

@@ -36,7 +36,7 @@ import ProjectProgressBar from './ProjectProgressBar';
 
 export const ProjectControlView = dataBind()(
   ({ projectId, selectedStagePath }, { projectById, get_stageEntries }) => {
-    if (!projectById.isLoaded({ projectId }) ||
+    if (!projectById.isLoaded({ projectId }) |
       !get_stageEntries.isLoaded({ projectId })) {
       return (<LoadIndicator block />);
     }

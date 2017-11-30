@@ -31,7 +31,7 @@ import LearnerEntryView from './LearnerEntryView';
 
 const LearnerEntryList = dataBind({})(
   ({ uid }, { userPublic, learnerEntriesOfUser }) => {
-    if (!learnerEntriesOfUser.isLoaded({ uid }) || !userPublic.isLoaded({ uid })) {
+    if (!learnerEntriesOfUser.isLoaded({ uid }) | !userPublic.isLoaded({ uid })) {
       return <LoadIndicator />;
     }
     else {
@@ -46,6 +46,7 @@ const LearnerEntryList = dataBind({})(
         </Alert>);
       }
       else {
+
         contentEl = (<div>
           {map(learnerEntries, (entry, entryId) => (
             <LearnerEntryView learnerEntryId={entryId} />

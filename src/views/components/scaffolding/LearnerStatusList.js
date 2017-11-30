@@ -1,5 +1,6 @@
 import map from 'lodash/map';
 import isEmpty from 'lodash/isEmpty';
+import size from 'lodash/size';
 
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -18,23 +19,41 @@ import LoadIndicator from 'src/views/components/util/loading';
 
 
 const LearnerStatusList = dataBind({})(
-  ({ projectId }, { uidsOfProject }) => {
-    if (!uidsOfProject.isLoaded({ projectId })) {
+  function LearnerStatusList(
+    { },
+    { learnerEntriesOfCycleByAllUsers },
+    { currentSchedule, currentSchedule_isLoaded, currentScheduleCycleId }
+  ) {
+    if (!currentSchedule_isLoaded | 
+      !learnerEntriesOfCycleByAllUsers.isLoaded({ cycleId: currentScheduleCycleId })) {
       return <LoadIndicator />;
     }
     else {
-      const uids = Object.keys(uidsOfProject({ projectId }));
+      const learnerEntries = learnerEntriesOfCycleByAllUsers({ cycleId: currentScheduleCycleId });
+      const nEntries = size(learnerEntries);
 
-      if (isEmpty(uids)) {
-        return (<Alert bsStyle="warning" style={{ display: 'inline' }} className="no-padding">
-          <span>this project has no team yet</span>
+      let contentEl;
+      if (!nEntries) {
+        contentEl = (<Alert bsStyle="warning" style={{ display: 'inline' }} className="no-padding">
+          <span>user has no entries yet</span>
         </Alert>);
       }
       else {
-        return (<div>
-          <span>Team ({size(uids)}):</span> <UserList uids={uids} />
+        contentEl = (<div>
+          {map(learnerEntries, (entry, entryId) => (
+            <LearnerStatusView learnerEntryId={entryId} />
+          ))}
         </div>);
       }
+
+      const header = (<span>
+        <UserIcon user={user} size="small" /> &nbsp;
+        {user.displayName} &nbsp;
+        ({nEntries})
+      </span>);
+      return (<Panel header={header}>
+        {contentEl}
+      </Panel>);
     }
   }
 );

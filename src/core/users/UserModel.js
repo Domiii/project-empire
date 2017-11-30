@@ -77,7 +77,7 @@ export default {
           uid
         } = currentUserAuthData;
 
-        if (!userPublic.isLoaded({ uid }) || !userPrivate.isLoaded({ uid })) {
+        if (!userPublic.isLoaded({ uid }) | !userPrivate.isLoaded({ uid })) {
           // not loaded yet
           return;
         }

@@ -93,7 +93,7 @@ export default {
   uidsWithoutProject({ }, { },
     { userProjectIdIndex, userProjectIdIndex_isLoaded, usersPublic, usersPublic_isLoaded }) {
     // TODO: make this more efficient (achieve O(k), where k = users without project)
-    if (!usersPublic_isLoaded || !userProjectIdIndex_isLoaded) {
+    if (!usersPublic_isLoaded | !userProjectIdIndex_isLoaded) {
       return undefined;
     }
 
