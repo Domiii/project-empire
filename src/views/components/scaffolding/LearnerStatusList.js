@@ -17,20 +17,23 @@ import Flexbox from 'flexbox-react';
 import UserList from 'src/views/components/users/UserList';
 import LoadIndicator from 'src/views/components/util/loading';
 
+import LearnerStatusEntryView from './LearnerStatusEntryView';
+
 
 const LearnerStatusList = dataBind({})(
   function LearnerStatusList(
-    { },
-    { learnerEntriesOfCycleByAllUsers },
-    { currentSchedule, currentSchedule_isLoaded, currentScheduleCycleId }
+    { scheduleId, cycleId },
+    { learnerEntriesOfCycleByAllUsers, get_learnerSchedule },
+    { }
   ) {
-    if (!currentSchedule_isLoaded | 
-      !learnerEntriesOfCycleByAllUsers.isLoaded({ cycleId: currentScheduleCycleId })) {
+    if (!get_learnerSchedule.isLoaded({ scheduleId }) |
+      !learnerEntriesOfCycleByAllUsers.isLoaded({ cycleId })) {
       return <LoadIndicator />;
     }
     else {
-      const learnerEntries = learnerEntriesOfCycleByAllUsers({ cycleId: currentScheduleCycleId });
-      const nEntries = size(learnerEntries);
+      const schedule = get_learnerSchedule({ scheduleId });
+      const learnerEntriesByUid = learnerEntriesOfCycleByAllUsers({ cycleId });
+      const nEntries = size(learnerEntriesByUid);
 
       let contentEl;
       if (!nEntries) {
@@ -40,12 +43,13 @@ const LearnerStatusList = dataBind({})(
       }
       else {
         contentEl = (<div>
-          {map(learnerEntries, (entry, entryId) => (
-            <LearnerStatusView learnerEntryId={entryId} />
+          {map(learnerEntriesByUid, (entry, uid) => (
+            <LearnerStatusEntryView uid={uid} />
           ))}
         </div>);
       }
 
+      // TODO: schedule + cycle info
       const header = (<span>
         <UserIcon user={user} size="small" /> &nbsp;
         {user.displayName} &nbsp;

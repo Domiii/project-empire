@@ -6,7 +6,7 @@
  */
 
 const readers = {
-  currentScheduleCycleId(
+  currentLearnerScheduleCycleId(
     { },
     { },
     { currentSchedule }
@@ -18,7 +18,7 @@ const readers = {
     const now = Date.now();
     const { startTime, cycleOffset, cycleTime } = currentSchedule;
     const dt = now - startTime + cycleOffset;
-    return Math.floor(dt/cycleTime) + 1;
+    return Math.floor(dt / cycleTime) + 1;
   },
 };
 
@@ -26,24 +26,26 @@ const writers = {
   // set_currentSchedule({}, { startTime, cycleOffset, cycleTime });
 };
 
-const ScheduleModel = {
-  path: 'scheduleSettings',
+const LearnerScheduleModel = {
+  path: 'learnerSchedules',
   readers,
   writers,
   children: {
-    currentSchedule: {
-      path: 'current',
+    currentLearnerScheduleId: 'currentScheduleId',
+    learnerScheduleList: {
+      path: 'list',
       children: {
-        scheduleStartTime: 'startTime', // in ticks
-        scheduleCycleTime: 'cycleTime', // in ticks
-        scheduleCycleOffset: 'cycleOffset' // in ticks
+        learnerSchedule: {
+          path: '$(scheduleId)',
+          children: {
+            scheduleStartTime: 'startTime', // in ticks
+            scheduleCycleTime: 'cycleTime', // in ticks
+            scheduleCycleOffset: 'cycleOffset' // in ticks
+          }
+        }
       }
-    },
-    scheduleArchive: {
-      path: 'archive'
-      // TODO
-    },
+    }
   }
 };
 
-export default ScheduleModel;
+export default LearnerScheduleModel;

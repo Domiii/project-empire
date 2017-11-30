@@ -20,8 +20,13 @@ export default class LearnerStatusPage extends Component {
     super(...args);
   }
 
-  render({ }, { }, { isCurrentUserAdmin, currentUser_isLoaded }) {
-    if (!currentUser_isLoaded) {
+  render(
+    { }, 
+    { }, 
+    { isCurrentUserAdmin, currentUser_isLoaded, 
+      currentLearnerScheduleId, currentLearnerScheduleId_isLoaded, currentLearnerScheduleCycleId }
+  ) {
+    if (!currentUser_isLoaded | !currentLearnerScheduleId_isLoaded) {
       return (<LoadOverlay />);
     }
     if (!isCurrentUserAdmin) {
@@ -31,7 +36,9 @@ export default class LearnerStatusPage extends Component {
     return (
       <div>
         <Panel bsStyle="primary" header="Learners">
-          <LearnerStatusList />
+          <LearnerStatusList
+            scheduleId={currentLearnerScheduleId} 
+            cycleId={currentLearnerScheduleCycleId} />
         </Panel>
       </div>
     );

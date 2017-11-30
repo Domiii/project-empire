@@ -3,7 +3,7 @@ import firebase from 'firebase';
 import ProjectModel from 'src/core/projects/projectModel';
 import UserModel from 'src/core/users/UserModel';
 import MissionModel from 'src/core/missions/MissionModel';
-import ScheduleModel from 'src/core/missions/ScheduleModel';
+import LearnerScheduleModel from 'src/core/scaffolding/LearnerScheduleModel';
 
 import dataProviders from './dataProviders.js';
 
@@ -51,7 +51,7 @@ const dataStructureConfig = {
       UserModel,
       MissionModel,
       ProjectModel,
-      ScheduleModel,
+      LearnerScheduleModel,
       {
         missions: {
           path: 'missions',
