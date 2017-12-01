@@ -195,7 +195,8 @@
   * Promiser can change status: InProgress -> Done, GiveUp
   * receiver of promise gets to evaluate fulfillment of promise
     * Fulfilled, Cancelled, Failed
-* ReflectionChecklist (Question) (as Feedback or for "analyze self")
+* Sharing, Inspiration, Curiosity + Exploration
+* Improving Productivity
   
 
 #### Feature: Learning Structures - Concepts

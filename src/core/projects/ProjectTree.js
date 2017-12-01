@@ -346,7 +346,7 @@ export class StageDefTree {
       return this.getNode(stageId);
     }
     catch (err) {
-      throw new Error(`could not getNodeByPath for "${stagePath}"`);
+      throw new Error(`could not getNodeByPath for "${stagePath}": ${err.stack}`);
     }
   }
   

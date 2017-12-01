@@ -5,11 +5,13 @@ import { routeNames, routeTemplates } from './routes';
 
 import dataBind from 'src/dbdi/react/dataBind';
 
+import GMPage from './pages/GMPage';
+import LearnerStatusPage from './pages/LearnerStatusPage';
+
 import SignInPage from './pages/SignInPage';
 import UserProfilePage from './pages/UserProfilePage';
 import LandingPage from './pages/LandingPage';
 import MissionControlPage from './pages/MissionControlPage';
-import GMPage from './pages/GMPage';
 import ProjectPage from './pages/ProjectPage';
 import TestPage from './pages/TestPage';
 
@@ -35,9 +37,11 @@ const AppRoutes = dataBind()(function AppRoutes(
   else {
     return (
       <Switch>
+        <Route exact path={routeTemplates.GM} component={GMPage} />
+        <Route path={routeTemplates.LEARNER_STATUS} component={LearnerStatusPage} />
+
         <Route exact path={routeTemplates.USER_PROFILE + '*'} component={UserProfilePage} />
         <Route path={routeTemplates.MISSION_CONTROL} component={MissionControlPage} />
-        <Route exact path={routeTemplates.GM} component={GMPage} />
         <Route exact path={routeTemplates.PROJECTS} component={ProjectPage} />
         <Route exact path={routeTemplates.TEST} component={TestPage} />
         <Route exact path={routeTemplates.ROOT} component={LandingPage} />

@@ -8,9 +8,9 @@ import {
 
 import { LoadOverlay } from 'src/views/components/overlays';
 
-import LearnerStatusList from 'src/views/components/projects/LearnerStatusList';
+import LearnerStatusList from 'src/views/components/scaffolding/LearnerStatusList';
 
-
+@dataBind()
 export default class LearnerStatusPage extends Component {
   static propTypes = {
     
@@ -21,7 +21,7 @@ export default class LearnerStatusPage extends Component {
   }
 
   render(
-    { }, 
+    { match }, 
     { }, 
     { isCurrentUserAdmin, currentUser_isLoaded, 
       currentLearnerScheduleId, currentLearnerScheduleId_isLoaded, currentLearnerScheduleCycleId }
@@ -32,6 +32,8 @@ export default class LearnerStatusPage extends Component {
     if (!isCurrentUserAdmin) {
       return (<Alert bsStyle="warning">GMs only :/</Alert>);
     }
+
+    const { uid, scheduleId, cycleId } = match.params;
     
     return (
       <div>

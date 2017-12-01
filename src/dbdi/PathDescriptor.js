@@ -9,6 +9,10 @@ import {
   createPathGetterFromTemplateProps
 } from 'src/firebaseUtil/dataUtil';
 
+import { 
+  makeIndices
+} from 'src/firebaseUtil/indices';
+
 import DataDescriptorNode from './DataDescriptorNode';
 
 export default class PathDescriptor extends DataDescriptorNode {
@@ -48,9 +52,12 @@ export default class PathDescriptor extends DataDescriptorNode {
 
   _buildPathGetter(pathConfig) {
     let getPath;
-    const { pathTemplate, queryParams, pathFn } = pathConfig;
+    const { pathTemplate, queryParams, pathFn, indices } = pathConfig;
+
+    this.indices = makeIndices(indices || {});
+
     if (!pathFn) {
-      getPath = this._buildGetPathFromTemplateString(pathTemplate, queryParams);
+      getPath = this._buildGetPathFromTemplateString(pathTemplate, queryParams, this.indices);
     }
     else {
       getPath = pathFn;
@@ -78,9 +85,10 @@ export default class PathDescriptor extends DataDescriptorNode {
     };
   }
 
-  _buildGetPathFromTemplateString(pathTemplate, _queryParams) {
-    // TODO: handle queryParams properly!
-    const getPathRaw = createPathGetterFromTemplateProps(pathTemplate);
+  _buildGetPathFromTemplateString(pathTemplate, _queryParams, indices) {
+    const variableTransform = indices.encodeQueryValue.bind(indices);
+    const getPathRaw = createPathGetterFromTemplateProps(pathTemplate, variableTransform);
+    
     //const argNames = getPathRaw.pathInfo && getPathRaw.pathInfo.varNames;
     if (!_queryParams) {
       return (args, readerProxy, injectProxy, callerNode, accessTracker) => {

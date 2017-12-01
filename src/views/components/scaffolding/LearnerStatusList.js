@@ -1,6 +1,9 @@
 import map from 'lodash/map';
 import isEmpty from 'lodash/isEmpty';
 import size from 'lodash/size';
+import sortBy from 'lodash/sortBy';
+
+import moment from 'moment';
 
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -20,46 +23,66 @@ import LoadIndicator from 'src/views/components/util/loading';
 import LearnerStatusEntryView from './LearnerStatusEntryView';
 
 
-const LearnerStatusList = dataBind({})(
+const LearnerStatusList = dataBind({
+  // eat up the button event
+  createDefaultScheduleClick(evt, { }, { createDefaultLearnerSchedule }) {
+    return createDefaultLearnerSchedule();
+  }
+})(
   function LearnerStatusList(
     { scheduleId, cycleId },
-    { learnerEntriesOfCycleByAllUsers, get_learnerSchedule },
+    { learnerEntryIdsOfCycleByAllUsers, get_learnerSchedule, createDefaultScheduleClick },
     { }
   ) {
     if (!get_learnerSchedule.isLoaded({ scheduleId }) |
-      !learnerEntriesOfCycleByAllUsers.isLoaded({ cycleId })) {
+      !learnerEntryIdsOfCycleByAllUsers.isLoaded({ cycleId })) {
       return <LoadIndicator />;
     }
     else {
       const schedule = get_learnerSchedule({ scheduleId });
-      const learnerEntriesByUid = learnerEntriesOfCycleByAllUsers({ cycleId });
-      const nEntries = size(learnerEntriesByUid);
+      let currentCycleLearnerEntries = learnerEntryIdsOfCycleByAllUsers({ cycleId });
+      const nUsers = size(currentCycleLearnerEntries);
+
+      // sort by whether there already is an entryId
+      currentCycleLearnerEntries = map(currentCycleLearnerEntries, (entryId, uid) => ({ entryId, uid }));
+      currentCycleLearnerEntries = sortBy(currentCycleLearnerEntries, ({ entryId, uid }) => !entryId);
 
       let contentEl;
-      if (!nEntries) {
+      if (!schedule) {
+        return (<Alert bsStyle="danger">
+          no schedule :(((
+          <Button onClick={createDefaultScheduleClick}>
+            Create!
+          </Button>
+        </Alert>);
+      }
+      else if (!nUsers) {
         contentEl = (<Alert bsStyle="warning" style={{ display: 'inline' }} className="no-padding">
           <span>user has no entries yet</span>
         </Alert>);
       }
       else {
         contentEl = (<div>
-          {map(learnerEntriesByUid, (entry, uid) => (
-            <LearnerStatusEntryView uid={uid} />
+          {map(currentCycleLearnerEntries, ({entryId, uid}) => (
+            <LearnerStatusEntryView key={uid} learnerEntryId={entryId}
+              uid={uid} scheduleId={scheduleId} cycleId={cycleId} />
           ))}
         </div>);
       }
 
       // TODO: schedule + cycle info
-      const header = (<span>
-        <UserIcon user={user} size="small" /> &nbsp;
-        {user.displayName} &nbsp;
-        ({nEntries})
-      </span>);
-      return (<Panel header={header}>
+      return (<div>
+        <h4><span>
+          schedule started: <Moment fromNow>{schedule && schedule.startTime}</Moment>;
+          cycleStart: <Moment format="llll">{schedule.startTime - schedule.cycleOffset}</Moment>;
+          cycleTime: {moment.duration(schedule.cycleTime).humanize()};
+          cycleId: {cycleId};
+          ({nUsers} users)
+        </span></h4>
         {contentEl}
-      </Panel>);
+      </div>);
     }
   }
-);
+  );
 
 export default LearnerStatusList;

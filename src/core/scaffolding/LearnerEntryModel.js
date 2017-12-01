@@ -1,19 +1,66 @@
+import map from 'lodash/map';
+import mapValues from 'lodash/mapValues';
+import groupBy from 'lodash/groupBy';
+
 import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 
 const readers = {
-  a(
-    { },
-    { },
-    { }
+  learnerEntryIdsOfCycleByAllUsers(
+    { cycleId },
+    { learnerEntriesOfCycle },
+    { usersPublic, usersPublic_isLoaded }
   ) {
+    if (!learnerEntriesOfCycle.isLoaded({ cycleId }) | !usersPublic_isLoaded) {
+      return undefined;
+    }
+
+    const entries = learnerEntriesOfCycle({ cycleId });
+
+    const byUid = mapValues(groupBy(entries, 'uid'), arr => arr[0]);
+    return mapValues(usersPublic, (_, uid) => byUid[uid] || null);
   }
 };
 
-function learnerEntryNode(prefix) {
-  const node = {
+const writers = {
+  createLearnerEntry(
+    { uid, scheduleId, cycleId },
+    { },
+    { },
+    { set_learnerEntryStatus }
+  ) {
+    const learnerEntryId = {
+      uid,
+      scheduleId,
+      cycleId
+    };
+
+    const val = {
+      uid,
+      scheduleId,
+      cycleId,
+      nFinishedEntries: 0,
+      nTotalEntries: 100 // TODO!
+    };
+
+    return set_learnerEntryStatus({ learnerEntryId }, val);
+  }
+};
+
+const learnerEntryIdPath = {
+  path: '$(learnerEntryId)',
+  indices: {
+    learnerEntryId: ['uid', 'scheduleId', 'cycleId']
+  }
+};
+
+export default {
+  allLearnerEntryData: {
+    path: 'learnerEntries',
+    readers,
+    writers,
     children: {
-      learnerEntryStatusList: {
-        path: 'status',
+      learnerEntryList: {
+        path: 'list',
         children: {
           learnerEntriesOfUser: {
             path: {
@@ -48,21 +95,11 @@ function learnerEntryNode(prefix) {
               }
             }
           },
-          learnerEntriesOfCycleByAllUsers(
-            { cycleId },
-            { learnerEntriesOfCycle, usersPublic },
-            { }
-          ) {
-            if (!learnerEntriesOfCycle.isLoaded({ cycleId }) | !usersPublic.isLoaded()) {
-              return undefined;
-            }
-
-            
-          },
           learnerEntryStatus: {
-            path: '$(learnerEntryId)',
+            path: learnerEntryIdPath,
             children: {
               uid: 'uid',
+              scheduleId: 'scheduleId',
               cycleId: 'cycleId',
               nFinishedEntries: 'nFinishedEntries',
               nTotalEntries: 'nTotalEntries',
@@ -73,48 +110,29 @@ function learnerEntryNode(prefix) {
               'updatedAt',
               'createdAt',
 
-              function setCycleId(queryArgs, val, { currentScheduleCycleId }) {
-                if (val && !val.cycleId) {
-                  const cycleId = currentScheduleCycleId();
-                  console.assert(cycleId,
-                    'tried to save learnerEntryStatus when currentScheduleCycleId was not loaded yet or returned invalid value');
-                  val.cycleId = cycleId;
-                }
-              }
+              // function setCycleId(queryArgs, val, { currentScheduleCycleId }) {
+              //   if (val && !val.cycleId) {
+              //     const cycleId = currentScheduleCycleId();
+              //     console.assert(cycleId,
+              //       'tried to save learnerEntryStatus when currentScheduleCycleId was not loaded yet or returned invalid value');
+              //     val.cycleId = cycleId;
+              //   }
+              // }
             ]
           },
         },
       },
-      learnerEntryRecord: {
-        path: 'data/$(learnerEntryId)',
+      learnerEntryDataList: {
+        path: 'data',
         children: {
-        }
-      }
-    }
-  };
-
-  // TODO: add prefix to all nodes of subtree
-
-  return node;
-}
-
-export default {
-  allLearnerEntryData: {
-    path: 'learnerEntries',
-    children: {
-      currentLearnerEntries: learnerEntryNode(),
-      archive: {
-        path: 'archive',
-        children: {
-          archivedEntries: {
-            path: '$(archiveId)',
+          learnerEntryData: {
+            path: learnerEntryIdPath,
             children: {
-              //learnerEntryStatusList
+              // TODO
             }
           }
         }
       }
-    },
-    readers
+    }
   }
 };

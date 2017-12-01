@@ -153,6 +153,11 @@ export default class Header extends Component {
                 <NavItem eventKey={3}>All Projects</NavItem>
               </LinkContainer>
               {isCurrentUserAdmin &&
+                <LinkContainer to="/learnerstatus">
+                  <NavItem eventKey={4}>Learner Status</NavItem>
+                </LinkContainer>
+              }
+              {isCurrentUserAdmin &&
                 <LinkContainer to="/gm">
                   <NavItem eventKey={4}>GM Tools</NavItem>
                 </LinkContainer>

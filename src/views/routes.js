@@ -31,7 +31,7 @@ export const routeTemplates = {
   MISSION_CONTROL: `${routePaths.MISSION_CONTROL}/:projectId?/:stagePath?`,
   GM: `${routePaths.GM}`,
   PROJECTS: `${routePaths.PROJECTS}`,
-  LEARNER_STATUS: `${routeNames.LEARNER_STATUS}/:uid`,
+  LEARNER_STATUS: `${routePaths.LEARNER_STATUS}/:uid?/:scheduleId?/:cycleId?`,
   GROUPS: `${routePaths.GROUPS}`,
 
   TEST: `${routePaths.TEST}`

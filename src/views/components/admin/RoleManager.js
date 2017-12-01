@@ -22,6 +22,7 @@ import {
 
 import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import { FAIcon } from 'src/views/components/util';
+import LoadIndicator from 'src/views/components/util/loading';
 
 import UserList from 'src/views/components/users/UserList';
 import UserIcon from 'src/views/components/users/UserIcon';
@@ -142,7 +143,14 @@ export default class RoleManager extends Component {
     autoBind(this);
   }
 
-  render({ }, { userLists }, { isCurrentUserAdmin }) {
+  render(
+    { },
+    { userLists },
+    { isCurrentUserAdmin, usersPublic_isLoaded }
+  ) {
+    if (!usersPublic_isLoaded) {
+      return <LoadIndicator />;
+    }
     if (!isCurrentUserAdmin) {
       return (
         <Alert bsStyle="warning">GM only</Alert>
@@ -152,9 +160,9 @@ export default class RoleManager extends Component {
     return (<div>{
       map(userLists(), (userList) => {
         const {
-            name,
+          name,
           list
-          } = userList;
+        } = userList;
 
         return (<Panel key={name} header={name}>
           <UserList uids={Object.keys(list)} renderUser={RenderUser} />

@@ -4,6 +4,7 @@ import ProjectModel from 'src/core/projects/projectModel';
 import UserModel from 'src/core/users/UserModel';
 import MissionModel from 'src/core/missions/MissionModel';
 import LearnerScheduleModel from 'src/core/scaffolding/LearnerScheduleModel';
+import LearnerEntryModel from 'src/core/scaffolding/LearnerEntryModel';
 
 import dataProviders from './dataProviders.js';
 
@@ -52,6 +53,7 @@ const dataStructureConfig = {
       MissionModel,
       ProjectModel,
       LearnerScheduleModel,
+      LearnerEntryModel,
       {
         missions: {
           path: 'missions',

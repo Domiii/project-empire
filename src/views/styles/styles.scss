@@ -308,6 +308,18 @@ button:active { outline:none !important; }
 
 /**
  * #######################################################
+ * Learner status
+ * #######################################################
+ */
+
+.learner-status-entry {
+  border: 1px solid black;
+  border-radius: 6px;
+}
+
+
+/**
+ * #######################################################
  * App-specific classes: Util
  * #######################################################
  */
@@ -360,7 +372,7 @@ button:active { outline:none !important; }
 
 /**
  * #######################################################
- * Useful classes for content embedding
+ * Utility classes for content embedding
  * #######################################################
  */
 

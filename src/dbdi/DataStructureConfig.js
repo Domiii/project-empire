@@ -127,6 +127,7 @@ export class DataStructureConfigNode {
 
     let pathTemplate;
     let queryParams = null;
+    let indices = null;
     let pathFn;
 
     if (isString(pathConfig)) {
@@ -135,6 +136,7 @@ export class DataStructureConfigNode {
     else if (isPlainObject(pathConfig)) {
       pathTemplate = pathConfig.path || pathConfig.pathTemplate;
       queryParams = pathConfig.queryParams;
+      indices = pathConfig.indices;
     }
 
     if (!isString(pathTemplate)) {
@@ -152,6 +154,7 @@ export class DataStructureConfigNode {
     this.pathConfig = {
       pathTemplate,
       queryParams,
+      indices,
       pathFn
     };
   }
