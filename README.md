@@ -11,6 +11,15 @@
   * https://docs.google.com/presentation/d/1PEDof6WXYTD4ejQWoBBlglemhnPD9OAx_4yTjyRLcBw/edit#slide=id.g1ff0478143_0_7
 
 
+## 系統目標：輔助彈性學習環境的架構
+
+* 搞清楚自己的目標、把雙手弄髒、從自己的 action 明顯感受到成就感、平時反省
+* 陪養做 Project 的好習慣
+* 進行一個好的與 Mentor Meeting、檢討方式
+* Promise (學習能力差 = 答應的事情容易會忘記，我們要想辦法紀錄)
+* Inspiration, Sharing, Exploration, Curiosity
+* Feedback (了解說人家給我們的 feedback，我們怎麼要轉換成 action？)
+
 
 ## TODO
 
