@@ -15,6 +15,10 @@ import {
 
 import DataDescriptorNode from './DataDescriptorNode';
 
+const defaultIndexSettings = {
+  forceSimpleEncoding: true
+};
+
 export default class PathDescriptor extends DataDescriptorNode {
   getPath;
 
@@ -53,8 +57,8 @@ export default class PathDescriptor extends DataDescriptorNode {
   _buildPathGetter(pathConfig) {
     let getPath;
     const { pathTemplate, queryParams, pathFn, indices } = pathConfig;
-
-    this.indices = makeIndices(indices || {});
+    
+    this.indices = indices && makeIndices(indices, defaultIndexSettings);
 
     if (!pathFn) {
       getPath = this._buildGetPathFromTemplateString(pathTemplate, queryParams, this.indices);
@@ -86,7 +90,7 @@ export default class PathDescriptor extends DataDescriptorNode {
   }
 
   _buildGetPathFromTemplateString(pathTemplate, _queryParams, indices) {
-    const variableTransform = indices.encodeQueryValue.bind(indices);
+    const variableTransform = indices && indices.encodeQueryValue.bind(indices);
     const getPathRaw = createPathGetterFromTemplateProps(pathTemplate, variableTransform);
     
     //const argNames = getPathRaw.pathInfo && getPathRaw.pathInfo.varNames;

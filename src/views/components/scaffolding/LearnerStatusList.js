@@ -17,7 +17,6 @@ import {
 } from 'react-bootstrap';
 import Flexbox from 'flexbox-react';
 
-import UserList from 'src/views/components/users/UserList';
 import LoadIndicator from 'src/views/components/util/loading';
 
 import LearnerStatusEntryView from './LearnerStatusEntryView';
@@ -41,10 +40,10 @@ const LearnerStatusList = dataBind({
     else {
       const schedule = get_learnerSchedule({ scheduleId });
       let currentCycleLearnerEntries = learnerEntryIdsOfCycleByAllUsers({ cycleId });
+      currentCycleLearnerEntries = map(currentCycleLearnerEntries, (entryId, uid) => ({ entryId, uid }));
       const nUsers = size(currentCycleLearnerEntries);
 
       // sort by whether there already is an entryId
-      currentCycleLearnerEntries = map(currentCycleLearnerEntries, (entryId, uid) => ({ entryId, uid }));
       currentCycleLearnerEntries = sortBy(currentCycleLearnerEntries, ({ entryId, uid }) => !entryId);
 
       let contentEl;

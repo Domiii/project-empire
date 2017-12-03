@@ -25,6 +25,10 @@ export default function UserIcon({user, size, ...moreProps}) {
     if (UserIconSizes[size]) {
       style.maxWidth = UserIconSizes[size];
       style.maxHeight = UserIconSizes[size];
+
+      // make sure, it always renders the same size?
+      // style.minWidth = UserIconSizes[size];
+      // style.minHeight = UserIconSizes[size];
     }
     else {
       if (isNumber(size)) {

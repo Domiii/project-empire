@@ -1,5 +1,5 @@
 export const routeNames = {
-  ROOT: '/',
+  ROOT: '',
   SIGN_IN: 'sign-in',
   USER_PROFILE: 'user',
   MISSION_CONTROL: 'mymissions',
@@ -31,7 +31,9 @@ export const routeTemplates = {
   MISSION_CONTROL: `${routePaths.MISSION_CONTROL}/:projectId?/:stagePath?`,
   GM: `${routePaths.GM}`,
   PROJECTS: `${routePaths.PROJECTS}`,
-  LEARNER_STATUS: `${routePaths.LEARNER_STATUS}/:uid?/:scheduleId?/:cycleId?`,
+  LEARNER_STATUS_LIST: `${routePaths.LEARNER_STATUS}`,
+  LEARNER_STATUS_USER: `${routePaths.LEARNER_STATUS}/:uid`,
+  LEARNER_STATUS_ENTRY: `${routePaths.LEARNER_STATUS}/:mode/:uid/:scheduleId/:cycleId`,
   GROUPS: `${routePaths.GROUPS}`,
 
   TEST: `${routePaths.TEST}`

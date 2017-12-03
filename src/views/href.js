@@ -14,16 +14,12 @@ export function hrefProjectControl(projectId, stagePath) {
   return url.join('/');
 }
 
-export function hrefLearnerStatus(uid) {
-  const url = [];
+export function hrefLearnerStatusEntry(mode, uid, scheduleId, cycleId) {
+  mode = mode || 'view';
 
-  url.push(routePaths.MISSION_CONTROL);
-  if (projectId) {
-    url.push(`${projectId}`);
-    if (stagePath) {
-      url.push(`${stagePath}`);
-    }
-  }
+  return `${routePaths.LEARNER_STATUS}/${mode}/${uid}/${scheduleId}/${cycleId}`;
+}
 
-  return url.join('/');
+export function hrefLearnerStatusList() {
+  return `${routePaths.LEARNER_STATUS}`;
 }

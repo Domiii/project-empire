@@ -2,18 +2,17 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import dataBind from 'src/dbdi/react/dataBind';
 
-import { 
+import {
   Alert, Button, Jumbotron, Well, Panel
 } from 'react-bootstrap';
 
 import { LoadOverlay } from 'src/views/components/overlays';
 
-import LearnerStatusList from 'src/views/components/scaffolding/LearnerStatusList';
+import LearnerStatusEntryForm from 'src/views/components/scaffolding/LearnerStatusEntryForm';
 
 @dataBind()
-export default class LearnerStatusPage extends Component {
+export default class LearnerStatusListPage extends Component {
   static propTypes = {
-    
   };
 
   constructor(...args) {
@@ -21,26 +20,24 @@ export default class LearnerStatusPage extends Component {
   }
 
   render(
-    { match }, 
-    { }, 
-    { isCurrentUserAdmin, currentUser_isLoaded, 
-      currentLearnerScheduleId, currentLearnerScheduleId_isLoaded, currentLearnerScheduleCycleId }
+    { match },
+    { },
+    { isCurrentUserAdmin, currentUser_isLoaded }
   ) {
-    if (!currentUser_isLoaded | !currentLearnerScheduleId_isLoaded) {
+    if (!currentUser_isLoaded) {
       return (<LoadOverlay />);
     }
     if (!isCurrentUserAdmin) {
       return (<Alert bsStyle="warning">GMs only :/</Alert>);
     }
 
-    const { uid, scheduleId, cycleId } = match.params;
-    
+    const { mode, uid, scheduleId, cycleId } = match.params;
+
+    const formProps = { mode, uid, scheduleId, cycleId };
     return (
       <div>
         <Panel bsStyle="primary" header="Learners">
-          <LearnerStatusList
-            scheduleId={currentLearnerScheduleId} 
-            cycleId={currentLearnerScheduleCycleId} />
+          <LearnerStatusEntryForm {...formProps} />
         </Panel>
       </div>
     );

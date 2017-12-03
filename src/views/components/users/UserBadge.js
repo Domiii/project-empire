@@ -30,9 +30,10 @@ export default class UserBadge extends Component {
 
     const clazzes = (otherProps && otherProps.className || '')
       + ' user-tag';
+    const size = otherProps.size || 'tiny';
 
     return (<Badge style={otherProps.style} className={clazzes}>
-      <UserIcon user={user} size="tiny" /> &nbsp;
+      <UserIcon user={user} size={size} /> &nbsp;
       {user.displayName}
     </Badge>);
   }

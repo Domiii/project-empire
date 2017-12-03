@@ -1,12 +1,15 @@
 import React from 'react';
 import { Route, Switch, Redirect } from 'react-router-dom';
 
-import { routeNames, routeTemplates } from './routes';
+import { routeTemplates } from './routes';
 
 import dataBind from 'src/dbdi/react/dataBind';
 
 import GMPage from './pages/GMPage';
-import LearnerStatusPage from './pages/LearnerStatusPage';
+
+import LearnerStatusListPage from './pages/LearnerStatusListPage';
+import LearnerStatusEntryPage from './pages/LearnerStatusEntryPage';
+import LearnerOverviewPage from './pages/LearnerOverviewPage';
 
 import SignInPage from './pages/SignInPage';
 import UserProfilePage from './pages/UserProfilePage';
@@ -38,7 +41,10 @@ const AppRoutes = dataBind()(function AppRoutes(
     return (
       <Switch>
         <Route exact path={routeTemplates.GM} component={GMPage} />
-        <Route path={routeTemplates.LEARNER_STATUS} component={LearnerStatusPage} />
+
+        <Route exact path={routeTemplates.LEARNER_STATUS_LIST} component={LearnerStatusListPage} />
+        <Route exact path={routeTemplates.LEARNER_STATUS_USER} component={LearnerOverviewPage} />
+        <Route exact path={routeTemplates.LEARNER_STATUS_ENTRY} component={LearnerStatusEntryPage} />
 
         <Route exact path={routeTemplates.USER_PROFILE + '*'} component={UserProfilePage} />
         <Route path={routeTemplates.MISSION_CONTROL} component={MissionControlPage} />
