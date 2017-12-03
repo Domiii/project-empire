@@ -1,17 +1,27 @@
-import React, { PropTypes } from 'react';
-import { Provider } from 'react-redux';
-import { Router } from 'react-router';
-import { getRoutes } from './routeDefines';
+import React from 'react';
+import { BrowserRouter } from 'react-router-dom';
 
-export default function Root({history, store}) {
+import App from './app';
+import AppRoutes from './AppRoutes';
+import DataSourceProvider from 'src/dbdi/react/DataSourceProvider';
+import dataSourceTree from 'src/core/dataSourceTree';
+
+
+export default function Root({ }) {
+
   return (
-    <Provider store={store}>
-      <Router history={history} routes={getRoutes(store.getState)} />
-    </Provider>
+    // ##########################################################################
+    // Wrap everything in DataSourceProvider, and go!
+    // ##########################################################################  
+    <DataSourceProvider dataSourceTree={dataSourceTree}>
+      <BrowserRouter>
+        <App>
+          <AppRoutes />
+        </App>
+      </BrowserRouter>
+    </DataSourceProvider>
   );
 }
 
 Root.propTypes = {
-  history: PropTypes.object.isRequired,
-  store: PropTypes.object.isRequired
 };

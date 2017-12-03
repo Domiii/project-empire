@@ -1,7 +1,13 @@
-import React, { PropTypes, PureComponent } from 'react';
-import { connect } from 'redux';
+import Roles, { hasDisplayRole } from 'src/core/users/Roles';
+
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
-import { Link } from 'react-router';
+
+import dataBind from 'src/dbdi/react/dataBind';
+
+import { Link } from 'react-router-dom';
+
 
 import {
   Navbar, Nav, NavItem, NavDropdown, MenuItem, Button, ButtonGroup, Alert
@@ -10,14 +16,16 @@ import {
   LinkContainer
 } from 'react-router-bootstrap';
 
+import Loading from 'src/views/components/util/loading';
 import { FAIcon } from 'src/views/components/util';
 
-import Roles from 'src/core/users/Roles';
 
-export default class Header extends PureComponent {
+@dataBind({
+
+})
+export default class Header extends Component {
   static contextTypes = {
-    router: PropTypes.object.isRequired,
-    currentUserRef: PropTypes.object
+    router: PropTypes.object.isRequired
   };
 
   static propTypes = {
@@ -27,13 +35,13 @@ export default class Header extends PureComponent {
   constructor(...args) {
     super(...args);
 
+    this.dataBindMethods(
+      this.switchToEn,
+      this.switchToZh,
+      this.toggleAdminView
+    );
+
     autoBind(this);
-  }
-
-
-  gotoProfile() {
-    const { router } = this.context;
-    router.replace('/user');
   }
 
   gotoSubmissions(evt) {
@@ -46,122 +54,127 @@ export default class Header extends PureComponent {
 
   openInNewTab(evt, url) {
     evt.preventDefault();
-    window.open(url,'_blank');
+    /* global window */
+    window.open(url, '_blank');
   }
 
-  switchToEn() {
-    const { currentUserRef } = this.context;
-    currentUserRef.set_locale('en');
+  switchToEn(evt, { }, { set_userLocale }) {
+    set_userLocale('en');
   }
 
-  switchToZh() {
-    const { currentUserRef } = this.context;
-    currentUserRef.set_locale('zh');
+  switchToZh(evt, { }, { set_userLocale }) {
+    set_userLocale('zh');
   }
 
-  toggleAdminView() {
-    const { currentUserRef } = this.context;
-    currentUserRef.setAdminDisplayMode(!currentUserRef.isAdminDisplayMode());
+  toggleAdminView(evt, { }, { setAdminDisplayMode }, { isCurrentUserAdmin, currentUid }) {
+    setAdminDisplayMode({ enabled: !isCurrentUserAdmin, uid: currentUid });
   }
 
-  render() {
-    //console.log('header');
-    const { router, currentUserRef } = this.context;
-    const { signOut } = this.props;
-
-    const isAdminView = currentUserRef && currentUserRef.isAdminDisplayMode();
-    const isGuardian = currentUserRef && currentUserRef.role() >= Roles.Guardian;
-    const isLoading = !currentUserRef || !currentUserRef.isLoaded;
-    const userData = currentUserRef && currentUserRef.data();
-    const lang = currentUserRef && currentUserRef.locale() || 'en';
+  render({ signOut }, { },
+    { currentUid, currentUser, currentUser_isLoaded,
+      isCurrentUserAdmin, isCurrentUserAdminReal }) {
+    //const isGuardian = hasDisplayRole(currentUserRef, Roles.Guardian);
+    const lang = currentUser && currentUser.userLocale || 'en';
 
     // elements
-    const adminToolsEL = (!currentUserRef || !currentUserRef.isAdmin()) ? null : (
-      <NavItem className='header-right'>
-        <Button onClick={this.toggleAdminView} bsStyle={isAdminView && 'success' || 'danger'}
+    const adminToolsEL = isCurrentUserAdminReal && (
+      <NavItem className="header-right">
+        <Button
+          onClick={this.toggleAdminView}
+          bsStyle={isCurrentUserAdmin && 'success' || 'danger'}
           className="header-gavel-button"
-          active={isAdminView}>
-          <FAIcon name="gavel"/>
+          active={isCurrentUserAdmin}>
+          <FAIcon name="gavel" />
         </Button>
         <span className="padding-half" />
       </NavItem>
     );
 
-    const userToolsEl = (!currentUserRef || !currentUserRef.val) ? null : (
-      <NavItem className='header-right'>
-        <ButtonGroup>
-          <Button active={lang === 'en'} onClick={this.switchToEn} bsSize="small">
-            EN
-          </Button>
-          <Button active={lang === 'zh'} onClick={this.switchToZh} bsSize="small">
-            中文
-          </Button>
-        </ButtonGroup>
-      </NavItem>
-    );
+    let userToolsEl;
+    if (!currentUser_isLoaded) {
+      userToolsEl = (<NavItem className="header-right"><Loading /></NavItem>);
+    }
+    else {
+      userToolsEl = !currentUser ? null : (
+        <NavItem className="header-right">
+          <ButtonGroup>
+            <Button active={lang === 'en'} onClick={this.switchToEn} bsSize="small">
+              EN
+            </Button>
+            <Button active={lang === 'zh'} onClick={this.switchToZh} bsSize="small">
+              中文
+            </Button>
+          </ButtonGroup>
+        </NavItem>
+      );
+    }
 
-    const profileEl = (userData && 
-      <MenuItem eventKey="user-drop-profile" onClick={this.gotoProfile}>
+    const profileEl = (currentUser &&
+      <MenuItem eventKey="user-drop-profile" href={'/user/' + currentUid}>
         <span>
           {
-            userData.photoURL &&
-            <img src={userData.photoURL} style={{width: '2em'}} /> ||
+            currentUser.photoURL &&
+            <img src={currentUser.photoURL} style={{ width: '2em' }} /> ||
             <FAIcon name="user" />
           }
           <span className="padding-half" />
-          {userData.displayName || userData.email}
+          {currentUser.displayName || '<unnamed user>'}
         </span>
       </MenuItem>
     );
 
-    let warningEl;
+    // let warningEl;
 
-    if (router.location.pathname === '/submissions') {
-      warningEl = (
-        <Alert bsStyle="danger">
-          This page suffers from data inconsistency when clicking buttons/links.
-          Open links in new window instead.
-        </Alert>
-      );
-    }
+    // if (router.location.pathname === '/submissions') {
+    //   warningEl = (
+    //     <Alert bsStyle="danger">
+    //       This page suffers from data inconsistency when clicking buttons/links.
+    //       Open links in new window instead.
+    //     </Alert>
+    //   );
+    // }
 
     return (<div>
-      { warningEl }
+      {/* {warningEl} */}
       <header className="header">
-        <Navbar inverse collapseOnSelect className="no-margin">
+        <Navbar inverse collapseOnSelect className=" no-margin">
           <Navbar.Header>
             <Navbar.Brand>
-              <Link to='/' onlyActiveOnIndex={true}><span>Home</span></Link>
+              <Link to="/"><span>Home</span></Link>
             </Navbar.Brand>
             <Navbar.Toggle />
           </Navbar.Header>
           <Navbar.Collapse>
             <Nav>
-              <LinkContainer to='/mymissions'>
-                <NavItem eventKey={2}>Mission Control</NavItem>
+              <LinkContainer to="/mymissions">
+                <NavItem eventKey={2}>My Projects</NavItem>
               </LinkContainer>
-              <LinkContainer to='/adventures'>
-                <NavItem eventKey={3}>Adventures</NavItem>
+              <LinkContainer to="/projects">
+                <NavItem eventKey={3}>All Projects</NavItem>
               </LinkContainer>
-              { isAdminView &&
-                <LinkContainer to='/gm'>
+              {isCurrentUserAdmin &&
+                <LinkContainer to="/learnerstatus">
+                  <NavItem eventKey={4}>Learner Status</NavItem>
+                </LinkContainer>
+              }
+              {isCurrentUserAdmin &&
+                <LinkContainer to="/gm">
                   <NavItem eventKey={4}>GM Tools</NavItem>
                 </LinkContainer>
               }
             </Nav>
             <Nav pullRight className="header-right-container">
-              { adminToolsEL }
-              { userToolsEl }
-              <NavDropdown eventKey="more-drop" id="user-dropdown" title={
-                   <FAIcon name="cog" />
-                }>
-                { profileEl }
-                { !!userData && <MenuItem divider /> }
-                <MenuItem eventKey="more-drop-sand" onClick={ this.gotoGit }>
-                 <FAIcon name="github" /> View Source Code
+              {adminToolsEL}
+              {userToolsEl}
+              <NavDropdown eventKey="more-drop"
+                id="user-dropdown" title={<FAIcon name="bars" />}>
+                {profileEl}
+                {!!currentUser && <MenuItem divider />}
+                <MenuItem eventKey="more-drop-sand" onClick={this.gotoGit}>
+                  <FAIcon name="github" /> View Source Code
                 </MenuItem>
-                { !!userData && <MenuItem divider /> }
-                { !!userData && (
+                {!!currentUser && <MenuItem divider />}
+                {!!currentUser && (
                   <MenuItem eventKey="user-drop-logout" onClick={signOut}>
                     <FAIcon name="close" className="color-red" /> Sign Out
                   </MenuItem>)
@@ -173,4 +186,4 @@ export default class Header extends PureComponent {
       </header>
     </div>);
   }
-};
+}

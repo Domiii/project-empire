@@ -1,7 +1,7 @@
 import _ from 'lodash';
 
 
-const defaultConfig = {
+const globalDefaultConfig = {
   keys: [],
 
   // Whether to automatically update the index at all.
@@ -27,16 +27,19 @@ const defaultConfig = {
   isRequired: false,
 
   // Whether the encoded values should be simplified.
-  // This makes them simpler but also might risk chances of ambiguity (different values encoded to the same result).
-  forceSimpleEncoding: false
+  // This makes them simpler but also might risk chances of ambiguity
+  // (different values encoded to the same result).
+  // You want to turn this off, if you have keys that contain non-constrained sets of characters,
+  //    and/or have other risks for keys to mash up into each other.
+  forceSimpleEncoding: true
 };
 
-export function makeIndices(cfg) {
-  return new IndexSet(cfg);
+export function makeIndices(cfg, defaultSettings) {
+  return new IndexSet(cfg, defaultSettings);
 }
 
 const IndexUtils = {
-  sanitizeConfig(cfg) {
+  sanitizeConfig(cfg, localDefaults) {
     return _.zipObject(_.keys(cfg), 
       _.map(cfg, (indexCfg, indexName) => {
         let cfgEntry;
@@ -64,7 +67,7 @@ const IndexUtils = {
           cfgEntry = {};
         }
 
-        return Object.assign({}, defaultConfig, cfgEntry);
+        return Object.assign({}, globalDefaultConfig, localDefaults, cfgEntry);
       })
     );
   },
@@ -95,17 +98,17 @@ const IndexUtils = {
 
   encodeValue(val, forceSimple) {
     if (_.isFunction(val) || _.isElement(val) || _.isError(val)) {
-      throw new Error("[ERROR] Cannot encode element or function values - " + val);
+      throw new Error('[ERROR] Cannot encode element or function values - ' + val);
     }
     if (_.isString(val) || _.isBoolean(val) || _.isNumber(val) || _.isNull(val)) {
-      return val + "";
+      return val + '';
     }
     if (forceSimple) {
       if (_.isArrayLike(val)) {
         return _.join(val, '\uFFFF');
       }
       else if (_.isDate(val)) {
-        return val.getTime() + "";
+        return val.getTime() + '';
       }
       else if (_.isPlainObject(val)) {
         // object should already have be converted to a sorted array
@@ -135,9 +138,9 @@ class IndexSet {
   /**
    * {cfg} Index definitions: Each index name is assigned an array of all keys that participate in it.
    */
-  constructor(cfg) {
+  constructor(cfg, defaultSettings) {
     // the cfg object supports some short-hands, which are unrolled in completeCfg
-    const completeCfg = IndexUtils.sanitizeConfig(cfg);
+    const completeCfg = IndexUtils.sanitizeConfig(cfg, defaultSettings);
 
     // create object of type { indexName => [ key1, key2...] }
     const keysByIndexName = _.zipObject(_.keys(completeCfg), _.map(completeCfg, 'keys'));
@@ -218,9 +221,9 @@ class IndexSet {
     }
 
     const indexName = this.getIndexNameByKeys(keys);
-    const settings = this.getCfg(indexName)
+    const settings = this.getCfg(indexName);
 
-    if (keys.length == 1) {
+    if (keys.length === 1) {
       return IndexUtils.encodeValueDeep(val[keys[0]], settings.forceSimpleEncoding);
     }
     const values = _.map(keys, key => val[key]);

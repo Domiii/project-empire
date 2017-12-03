@@ -1,41 +1,50 @@
 import isPlainObject from 'lodash/isPlainObject';
+import get from 'lodash/get';
+import set from 'lodash/set';
+import some from 'lodash/some';
 
-export function _makePathVariable(val, variableTransform) {
-  if (isPlainObject(val)) {
+export function _makePathVariable(val, varName, variableTransform) {
+  if (isPlainObject(val) && variableTransform) {
     // use index transformation for variable
-    return variableTransform(val);
+    return variableTransform(val, varName);
   }
   return val;
 }
+
 
 // creates a function that plugs in path variables 
 //  from a single plain object argument that names variables explicitely
 export function createPathGetterFromTemplateProps(pathTemplate, variableTransform) {
   const varLookup = (props, varName, iArg) => {
-    if (!props || props[varName] === undefined) {
-        debugger;
+    const prop = props && props[varName];
+    if (prop === undefined) {
       throw new Error(`invalid arguments: ${varName} was not provided for path ${pathTemplate}`);
     }
 
-    return _makePathVariable(props[varName], variableTransform);
-  }
+    return _makePathVariable(prop, varName, variableTransform);
+  };
 
   const getPathWithVariables = function getPathWithVariables(props) {
-    return getPathWithVariables.pathInfo.nodes.map(node => node(props)).join('');
+    const nodeOutput = getPathWithVariables.pathInfo.nodes.map(node => node(props));
+    if (some(nodeOutput, output => output === undefined)) {
+      return undefined;
+    }
+    return nodeOutput.join('');
   };
 
   return createPathGetterFromTemplate(pathTemplate, varLookup, getPathWithVariables);
 }
 
+
 // creates a function that plugs in path variables from the function's arguments
 export function createPathGetterFromTemplateArray(pathTemplate, variableTransform) {
   const varLookup = (args, varName, iArg) => {
     if (!args || iArg >= args.length) {
-        debugger;
+      //debugger;
       throw new Error(`invalid arguments: ${varName} was not provided for path ${pathTemplate}`);
     }
 
-    return _makePathVariable(args[iArg], variableTransform);
+    return _makePathVariable(args[iArg], varName, variableTransform);
   };
   const getPathWithVariables = function getPathWithVariables(...args) {
     return getPathWithVariables.pathInfo.nodes.map(node => node(args)).join('');
@@ -51,13 +60,13 @@ export function createPathGetterFromTemplate(pathTemplate, varLookup, getPathWit
     // template substitution from array
     getPath = getPathWithVariables;
     getPath.hasVariables = true;
-    getPath.pathInfo = pathInfo;
   }
   else {
     // no variable substitution necessary
     getPath = function getPath() { return pathTemplate; };
     getPath.hasVariables = false;
   }
+  getPath.pathInfo = pathInfo;
   getPath.pathTemplate = pathTemplate;
   return getPath;
 }
@@ -84,7 +93,7 @@ export function parseTemplateString(text, varLookup) {
   const varNames = [];
   let lastIndex = 0;
   let match;
-  while ((match = varRe.exec(text)) != null) {
+  while ((match = varRe.exec(text)) !== null) {
     const matchStart = match.index, matchEnd = varRe.lastIndex;
     let prevText = text.substring(lastIndex, matchStart);
     let varName = match[1];
@@ -115,10 +124,54 @@ export function createChildVarGetterFromTemplateProps(pathTemplate, varNames) {
   return props => {
     return varNames.map(varName => {
       if (!props || props[varName] === undefined) {
-        debugger;
+        //debugger;
         throw new Error(`invalid arguments: ${varName} was not provided for path ${pathTemplate}`);
       }
       return props[varName];
     });
   };
+}
+
+// convert to dot notation for lodash path access
+function _convertPathToObjNotation(path) {
+  path = path || '';
+  path = path.toString();
+  path = path.replace(/\//g, '.');
+  path = path.replace(/\.\./g, '.');
+  if (path[0] === '.') {
+    path = path.substring(1);
+  }
+  return path;
+}
+
+export function getDataIn(obj, path, defaultValue = undefined) {
+  path = _convertPathToObjNotation(path);
+
+  if (!path) {
+    // handle empty path separately
+    // see: https://github.com/lodash/lodash/issues/3386
+    if (obj === undefined) return defaultValue;
+    return obj;
+  }
+  return get(obj, path, defaultValue);
+}
+export function setDataIn(obj, path, val) {
+  path = _convertPathToObjNotation(path);
+  if (!path) {
+    // handle empty path separately
+    // see: https://github.com/lodash/lodash/issues/3386
+    if (obj !== undefined) {
+      Object.assign(obj, val);
+    }
+  }
+  return set(obj, path, val);
+}
+
+
+// ###################################################
+// rrf 1.5 → 2.0 migration utility
+// ###################################################
+
+export function dataToJS(firebase, path, defaultValue) {
+  return getDataIn(firebase.data, path, defaultValue);
 }

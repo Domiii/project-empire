@@ -6,69 +6,82 @@
         ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
       }
     },
-
     "missions": {
       ".read": "auth !== null",
-
       "$missionId": {
         ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
       }
     },
-
-    "adventures": {
+    "projects": {
       ".read": "auth !== null",
-
-      "$adventureId": {
-        ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
+      "$projectId": {
+        ".write": "auth !== null"
       }
     },
-
+    "meetings": {
+      ".read": "auth !== null",
+      ".indexOn": [
+        "projectId"
+      ],
+      "$meetingId": {
+        ".write": "auth !== null",
+        "preparations": {
+          "$uid": {}
+        }
+      }
+    },
+    "learnerSchedules": {
+      ".read": "auth !== null",
+      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+    },
+    "learnerEntries": {
+      ".read": "auth !== null",
+      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+    },
     "groups": {
       ".read": "auth !== null",
-
       "$groupId": {
         ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
       }
     },
-
     "notifications": {
       ".read": "auth !== null",
-
-      "public" : {
-        ".indexOn": ["updatedAt", "type"],
-        
-        "$notificationId" : {
+      "public": {
+        ".indexOn": [
+          "updatedAt",
+          "type"
+        ],
+        "$notificationId": {
           ".write": "auth !== null && !data.exists() && newData.exists() && newData.child('uid').val() === auth.uid"
         }
       },
-
-      "other" : {
-        ".indexOn": ["updatedAt", "type"],
-        
-        "$notificationId" : {
+      "other": {
+        ".indexOn": [
+          "updatedAt",
+          "type"
+        ],
+        "$notificationId": {
           ".write": "auth !== null && !data.exists() && newData.exists() && newData.child('uid').val() === auth.uid"
         }
       }
     },
-    
     "users": {
       "public": {
         ".read": "true",
-
-        "$uid" : {
+        "$uid": {
           "displayName": {
             ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
           },
           "photoURL": {
             ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
           },
-          "role" : {
+          "role": {
             ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
           },
-          "displayRole" : {
+          "displayRole": {
             ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
           },
-          "locale" : {
+          "locale": {
             ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
           },
           "updatedAt": {
@@ -77,12 +90,8 @@
         }
       },
       "private": {
-        "$uid" : {
+        "$uid": {
           ".read": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))",
-          
-          "prefs": {
-            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
-          },
           "updatedAt": {
             ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
           },
@@ -90,9 +99,14 @@
             ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
           }
         }
+      },
+      "prefs": {
+        "$uid": {
+          ".read": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))",
+          ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
+        }
       }
     },
-
     "_index": {
       "userGroups": {
         "user": {
@@ -104,16 +118,20 @@
           ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
         }
       },
-      "adventureUsers": {
+      "projectUsers": {
         "user": {
           ".read": "auth !== null",
           ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
         },
-        "adventure": {
+        "project": {
           ".read": "auth !== null",
           ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 5)"
         }
       }
+    },
+    "test": {
+      ".read": "auth !== null",
+      ".write": "auth !== null"
     }
   }
 }

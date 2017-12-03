@@ -32,7 +32,7 @@ NotificationTypeSettings.byName = keyBy(NotificationTypeSettings.list, 'name');
 
 function makeNotificationEntrySpecs(prefix) {
   return { 
-    [`${prefix}_entry`] : {
+    [`${prefix}_entry`]: {
       pathTemplate: '$(notificationId)',
 
       children: {
@@ -73,7 +73,7 @@ const NotificationsRef = makeRefWrapper({
 
       // start notification verification process
       if (!type || !args || !NotificationTypeSettings.byName[type]) {
-        console.error(`[ERROR] Invalid notification type: ` + type);
+        console.error(`[ERROR] Invalid notification type "${type}"`);
         return null;
       }
       const settings = NotificationTypeSettings.byName[type];
@@ -86,7 +86,7 @@ const NotificationsRef = makeRefWrapper({
           console.error(`[ERROR] Notification of type "${type}" missing argument: ` + parameterName);
           return null;
         }
-      };
+      }
 
       const childPath = settings.isPublic(args) ?
         'public' :

@@ -1,12 +1,9 @@
-import React, { PureComponent, PropTypes } from 'react';
+import React, { PureComponent, } from 'react';
+import PropTypes from 'prop-types';
 import {
   ListGroup, ListGroupItem, Well
 } from 'react-bootstrap';
-import { Link } from 'react-router';
-import { FAIcon } from 'src/views/components/util';
 import classNames from 'classnames';
-
-import { hrefConceptView } from 'src/views/href';
 
 export default class SubmissionEntryContent extends PureComponent {
   static propTypes = {

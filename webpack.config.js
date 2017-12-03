@@ -22,22 +22,45 @@ const PORT = 3000;
 //=========================================================
 //  LOADERS
 //---------------------------------------------------------
-const loaders = {
-  js:   {test: /\.js[x]?$/, exclude: /node_modules/, loader: 'babel'},
-  json: {test: /\.json$/, loader: 'json-loader' },
-  scss:  {test: /\.[s]?css$/, loader: 'style!css!postcss!sass'},
-  // the url-loader uses DataUrls. 
-  urls: { 
-    test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, 
-    loader: "url-loader?limit=10000&mimetype=application/font-woff" 
-  },
+const cssLoaders = [{
+  loader: 'css-loader'
+}, {
+  loader: 'postcss-loader',
+  options: {
+    plugins: () => [ require('autoprefixer')() ]
+  }
+}, 
+{
+  loader: 'sass-loader'
+}];
 
-  // the file-loader emits files. 
-  files: { 
-    test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, 
-    loader: "file-loader" 
+const loaders = [
+  {
+    test: /\.js[x]?$/,
+    exclude: /node_modules/,
+    loader: 'babel-loader'
   },
-};
+  {
+    test: /\.json$/, loader: 'json-loader'
+  },
+  {
+    test: /\.[s]?css$/, 
+    use: ENV_DEVELOPMENT ?
+      [{ loader: 'style-loader' }, ...cssLoaders] :
+      ExtractTextPlugin.extract({
+        fallback: 'style-loader',
+        use: cssLoaders
+      })
+  },
+  { 
+    test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, 
+    loader: 'url-loader?limit=10000&mimetype=application/font-woff'
+  },
+  { 
+    test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, 
+    loader: 'file-loader'
+  }
+];
 
 
 //=========================================================
@@ -48,9 +71,11 @@ module.exports = config;
 
 
 config.resolve = {
-  extensions: ['', '.js', '.jsx', 'entities.json'],
-  modulesDirectories: ['node_modules'],
-  root: path.resolve('.')
+  extensions: ['.js', '.jsx', 'entities.json'],
+  modules: [
+    path.resolve(__dirname, 'node_modules'),
+    path.resolve(__dirname, './'),
+  ]
 };
 
 config.plugins = [
@@ -59,15 +84,9 @@ config.plugins = [
   })
 ];
 
-config.postcss = [
-  autoprefixer({ browsers: ['last 3 versions'] })
-];
-
-config.sassLoader = {
-  outputStyle: 'compressed',
-  precision: 10,
-  sourceComments: false
-};
+// config.postcss = [
+//   autoprefixer({ browsers: ['last 3 versions'] })
+// ];
 
 
 //=====================================
@@ -100,7 +119,7 @@ if (ENV_DEVELOPMENT || ENV_PRODUCTION) {
 //  DEVELOPMENT
 //-------------------------------------
 if (ENV_DEVELOPMENT) {
-  config.devtool = 'cheap-module-source-map';
+  config.devtool = 'source-map';
 
   config.entry.main.unshift(
     `webpack-dev-server/client?http://${HOST}:${PORT}`,
@@ -110,13 +129,7 @@ if (ENV_DEVELOPMENT) {
   );
 
   config.module = {
-    loaders: [
-      loaders.js,
-      loaders.json,
-      loaders.scss,
-      loaders.files,
-      loaders.urls
-    ]
+    loaders
   };
 
   config.plugins.push(
@@ -150,20 +163,14 @@ if (ENV_DEVELOPMENT) {
 //  PRODUCTION
 //-------------------------------------
 if (ENV_PRODUCTION) {
-  config.devtool = 'source-map';
+  config.devtool = 'eval';
 
   config.entry.vendor = './src/vendor.js';
 
   config.output.filename = '[name].[chunkhash].js';
 
   config.module = {
-    loaders: [
-      loaders.js,
-      loaders.json,
-      loaders.scss,
-      loaders.files,
-      loaders.urls
-    ]
+    loaders
   };
 
   config.plugins.push(
@@ -173,7 +180,6 @@ if (ENV_PRODUCTION) {
       name: 'vendor',
       minChunks: Infinity
     }),
-    new webpack.optimize.DedupePlugin(),
     new webpack.optimize.UglifyJsPlugin({
       mangle: true,
       compress: {
@@ -194,12 +200,6 @@ if (ENV_TEST) {
   config.devtool = 'inline-source-map';
 
   config.module = {
-    loaders: [
-      loaders.js,
-      loaders.json,
-      loaders.scss,
-      loaders.files,
-      loaders.urls
-    ]
+    loaders
   };
 }

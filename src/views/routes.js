@@ -1,10 +1,11 @@
 export const routeNames = {
-  ROOT: '/',
+  ROOT: '',
   SIGN_IN: 'sign-in',
   USER_PROFILE: 'user',
   MISSION_CONTROL: 'mymissions',
   GM: 'gm',
-  ADVENTURES: 'adventures',
+  PROJECTS: 'projects',
+  LEARNER_STATUS: 'learnerstatus',
   GROUPS: 'groups',
 
   TEST: 'test'
@@ -16,20 +17,24 @@ export const routePaths = {
   USER_PROFILE: `/${routeNames.USER_PROFILE}`,
   MISSION_CONTROL: `/${routeNames.MISSION_CONTROL}`,
   GM: `/${routeNames.GM}`,
-  ADVENTURES: `/${routeNames.ADVENTURES}`,
+  PROJECTS: `/${routeNames.PROJECTS}`,
+  LEARNER_STATUS: `/${routeNames.LEARNER_STATUS}`,
   GROUPS: `/${routeNames.GROUPS}`,
 
   TEST: `/${routeNames.TEST}`
 };
 
 export const routeTemplates = {
-  ROOT: `${routeNames.ROOT}`,
-  SIGN_IN: `${routeNames.SIGN_IN}`,
-  USER_PROFILE: `${routeNames.USER_PROFILE}`,
-  MISSION_CONTROL: `${routeNames.MISSION_CONTROL}`,
-  GM: `${routeNames.GM}`,
-  ADVENTURES: `${routeNames.ADVENTURES}`,
-  GROUPS: `${routeNames.GROUPS}`,
+  ROOT: `${routePaths.ROOT}`,
+  SIGN_IN: `${routePaths.SIGN_IN}`,
+  USER_PROFILE: `${routePaths.USER_PROFILE}`,
+  MISSION_CONTROL: `${routePaths.MISSION_CONTROL}/:projectId?/:stagePath?`,
+  GM: `${routePaths.GM}`,
+  PROJECTS: `${routePaths.PROJECTS}`,
+  LEARNER_STATUS_LIST: `${routePaths.LEARNER_STATUS}`,
+  LEARNER_STATUS_USER: `${routePaths.LEARNER_STATUS}/:uid`,
+  LEARNER_STATUS_ENTRY: `${routePaths.LEARNER_STATUS}/:mode/:uid/:scheduleId/:cycleId`,
+  GROUPS: `${routePaths.GROUPS}`,
 
-  TEST: `${routeNames.TEST}`
+  TEST: `${routePaths.TEST}`
 };

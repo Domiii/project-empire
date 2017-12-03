@@ -1,17 +1,15 @@
-import React, { PropTypes } from 'react';
-import { connect } from 'react-redux';
+import React, { } from 'react';
+import PropTypes from 'prop-types';
 import {
-  signInWithGithub,
-  signInWithGoogle,
-  signInWithTwitter
+  //signInWithGithub,
+  signInWithGoogle
+  //signInWithTwitter
 } from 'src/firebaseUtil';
-
-import { firebaseConnect, getFirebase } from 'react-redux-firebase'
 
 import { FAIcon } from 'src/views/components/util';
 import { Button } from 'react-bootstrap';
 
-export function SignInPage({firebase}) {
+export function SignInPage({}) {
 
   { /*
     <Button bsStyle="primary" onClick={signInWithGithub}>
@@ -22,27 +20,20 @@ export function SignInPage({firebase}) {
     </Button>
   */ }
 
-  const signInWithGoogle = () => getFirebase().login({
-     provider: 'google',
-     type: 'redirect'
-   });
-
   return (
     <div className="g-row sign-in">
       <div className="g-col">
-        <h1 className="sign-in__heading">Sign in</h1>
-        <Button bsStyle="primary" onClick={signInWithGoogle}>
-          <FAIcon name="google" /> Google
-        </Button>
+        <center>
+          <Button bsSize="large" bsStyle="primary" onClick={signInWithGoogle}>
+            <FAIcon name="google" /> Sign in with Google
+          </Button>
+        </center>
       </div>
     </div>
   );
 }
 
 SignInPage.propTypes = {
-  // signInWithGithub: PropTypes.func.isRequired,
-  // signInWithGoogle: PropTypes.func.isRequired,
-  // signInWithTwitter: PropTypes.func.isRequired
 };
 
 
@@ -50,8 +41,4 @@ SignInPage.propTypes = {
 //  CONNECT
 //-------------------------------------
 
-export default connect(state => ({
-  // signInWithGithub,
-  // signInWithGoogle,
-  // signInWithTwitter
-}))(SignInPage);
+export default SignInPage;

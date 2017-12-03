@@ -21,7 +21,7 @@ const SubmissionFeedbackRef = makeRefWrapper({
   pathTemplate: '/submissionFeedback',
 
   indices: {
-    reviewerId: ['reviewerId'],
+    reviewerUid: ['reviewerUid'],
     submissionId: ['submissionId'],
     conceptId: ['conceptId'],
     status: ['status']
@@ -66,7 +66,7 @@ const SubmissionFeedbackRef = makeRefWrapper({
       const newFeedbackRef = this.push({
         conceptId,
         submitterId,
-        reviewerId: uid,
+        reviewerUid: uid,
 
         status
       });
@@ -82,7 +82,7 @@ const SubmissionFeedbackRef = makeRefWrapper({
       const pathArgs = { submissionId, feedbackId };
 
       const statusPath = SubmissionFeedbackRef.feedback.status.getPath(pathArgs);
-      const reviewerPath = SubmissionFeedbackRef.feedback.reviewerId.getPath(pathArgs);
+      const reviewerPath = SubmissionFeedbackRef.feedback.reviewerUid.getPath(pathArgs);
       const textPath = SubmissionFeedbackRef.feedbackDetails.text.getPath(pathArgs);
 
       const { uid } = this.props;
@@ -104,7 +104,7 @@ const SubmissionFeedbackRef = makeRefWrapper({
         conceptId: 'conceptId',
         submitterId: 'submitterId',
 
-        reviewerId: 'reviewerId',
+        reviewerUid: 'reviewerUid',
 
         // feedback status
         status: 'status'

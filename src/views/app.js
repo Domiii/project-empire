@@ -1,82 +1,52 @@
-import DBStatusRef from 'src/core/DBStatusRef';
-import { UserInfoRef } from 'src/core/users';
-import { createSelector } from 'reselect';
+import firebase from 'firebase';
 
-import React, { Component, PropTypes } from 'react';
-import { connect } from 'react-redux';
+import DBStatusModel from 'src/core/DBStatusModel';
+
+import isEqual from 'lodash/isEqual';
+
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
-import { 
-  firebaseConnect, 
-  helpers,
-  getFirebase
-} from 'react-redux-firebase'
+
+import dataBind from 'src/dbdi/react/dataBind';
+
 import Header from './components/header';
 import { FAIcon } from 'src/views/components/util';
 import { lookupLocalized } from 'src/util/localizeUtil';
 
 import { Overlay, LoadOverlay } from 'src/views/components/overlays';
 
-const { pathToJS } = helpers;
 
-@firebaseConnect((props, firebase) => {
-  const paths = [
-    DBStatusRef.makeQuery()
-  ];
-  
-  const uid = getFirebase().auth().currentUser && getFirebase().auth().currentUser.uid;
-  if (uid) {
-    UserInfoRef.user.addQuery(paths, {uid});
-  }
-  //paths.push(UserInfoRef.makeQuery());
-  return paths;
-})
-@connect(({ firebase }, ownProps) => {
-  const auth = pathToJS(firebase, 'auth');
-  //const dBStatusRef = DBStatusRef(firebase);
+/* global window */
 
-  const props = {
-    //dBStatusRef,
-    //clientVersion: dBStatusRef.version()
-  };
 
-  if (auth && auth.uid) {
-    // TODO: Move this to componentWillMount
-    //    see: https://firebase.google.com/docs/reference/node/firebase.auth.Auth#onAuthStateChanged
-    props.currentUserRef = UserInfoRef.user(firebase, {auth, uid: auth.uid});
-  }
-
-  //console.log(UserInfoRef(firebase).val);
-
-  return props;
-})
+@dataBind()
 export class App extends Component {
   static contextTypes = {
-    router: PropTypes.object.isRequired
+    //router: PropTypes.object.isRequired
   };
 
   static propTypes = {
-    firebase: PropTypes.object.isRequired,
-    currentUserRef: PropTypes.object,
-    //dBStatusRef: PropTypes.object.isRequired,
-
     children: PropTypes.object
   };
 
   static childContextTypes = {
-    currentUserRef: PropTypes.object,
     lookupLocalized: PropTypes.func
   };
 
   getChildContext() {
     return {
-      currentUserRef: this.props.currentUserRef,
       lookupLocalized: this.lookupLocalized
-    }
+    };
   }
 
   constructor(...args) {
     super(...args);
     this.state = { wasBusy: false };
+
+    // this.dataBindMethods(
+    //   this.componentWillUpdate
+    // );
 
     autoBind(this);
   }
@@ -85,12 +55,10 @@ export class App extends Component {
   //   const { router } = this.context;
   // }
 
-  componentWillReceiveProps(nextProps) {
-    const { currentUserRef } = nextProps;
+  componentWillUpdate() {
+    const { ensureUserInitialized } = this.props.writers;
 
-    if (!!currentUserRef) {
-      currentUserRef.ensureUserInitialized();
-    }
+    ensureUserInitialized();
         
     // TODO: log new visit
     // TODO: add hook to browserhistory
@@ -101,7 +69,7 @@ export class App extends Component {
 
   signOut() {
     try {
-      this.props.firebase.logout();
+      firebase.auth().signOut();
       setTimeout(() => window.location.reload());
     }
     catch (err) {
@@ -110,13 +78,14 @@ export class App extends Component {
   }
 
   lookupLocalized(obj, entry) {
-    const lang = this.props.currentUserRef && this.props.currentUserRef.locale() || 'en';
+    const { currentUser } = this.props.fromReader;
+    const lang = currentUser && currentUser.userLocale || 'en';
     return lookupLocalized(lang, obj, entry);
   }
 
   render() {
-    const { currentUserRef, children } = this.props;
-    const { router } = this.context;
+    const { children } = this.props;
+    //const { router } = this.context;
 
     //const notYetLoaded = !dBStatusRef.isLoaded;
 
@@ -131,13 +100,12 @@ export class App extends Component {
     // }
 
     return (
-      <div className="app container max-height">
+      <div className="app container full-height">
         <Header
-          currentUser={currentUserRef && currentUserRef.val}
           signOut={this.signOut}
         />
 
-        <main className="app-main max-height">
+        <main className="app-main full-height">
           { children }
         </main>
       </div>

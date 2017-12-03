@@ -7,7 +7,6 @@ plugins: ["react"]
 extends: ["eslint:recommended", "plugin:react/recommended"]
 
 env:
-  browser: true
   es6: true
   jasmine: true
   node: true
@@ -24,15 +23,15 @@ rules:
   array-bracket-spacing: 0
   array-callback-return: 0
   arrow-body-style: 0
-  arrow-parens: [2, "as-needed"]
+  arrow-parens: 0
   arrow-spacing: [2, {before: true, after: true}]
   accessor-pairs: 0
   block-scoped-var: 0
   block-spacing: 2
   brace-style: [2, "stroustrup", {allowSingleLine: true}]
   callback-return: 0
-  camelcase: [2, {properties: "always"}]
-  comma-dangle: 2
+  camelcase: [0, {properties: "always"}]
+  comma-dangle: 0
   comma-spacing: 2
   comma-style: [2, "last"]
   complexity: [0, 10]
@@ -47,15 +46,15 @@ rules:
   eol-last: 0
   eqeqeq: 2
   func-names: 0
-  func-style: [2, "declaration", {allowArrowFunctions: true }]
+  func-style: [0, "declaration", {allowArrowFunctions: true }]
   generator-star-spacing: [2, {before: false, after: true}]
-  guard-for-in: 2
+  guard-for-in: 0
   global-require: 0
   handle-callback-err: 0
   id-blacklist: 0
   id-length: 0
   id-match: 0
-  indent: [2, 2, {SwitchCase: 1, VariableDeclarator: 2}]
+  indent: [0, 2, {SwitchCase: 1, VariableDeclarator: 2}]
   init-declarations: 0
   jsx-quotes: 1
   key-spacing: [2, {beforeColon: false, afterColon: true}]
@@ -68,7 +67,7 @@ rules:
   max-params: 0
   max-statements: 0
   max-statements-per-line: 0
-  new-cap: 2
+  new-cap: 0
   new-parens: 2
   newline-after-var: 0
   newline-before-return: 0
@@ -77,17 +76,17 @@ rules:
   no-array-constructor: 2
   no-bitwise: 0
   no-caller: 2
-  no-case-declarations: 2
+  no-case-declarations: 0
   no-catch-shadow: 0
   no-class-assign: 2
   no-cond-assign: 2
   no-confusing-arrow: 0
-  no-console: 2
+  no-console: 0
   no-const-assign: 2
   no-constant-condition: 2
   no-continue: 0
   no-control-regex: 2
-  no-debugger: 2
+  no-debugger: 0
   no-delete-var: 2
   no-div-regex: 0
   no-dupe-args: 2
@@ -99,13 +98,13 @@ rules:
   no-empty: 2
   no-empty-character-class: 2
   no-empty-function: 0
-  no-empty-pattern: 2
+  no-empty-pattern: 0
   no-eq-null: 0
   no-eval: 2
   no-ex-assign: 2
   no-extend-native: 2
   no-extra-bind: 2
-  no-extra-boolean-cast: 2
+  no-extra-boolean-cast: 0
   no-extra-label: 0
   no-extra-parens: 0
   no-extra-semi: 2
@@ -118,7 +117,7 @@ rules:
   no-inline-comments: 0
   no-inner-declarations: 2
   no-invalid-regexp: 2
-  no-invalid-this: 2
+  no-invalid-this: 0
   no-irregular-whitespace: 2
   no-iterator: 2
   no-label-var: 2
@@ -168,7 +167,7 @@ rules:
   no-sparse-arrays: 2
   no-sync: 0
   no-ternary: 0
-  no-trailing-spaces: 2
+  no-trailing-spaces: 0
   no-this-before-super: 2
   no-throw-literal: 0
   no-undef: 2
@@ -180,7 +179,7 @@ rules:
   no-unneeded-ternary: 0
   no-unreachable: 2
   no-unsafe-finally: 0
-  no-unused-expressions: 2
+  no-unused-expressions: [2, { "allowShortCircuit": true }]
   no-unused-labels: 2
   no-unused-vars: [1, {vars: "all", args: "after-used"}]
   no-use-before-define: 0
@@ -219,13 +218,13 @@ rules:
   space-before-blocks: 2
   space-before-function-paren: [2, "never"]
   space-in-parens: 0
-  space-infix-ops: 2
+  space-infix-ops: 0
   space-unary-ops: [2, {words: true, nonwords: false}]
   spaced-comment: "off"
   strict: 0
   template-curly-spacing: 0
   use-isnan: 2
-  valid-jsdoc: [2, {
+  valid-jsdoc: [0, {
     prefer: {return: "returns"},
     requireReturn: false,
     requireReturnType: false,
@@ -245,11 +244,11 @@ rules:
   react/display-name: 0
   react/forbid-prop-types: [2, {forbid: ["any"]}]
   react/jsx-boolean-value: 0
-  react/jsx-closing-bracket-location: [2, {selfClosing: "tag-aligned", nonEmpty: "after-props"}]
-  react/jsx-curly-spacing: [2, "never"]
+  react/jsx-closing-bracket-location: [0, {selfClosing: "tag-aligned", nonEmpty: "after-props"}]
+  react/jsx-curly-spacing: 0
   react/jsx-equals-spacing: [2, "never"]
   react/jsx-filename-extension: 0
-  react/jsx-first-prop-new-line: [2, "multiline"]
+  react/jsx-first-prop-new-line: 0
   react/jsx-handler-names: 0
   react/jsx-indent: [1, 2]
   react/jsx-indent-props: [1, 2]
@@ -274,17 +273,17 @@ rules:
   react/no-direct-mutation-state: 2
   react/no-find-dom-node: 2
   react/no-is-mounted: 2
-  react/no-multi-comp: 1
+  react/no-multi-comp: 0
   react/no-render-return-value: 2
   react/no-set-state: 0
   react/no-string-refs: 2
   react/no-unknown-property: 2
   react/prefer-es6-class: 2
-  react/prefer-stateless-function: 2
+  react/prefer-stateless-function: 0
   react/prop-types: 2
   react/react-in-jsx-scope: 2
   react/require-optimization: 0
   react/require-render-return: 2
   react/self-closing-comp: 0
-  react/sort-comp: 1
-  react/sort-prop-types: 1
+  react/sort-comp: 0
+  react/sort-prop-types: 0

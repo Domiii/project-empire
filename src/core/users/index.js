@@ -1,2 +1,0 @@
-
-export UserInfoRef from './UserInfoRef';

@@ -3,6 +3,7 @@
 // TODO: play around with themes (https://github.com/isagalaev/highlight.js/tree/master/src/styles)
 
 import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/ocean.css';
 
@@ -10,8 +11,8 @@ let init = false;
 
 export default class CodeBlock extends PureComponent {
   static propTypes = {
-    literal: React.PropTypes.string,
-    language: React.PropTypes.string
+    literal: PropTypes.string,
+    language: PropTypes.string
   };
 
   componentDidMount() {
@@ -36,14 +37,14 @@ export default class CodeBlock extends PureComponent {
     const style = {
       margin: '4px 0'
     };
-    return <div style={style}>
+    return (<div style={style}>
       <pre className="hljs no-margin no-padding">
         <code ref="code"
           className={this.props.language}>
           {this.props.literal}
         </code>
       </pre>
-    </div>;
+    </div>);
   }
 
   render() {

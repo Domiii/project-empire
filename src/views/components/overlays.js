@@ -1,14 +1,16 @@
-import React, { Component, PropTypes } from 'react';
+import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import { FAIcon } from 'src/views/components/util';
 
-export class Overlay extends Component {
+export class Overlay extends PureComponent {
   static propTypes = {
+    className: PropTypes.string,
     contents: PropTypes.element
   };
 
   render() {
     const { contents, className } = this.props;
-    const screenClasses = "overlay-screen max-height " + (className || '');
+    const screenClasses = 'overlay-screen full-height ' + (className || '');
 
     return (
       <div className="overlay color-gray">
@@ -20,10 +22,13 @@ export class Overlay extends Component {
   }
 }
 
-export class LoadOverlay extends Component {
+
+// TODO: move to loading.js
+export class LoadOverlay extends PureComponent {
   static propTypes = {
-    message: PropTypes.string,
-    contents: PropTypes.element
+    className: PropTypes.string,
+    contents: PropTypes.element,
+    message: PropTypes.string
   };
 
   get DefaultMessage() {
@@ -37,7 +42,7 @@ export class LoadOverlay extends Component {
     return (<div>
       <p>{ message }</p>
       <p>
-        <FAIcon name="cog" spinning={true}/>
+        <FAIcon name="cog" spinning={true} />
       </p>
     </div>);
   }

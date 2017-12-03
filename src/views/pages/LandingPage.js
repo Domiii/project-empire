@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { firebaseConnect } from 'react-redux-firebase'
-import { 
+
+import dataBind from 'src/dbdi/react/dataBind';
+
+import {
   Alert, Button, Jumbotron, Well
 } from 'react-bootstrap';
 
@@ -13,34 +14,15 @@ import {
 import { LoadOverlay } from 'src/views/components/overlays';
 
 
-@firebaseConnect((props, firebase) => {
-  return [];
-})
-@connect(({ firebase }, props) => {
-  return {};
-})
+@dataBind()
 export default class LandingPage extends Component {
-  static contextTypes = {
-    currentUserRef: PropTypes.object.isRequired
-  };
-
   constructor(...args) {
     super(...args);
 
     autoBind(this);
   }
 
-  get IsNotLoadedYet() {
-    const { currentUserRef } = this.context;
-    return !currentUserRef || !currentUserRef.isLoaded;
-  }
-
   render() {
-    if (this.IsNotLoadedYet) {
-      // still loading
-      return (<LoadOverlay />);
-    }
-
     //console.log(this.context.currentUserRef, this.context.currentUserRef.isAdminDisplayMode());
 
     return (

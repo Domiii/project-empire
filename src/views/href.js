@@ -1,18 +1,25 @@
 import { routePaths } from './routes';
 
-export function hrefXXView(ownerId, xId, mode) {
+export function hrefProjectControl(projectId, stagePath) {
   const url = [];
 
-  url.push(routePaths.CONCEPT_VIEW);
-  if (ownerId && xId) {
-    url.push(`${ownerId}/${xId}`);
-  }
-  else if (!mode) {
-    return '/';
+  url.push(routePaths.MISSION_CONTROL);
+  if (projectId) {
+    url.push(`${projectId}`);
+    if (stagePath) {
+      url.push(`${stagePath}`);
+    }
   }
 
-  if (mode) {
-    url.push(mode);
-  }
   return url.join('/');
+}
+
+export function hrefLearnerStatusEntry(mode, uid, scheduleId, cycleId) {
+  mode = mode || 'view';
+
+  return `${routePaths.LEARNER_STATUS}/${mode}/${uid}/${scheduleId}/${cycleId}`;
+}
+
+export function hrefLearnerStatusList() {
+  return `${routePaths.LEARNER_STATUS}`;
 }

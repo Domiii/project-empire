@@ -80,7 +80,7 @@ export class StatusPanel extends Component {
         conceptId: 'conceptId',
         submitterId: 'submitterId',
 
-        reviewerId: 'reviewerId',
+        reviewerUid: 'reviewerUid',
 
         // feedback status
         status: 'status'

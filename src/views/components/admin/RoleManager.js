@@ -7,172 +7,167 @@ import zipObject from 'lodash/zipObject';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
-import UserInfoRef from 'src/core/users/UserInfoRef';
-import Roles from 'src/core/users/Roles';
+import Roles, { hasRole } from 'src/core/users/Roles';
 
-import React, { Component, PropTypes } from 'react';
-import { connect } from 'react-redux';
-import { firebaseConnect } from 'react-redux-firebase'
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 
 import autoBind from 'react-autobind';
+
+import dataBind from 'src/dbdi/react/dataBind';
+
 import {
   Panel, Button, ListGroup, ListGroupItem, Alert, Badge
 } from 'react-bootstrap';
 
 import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import { FAIcon } from 'src/views/components/util';
+import LoadIndicator from 'src/views/components/util/loading';
 
 import UserList from 'src/views/components/users/UserList';
+import UserIcon from 'src/views/components/users/UserIcon';
 
 
-const userListNames = [
+const RoleNames = [
   'Adventurer',
   'Guardian',
   'GM'
 ];
 
-// create + cache "changeRoleButtons" components
-function makeChangeRoleButtons(setRoleName) {
-  return zipObject(userListNames, 
-    map(userListNames, roleName => {
-      const header = `Make user ${roleName}?`;
-      const changeRole = uid => setRoleName(uid, roleName);
-
-      return ({user, uid}) => {
-        const arrowEl = Roles[roleName] < user.role ? 
-          (<span className="color-red"><FAIcon name="level-down" /></span>) :
-          (<span className="color-green"><FAIcon name="level-up" /></span>);
-        const btnEl = ({open}) => (<Button onClick={open} bsSize="small"
-              className="no-padding">
-            { roleName } { arrowEl }
-          </Button>);
-        return (<ConfirmModal
-          key={roleName}
-          header={header}
-          body={(<span>
-            { user.displayName }
-            { arrowEl }
-          </span>)}
-          ButtonCreator={btnEl}
-          onConfirm={changeRole}
-          confirmArgs={uid}
-        />);
-      };
+function RoleChangeLabel({ newRole, oldRole }) {
+  return (<span>
+    {hasRole(newRole, oldRole) ?
+      (<span className="color-green"><FAIcon name="level-up" /></span>) :
+      (<span className="color-red"><FAIcon name="level-down" /></span>)
     }
-  ));
+    {newRole}
+  </span>);
 }
+RoleChangeLabel.propTypes = {
+  newRole: PropTypes.oneOfType([
+    PropTypes.number,
+    PropTypes.string
+  ]).isRequired,
+  oldRole: PropTypes.oneOfType([
+    PropTypes.number,
+    PropTypes.string
+  ]).isRequired
+};
 
-@firebaseConnect((props, firebase) => {
-  const paths = [
-    UserInfoRef.userList.makeQuery()
-  ];
-  return paths;
-})
-@connect(({ firebase }, props) => {
-  const userListRef = UserInfoRef.userList(firebase);
-  return {
-    userListRef,
-    setRoleName: userListRef.setRoleName,
-    changeRoleButtons: makeChangeRoleButtons(userListRef.setRoleName)
-  };
-})
-export default class RoleManager extends Component {
-  static contextTypes = {
-    currentUserRef: PropTypes.object
-  };
+function ChangeRoleButton({ oldRole, newRole, open }) {
+  return (<Button onClick={open} bsSize="small" className="no-padding">
+    <RoleChangeLabel oldRole={oldRole} newRole={newRole} />
+  </Button>);
+}
+ChangeRoleButton.propTypes = {
+  oldRole: PropTypes.oneOfType([
+    PropTypes.number,
+    PropTypes.string
+  ]).isRequired,
+  newRole: PropTypes.oneOfType([
+    PropTypes.number,
+    PropTypes.string
+  ]).isRequired,
+  open: PropTypes.func.isRequired
+};
 
-  static propTypes = {
-    userListRef: PropTypes.object.isRequired,
-    setRoleName: PropTypes.func.isRequired
-  };
-
-  constructor() {
-    super();
-
-    autoBind(this);
+const RoleEditor = dataBind({
+  changeRole({ uid, newRole }, { setRole }) {
+    return setRole({ uid, role: newRole });
   }
+})(({ uid, newRole }, { changeRole, userPublic }, { }) => {
+  const user = userPublic({ uid });
 
-  get IsAdmin() {
-    const { currentUserRef } = this.context;
-    return currentUserRef && currentUserRef.isAdminDisplayMode() || false;
-  }
+  return (<ConfirmModal
+    key={newRole}
+    header={<span>Make user <RoleChangeLabel role1={newRole} role2={user.role} />?</span>}
+    ButtonCreator={ChangeRoleButton}
+    onConfirm={changeRole}
 
-  RenderUser({user, uid}) {
-    const otherRoles = userListNames.filter(name => Roles[name] !== (user.role || 1));
-    const ButtonComps = map(otherRoles, role => this.props.changeRoleButtons[role]);
+    oldRole={user.role}
+    newRole={newRole}
+  >
+    <span>
+      Promote/demote {user.displayName} t
+      o <RoleChangeLabel newRole={newRole} oldRole={user.role} />?
+    </span>
+  </ConfirmModal>);
+});
+
+
+const RenderUser = dataBind({})(
+  ({ uid }, { userPublic }) => {
+    const user = userPublic({ uid });
+    const otherRoles = RoleNames.filter(name => Roles[name] !== (user.role || 0));
     const buttonEls = (
       <span>
-        {map(ButtonComps, (Btn, i) => (
-          <Btn key={otherRoles[i]} user={user} uid={uid} />
+        {map(otherRoles, (newRole) => (
+          <RoleEditor key={newRole} uid={uid} newRole={newRole} />
         ))}
       </span>
     );
 
     return (<Badge>
       <span className="user-tag">
-        <img src={user.photoURL} className="user-image-tiny" /> &nbsp;
+        <UserIcon user={user} size="tiny" /> &nbsp;
         {user.displayName} &nbsp;
         {buttonEls}
       </span>
     </Badge>);
   }
+);
 
-  getUserLists() {
-    const { 
-      userListRef,
-    } = this.props;
-
-    const allUsers = userListRef.val || {};
-    const allUids = Object.keys(allUsers);
-    const sortedUids = sortBy(allUids, uid => allUsers[uid].role || 1);
-    const userLists = map(userListNames, name => ({ name, role: Roles[name], list: {} }));
+@dataBind({
+  userLists({ }, { }, { usersPublic }) {
+    const allUids = Object.keys(usersPublic);
+    const sortedUids = sortBy(allUids, uid => usersPublic[uid].role || 1);
+    const userLists = map(RoleNames, name => ({ name, role: Roles[name], list: {} }));
 
     // sort users into userLists by role
     let listI = 0;
     for (let i = 0; i < sortedUids.length; ++i) {
       const uid = sortedUids[i];
-      const user = allUsers[uid];
-      while (listI < userListNames.length-1 && user.role && user.role >= userLists[listI+1].role) {
+      const user = usersPublic[uid];
+      while (listI < RoleNames.length - 1 && user.role && user.role >= userLists[listI + 1].role) {
         ++listI;
       }
       userLists[listI].list[uid] = user;
     }
     return userLists;
   }
+})
+export default class RoleManager extends Component {
+  constructor(...args) {
+    super(...args);
 
-  roleListEls() {
-    const { 
-      userListRef,
-      setRoleName
-    } = this.props;
-
-    const userLists = this.getUserLists();
-
-    // render
-    return (
-      map(userLists, (userList) => {
-        const {
-          name,
-          list
-        } = userList;
-
-        return (<Panel key={name} header={name}> 
-          <UserList users={list} 
-              renderUser={this.RenderUser} />
-        </Panel>);
-      })
-    );
+    autoBind(this);
   }
 
-  render() {
-    if (!this.IsAdmin) {
+  render(
+    { },
+    { userLists },
+    { isCurrentUserAdmin, usersPublic_isLoaded }
+  ) {
+    if (!usersPublic_isLoaded) {
+      return <LoadIndicator />;
+    }
+    if (!isCurrentUserAdmin) {
       return (
         <Alert bsStyle="warning">GM only</Alert>
       );
     }
 
-    return (<div>
-      { this.roleListEls() }
-    </div>);
+    return (<div>{
+      map(userLists(), (userList) => {
+        const {
+          name,
+          list
+        } = userList;
+
+        return (<Panel key={name} header={name}>
+          <UserList uids={Object.keys(list)} renderUser={RenderUser} />
+        </Panel>);
+      })
+    }</div>);
   }
 }
