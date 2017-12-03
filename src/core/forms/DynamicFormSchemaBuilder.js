@@ -128,8 +128,10 @@ export function normalizeSchema(o, uiSchema) {
   return normalizedSchema;
 }
 
-
-export default class FormSchemaBuilder {
+/**
+ * Allow form schemas to be built dynamically
+ */
+export default class DynamicFormSchemaBuilder {
   template;
 
   constructor(template) {

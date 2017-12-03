@@ -186,8 +186,8 @@ export default (propsOrPropCb) => WrappedComponent => {
           // hack: we must override the prototype because else react-autobind won't catch it
           // NOTE: it's oke because we created a new class in constructor anyway
           //    (injectRenderArgs returns a new class)
-          const proto = Object.getPrototypeOf(this);
-          return proto[methodName] = partialRight(
+          //const proto = Object.getPrototypeOf(this);
+          return this[methodName] = partialRight(
             this[methodName], 
             ..._injectedArguments
           );

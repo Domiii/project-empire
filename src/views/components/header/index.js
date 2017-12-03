@@ -158,8 +158,13 @@ export default class Header extends Component {
                 </LinkContainer>
               }
               {isCurrentUserAdmin &&
+                <LinkContainer to="/kb">
+                  <NavItem eventKey={5}>KB</NavItem>
+                </LinkContainer>
+              }
+              {isCurrentUserAdmin &&
                 <LinkContainer to="/gm">
-                  <NavItem eventKey={4}>GM Tools</NavItem>
+                  <NavItem eventKey={6}>GM Tools</NavItem>
                 </LinkContainer>
               }
             </Nav>

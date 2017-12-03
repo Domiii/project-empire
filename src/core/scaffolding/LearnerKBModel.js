@@ -7,10 +7,11 @@ import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 export const LearnerQuestionTypes = {
   ShortAnswer: 1,
   ParagraphAnswer: 2,
-  Radios: 3,
-  Checkboxes: 4,
-  Date: 5,
-  Time: 6
+  YesNo: 3,
+  Radios: 4,
+  Checkboxes: 5,
+  Date: 6,
+  Time: 7
 };
 
 const readers = {
@@ -42,12 +43,29 @@ export default {
         children: {
           learnerQuestion: {
             path: '$(questionId)',
+            onWrite: [
+              'createdAt',
+              'updatedAt'
+            ],
             children: {
               title: 'title',
               description: 'description',
               questionType: 'questionType',
-              choices: 'choices', // if this is a radios/checkboxes question
-              order: 'order'
+              choices: { // if this is a radios/checkboxes question
+                path: 'choices', 
+                children: {
+                  learnerQuestionChoice: {
+                    path: '$(choiceId)',
+                    children: {
+                      title: 'title',
+                      description: 'description'
+                    }
+                  }
+                }
+              },
+              order: 'order',
+              createdAt: 'createdAt',
+              updatedAt: 'updatedAt'
             }
           }
         }

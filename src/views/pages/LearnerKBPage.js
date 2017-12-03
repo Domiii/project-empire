@@ -20,7 +20,7 @@ export default class LearnerKBPage extends Component {
   }
 
   render(
-    { match },
+    { },
     { },
     { isCurrentUserAdmin, currentUser_isLoaded }
   ) {
@@ -35,9 +35,9 @@ export default class LearnerKBPage extends Component {
     // const formProps = { mode, uid, questionId };
     return (
       <div>
-        <Panel bsStyle="primary" header="Learner KB">
-          <LearnerQuestionsOverview />
-        </Panel>
+        {/* <Panel bsStyle="primary" header="Learner KB"> */}
+        <LearnerQuestionsOverview />
+        {/* </Panel> */}
       </div>
     );
   }

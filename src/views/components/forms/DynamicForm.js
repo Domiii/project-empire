@@ -19,13 +19,6 @@ import Markdown from 'src/views/components/markdown';
 
 import UserBadge from 'src/views/components/users/UserBadge';
 
-import partyPrepareMeeting from './partyPrepareMeeting';
-
-
-const _stageFormRenderAll = {
-  partyPrepareMeeting
-};
-
 
 // ###########################################################################
 // FieldTemplate
@@ -129,8 +122,6 @@ const widgets = {
 };
 
 const defaultFormRenderSettings = {
-  // schema: FormSchema,
-
   uiSchema: {
     createdAt: {
       'ui:readonly': true,
@@ -168,83 +159,65 @@ function DefaultFormRender(allProps) {
 
 
 // ###########################################################################
-// FormWrapper
+// Putting it all together
 // ###########################################################################
 
 
-// ###########################################################################
-// Bookkeeping
-// ###########################################################################
+/**
+ * Adds dynamicity, some default components and more features to default jsonschema forms.
+ */
+@dataBind({})
+export default class DynamicForm extends Component {
+  static propTypes = {
+    formData: PropTypes.object.isRequired,
+    onSubmit: PropTypes.func.isRequired
+  };
 
-const renderSettings = mapValues(_stageFormRenderAll, info => merge({}, info && info.settings, defaultFormRenderSettings));
-const renderersRaw = mapValues(_stageFormRenderAll, info => info && info.render || DefaultFormRender);
-
-const stageFormRenderers = mapValues(renderersRaw, (FormRender, name) => {
-  FormRender = merge({}, FormRender, DefaultFormRender);
-  const settings = renderSettings[name] || {};
-  let { schema, uiSchema, schemaTemplate, ...moreSettings } = settings;
-  let schemaBuilder;
-  if (schemaTemplate) {
-    schemaBuilder = new DynamicFormSchemaBuilder(schemaTemplate);
+  constructor(...args) {
+    super(...args);
   }
 
-  uiSchema = uiSchema || {};
+  render(allArgs) {
+    const [
+      { },
+      { getProps },
+      { }
+    ] = allArgs;
 
-  /**
-   * Stateful form wrapper for managing auto-save et al 
-   */
-  @dataBind({})
-  class FormWrapper extends Component {
-    static propTypes = {
-      formData: PropTypes.object.isRequired,
-      onSubmit: PropTypes.func.isRequired
-    };
+    let {
+      component,
+      
+      schema,
+      schemaTemplate,
+      schemaBuilder,
 
-    constructor(...args) {
-      super(...args);
+      formData,
+      onSubmit,
+
+      ...otherProps
+    } = getProps();
+
+    const Component = component || DefaultFormRender;
+
+    const renderSettings = merge(otherProps, defaultFormRenderSettings);
+
+    if (schemaTemplate) {
+      // template overrides builder
+      schemaBuilder = new DynamicFormSchemaBuilder(schemaTemplate);
     }
 
-    render(...allArgs) {
-      const [
-        _,
-        { getProps }
-      ] = allArgs;
-
-      const pureProps = getProps();
-      const {
-        formData,
-        onSubmit,
-        otherProps
-      } = pureProps;
-
-      if (schemaBuilder) {
-        schema = schemaBuilder.build(uiSchema, allArgs);
-      }
-
-      return (<FormRender
-        formData={formData}
-        onSubmit={onSubmit}
-        schema={schema}
-        uiSchema={uiSchema}
-        {...moreSettings}
-        {...otherProps}
-      />);
+    if (schemaBuilder) {
+      // builder overrides schema
+      schema = schemaBuilder.build(renderSettings.uiSchema, allArgs);
     }
+
+    return (<Component
+      schema={schema}
+
+      formData={formData}
+      onSubmit={onSubmit}
+
+      {...renderSettings}
+    />);
   }
-  return FormWrapper;
-});
-
-function createInvalidFormRender(name) {
-  return () => (<pre className="color-red">
-    invalid form name: {name}
-  </pre>);
 }
-
-export function getStageFormRenderer(name) {
-  if (!stageFormRenderers[name]) {
-    return createInvalidFormRender(name);
-  }
-  return stageFormRenderers[name];
-}
-
-export default stageFormRenderers;

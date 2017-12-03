@@ -25,3 +25,4 @@ export default class FormTable extends Component {
   //   </BootstrapTable>
   // </div>);
  }
+}

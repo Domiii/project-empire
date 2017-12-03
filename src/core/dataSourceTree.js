@@ -1,10 +1,13 @@
 import firebase from 'firebase';
 
-import ProjectModel from 'src/core/projects/projectModel';
 import UserModel from 'src/core/users/UserModel';
-import MissionModel from 'src/core/missions/MissionModel';
+
+import LearnerKBModel from 'src/core/scaffolding/LearnerKBModel';
 import LearnerScheduleModel from 'src/core/scaffolding/LearnerScheduleModel';
 import LearnerEntryModel from 'src/core/scaffolding/LearnerEntryModel';
+
+import ProjectModel from 'src/core/projects/projectModel';
+import MissionModel from 'src/core/missions/MissionModel';
 
 import dataProviders from './dataProviders.js';
 
@@ -50,10 +53,13 @@ const dataStructureConfig = {
     path: '/',
     children: merge({},
       UserModel,
-      MissionModel,
-      ProjectModel,
+      
+      LearnerKBModel,
       LearnerScheduleModel,
       LearnerEntryModel,
+
+      MissionModel,
+      ProjectModel,
       {
         missions: {
           path: 'missions',

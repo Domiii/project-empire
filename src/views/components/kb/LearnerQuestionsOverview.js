@@ -1,6 +1,11 @@
+import { LearnerQuestionTypes } from 'src/core/scaffolding/LearnerKBModel';
+
+import size from 'lodash/size';
+import map from 'lodash/map';
+
 import { hrefLearnerStatusList } from 'src/views/href';
 
-import React from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 import dataBind from 'src/dbdi/react/dataBind';
@@ -8,46 +13,66 @@ import dataBind from 'src/dbdi/react/dataBind';
 import Moment from 'react-moment';
 import {
   Alert, Button,
-  Well, Panel
+  Panel,
+  ListGroup, ListGroupItem
 } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import Flexbox from 'flexbox-react';
 
 import UserBadge from 'src/views/components/users/UserBadge';
 import LoadIndicator from 'src/views/components/util/loading';
+import FAIcon from 'src/views/components/util/FAIcon';
 
+import LearnerQuestionList from './LearnerQuestionList';
 
-const LearnerQuestionsOverview = dataBind({})(function LearnerEntryList(
-  { mode, uid, scheduleId, cycleId },
-  { userPublic,
-    get_learnerEntryStatus }
-) {
-  const learnerEntryId = { uid, scheduleId, cycleId };
-  if (!userPublic.isLoaded({ uid }) |
-    !get_learnerEntryStatus.isLoaded({ learnerEntryId })) {
-    return <LoadIndicator />;
+@dataBind({
+  addQuestionClick(evt, { }, { push_learnerQuestion }) {
+    const q = {
+      title: 'untitled',
+      description: '',
+      questionType: LearnerQuestionTypes.YesNo
+    };
+
+    return push_learnerQuestion(q);
   }
-  else {
-    const status = get_learnerEntryStatus({ learnerEntryId });
-    const user = userPublic({ uid });
-    if (!status || !user) {
-      return (<Alert bsStyle="danger">
-        invalid page :( <LinkContainer to={hrefLearnerStatusList()}>
-          <Button bsStyle="primary">
-            Back!
-          </Button>
-        </LinkContainer>
-      </Alert>);
-    }
+})
+export default class LearnerQuestionsOverview extends Component {
+  constructor(...args) {
+    super(...args);
 
-    // TODO
+    this.state = {
+      editQuestionId: null
+    };
+
+    this.dataBindMethods(
+      'clickAdd'
+    );
+  }
+
+  clickAdd = (evt, { }, { addQuestionClick }, { }) => {
+    const newRef = addQuestionClick(evt);
+    this.setState({
+      editQuestionId: newRef.key
+    });
+  }
+
+  render(
+    { },
+    { },
+    { }
+  ) {
     return (<div>
       <h3>
-        <UserBadge uid={uid} /> learner record
+        Learner Questions
       </h3>
-      form
+      
+      <LearnerQuestionList editQuestionId={this.state.editQuestionId} />
+
+      <center className="full-width">
+        <Button bsStyle="success" onClick={this.clickAdd}>
+          <FAIcon name="plus" /> Add Question!
+        </Button>
+      </center>
     </div>);
   }
-});
-
-export default LearnerQuestionsOverview;
+}
