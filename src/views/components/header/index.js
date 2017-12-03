@@ -58,12 +58,12 @@ export default class Header extends Component {
     window.open(url, '_blank');
   }
 
-  switchToEn(evt, { }, { set_userLocale }) {
-    set_userLocale('en');
+  switchToEn(evt, { }, { set_userLocale }, { currentUid }) {
+    set_userLocale({ uid: currentUid }, 'en');
   }
 
-  switchToZh(evt, { }, { set_userLocale }) {
-    set_userLocale('zh');
+  switchToZh(evt, { }, { set_userLocale }, { currentUid }) {
+    set_userLocale({ uid: currentUid }, 'zh');
   }
 
   toggleAdminView(evt, { }, { setAdminDisplayMode }, { isCurrentUserAdmin, currentUid }) {
@@ -74,7 +74,7 @@ export default class Header extends Component {
     { currentUid, currentUser, currentUser_isLoaded,
       isCurrentUserAdmin, isCurrentUserAdminReal }) {
     //const isGuardian = hasDisplayRole(currentUserRef, Roles.Guardian);
-    const lang = currentUser && currentUser.userLocale || 'en';
+    const lang = currentUser && currentUser.locale || 'en';
 
     // elements
     const adminToolsEL = isCurrentUserAdminReal && (

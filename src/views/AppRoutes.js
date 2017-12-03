@@ -7,6 +7,8 @@ import dataBind from 'src/dbdi/react/dataBind';
 
 import GMPage from './pages/GMPage';
 
+import LearnerKBPage from './pages/LearnerKBPage';
+
 import LearnerStatusListPage from './pages/LearnerStatusListPage';
 import LearnerStatusEntryPage from './pages/LearnerStatusEntryPage';
 import LearnerOverviewPage from './pages/LearnerOverviewPage';
@@ -41,6 +43,8 @@ const AppRoutes = dataBind()(function AppRoutes(
     return (
       <Switch>
         <Route exact path={routeTemplates.GM} component={GMPage} />
+
+        <Route exact path={routeTemplates.LEARNER_KB} component={LearnerKBPage} />
 
         <Route exact path={routeTemplates.LEARNER_STATUS_LIST} component={LearnerStatusListPage} />
         <Route exact path={routeTemplates.LEARNER_STATUS_USER} component={LearnerOverviewPage} />

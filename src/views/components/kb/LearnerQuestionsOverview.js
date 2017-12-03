@@ -12,13 +12,12 @@ import {
 } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import Flexbox from 'flexbox-react';
-import { Redirect } from 'react-router-dom';
 
 import UserBadge from 'src/views/components/users/UserBadge';
 import LoadIndicator from 'src/views/components/util/loading';
 
 
-const LearnerStatusEntryForm = dataBind({})(function LearnerEntryList(
+const LearnerQuestionsOverview = dataBind({})(function LearnerEntryList(
   { mode, uid, scheduleId, cycleId },
   { userPublic,
     get_learnerEntryStatus }
@@ -51,4 +50,4 @@ const LearnerStatusEntryForm = dataBind({})(function LearnerEntryList(
   }
 });
 
-export default LearnerStatusEntryForm;
+export default LearnerQuestionsOverview;
