@@ -30,20 +30,20 @@ export default class ProgressBar extends Component {
         style={{ position: 'relative', textAlign: 'center', verticalAlign: 'middle'}}>
         <div
           style={{
-            position:'absolute', left: 0, top: 0, bottom: 0,
+            position: 'absolute', left: 0, top: 0, bottom: 0,
             width: '100%',
             backgroundColor: '#555'}}>
         </div>
         <div
           style={{
-            position:'absolute', left: 0, top: 0, bottom: 0,
+            position: 'absolute', left: 0, top: 0, bottom: 0,
             width: progressPct + '%',
             backgroundColor: progressColor}}>
         </div>
 
         <div
           style={{
-            position:'absolute', left: 0, top: 0, bottom: 0,
+            position: 'absolute', left: 0, top: 0, bottom: 0,
             color: 'white',
             width: '100%'}}>
               <span>{ !isNaN(progressPct) && (progressPct + '%') || '' }</span>

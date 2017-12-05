@@ -10,6 +10,8 @@ import filter from 'lodash/filter';
 import sortBy from 'lodash/sortBy';
 import size from 'lodash/size';
 
+import { NOT_LOADED } from 'src/dbdi/react/dataBind';
+
 export default {
   // #########################################################################
   // Project basics
@@ -17,7 +19,7 @@ export default {
 
   sortedProjectIdsOfPage(args, { projectsOfPage }, { }) {
     if (!projectsOfPage.isLoaded(args)) {
-      return undefined;
+      return NOT_LOADED;
     }
 
     const projects = projectsOfPage(args);
@@ -84,17 +86,20 @@ export default {
 
   projectPartySize({ projectId }, { uidsOfProject }) {
     const uids = uidsOfProject({ projectId });
-    if (uids === undefined) {
-      return undefined;
+    if (uids === NOT_LOADED) {
+      return NOT_LOADED;
     }
     return size(uids);
   },
 
-  uidsWithoutProject({ }, { },
-    { userProjectIdIndex, userProjectIdIndex_isLoaded, usersPublic, usersPublic_isLoaded }) {
+  uidsWithoutProject(
+    { },
+    { },
+    { userProjectIdIndex, userProjectIdIndex_isLoaded, usersPublic, usersPublic_isLoaded }
+  ) {
     // TODO: make this more efficient (achieve O(k), where k = users without project)
     if (!usersPublic_isLoaded | !userProjectIdIndex_isLoaded) {
-      return undefined;
+      return NOT_LOADED;
     }
 
     if (!usersPublic) {
@@ -109,6 +114,33 @@ export default {
 
     // get all uids of users who have no project yet
     return filter(uids, uid => !size(userProjectIdIndex[uid]));
+  },
+
+  uidsWithProjectButNotIn(
+    { projectId },
+    {},
+    { userProjectIdIndex, userProjectIdIndex_isLoaded, usersPublic, usersPublic_isLoaded }
+  ) {
+    if (!usersPublic_isLoaded | !userProjectIdIndex_isLoaded) {
+      return NOT_LOADED;
+    }
+
+    if (!usersPublic) {
+      return EmptyArray;
+    }
+
+    const uids = Object.keys(usersPublic);
+    if (!userProjectIdIndex) {
+      // not a single user is assigned yet
+      return EmptyArray;
+    }
+
+
+    // get all uids of users who have at least one project (excluding the given project)
+    return filter(uids, uid => {
+      const excludeSize = userProjectIdIndex[uid] && userProjectIdIndex[uid][projectId] && 1 || 0;
+      return size(userProjectIdIndex[uid]) > excludeSize;
+    });
   },
 
   projectReviewers({ projectId }, { projectById, userPublic }, { }) {

@@ -29,6 +29,7 @@ import dataBind from 'src/dbdi/react/dataBind';
 
 import LoadIndicator from 'src/views/components/util/loading';
 
+import { MissionHeader } from './ProjectPreview';
 import ProjectStageView from './ProjectStageView';
 //import ProjectTree from './ProjectTree';
 import ProjectProgressBar from './ProjectProgressBar';
@@ -50,14 +51,16 @@ export const ProjectControlView = dataBind()(
     //return <ProjectTree setContext={newContext} />;
 
     return (<div>
-      <ProjectProgressBar setContext={newContext} />
-      {selectedStagePath &&
-        <ProjectStageView key={selectedStagePath} setContext={{
-          thisProjectId: projectId,
-          thisStagePath: selectedStagePath,
-          thisNode: projectStageTree.getNodeByPath(selectedStagePath)
-        }} />
-      }
+      <Panel header={<MissionHeader missionId={thisProject.missionId} />}>
+        <ProjectProgressBar setContext={newContext} />
+        {selectedStagePath &&
+          <ProjectStageView key={selectedStagePath} setContext={{
+            thisProjectId: projectId,
+            thisStagePath: selectedStagePath,
+            thisNode: projectStageTree.getNodeByPath(selectedStagePath)
+          }} />
+        }
+      </Panel>
     </div>);
   }
 );

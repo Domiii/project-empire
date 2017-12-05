@@ -49,6 +49,28 @@ export const ProjectTeam = dataBind({})(
   }
 );
 
+export const MissionHeader = dataBind({})(function MissionHeader(
+  { missionId },
+  { missionById }
+) {
+  const isMissionLoaded = missionById.isLoaded({ missionId });
+  let missionHeader;
+  if (isMissionLoaded) {
+    const mission = missionById({ missionId });
+    if (mission) {
+      missionHeader = `${mission.code} - ${mission.title}`;
+    }
+    else {
+      missionHeader = '<unknown mission>';
+    }
+  }
+  else {
+    missionHeader = <LoadIndicator />;
+  }
+
+  return missionHeader;
+});
+
 @dataBind({
 
 })
@@ -112,7 +134,7 @@ export default class ProjectPreview extends Component {
     );
   }
 
-  render({ }, { projectById, missionById }, { }) {
+  render({ }, { projectById, get_missionDescription }, { }) {
     const {
       projectId
     } = this.props;
@@ -127,29 +149,26 @@ export default class ProjectPreview extends Component {
     }
 
     // mission
-    const isMissionLoaded = missionById.isLoaded({ missionId: project.missionId });
-    const mission = missionById({ missionId: project.missionId });
+    const missionId = project.missionId;
+    const isMissionLoaded = get_missionDescription.isLoaded({ missionId });
     let missionEl;
-    let missionHeader;
     if (isMissionLoaded) {
-      if (mission) {
-        missionHeader = `${mission.code} - ${mission.title}`;
+      const missionDescription = get_missionDescription({ missionId });
+      if (missionDescription) {
         missionEl = (<Well>
-          <h4 className="no-margin no-padding">{mission.description}</h4>
+          <h4 className="no-margin no-padding">{missionDescription}</h4>
         </Well>);
       }
       else {
-        missionHeader = '<unknown mission>';
         missionEl = (<Alert bsStyle="danger">mission doesn{'\''}t exist (anymore)</Alert>);
       }
     }
     else {
-      missionHeader = <LoadIndicator />;
       missionEl = <LoadIndicator block message="loading mission..." />;
     }
 
     return (<div>
-      <h1>{missionHeader}</h1>
+      <h1><MissionHeader missionId={project.missionId} /></h1>
       <Panel header={null} bsStyle="info">
         <div>
           {this.editorHeader()}

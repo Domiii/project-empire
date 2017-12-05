@@ -11,11 +11,12 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
 
-import dataBind from 'src/dbdi/react/dataBind';
+import dataBind, { NOT_LOADED } from 'src/dbdi/react/dataBind';
 
 import Moment from 'react-moment';
 import {
-  Alert, Button, Badge
+  Alert, Button, Badge,
+  Panel
 } from 'react-bootstrap';
 import Flexbox from 'flexbox-react';
 
@@ -151,16 +152,23 @@ const FormUISchema = {
 // ProjectEditor
 // ##########################################################################
 
-// eslint-disable-next-line react/prop-types
-function DeleteUserButton({ open }) {
-  return (<Button onClick={open} bsSize="small"
-    className="color-red no-padding">
-    <FAIcon name="trash" />
-  </Button>);
-}
+// // eslint-disable-next-line react/prop-types
+// function DeleteUserButton({ open }) {
+//   return (<Button onClick={open} bsSize="small"
+//     className="color-red no-padding">
+//     <FAIcon name="trash" />
+//   </Button>);
+// }
+// <ConfirmModal
+// header="Delete user from project?"
+// ButtonCreator={DeleteUserButton}
+// onConfirm={deleteUser}
+// >
+// <UserBadge uid={uid} size="tiny" />
+// </ConfirmModal>
 
 const ExistingUserEl = dataBind({
-  deleteUser({ uid, thisProjectId }, { deleteUserFromProject }) {
+  deleteUser(evt, { uid, thisProjectId }, { deleteUserFromProject }) {
     return deleteUserFromProject({ uid, projectId: thisProjectId });
   }
 })(
@@ -168,29 +176,32 @@ const ExistingUserEl = dataBind({
     return (<Badge>
       <span className="user-tag">
         <UserBadge uid={uid} size="tiny" /> &nbsp;
-
-        <ConfirmModal
-          header="Delete user from project?"
-          ButtonCreator={DeleteUserButton}
-          onConfirm={deleteUser}
-        >
-          <UserBadge uid={uid} size="tiny" />
-        </ConfirmModal>
+        <Button onClick={deleteUser} bsSize="small"
+          className="color-red no-padding">
+          <FAIcon name="trash" />
+        </Button>
       </span>
     </Badge>);
   });
 
-// eslint-disable-next-line react/prop-types
-function AddUserButton({ open }) {
-  return (<Button onClick={open}
-    className="color-green no-padding"
-    bsSize="small">
-    <FAIcon name="plus" />
-  </Button>);
-}
+// // eslint-disable-next-line react/prop-types
+// function AddUserButton({ open }) {
+//   return (<Button onClick={open}
+//     className="color-green no-padding"
+//     bsSize="small">
+//     <FAIcon name="plus" />
+//   </Button>);
+// }
+// <ConfirmModal
+//   header="Delete user from project?"
+//   ButtonCreator={AddUserButton}
+//   onConfirm={addUser}
+// >
+//   <UserBadge uid={uid} size="tiny" />
+// </ConfirmModal>
 
 const AddUserEl = dataBind({
-  addUser({ uid, thisProjectId }, { addUserToProject }) {
+  addUser(evt, { uid, thisProjectId }, { addUserToProject }) {
     return addUserToProject({ uid, projectId: thisProjectId });
   }
 })(
@@ -199,24 +210,75 @@ const AddUserEl = dataBind({
       <span className="user-tag">
         <UserBadge uid={uid} size="tiny" /> &nbsp;
 
-        <ConfirmModal
-          header="Delete user from project?"
-          ButtonCreator={AddUserButton}
-          onConfirm={addUser}
-        >
-          <UserBadge uid={uid} size="tiny" />
-        </ConfirmModal>
+        <Button onClick={addUser}
+          className="color-green no-padding"
+          bsSize="small">
+          <FAIcon name="plus" />
+        </Button>
       </span>
     </Badge>);
-  });
+  }
+  );
 
-export const ProjectUserEditor = dataBind({
 
+const ProjectUserList = dataBind({})(function ProjectUserList(
+  { userFn, emptyText },
+  { }
+) {
+  const addableUids = userFn();
+  if (addableUids !== NOT_LOADED) {
+    if (isEmpty(addableUids)) {
+      return (
+        <Alert bsStyle="warning" className="no-padding">
+          {emptyText}
+        </Alert>
+      );
+    }
+    else {
+      return (
+        <UserList uids={addableUids}
+          renderUser={AddUserEl} />
+      );
+    }
+  }
+  else {
+    return <LoadIndicator block />;
+  }
+});
 
-})(
-  ({ projectId }, { uidsOfProject, uidsWithoutProject }, { }) => {
-    let existingUsersEl, addableUsersEl;
-    const addableUids = uidsWithoutProject(); // make sure loading starts even if others haven't loaded yet
+@dataBind({
+  getAllUidsWithProjectButNotInCurrent(
+    { projectId },
+    { uidsWithProjectButNotIn }
+  ) {
+    return uidsWithProjectButNotIn({ projectId });
+  }
+})
+export class ProjectUserEditor extends Component {
+  constructor(...args) {
+    super(...args);
+
+    this.state = {
+      addAllUsers: false
+    };
+  }
+
+  toggleAddAllUsers = () => {
+    this.setState({
+      addAllUsers: !this.state.addAllUsers
+    });
+  };
+
+  render(
+    { projectId },
+    { uidsOfProject, uidsWithoutProject, getAllUidsWithProjectButNotInCurrent },
+    { }
+  ) {
+    const {
+      addAllUsers
+    } = this.state;
+
+    let existingUsersEl;
     if (uidsOfProject.isLoaded({ projectId })) {
       const existingUids = Object.keys(uidsOfProject({ projectId }));
       if (isEmpty(existingUids)) {
@@ -233,35 +295,31 @@ export const ProjectUserEditor = dataBind({
       existingUsersEl = <LoadIndicator block />;
     }
 
-    if (uidsWithoutProject.isLoaded()) {
-      if (isEmpty(addableUids)) {
-        addableUsersEl = (
-          <Alert bsStyle="warning" className="no-padding">no more available users</Alert>
-        );
-        // TODO: also allow choosing to "add any user" (not just those without project)
-      }
-      else {
-        addableUsersEl = (
-          <UserList uids={addableUids}
-            renderUser={AddUserEl} />
-        );
-      }
-    }
-    else {
-      addableUsersEl = <LoadIndicator block />;
-    }
-
-    return (<Flexbox flexDirection="row" alignItems="center">
-      <Flexbox flex="20">
-        {existingUsersEl}
+    return (<Flexbox flexDirection="row" justifyContent="flex-start" alignItems="stretch"
+      className="full-width">
+      <Flexbox flex="20" alignItems="stretch" className="full-width">
+        <Panel header="Remove user from project" className="full-width full-height">
+          {existingUsersEl}
+        </Panel>
       </Flexbox>
       <Flexbox flex="1" />
-      <Flexbox flex="20">
-        {addableUsersEl}
+      <Flexbox flex="20" className="full-width" flexDirection="column" alignItems="stretch">
+        <Panel header="Users w/o project">
+          <ProjectUserList emptyText="no users without project"
+            userFn={uidsWithoutProject} />
+        </Panel>
+        <Panel header={<Button onClick={this.toggleAddAllUsers} active={addAllUsers}>
+          <FAIcon name="users" /> Show users with projects
+          </Button>} className="no-margin">
+          {addAllUsers && (<div>
+            <ProjectUserList emptyText="no users with project"
+              userFn={getAllUidsWithProjectButNotInCurrent} />
+          </div>)}
+        </Panel>
       </Flexbox>
     </Flexbox>);
   }
-  );
+}
 
 
 @dataBind({
@@ -276,7 +334,6 @@ export const ProjectUserEditor = dataBind({
 
     // get rid of undefined fields, created by (weird) form editor
     formData = pickBy(formData, val => val !== undefined);
-
 
     let promise;
     if (!projectId) {
@@ -314,7 +371,7 @@ export default class ProjectEditor extends Component {
 
   render({ projectId }, { projectById, onSubmit }, { }) {
     const alreadyExists = !!projectId;
-    const project = alreadyExists && 
+    const project = alreadyExists &&
       projectById({ projectId }) ||
       this.createNewProject();
 
@@ -333,8 +390,8 @@ export default class ProjectEditor extends Component {
           {/* the Form children are rendered at the bottom of the form */}
           <div>
             <p><label>edit users</label></p>
-            {projectId && <ProjectUserEditor 
-              setContext={{thisProjectId: projectId}}
+            {projectId && <ProjectUserEditor
+              setContext={{ thisProjectId: projectId }}
               projectId={projectId} />}
 
             <button type="submit" className="btn btn-info">

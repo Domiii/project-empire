@@ -60,8 +60,7 @@ export class App extends Component {
 
     ensureUserInitialized();
         
-    // TODO: log new visit
-    // TODO: add hook to browserhistory
+    // TODO: log all visits via browserhistory hook
     // browserHistory.listen( location =>  {
       
     // });

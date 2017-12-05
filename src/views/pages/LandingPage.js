@@ -28,10 +28,6 @@ export default class LandingPage extends Component {
     return (
       <div>
         <span>hi!</span>
-        <pre>（任務鑑定前自評表）
-  TODO: Rule book
-  TODO: Q & A
-  專案帝國的新聞　（or 上課簡報）</pre>
       </div>
     );
   }

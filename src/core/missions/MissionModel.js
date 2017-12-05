@@ -14,7 +14,7 @@ export default {
         children: {
           code: 'code',
           title: 'title',
-          description: 'description',
+          missionDescription: 'description',
           prereqs: 'prereqs',
           goals: 'goals',
           rewards: 'rewards',

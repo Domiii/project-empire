@@ -34,6 +34,8 @@ import {
 } from './lib/dbdi-react-internals';
 import { injectRenderArgs } from './react-util';
 
+export const NOT_LOADED = undefined;
+
 // class ReactContextDataProvider extends DataProviderBase {
 //   // TODO: a data provider to read/write the local React context without it's usual shortcomings
 //   // TODO: proper pub-sub bindings

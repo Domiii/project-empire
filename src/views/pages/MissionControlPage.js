@@ -44,7 +44,7 @@ export default class MissionControlPage extends Component {
   render({ }, { }, { }) {
     return (
       <div>
-        <Panel header="目前的任務">
+        <Panel header="進行中的任務">
           <ProjectControlView />
         </Panel>
         <Panel header="以前做過的任務">
