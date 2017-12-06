@@ -6,7 +6,7 @@ import {
 
 import {
   stageStatusBsStyles
-} from './stageRenderSettings';
+} from './projectRenderSettings';
 
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -18,7 +18,7 @@ import {
 
 import dataBind from 'src/dbdi/react/dataBind';
 
-import StageStatusBar from './StageStatusBar';
+import StageContributorStatusList from './StageContributorStatusList';
 import StageButtons from './StageButtons';
 import StageContent from './StageContent';
 
@@ -56,7 +56,7 @@ const ProjectStageView = dataBind({
         <span>{`${title}`}</span>
       </Flexbox>
       <Flexbox>
-        <StageStatusBar />
+        <StageContributorStatusList />
       </Flexbox>
     </Flexbox>
   );

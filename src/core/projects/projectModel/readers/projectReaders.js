@@ -3,7 +3,7 @@ import {
 } from 'src/core/projects/ProjectPath';
 
 import { EmptyObject, EmptyArray } from 'src/util';
-import { getOptionalArgument, getOptionalArguments } from 'src/dbdi/dataAccessUtil';
+import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 
 import mapValues from 'lodash/mapValues';
 import filter from 'lodash/filter';
@@ -77,10 +77,8 @@ export default {
 
   usersOfProject({ projectId }, { uidsOfProject, userPublic }, { }) {
     return mapValues(
-      uidsOfProject(
-        { projectId }) || EmptyObject,
-      (_, uid) => userPublic({ uid }
-      )
+      uidsOfProject({ projectId }) || EmptyObject,
+      (_, uid) => userPublic({ uid })
     );
   },
 

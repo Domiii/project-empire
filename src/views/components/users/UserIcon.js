@@ -43,7 +43,8 @@ export default function UserIcon({user, size, ...moreProps}) {
       src={user.photoURL}
       preloader={preloader}
       className={clazz}
-      style={style}>
+      style={style}
+      title={user.displayName}>
       {user.photoURL}
     </ImageLoader>
   );

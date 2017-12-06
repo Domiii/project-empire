@@ -1,7 +1,7 @@
 import {
   contributorStatusStyles,
   constributorStatusIcons
-} from './stageRenderSettings';
+} from './projectRenderSettings';
 
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -28,12 +28,12 @@ ProjectContributorStatusIcon.propTypes = {
 };
 
 const ProjectContributorIcon = dataBind()(
-  ({ uid, userStatus, groupName },
+  ({ uid, groupName, userStatus },
     { userPublic }) => {
     const isUserLoaded = !uid || userPublic.isLoaded({ uid });
     const user = isUserLoaded && uid && userPublic({ uid });
 
-    const statusIconEl = (
+    const statusIconEl = (!!userStatus || userStatus === 0) && (
       <ProjectContributorStatusIcon status={userStatus} className="project-contributor-status-icon" />
     );
 
@@ -51,7 +51,7 @@ const ProjectContributorIcon = dataBind()(
       // unknown user
       return (
         <div className={classes}>
-          <FAIcon className={classes} name="user-secret" >
+          <FAIcon name="user-secret" >
             {statusIconEl}
           </FAIcon>
         </div>

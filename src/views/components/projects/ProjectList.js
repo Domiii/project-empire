@@ -21,7 +21,7 @@ import { LoadOverlay } from 'src/views/components/overlays';
 import { FAIcon } from 'src/views/components/util';
 
 import LoadIndicator from 'src/views/components/util/loading';
-import ProjectPreview from './ProjectPreview';
+import ProjectPanel from './ProjectPanel';
 import ProjectEditor from './ProjectEditor';
 
 
@@ -85,7 +85,7 @@ export default class ProjectList extends Component {
         <Button active={this.IsAdding}
           bsStyle="success" bsSize="small"
           onClick={this.toggleAdding}>
-          <FAIcon name="plus" className="color-green" /> add new project
+          <FAIcon name="plus" className="color-green" /> create new project
           </Button>
 
         {this.IsAdding &&
@@ -112,7 +112,7 @@ export default class ProjectList extends Component {
         map(projectIds, (projectId) => {
 
           return (<li key={projectId} className="list-group-item">
-            <ProjectPreview {...{
+            <ProjectPanel {...{
               readonly: false,
               projectId
             }} />

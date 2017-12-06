@@ -14,7 +14,7 @@ import StageContributorIcon from './StageContributorIcon';
 // Render icon + status of all responsible contributors for given stage
 
 
-const StageStatusBar = dataBind()(
+const StageContributorStatusList = dataBind()(
   ({ thisProjectId, thisStagePath }, { stageContributors }) => {
     const projectId = thisProjectId;
     const stagePath = thisStagePath;
@@ -68,7 +68,7 @@ const StageStatusBar = dataBind()(
     </Flexbox>);
   }
 );
-StageStatusBar.propTypes = {
+StageContributorStatusList.propTypes = {
 };
 
-export default StageStatusBar;
+export default StageContributorStatusList;

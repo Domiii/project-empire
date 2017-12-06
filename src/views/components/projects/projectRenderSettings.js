@@ -2,9 +2,28 @@
 import {
   projectStageTree,
   StageStatus,
+  ProjectStatus,
   StageContributorStatus,
   isStageStatusOver
 } from 'src/core/projects/ProjectDef';
+
+export const projectStatusProps = {
+  [ProjectStatus.None]: {
+    bsStyle: 'default'
+  },
+  [ProjectStatus.NotStarted]: {
+    bsStyle: 'default'
+  },
+  [ProjectStatus.Started]: {
+    bsStyle: 'primary'
+  },
+  [ProjectStatus.Finished]: {
+    bsStyle: 'success'
+  },
+  [ProjectStatus.Failed]: {
+    bsStyle: 'danger'
+  }
+};
 
 export const stageStatusStyles = {
   [StageStatus.None]: {

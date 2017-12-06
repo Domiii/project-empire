@@ -10,7 +10,7 @@ import {
   contributorStatusStyles,
   constributorStatusIcons,
   stageStatusBsStyles
-} from './stageRenderSettings';
+} from './projectRenderSettings';
 
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -26,6 +26,8 @@ import LoadIndicator from 'src/views/components/util/loading';
 
 import UserIcon from 'src/views/components/users/UserIcon';
 
+import ProjectContributorIcon from './ProjectContributorIcon';
+
 
 
 
@@ -40,48 +42,23 @@ StageContributorStatusIcon.propTypes = {
 
 const StageContributorIcon = dataBind()(
   ({ projectId, stagePath, groupName, uid },
-    { userPublic, stageContributorStatus }) => {
+    { stageContributorStatus }) => {
     const isStatusLoaded = !uid || stageContributorStatus.isLoaded({ projectId, stagePath, uid });
-    const isUserLoaded = !uid || userPublic.isLoaded({ uid });
-    const userStatus = isUserLoaded && uid && stageContributorStatus({ projectId, stagePath, uid }) ||
+
+    if (!isStatusLoaded) {
+      return <LoadIndicator className="project-contributor-status-icon" />;
+    }
+
+    const userStatus = uid && stageContributorStatus({ projectId, stagePath, uid }) ||
       StageContributorStatus.None;
-    const user = isUserLoaded && uid && userPublic({ uid });
 
-    const statusIconEl = (
-      !isStatusLoaded ?
-        <LoadIndicator className="project-contributor-status-icon" /> :
-        <StageContributorStatusIcon status={userStatus} className="project-contributor-status-icon" />
-    );
+    const iconProps = {
+      uid,
+      userStatus,
+      groupName
+    };
 
-    if (!isUserLoaded) {
-      // still loading
-      return (
-        <div className={classes}>
-          <LoadIndicator />
-        </div>
-      );
-    }
-
-    const classes = 'project-contributor project-contributor-' + groupName;
-    if (!user) {
-      // unknown user
-      return (
-        <div className={classes}>
-          <FAIcon className={classes} name="user-secret" >
-            {statusIconEl}
-          </FAIcon>
-        </div>
-      );
-    }
-    else {
-      // user icon
-      return (
-        <div className={classes}>
-          <UserIcon user={user} />
-          {statusIconEl}
-        </div>
-      );
-    }
+    return (<ProjectContributorIcon {...iconProps} />);
   }
 );
 

@@ -1,4 +1,10 @@
 import { hasDisplayRole } from 'src/core/users/Roles';
+import {
+  ProjectStatus,
+  isProjectStatusOver
+} from 'src/core/projects/ProjectDef';
+
+import { getOptionalArgument } from 'src/dbdi/dataAccessUtil';
 
 import map from 'lodash/map';
 import isEmpty from 'lodash/isEmpty';
@@ -20,34 +26,19 @@ import Flexbox from 'flexbox-react';
 
 import ProjectEditor from './ProjectEditor';
 import ProjectEditTools from './ProjectEditTools';
-import { ProjectControlView } from './ProjectControlView';
+import ProjectTeamList from './ProjectTeamList';
+import ProjectControlView from './ProjectControlView';
+
 import UserList from 'src/views/components/users/UserList';
 import UserBadge from 'src/views/components/users/UserBadge';
+
 import LoadIndicator from 'src/views/components/util/loading';
 import { FAIcon } from 'src/views/components/util';
 
 
-export const ProjectTeam = dataBind({})(
-  ({ projectId }, { uidsOfProject }) => {
-    if (!uidsOfProject.isLoaded({ projectId })) {
-      return <LoadIndicator />;
-    }
-    else {
-      const uids = Object.keys(uidsOfProject({ projectId }));
-
-      if (isEmpty(uids)) {
-        return (<Alert bsStyle="warning" style={{ display: 'inline' }} className="no-padding">
-          <span>this project has no team yet</span>
-        </Alert>);
-      }
-      else {
-        return (<div>
-          <span>Team ({size(uids)}):</span> <UserList uids={uids} />
-        </div>);
-      }
-    }
-  }
-);
+import {
+  projectStatusProps
+} from './projectRenderSettings';
 
 export const MissionHeader = dataBind({})(function MissionHeader(
   { missionId },
@@ -71,10 +62,72 @@ export const MissionHeader = dataBind({})(function MissionHeader(
   return missionHeader;
 });
 
+
+export const MissionBody = dataBind({})(function MissionBody(
+  { missionId },
+  { get_missionDescription }
+) {
+  const isMissionLoaded = get_missionDescription.isLoaded({ missionId });
+  let missionEl;
+  if (isMissionLoaded) {
+    const missionDescription = get_missionDescription({ missionId });
+    if (missionDescription) {
+      missionEl = (<Well>
+        <h4 className="no-margin no-padding">{missionDescription}</h4>
+      </Well>);
+    }
+    else {
+      missionEl = (<Alert bsStyle="danger">mission doesn{'\''}t exist (anymore)</Alert>);
+    }
+  }
+  else {
+    missionEl = <LoadIndicator block message="loading mission..." />;
+  }
+  return missionEl;
+});
+
+export const ProjectHeader = dataBind({})(function ProjectHeader(
+  { projectId },
+  { projectById, get_stageEntries }
+) {
+
+  if (!projectById.isLoaded({ projectId }) |
+    !get_stageEntries.isLoaded({ projectId })) {
+    return (<LoadIndicator block />);
+  }
+
+  const thisProject = projectById({ projectId });
+
+  const startTime = thisProject.createdAt;
+  const finishTime = thisProject.finishTime;
+  const projectStatus = thisProject.status || ProjectStatus.None;
+  const hasProjectFinished = isProjectStatusOver(projectStatus);
+  return (
+    <Flexbox justifyContent="space-between" alignItems="center">
+      <Flexbox>
+        <h4><MissionHeader missionId={thisProject.missionId} /></h4>
+      </Flexbox>
+      {hasProjectFinished && <Flexbox>
+        <span className="color-red">finished</span>&nbsp;
+        <Moment fromNow>{finishTime}</Moment>&nbsp;
+        (<Moment format="ddd, MMMM Do YYYY, h:mm:ss a">{finishTime}</Moment>)
+      </Flexbox>}
+      {!hasProjectFinished && <Flexbox>
+        started&nbsp;<Moment fromNow>{startTime}
+        </Moment>&nbsp;
+        (<Moment format="ddd, MMMM Do YYYY, h:mm:ss a">{startTime}</Moment>)
+      </Flexbox>}
+      <Flexbox>
+        <ProjectTeamList projectId={projectId} />
+      </Flexbox>
+    </Flexbox>
+  );
+});
+
 @dataBind({
 
 })
-export default class ProjectPreview extends Component {
+export default class ProjectPanel extends Component {
   static propTypes = {
     projectId: PropTypes.string.isRequired,
     readonly: PropTypes.bool
@@ -116,6 +169,14 @@ export default class ProjectPreview extends Component {
     const { showDetails } = this.state;
     return (readonly || !isCurrentUserGuardian) ? null : (
       <Flexbox alignItems="center" justifyContent="flex-end">
+        <Button onClick={this.toggleShowDetails}
+          bsStyle="primary"
+          bsSize="small" active={showDetails}>
+          <FAIcon name="cubes" />
+        </Button>
+
+        <div className="margin-half" />
+
         <ProjectEditTools {...{
           projectId,
 
@@ -124,20 +185,19 @@ export default class ProjectPreview extends Component {
           editing: this.IsEditing,
           toggleEdit: this.toggleEdit
         }} />
-
-        <Button onClick={this.toggleShowDetails}
-          bsStyle="primary"
-          bsSize="small" active={showDetails}>
-          <FAIcon name="cubes" />
-        </Button>
       </Flexbox>
     );
   }
 
-  render({ }, { projectById, get_missionDescription }, { }) {
+  render(
+    args,
+    { projectById },
+    { }
+  ) {
     const {
       projectId
     } = this.props;
+    const children = getOptionalArgument(args, 'children');
 
     if (!projectById.isLoaded({ projectId })) {
       return <LoadIndicator block message="loading project..." />;
@@ -148,47 +208,24 @@ export default class ProjectPreview extends Component {
       return (<Alert bsStyle="danger">invalid project id {projectId}</Alert>);
     }
 
-    // mission
-    const missionId = project.missionId;
-    const isMissionLoaded = get_missionDescription.isLoaded({ missionId });
-    let missionEl;
-    if (isMissionLoaded) {
-      const missionDescription = get_missionDescription({ missionId });
-      if (missionDescription) {
-        missionEl = (<Well>
-          <h4 className="no-margin no-padding">{missionDescription}</h4>
-        </Well>);
-      }
-      else {
-        missionEl = (<Alert bsStyle="danger">mission doesn{'\''}t exist (anymore)</Alert>);
-      }
-    }
-    else {
-      missionEl = <LoadIndicator block message="loading mission..." />;
-    }
+    const {
+      missionId,
+      status
+    } = project;
 
     return (<div>
-      <h1><MissionHeader missionId={project.missionId} /></h1>
-      <Panel header={null} bsStyle="info">
+      <Panel {...projectStatusProps[status]} header={<ProjectHeader projectId={projectId} />}>
         <div>
           {this.editorHeader()}
-          <p>Started: <Moment fromNow>{project.createdAt}</Moment></p>
           <p>Guardian: {
             !project.guardianUid ?
               <span className="color-gray">no guardian</span> :
               <UserBadge uid={project.guardianUid} />
           }</p>
-          <p>Reviewer: {
-            !project.reviewerUid ?
-              <span className="color-gray">no assigned reviewer</span> :
-              <UserBadge uid={project.reviewerUid} />
-          }</p>
-
-          <ProjectTeam projectId={projectId} />
 
           <div className="margin-half" />
 
-          {missionEl}
+          <MissionBody missionId={missionId} />
 
           <div className="margin-half" />
 
@@ -199,6 +236,7 @@ export default class ProjectPreview extends Component {
             <ProjectControlView projectId={projectId} />
           }
 
+          {children}
         </div>
       </Panel>
     </div>);

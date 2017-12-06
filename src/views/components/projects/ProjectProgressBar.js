@@ -1,7 +1,6 @@
 import {
   projectStageTree,
   StageStatus,
-  StageContributorStatus,
   isStageStatusOver,
   isProjectStatusOver
 } from 'src/core/projects/ProjectDef';
@@ -35,7 +34,7 @@ import FAIcon from 'src/views/components/util/FAIcon';
 import {
   stageStatusStyles,
   stageStatusBsStyles
-} from './stageRenderSettings';
+} from './projectRenderSettings';
 
 
 const StageProgressIcon = withRouter(dataBind({

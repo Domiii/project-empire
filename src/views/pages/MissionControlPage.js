@@ -19,8 +19,8 @@ import {
 import { LoadOverlay } from 'src/views/components/overlays';
 import { FAIcon } from 'src/views/components/util';
 
-import ProjectPreview from 'src/views/components/projects/ProjectPreview';
-import ProjectControlView from 'src/views/components/projects/ProjectControlView';
+import ProjectPanel from 'src/views/components/projects/ProjectPanel';
+import ProjectControlList from 'src/views/components/projects/ProjectControlList';
 //import { ProjectMeetingPanel } from 'src/views/components/projects/MeetingView';
 
 //import UserBadge from 'src/views/components/users/UserBadge';
@@ -45,7 +45,7 @@ export default class MissionControlPage extends Component {
     return (
       <div>
         <Panel header="進行中的任務">
-          <ProjectControlView />
+          <ProjectControlList />
         </Panel>
         <Panel header="以前做過的任務">
           TODO: project archive

@@ -240,34 +240,52 @@ button:active { outline:none !important; }
  * #######################################################
  */
 
+ .project-team {
+   font-size: 1.5em;
+ }
+
 .project-contributor {
   position: relative;
   color: black;
 }
 
 .project-contributor > img {
-  max-width: 100%;
-  max-height: 100%;
+  width: 100% !important;
+  height: 100% !important;
+  font-size: 1em !important;
+}
+
+.project-contributor {
+  font-size: 1em !important;
+}
+
+.project-contributor > i {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .project-contributor-any {
   max-width: 1em;
   max-height: 1em;
+  font-size: 1em;
 }
 
 .project-contributor-party {
   max-width: 1.5em;
   max-height: 1.5em;
+  font-size: 1.5em;
 }
 
 .project-contributor-reviewer {
   max-width: 1em;
   max-height: 1em;
+  font-size: 1em;
 }
 
 .project-contributor-gm {
   max-width: 1em;
   max-height: 1em;
+  font-size: 1em;
 }
 
 .project-contributor-status-icon {

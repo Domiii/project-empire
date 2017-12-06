@@ -7,7 +7,7 @@ import {
 
 import {
   stageStatusStyles
-} from './stageRenderSettings';
+} from './projectRenderSettings';
 
 import React from 'react';
 import PropTypes from 'prop-types';
