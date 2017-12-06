@@ -169,6 +169,12 @@ function DefaultFormRender(allProps) {
 @dataBind({})
 export default class DynamicForm extends Component {
   static propTypes = {
+    component: PropTypes.element,
+
+    schema: PropTypes.object,
+    schemaTemplate: PropTypes.object,
+    schemaBuilder: PropTypes.object,
+
     formData: PropTypes.object.isRequired,
     onSubmit: PropTypes.func.isRequired
   };
@@ -197,9 +203,11 @@ export default class DynamicForm extends Component {
       ...otherProps
     } = getProps();
 
-    const Component = component || DefaultFormRender;
+    const renderSettings = merge({}, defaultFormRenderSettings, otherProps);
 
-    const renderSettings = merge(otherProps, defaultFormRenderSettings);
+    if (!!schema + !!schemaBuilder + !!schemaTemplate !== 1) {
+      throw new Error('one and only one of the three properties [schema, schemaBuilder, schemaTemplate] must be defined!');
+    }
 
     if (schemaTemplate) {
       // template overrides builder
@@ -210,6 +218,8 @@ export default class DynamicForm extends Component {
       // builder overrides schema
       schema = schemaBuilder.build(renderSettings.uiSchema, allArgs);
     }
+    
+    const Component = component || DefaultFormRender;
 
     return (<Component
       schema={schema}
