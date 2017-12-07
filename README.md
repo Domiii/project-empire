@@ -23,6 +23,10 @@
 
 ## TODO
 
+### High Priority, Super Important!
+* AutoSave
+* DynamicForm must work!!!
+
 ### Feature: Building student learner profiles
 
 #### LearnerStatusList
@@ -36,7 +40,7 @@
 * 自我反省 + 情緒:
   * 今天（一開始的時候）有沒有先停止，刻意想了今天要做甚麼才做第一個決策？
   * 今天／這禮拜有沒有全心投入一段時間？（大概多久？ [Advanced] 熱情冷掉的原因是什麼？）
-  * How do you feel today? (很感動, 很開心, 負面情緒存在, 生氣, 難過, 害怕, 心裡有點累、空泛, 大錯覺（遇到一個很失敗很失望的感覺）, 普通/冷淡, <OtherEmotions>)
+  * How do you feel today? (很開心, 負面情緒存在, 生氣, 難過, 害怕, 心裡有點累、空泛, 普通/冷淡, <OtherEmotions>)
   * 如果發現自己情緒差的話:
     * 有沒有用任何方法勇敢的面對？e.g.:
       * 有沒有找人聊天討論這問題？
@@ -44,6 +48,7 @@
       * 有的話，知道是誰嗎？（也不需要講出來啦）
   * 今天最感人的事情是什麼？
 * Goals + 成就 + Challenges
+  * 今天有沒有什麼特別的、很感動的事情發生？或是遇到什麼大錯覺？
   * 今天的目標是什麼？有嗎？
   * 你今天有沒有往你的目標前進？
   * 回家了（或其他時間）有沒有主動去想這個目標？
@@ -75,6 +80,7 @@
   * 有沒有一種很明顯學到新東西的感覺？
     * 學到甚麼？ [note: 這個非常需要 GM 的引導]
   * 有沒有感覺到非常需要／想要的地方？（這基本上是非常正面的事情）
+  * TODO: 能力培養紀錄問題
 * 如果是新手／還不成熟的夥伴的話：
   * 有沒有進入狀態？有沒有事情做？
   * 有沒有 GM 陪半／小老師／leader 主動幫他？誰？
@@ -173,7 +179,6 @@
       * 可以看到其他人的紀錄
       * 針對 DailyReflection 給 feedback
   * Data:
-    * Overall Feeling: "Cool", "今天很感動，覺得突破自己了", "今天很感動，覺得有很感動的事情發生", "今天很感動", "普通", <OtherEmotions>
     * GoalSetting
     * GoalHoning (essentially the same as "promises to self")
     * SDL Strategies
