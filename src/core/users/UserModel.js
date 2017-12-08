@@ -193,7 +193,8 @@ export default {
               userPhotoURL: 'photoURL',
               userLocale: 'locale',
               userRole: 'role',
-              userDisplayRole: 'displayRole'
+              userDisplayRole: 'displayRole',
+              userPlaceId: 'placeId'
             }
           }
         }

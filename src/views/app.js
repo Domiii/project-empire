@@ -12,7 +12,6 @@ import dataBind from 'src/dbdi/react/dataBind';
 
 import Header from './components/header';
 import { FAIcon } from 'src/views/components/util';
-import { lookupLocalized } from 'src/util/localizeUtil';
 
 import { Overlay, LoadOverlay } from 'src/views/components/overlays';
 
@@ -29,16 +28,6 @@ export class App extends Component {
   static propTypes = {
     children: PropTypes.object
   };
-
-  static childContextTypes = {
-    lookupLocalized: PropTypes.func
-  };
-
-  getChildContext() {
-    return {
-      lookupLocalized: this.lookupLocalized
-    };
-  }
 
   constructor(...args) {
     super(...args);
@@ -74,12 +63,6 @@ export class App extends Component {
     catch (err) {
       console.error(err.stack);
     }
-  }
-
-  lookupLocalized(obj, entry) {
-    const { currentUser } = this.props.fromReader;
-    const lang = currentUser && currentUser.userLocale || 'en';
-    return lookupLocalized(lang, obj, entry);
   }
 
   render() {

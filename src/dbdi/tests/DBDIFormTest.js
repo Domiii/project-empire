@@ -288,7 +288,6 @@ const ItemEditor = dataBind({
               onConfirm={doDelete}>
 
               <span>{data.title}</span>
-
             </ConfirmModal>
           }
         </div>

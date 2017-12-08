@@ -19,6 +19,28 @@ import {
 import Loading from 'src/views/components/util/loading';
 import { FAIcon } from 'src/views/components/util';
 
+class NavWrap extends Component {
+  static propTypes = {
+    children: PropTypes.object
+  };
+
+  render() {
+    const {
+      active,
+      activeKey,
+      activeHref,
+      onSelect,
+
+      children,
+
+      ...otherProps
+    } = this.props;
+    return (<li role="presentation" {...otherProps}>
+      {children}
+    </li>);
+  }
+}
+
 
 @dataBind({
 
@@ -134,6 +156,28 @@ export default class Header extends Component {
     //   );
     // }
 
+    const adminEls = isCurrentUserAdmin && [
+      (
+        <NavWrap key="divider1" className="divider-vertical">
+        </NavWrap>
+      ),
+      (
+        <LinkContainer key="learnerstatus" to="/learnerstatus">
+          <NavItem eventKey={11}>Learner Status</NavItem>
+        </LinkContainer>
+      ),
+      (
+        <LinkContainer key="kb" to="/kb">
+          <NavItem eventKey={12}>KB</NavItem>
+        </LinkContainer>
+      ),
+      (
+        <LinkContainer key="gm" to="/gm">
+          <NavItem eventKey={13}>GM Tools</NavItem>
+        </LinkContainer>
+      )
+    ];
+
     return (<div>
       {/* {warningEl} */}
       <header className="header">
@@ -146,27 +190,16 @@ export default class Header extends Component {
           </Navbar.Header>
           <Navbar.Collapse>
             <Nav>
-              <LinkContainer to="/mymissions">
+              <LinkContainer to="/myprojects">
                 <NavItem eventKey={2}>My Projects</NavItem>
               </LinkContainer>
               <LinkContainer to="/projects">
                 <NavItem eventKey={3}>All Projects</NavItem>
               </LinkContainer>
-              {isCurrentUserAdmin &&
-                <LinkContainer to="/learnerstatus">
-                  <NavItem eventKey={4}>Learner Status</NavItem>
-                </LinkContainer>
-              }
-              {isCurrentUserAdmin &&
-                <LinkContainer to="/kb">
-                  <NavItem eventKey={5}>KB</NavItem>
-                </LinkContainer>
-              }
-              {isCurrentUserAdmin &&
-                <LinkContainer to="/gm">
-                  <NavItem eventKey={6}>GM Tools</NavItem>
-                </LinkContainer>
-              }
+              <LinkContainer to="/places">
+                <NavItem eventKey={4}>Places</NavItem>
+              </LinkContainer>
+              {adminEls}
             </Nav>
             <Nav pullRight className="header-right-container">
               {adminToolsEL}

@@ -6,10 +6,13 @@ import LearnerKBModel from 'src/core/scaffolding/LearnerKBModel';
 import LearnerScheduleModel from 'src/core/scaffolding/LearnerScheduleModel';
 import LearnerEntryModel from 'src/core/scaffolding/LearnerEntryModel';
 
+import PlaceModel from 'src/core/places/PlaceModel';
 import ProjectModel from 'src/core/projects/projectModel';
 import MissionModel from 'src/core/missions/MissionModel';
 
 import dataProviders from './dataProviders.js';
+
+import { lookupLocalized } from 'src/util/localizeUtil';
 
 import map from 'lodash/map';
 import merge from 'lodash/merge';
@@ -19,11 +22,15 @@ import zipObject from 'lodash/zipObject';
 import DataSourceTree from 'src/dbdi/DataSourceTree';
 
 const utility = {
-  // readers: {
-  //   failIfNotLoaded({ readers }) {
-  //     return 
-  //   }
-  // },
+  readers: {
+    // failIfNotLoaded({ readers }) {
+    //   return 
+    // }
+    lookupLocalized({ obj, prop }, { }, { currentUser }) {
+      const lang = currentUser && currentUser.locale || 'en';
+      return lookupLocalized(lang, obj, prop);
+    }
+  },
 
   writers: {
     updateAll(
@@ -53,11 +60,8 @@ const dataStructureConfig = {
     path: '/',
     children: merge({},
       UserModel,
-      
-      LearnerKBModel,
-      LearnerScheduleModel,
-      LearnerEntryModel,
 
+      PlaceModel,
       MissionModel,
       ProjectModel,
       {
@@ -67,7 +71,11 @@ const dataStructureConfig = {
             mission: '$(missionId)'
           }
         }
-      }
+      },
+
+      LearnerKBModel,
+      LearnerScheduleModel,
+      LearnerEntryModel
     )
   }
 };

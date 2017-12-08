@@ -2,19 +2,19 @@ import { EmptyObject } from 'src/util';
 import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 
 /**
- * Guild data
+ * Place data
  */
-const guildsById = {
-  path: '$(guildId)',
+const placesById = {
+  path: '$(placeId)',
   onWrite: [
     'updatedAt',
     'createdAt'
   ],
   children: {
-    guildName: 'name',
-    guildDescription: 'description',
-    guildLeaderUid: 'leaderUid',
-    guildGMUid: 'gmUid'
+    placeName: 'name',
+    placeDescription: 'description',
+    placeLeaderUid: 'leaderUid',
+    placeGMUid: 'gmUid'
   }
 };
 
@@ -27,15 +27,15 @@ const writers = {
 };
 
 export default {
-  allGuildData: {
-    path: '/guilds',
+  allPlaceData: {
+    path: '/places',
     readers,
     writers,
     children: {
-      guildList: {
+      placeList: {
         path: 'list',
         children: {
-          guildsById
+          placesById
         }
       }
     }

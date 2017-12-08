@@ -3,6 +3,7 @@ import DynamicFormSchemaBuilder from 'src/core/forms/DynamicFormSchemaBuilder';
 import merge from 'lodash/merge';
 import mapValues from 'lodash/mapValues';
 import map from 'lodash/map';
+import pickBy from 'lodash/pickBy';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -166,7 +167,34 @@ function DefaultFormRender(allProps) {
 /**
  * Adds dynamicity, some default components and more features to default jsonschema forms.
  */
-@dataBind({})
+@dataBind({
+  /**
+   * DI-decorated action: create or update item
+   */
+  __onSubmit({ formData }, { idArgs, dbName }, fns, { }) {
+    const doSet = fns[`set_${dbName}`];
+    const doPush = fns[`push_${dbName}`];
+    // get rid of undefined fields, created by (weird) form editor
+    formData = pickBy(formData, val => val !== undefined);
+
+    if (!idArgs) {
+      // new item data
+      return doPush(formData);
+    }
+    else {
+      // existing item data
+      return doSet(idArgs, formData);
+    }
+  },
+
+  /**
+   * DI-decorated action: delete item
+   */
+  __doDelete({ idArgs, dbName }, fns, { }) {
+    const doDelete = fns[`delete_${dbName}`];
+    return doDelete(idArgs);
+  }
+})
 export default class DynamicForm extends Component {
   static propTypes = {
     component: PropTypes.element,
@@ -175,12 +203,66 @@ export default class DynamicForm extends Component {
     schemaTemplate: PropTypes.object,
     schemaBuilder: PropTypes.object,
 
+    dbName: PropTypes.string.isRequired,
+
+    /**
+     * `idArgs` should be an object containing all args required for selecting a given object from the reader of name `dbName`
+     */
+    idArgs: PropTypes.object.isRequired,
     formData: PropTypes.object.isRequired,
-    onSubmit: PropTypes.func.isRequired
+
+    /**
+     * takes three arguments:
+     * 1. `idArgs`
+     * 2. default jsonschema-form argument
+     * 3. result of trying to save the result
+     */
+    onSubmit: PropTypes.func,
+
+    /**
+     * onChange takes two arguments: `idArgs`, followed by the default jsonschema-form argument.
+     */
+    onChange: PropTypes.func
   };
 
   constructor(...args) {
     super(...args);
+
+    this.state = {
+      originalFormData: null,
+      formData: null
+    };
+
+    this.dataBindMethods(
+      'onSubmit',
+      'onChange'
+    );
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const stateUpdate = {};
+    if (!this.state.formData || nextProps.formData !== this.state.originalFormData) {
+      stateUpdate.formData = nextProps.formData;
+      stateUpdate.originalFormData = nextProps.formData;
+    }
+    this.setState(stateUpdate);
+  }
+
+  onSubmit = (dataArgs, {}, { __onSubmit }) => {
+    const promise = __onSubmit(dataArgs);
+
+    const { idArgs } = this.props;
+    return this.props.onSubmit && this.props.onSubmit(idArgs, dataArgs, promise);
+  }
+
+  onChange = (dataArgs) => {
+    const { idArgs } = this.props;
+    const { formData } = dataArgs;
+    this.setState({
+      formData
+    });
+
+    return this.props.onChange && this.props.onChange(idArgs, dataArgs);
   }
 
   render(allArgs) {
@@ -192,13 +274,10 @@ export default class DynamicForm extends Component {
 
     let {
       component,
-      
+
       schema,
       schemaTemplate,
       schemaBuilder,
-
-      formData,
-      onSubmit,
 
       ...otherProps
     } = getProps();
@@ -218,14 +297,15 @@ export default class DynamicForm extends Component {
       // builder overrides schema
       schema = schemaBuilder.build(renderSettings.uiSchema, allArgs);
     }
-    
+
     const Component = component || DefaultFormRender;
 
     return (<Component
       schema={schema}
 
-      formData={formData}
-      onSubmit={onSubmit}
+      formData={this.state.formData}
+      onSubmit={this.onSubmit}
+      onChange={this.onChange}
 
       {...renderSettings}
     />);
