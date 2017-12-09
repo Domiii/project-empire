@@ -23,9 +23,12 @@
 
 ## TODO
 
-### High Priority, Super Important!
-* AutoSave
-* DynamicForm must work!!!
+### Next big goal(s)
+* LearnerStatus forms
+* complete Meeting SOP + Meeting forms
+* complete Project SOP
+* Complete LearnerOverview
+* simple Place editing
 
 ### Feature: Building student learner profiles
 

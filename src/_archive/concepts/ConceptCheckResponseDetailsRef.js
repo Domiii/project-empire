@@ -20,7 +20,7 @@ const ConceptCheckResponseDetailsRef = makeRefWrapper({
     conceptId: ['conceptId'],
     uid_conceptId: {
       keys: ['uid', 'conceptId'],
-      autoUpdate: false
+      isProperty: false
     }
   },
 

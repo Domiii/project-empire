@@ -4,33 +4,46 @@ import _ from 'lodash';
 const globalDefaultConfig = {
   keys: [],
 
-  // Whether to automatically update the index at all.
-  // Difference to `writeAlways` is that: 
-  // If `autoUpdate` is set to `false`, 
-  //    the index will never be written.
-  // If `autoUpdate` is `true` and `writeAlways` is `false`, 
-  //    it will at least be written initially.
-  autoUpdate: true,
+  /**
+   * Whether the index should be handled as property, and added as property to object on write.
+   * Difference to `updateOnWrite` is that: 
+   * If `isProperty` is set to `false`, 
+   *    the index will never be written.
+   * If `isProperty` is `true` and `updateOnWrite` is `false`, 
+   *    it will at least be written initially.
+   * Set this to false for indices representing parent path keys/ids.
+   * 
+   * Default: true.
+   */
+  isProperty: true,
 
-  // Whether to update the index on every 
-  // write operation (given it's keys are present).
-  // If this is set to false, it will only try 
-  // to write the index when it has not previously 
-  // been written.
-  writeAlways: false,
+  /**
+   * Whether to update the index on every 
+   * write operation (given it's keys are present).
+   * If this is set to false, it will only try 
+   * to write the index when it has not previously 
+   * been written.
+   * 
+   * Default: false.
+   * Reason: Often indices are set on properties that never change.
+   */
+  updateOnWrite: false,
 
   // Whether to show a warning when an index cannot 
   // be updated due to missing key data.
   // You only want to set this to true when you are sure 
-  // that all required key data will be written for 
-  // every possible index update.
-  isRequired: false,
+  // that all required keys are set at 
+  // every possible index update (at every write).
+  isRequired: true,
 
-  // Whether the encoded values should be simplified.
-  // This makes them simpler but also might risk chances of ambiguity
-  // (different values encoded to the same result).
-  // You want to turn this off, if you have keys that contain non-constrained sets of characters,
-  //    and/or have other risks for keys to mash up into each other.
+  /**
+   * Whether the encoded values should be simplified.
+   * This makes them simpler but also might risk chances of ambiguity
+   * (different values encoded to the same result).
+   * You want to turn this off, if you have keys that contain non-constrained sets of characters,
+   *    and/or have other risks for keys to mash up into each other, 
+   *    and thus risk non-uniqueness between different inputs.
+   */
   forceSimpleEncoding: true
 };
 
@@ -200,8 +213,8 @@ class IndexSet {
       throw new Error('invalid query - keys did not match any index: ' + JSON.stringify(query));
     }
     return [
-      `orderByChild=${indexName}`,
-      `equalTo=${this.encodeQueryValueByKeys(query, keys)}`
+      ['orderByChild', indexName],
+      ['equalTo', this.encodeQueryValueByKeys(query, keys)]
     ];
   }
 
@@ -240,12 +253,12 @@ class IndexSet {
     
     for (var indexName in this.keysByIndexName) {
       const cfg = this.getCfg(indexName);
-      if (cfg.autoUpdate && (cfg.writeAlways || !val[indexName])) {
-        // either writeAlways is true, 
-        //    or index has not been written yet
+
+      // isProperty must be true, and either updateOnWrite is true, or index has not been written yet
+      if (cfg.isProperty && (cfg.updateOnWrite || !val[indexName])) {
         const keys = this.keysByIndexName[indexName];
 
-        // simple keys are don't need explicit writes
+        // single-entry keys are already properties don't need explicit writes
         if (keys.length < 2) continue;
 
         if (_.some(keys, key => !_.has(val, key))) {

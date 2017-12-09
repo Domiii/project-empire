@@ -36,9 +36,7 @@ export default class LearnerStatusListPage extends Component {
     const formProps = { mode, uid, scheduleId, cycleId };
     return (
       <div>
-        <Panel bsStyle="primary" header="Learners">
-          <LearnerStatusEntryForm {...formProps} />
-        </Panel>
+        <LearnerStatusEntryForm {...formProps} />
       </div>
     );
   }

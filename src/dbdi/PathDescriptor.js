@@ -1,6 +1,7 @@
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 import isFunction from 'lodash/isFunction';
+import isPlainObject from 'lodash/isPlainObject';
 
 
 import autoBind from 'src/util/auto-bind';
@@ -61,7 +62,7 @@ export default class PathDescriptor extends DataDescriptorNode {
     this.indices = indices && makeIndices(indices, defaultIndexSettings);
 
     if (!pathFn) {
-      getPath = this._buildGetPathFromTemplateString(pathTemplate, queryParams, this.indices);
+      getPath = this._buildGetPathFromTemplateString(pathTemplate, queryParams);
     }
     else {
       getPath = pathFn;
@@ -89,21 +90,39 @@ export default class PathDescriptor extends DataDescriptorNode {
     };
   }
 
-  _buildGetPathFromTemplateString(pathTemplate, _queryParams, indices) {
+  _transformQueryParams(queryParamsRaw) {
+    if (isPlainObject(queryParamsRaw)) {
+      debugger;
+      if (this.indices) {
+        return this.indices.where(queryParamsRaw);
+      }
+    }
+    return queryParamsRaw;
+  }
+
+  _buildGetPathFromTemplateString(pathTemplate, _queryParamsInput) {
+    const indices = this.indices;
     const variableTransform = indices && indices.encodeQueryValue.bind(indices);
     const getPathRaw = createPathGetterFromTemplateProps(pathTemplate, variableTransform);
     
     //const argNames = getPathRaw.pathInfo && getPathRaw.pathInfo.varNames;
-    if (!_queryParams) {
+    if (!_queryParamsInput) {
+      // simpler!
       return (args, readerProxy, injectProxy, callerNode, accessTracker) => {
         return getPathRaw(args);
       };
     }
     else {
+      // handle custom query parameters
       return (args, readerProxy, injectProxy, callerNode, accessTracker) => {
-        const queryParams = isFunction(_queryParams) ? 
-          _queryParams(args, readerProxy, injectProxy, callerNode, accessTracker) :
-          queryParams;
+        // get queryParams
+        const queryParamsRaw = isFunction(_queryParamsInput) ? 
+          _queryParamsInput(args, readerProxy, injectProxy, callerNode, accessTracker) :
+          queryParamsRaw;
+
+        // apply transform
+        const queryParams = this._transformQueryParams(queryParamsRaw);
+        
         return {
           path: getPathRaw(args),
           queryParams

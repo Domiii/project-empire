@@ -1,4 +1,3 @@
-import isPlainObject from 'lodash/isPlainObject';
 import isFunction from 'lodash/isFunction';
 import isArray from 'lodash/isArray';
 
@@ -66,6 +65,7 @@ export const writeParameterConfig = Object.freeze({
 export default class DataWriteDescriptor extends DataDescriptorNode {
   actionName;
   onWrite;
+  pathDescriptor;
 
   writeData;
 
@@ -140,6 +140,7 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
   }
 
   _buildWriteDataFromDescriptor(pathDescriptor) {
+    this.pathDescriptor = pathDescriptor;
     return (args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) => {
       // // TODO check if all dependencies are loaded?
       // if (!callerNode.areDependenciesLoaded(this)) {
@@ -162,9 +163,16 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
     } = callerNode;
 
     //accessTracker.recordDataWrite(dataProvider, path, val);
+
+    // update indices first
+    if (this.pathDescriptor && this.pathDescriptor.indices) {
+      this.pathDescriptor.indices.updateIndices(val);
+    }
+
+    // custom write hooks
     this.onWrite && this.onWrite(queryArgs, val, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
 
+    // perform write action
     return dataProvider.actions[this.actionName](path, val);
-    //dataProvider.writeData(path, val);
   }
 }

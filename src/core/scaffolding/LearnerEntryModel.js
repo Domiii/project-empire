@@ -46,11 +46,18 @@ const writers = {
   }
 };
 
+const indices = {
+  uid: ['uid'],
+  scheduleCycle: ['scheduleId', 'cycleId'],
+  learnerEntryId: {
+    keys: ['uid', 'scheduleId', 'cycleId'],
+    isProperty: false // this should never be written as a property
+  }
+};
+
 const learnerEntryIdPath = {
   path: '$(learnerEntryId)',
-  indices: {
-    learnerEntryId: ['uid', 'scheduleId', 'cycleId']
-  }
+  indices
 };
 
 export default {
@@ -64,34 +71,17 @@ export default {
         children: {
           learnerEntriesOfUser: {
             path: {
+              indices,
               queryParams({ uid }) {
-                // const {
-                //   page
-                // } = args;
-
-                // const {
-                //   itemsPerPage,
-                //   ascending
-                // } = getOptionalArguments(args, {
-                //   itemsPerPage: 20,
-                //   ascending: false
-                // });
-
-                return [
-                  ['orderByChild', 'uid'],
-                  ['equalTo', uid]
-                  //[ascending ? 'limitToFirst' : 'limitToLast', page * itemsPerPage]
-                ];
+                return { uid };
               }
             }
           },
           learnerEntriesOfCycle: {
             path: {
+              indices,
               queryParams({ scheduleId, cycleId }) {
-                return [
-                  ['orderByChild', 'cycleId'],
-                  ['equalTo', cycleId]
-                ];
+                return { scheduleId, cycleId };
               }
             }
           },

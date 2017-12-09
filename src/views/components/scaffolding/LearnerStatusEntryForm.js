@@ -45,11 +45,14 @@ const LearnerStatusEntryForm = dataBind({})(function LearnerEntryList(
       </Alert>);
     }
 
+    const header = (<h3>
+      <UserBadge uid={uid} /> learner record
+    </h3>);
+
     return (<div>
-      <h3>
-        <UserBadge uid={uid} /> learner record
-      </h3>
-      form
+      <Panel bsStyle="info" header={header}>
+        form
+      </Panel>
     </div>);
   }
 });
