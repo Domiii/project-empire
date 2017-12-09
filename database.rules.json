@@ -40,7 +40,12 @@
     },
     "learnerEntries": {
       ".read": "auth !== null",
-      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)",
+      "list": {
+        ".indexOn": [
+          "cycleId"
+        ]
+      }
     },
     "learnerKb": {
       ".read": "auth !== null",

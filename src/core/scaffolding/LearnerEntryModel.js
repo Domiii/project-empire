@@ -6,15 +6,15 @@ import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 
 const readers = {
   learnerEntryIdsOfCycleByAllUsers(
-    { cycleId },
+    { scheduleId, cycleId },
     { learnerEntriesOfCycle },
     { usersPublic, usersPublic_isLoaded }
   ) {
-    if (!learnerEntriesOfCycle.isLoaded({ cycleId }) | !usersPublic_isLoaded) {
+    if (!learnerEntriesOfCycle.isLoaded({ scheduleId, cycleId }) | !usersPublic_isLoaded) {
       return undefined;
     }
 
-    const entries = learnerEntriesOfCycle({ cycleId });
+    const entries = learnerEntriesOfCycle({ scheduleId, cycleId });
 
     const byUid = mapValues(groupBy(entries, 'uid'), arr => arr[0]);
     return mapValues(usersPublic, (_, uid) => byUid[uid] || null);
@@ -87,7 +87,7 @@ export default {
           },
           learnerEntriesOfCycle: {
             path: {
-              queryParams({ cycleId }) {
+              queryParams({ scheduleId, cycleId }) {
                 return [
                   ['orderByChild', 'cycleId'],
                   ['equalTo', cycleId]

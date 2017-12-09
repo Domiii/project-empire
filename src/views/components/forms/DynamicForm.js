@@ -14,6 +14,7 @@ import Moment from 'react-moment';
 import {
   Label, Button
 } from 'react-bootstrap';
+import Flexbox from 'flexbox-react';
 
 import dataBind, { NOT_LOADED } from 'src/dbdi/react/dataBind';
 import { getOptionalArgument, getOptionalArguments } from 'src/dbdi/dataAccessUtil';
@@ -159,8 +160,8 @@ const defaultFormProps = {
 
 
 function ItemDeleteButton({ open }) {
-  return (<Button bsStyle="warning" onClick={open}>
-    <FAIcon name="trash" /> Delete!
+  return (<Button bsStyle="danger" onClick={open}>
+    <FAIcon name="trash" /> Delete
   </Button>);
 }
 ItemDeleteButton.propTypes = {
@@ -194,23 +195,28 @@ export const DefaultFormChildren = dataBind({
     idArgs,
     deleteMessage
   ] = getOptionalArguments(allArgs, 'idArgs', 'deleteMessage');
-  
+
   const alreadyExists = !!idArgs;
 
-  return (<div>
-    <button type="submit" className="btn btn-info">
-      {alreadyExists ? 'Update' : 'Add new'}
-    </button>
-    {alreadyExists &&
-      <ConfirmModal
-        header="Confirm DELETE"
-        ButtonCreator={ItemDeleteButton}
-        onConfirm={__doDelete}>
-  
-        {/* { <span>{data.title}</span>} */}
-      </ConfirmModal>
-    }
-  </div>);
+  return (
+    <Flexbox justifyContent="space-between" alignItems="center">
+      <Flexbox>
+        <button type="submit" className="btn btn-info">
+          {alreadyExists ? 'Update' : 'Add new'}
+        </button>
+      </Flexbox>
+      <Flexbox>
+        {alreadyExists &&
+          <ConfirmModal
+            header="Confirm DELETE"
+            ButtonCreator={ItemDeleteButton}
+            onConfirm={__doDelete}>
+
+            {/* { <span>{data.title}</span>} */}
+          </ConfirmModal>
+        }
+      </Flexbox>
+    </Flexbox>);
 });
 
 function DefaultFormComponent(allProps) {

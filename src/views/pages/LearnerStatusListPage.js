@@ -26,7 +26,7 @@ export default class LearnerStatusListPage extends Component {
     { isCurrentUserAdmin, currentUser_isLoaded,
       currentLearnerScheduleId, currentLearnerScheduleCycleId, currentLearnerScheduleId_isLoaded }
   ) {
-    if (!currentUser_isLoaded | !currentLearnerScheduleId_isLoaded) {
+    if (!currentUser_isLoaded | !currentLearnerScheduleId_isLoaded | !currentLearnerScheduleCycleId) {
       return (<LoadOverlay />);
     }
     if (!isCurrentUserAdmin) {

@@ -33,6 +33,10 @@ const LearnerStatusEntryForm = dataBind({})(function LearnerEntryList(
     const user = userPublic({ uid });
     if (!status || !user) {
       return (<Alert bsStyle="danger">
+        {/* <pre>
+          {JSON.stringify(learnerEntryId, null, 2)}
+          {JSON.stringify(status, null, 2)}
+        </pre> */}
         invalid page :( <LinkContainer to={hrefLearnerStatusList()}>
           <Button bsStyle="primary">
             Back!
@@ -41,7 +45,6 @@ const LearnerStatusEntryForm = dataBind({})(function LearnerEntryList(
       </Alert>);
     }
 
-    // TODO
     return (<div>
       <h3>
         <UserBadge uid={uid} /> learner record

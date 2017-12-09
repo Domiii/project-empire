@@ -17,7 +17,6 @@ import {
   ListGroup, ListGroupItem
 } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
-import Flexbox from 'flexbox-react';
 
 import UserBadge from 'src/views/components/users/UserBadge';
 import LoadIndicator from 'src/views/components/util/loading';

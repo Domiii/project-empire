@@ -30,13 +30,12 @@ export default class DataProviderBase {
     let cache = this._queriesByQueryInput.get(queryInput);
     if (!cache) {
       // does not exist yet
-      let localPath, remotePath, remoteQuery;
+      let localPath, remotePath;
       if (isString(queryInput)) {
-        localPath = remoteQuery = remotePath = queryInput;
+        localPath = remotePath = queryInput;
       }
       else if (isPlainObject(queryInput)) {
         localPath = JSON.stringify(queryInput);
-        remoteQuery = queryInput;
         remotePath = queryInput.path;
       }
 
@@ -44,7 +43,6 @@ export default class DataProviderBase {
         queryInput,
         localPath,
         remotePath,
-        remoteQuery,
         _useCount: 1
       };
       this._queriesByQueryInput.set(queryInput, cache);
@@ -165,11 +163,11 @@ export default class DataProviderBase {
   notifyNewData(query, val) {
     const {
       localPath,
-      remoteQuery
+      queryInput
     } = query;
 
     const listeners = this.getListeners(localPath) || EmptyArray;
-    setTimeout(() => listeners.forEach(listener => listener(localPath, remoteQuery, val)));
+    setTimeout(() => listeners.forEach(listener => listener(localPath, queryInput, val)));
   }
 
   readData(queryInput) {

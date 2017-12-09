@@ -34,12 +34,12 @@ const LearnerStatusList = dataBind({
     { }
   ) {
     if (!get_learnerSchedule.isLoaded({ scheduleId }) |
-      !learnerEntryIdsOfCycleByAllUsers.isLoaded({ cycleId })) {
+      !learnerEntryIdsOfCycleByAllUsers.isLoaded({ scheduleId, cycleId })) {
       return <LoadIndicator />;
     }
     else {
       const schedule = get_learnerSchedule({ scheduleId });
-      let currentCycleLearnerEntries = learnerEntryIdsOfCycleByAllUsers({ cycleId });
+      let currentCycleLearnerEntries = learnerEntryIdsOfCycleByAllUsers({ scheduleId, cycleId });
       currentCycleLearnerEntries = map(currentCycleLearnerEntries, (entryId, uid) => ({ entryId, uid }));
       const nUsers = size(currentCycleLearnerEntries);
 
