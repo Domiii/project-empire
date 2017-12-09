@@ -92,7 +92,6 @@ export default class PathDescriptor extends DataDescriptorNode {
 
   _transformQueryParams(queryParamsRaw) {
     if (isPlainObject(queryParamsRaw)) {
-      debugger;
       if (this.indices) {
         return this.indices.where(queryParamsRaw);
       }

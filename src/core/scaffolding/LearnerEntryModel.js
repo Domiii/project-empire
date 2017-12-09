@@ -1,8 +1,10 @@
 import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
 import groupBy from 'lodash/groupBy';
+import zipObject from 'lodash/zipObject';
 
 import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
+import { EmptyObject } from '../../util/miscUtil';
 
 const readers = {
   learnerEntryIdsOfCycleByAllUsers(
@@ -15,9 +17,11 @@ const readers = {
     }
 
     const entries = learnerEntriesOfCycle({ scheduleId, cycleId });
+    const ids = Object.keys(entries || EmptyObject);
+    const entryIdsByUid = zipObject(map(ids, id => entries[id].uid), ids);
 
-    const byUid = mapValues(groupBy(entries, 'uid'), arr => arr[0]);
-    return mapValues(usersPublic, (_, uid) => byUid[uid] || null);
+    //const byUid = mapValues(groupBy(entries, 'uid'), arr => arr[0]);
+    return mapValues(usersPublic, (_, uid) => entryIdsByUid[uid] || null);
   }
 };
 

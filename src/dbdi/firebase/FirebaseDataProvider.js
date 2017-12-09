@@ -54,12 +54,16 @@ export default class FirebaseDataProvider extends DataProviderBase {
 
   _onNewData(query, snap) {
     const val = snap.val();
-    this.loadedPaths[query.localPath] = 1;
-    //console.log('R [', query.remotePath, '] ', val);
-
-    if (val !== undefined && val !== null) {
-      setDataIn(this.firebaseCache, query.localPath, val);
+    if (!this.loadedPaths[query.localPath]) {
+      this.loadedPaths[query.localPath] = true;
+      console.warn('LOAD', query.localPath);
     }
+
+    //console.warn('R [', query.remotePath, '] ', val);
+
+    //if (val !== undefined && val !== null) {
+      setDataIn(this.firebaseCache, query.localPath, val);
+    //}
 
     this.notifyNewData(query, val);
   }
@@ -101,7 +105,8 @@ export default class FirebaseDataProvider extends DataProviderBase {
     ref.off('value', hook);
     if (!query._useCount) {
       // set path as unloaded
-      delete this.loadedPaths[query.localPath];
+      console.warn('UNLOAD', query.localPath);
+      this.loadedPaths[query.localPath] = false;
     }
   }
 

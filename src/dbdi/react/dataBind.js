@@ -455,13 +455,13 @@ export default (propsOrPropCb) => WrappedComponent => {
       this._isMounted = false;
     }
 
-    _onNewData(path, val) {
+    _onNewData(localPath, queryInput, val) {
       this._shouldUpdate = true;
+      //console.warn(WrappedComponent.name || '<unnamed component>', 'onNewData', localPath, val);
       //this.forceUpdate();
       if (this._isMounted) {
         this.setState(EmptyObject);
       }
-      //console.warn(this.wrappedComponentName, '_onNewData');
     }
 
     render() {

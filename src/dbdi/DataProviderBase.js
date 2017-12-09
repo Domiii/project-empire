@@ -10,7 +10,6 @@ import { EmptyObject, EmptyArray } from 'src/util';
 
 export default class DataProviderBase {
   _listenersByPath = {};
-  _queriesByQueryInput = new Map();
   _queriesByLocalPath = new Map();
   _listenerData = new Map();
 
@@ -19,48 +18,68 @@ export default class DataProviderBase {
   }
 
   getQueryByQueryInput(queryInput) {
-    return this._queriesByQueryInput.get(queryInput);
+    const localPath = this.getLocalPath(queryInput);
+    return this.getQueryByLocalPath(localPath);
   }
 
   getQueryByLocalPath(localPath) {
     return this._queriesByLocalPath.get(localPath);
   }
 
-  _getOrCreateQueryInputCache(queryInput) {
-    let cache = this._queriesByQueryInput.get(queryInput);
-    if (!cache) {
-      // does not exist yet
-      let localPath, remotePath;
-      if (isString(queryInput)) {
-        localPath = remotePath = queryInput;
-      }
-      else if (isPlainObject(queryInput)) {
-        localPath = JSON.stringify(queryInput);
-        remotePath = queryInput.path;
-      }
+  getLocalPath(queryInput) {
+    let localPath;
+    if (isString(queryInput)) {
+      localPath = queryInput;
+    }
+    else if (isPlainObject(queryInput)) {
+      localPath = JSON.stringify(queryInput);
+    }
+    return localPath;
+  }
 
-      cache = {
+  getRemotePath(queryInput) {
+    let remotePath;
+    if (isString(queryInput)) {
+      remotePath = queryInput;
+    }
+    else if (isPlainObject(queryInput)) {
+      remotePath = queryInput.path;
+    }
+    return remotePath;
+  }
+
+  _setQueryCache(query) {
+    const {
+      //queryInput,
+      localPath
+    } = query;
+    this._queriesByLocalPath.set(localPath, query);
+  }
+
+  _useQueryInput(localPath, queryInput) {
+    let cachedQuery = this.getQueryByLocalPath(localPath);
+    if (!cachedQuery) {
+      // does not exist yet
+      const remotePath = this.getRemotePath(queryInput);
+
+      cachedQuery = {
         queryInput,
         localPath,
         remotePath,
         _useCount: 1
       };
-      this._queriesByQueryInput.set(queryInput, cache);
-      this._queriesByLocalPath.set(localPath, cache);
+      this._setQueryCache(cachedQuery);
     }
     else {
-      ++cache._useCount;
+      ++cachedQuery._useCount;
     }
-    return cache;
+    return cachedQuery;
   }
 
   registerListener(queryInput, listener, who) {
     console.assert(isFunction(listener), '[INTERNAL ERROR] listener must be function.');
 
-    const query = this._getOrCreateQueryInputCache(queryInput);
-    const {
-      localPath
-    } = query;
+    const localPath = this.getLocalPath(queryInput);
 
     let listeners = this.getListeners(localPath);
 
@@ -77,8 +96,10 @@ export default class DataProviderBase {
     }
 
     if (!this._listenerData.get(listener).byPath[localPath]) {
-      // register new listener for this path (if not already listening on path)
-      //console.warn(who, 'registered path:', localPath);
+      // if not already listening on path, register!
+      //console.warn(who, '[registerListener]', localPath);
+      
+      const query = this._useQueryInput(localPath, queryInput);
       const customData = this.onListenerAdd(query, listener);
       this._listenerData.get(listener).byPath[localPath] = {
         query,
@@ -100,7 +121,7 @@ export default class DataProviderBase {
   }
 
   _unregisterListenerPath(localPath, pathData, listener) {
-    console.log('unregister path: ' + localPath);
+    //console.log('unregister path: ' + localPath);
 
     const listeners = this.getListeners(localPath);
 
@@ -130,8 +151,7 @@ export default class DataProviderBase {
     --query._useCount;
     if (!query._useCount) {
       // delete it
-      delete this._queriesByLocalPath[query.localPath];
-      delete this._queriesByQueryInput[query.queryInput];
+      this._queriesByLocalPath.delete(query.localPath);
     }
 
     if (isEmpty(listenerData.byPath)) {
