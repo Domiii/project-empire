@@ -44,7 +44,11 @@ export default class DataAccessTracker {
       get: (target, name) => {
         // resolve node and return read data
         const readData = this.resolveReadDataForce(name);
-        return readData && readData();
+        return readData();
+      },
+      has: (target, name) => {
+        const fn = this.resolveReadData(name);
+        return !!fn;
       }
     };
   }
@@ -55,6 +59,10 @@ export default class DataAccessTracker {
         // resolve node and return call function to caller.
         // let caller decide when to make the actual call and which arguments to supply.
         return this.resolveReadDataForce(name);
+      },
+      has: (target, name) => {
+        const fn = this.resolveReadData(name);
+        return !!fn;
       }
     };
   }
@@ -65,6 +73,10 @@ export default class DataAccessTracker {
         // resolve node and return call function to caller.
         // let caller decide when to make the actual call and which arguments to supply.
         return this.resolveWriteDataForce(name);
+      },
+      has: (target, name) => {
+        const fn = this.resolveWriteData(name);
+        return !!fn;
       }
     };
   }

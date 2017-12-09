@@ -4,6 +4,7 @@ import merge from 'lodash/merge';
 import mapValues from 'lodash/mapValues';
 import map from 'lodash/map';
 import pickBy from 'lodash/pickBy';
+import isEmpty from 'lodash/isEmpty';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -14,8 +15,12 @@ import {
   Label, Button
 } from 'react-bootstrap';
 
-import dataBind from 'src/dbdi/react/dataBind';
+import dataBind, { NOT_LOADED } from 'src/dbdi/react/dataBind';
+import { getOptionalArgument, getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 
+import FAIcon from 'src/views/components/util/FAIcon';
+import LoadIndicator from 'src/views/components/util/loading';
+import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import Markdown from 'src/views/components/markdown';
 
 import UserBadge from 'src/views/components/users/UserBadge';
@@ -97,6 +102,10 @@ function DescriptionField(props) {
     <Markdown id={id} className="field-description color-gray" source={description} />
   );
 }
+DescriptionField.propTypes = {
+  id: PropTypes.string,
+  description: PropTypes.string,
+};
 
 
 // ###########################################################################
@@ -122,7 +131,7 @@ const widgets = {
   //mission: MissionSelect
 };
 
-const defaultFormRenderSettings = {
+const defaultFormProps = {
   uiSchema: {
     createdAt: {
       'ui:readonly': true,
@@ -143,21 +152,73 @@ const defaultFormRenderSettings = {
   // onError: itemLog('errors'),
 };
 
-function defaultFormChildren() {
-  return (<div>
-    <Button block type="submit" bsStyle="info">
-      完成
-    </Button>
-  </div>);
-}
 
-function DefaultFormRender(allProps) {
+// ###########################################################################
+// Default form components
+// ###########################################################################
+
+
+function ItemDeleteButton({ open }) {
+  return (<Button bsStyle="warning" onClick={open}>
+    <FAIcon name="trash" /> Delete!
+  </Button>);
+}
+ItemDeleteButton.propTypes = {
+  open: PropTypes.func.isRequired
+};
+
+export const DefaultFormChildren = dataBind({
+  /**
+   * DI-decorated action: delete item
+   */
+  __doDelete(allArgs, fns, { }) {
+    const [
+      dbName,
+      idArgs
+    ] = getOptionalArguments(allArgs, 'dbName', 'idArgs');
+
+    if (!dbName) {
+      return Promise.resolve();
+    }
+
+    const doDelete = fns[`delete_${dbName}`];
+    return doDelete(idArgs);
+  }
+})(function DefaultFormChildren(
+  allArgs,
+  {
+    __doDelete
+  }
+) {
+  const [
+    idArgs,
+    deleteMessage
+  ] = getOptionalArguments(allArgs, 'idArgs', 'deleteMessage');
+  
+  const alreadyExists = !!idArgs;
+
+  return (<div>
+    <button type="submit" className="btn btn-info">
+      {alreadyExists ? 'Update' : 'Add new'}
+    </button>
+    {alreadyExists &&
+      <ConfirmModal
+        header="Confirm DELETE"
+        ButtonCreator={ItemDeleteButton}
+        onConfirm={__doDelete}>
+  
+        {/* { <span>{data.title}</span>} */}
+      </ConfirmModal>
+    }
+  </div>);
+});
+
+function DefaultFormComponent(allProps) {
   return (<Form {...allProps}>
     {/* the Form children are the control elements, rendered at the bottom of the form */}
-    {allProps.children || defaultFormChildren()}
+    {allProps.children || <DefaultFormChildren {...allProps} />}
   </Form>);
 }
-
 
 // ###########################################################################
 // Putting it all together
@@ -171,7 +232,17 @@ function DefaultFormRender(allProps) {
   /**
    * DI-decorated action: create or update item
    */
-  __onSubmit({ formData }, { idArgs, dbName }, fns, { }) {
+  __onSubmit({ formData }, allArgs, fns, { }) {
+    //var _xx = [allArgs.dbName, allArgs.idArgs];
+    const [
+      dbName,
+      idArgs
+    ] = getOptionalArguments(allArgs, 'dbName', 'idArgs');
+
+    if (!dbName) {
+      return Promise.resolve();
+    }
+
     const doSet = fns[`set_${dbName}`];
     const doPush = fns[`push_${dbName}`];
     // get rid of undefined fields, created by (weird) form editor
@@ -185,14 +256,6 @@ function DefaultFormRender(allProps) {
       // existing item data
       return doSet(idArgs, formData);
     }
-  },
-
-  /**
-   * DI-decorated action: delete item
-   */
-  __doDelete({ idArgs, dbName }, fns, { }) {
-    const doDelete = fns[`delete_${dbName}`];
-    return doDelete(idArgs);
   }
 })
 export default class DynamicForm extends Component {
@@ -203,24 +266,36 @@ export default class DynamicForm extends Component {
     schemaTemplate: PropTypes.object,
     schemaBuilder: PropTypes.object,
 
-    dbName: PropTypes.string.isRequired,
+    formData: PropTypes.object,
 
     /**
-     * `idArgs` should be an object containing all args required for selecting a given object from the reader of name `dbName`
+     * The name of the data in the database.
+     * If given, `onSubmit` is called after trying to save the entry to DB,
+     * using:
+     * `push_${dbName}` if `idArgs` are not given (does not exist yet)
+     * `set_${dbName}` if `idArgs` are given (exists already)
      */
-    idArgs: PropTypes.object.isRequired,
-    formData: PropTypes.object.isRequired,
+    dbName: PropTypes.string,
 
     /**
-     * takes three arguments:
+     * `idArgs` should be an object containing all args required for 
+     * selecting a given object from the reader of name `dbName`.
+     * If not provided, submitting will push to db as new entry (instead of setting it).
+     */
+    idArgs: PropTypes.object,
+
+    /**
+     * callback has three arguments:
      * 1. `idArgs`
      * 2. default jsonschema-form argument
-     * 3. result of trying to save the result
+     * 3. promise from saving the result to DB
      */
     onSubmit: PropTypes.func,
 
     /**
-     * onChange takes two arguments: `idArgs`, followed by the default jsonschema-form argument.
+     * callback has two arguments:
+     * 1. `idArgs`
+     * 2. default jsonschema-form argument
      */
     onChange: PropTypes.func
   };
@@ -234,38 +309,90 @@ export default class DynamicForm extends Component {
     };
 
     this.dataBindMethods(
+      '_onUpdate',
       'onSubmit',
       'onChange'
     );
   }
 
+  componentWillMount() {
+    this._onUpdate(this.props);
+  }
+
+  /**
+   * This works even when we use DB data since DB data is sent via context updates.
+   * see: https://github.com/facebook/react/pull/5787
+   */
   componentWillReceiveProps(nextProps) {
+    this._onUpdate(nextProps);
+  }
+
+  _onUpdate(nextProps,
+    { },
+    fns,
+    { }
+  ) {
+    const {
+      dbName,
+      idArgs,
+      formData
+    } = nextProps;
+
     const stateUpdate = {};
-    if (!this.state.formData || nextProps.formData !== this.state.originalFormData) {
-      stateUpdate.formData = nextProps.formData;
-      stateUpdate.originalFormData = nextProps.formData;
+    if (dbName) {
+      // formData is queried from DB
+      if (formData) {
+        console.error('DynamicForm ignores `formData` when `dbName` is set.');
+      }
+
+      const doGet = fns[`get_${dbName}`];
+      const newFormData = doGet(idArgs);
+      //if (newFormData !== stateUpdate.formData) {}
+      stateUpdate.formData = newFormData;
     }
-    this.setState(stateUpdate);
+    else {
+      // formData must be passed explicitely
+      if (!this.state.formData ||
+        !formData ||
+        formData !== this.state.originalFormData) {
+        // formData changed
+        stateUpdate.formData = formData;
+        stateUpdate.originalFormData = formData;
+      }
+      else {
+        // nothing to do!
+      }
+    }
+    if (!isEmpty(stateUpdate)) {
+      this.setState(stateUpdate);
+    }
   }
 
-  onSubmit = (dataArgs, {}, { __onSubmit }) => {
-    const promise = __onSubmit(dataArgs);
+  onSubmit = (formArgs, { }, { __onSubmit }) => {
+    const promise = __onSubmit(formArgs);
 
     const { idArgs } = this.props;
-    return this.props.onSubmit && this.props.onSubmit(idArgs, dataArgs, promise);
+    this.props.onSubmit && this.props.onSubmit(idArgs, formArgs, promise);
   }
 
-  onChange = (dataArgs) => {
+  onChange = (formArgs) => {
     const { idArgs } = this.props;
-    const { formData } = dataArgs;
+    const { formData } = formArgs;
     this.setState({
       formData
     });
 
-    return this.props.onChange && this.props.onChange(idArgs, dataArgs);
+    this.props.onChange && this.props.onChange(idArgs, formArgs);
   }
 
-  render(allArgs) {
+  render(...allArgs) {
+    const {
+      formData
+    } = this.state;
+    if (formData === NOT_LOADED) {
+      return <LoadIndicator />;
+    }
+
     const [
       { },
       { getProps },
@@ -282,7 +409,7 @@ export default class DynamicForm extends Component {
       ...otherProps
     } = getProps();
 
-    const renderSettings = merge({}, defaultFormRenderSettings, otherProps);
+    const formProps = merge({}, defaultFormProps, otherProps);
 
     if (!!schema + !!schemaBuilder + !!schemaTemplate !== 1) {
       throw new Error('one and only one of the three properties [schema, schemaBuilder, schemaTemplate] must be defined!');
@@ -295,19 +422,19 @@ export default class DynamicForm extends Component {
 
     if (schemaBuilder) {
       // builder overrides schema
-      schema = schemaBuilder.build(renderSettings.uiSchema, allArgs);
+      schema = schemaBuilder.build(formProps.uiSchema, [formData, ...allArgs]);
     }
 
-    const Component = component || DefaultFormRender;
+    const Component = component || DefaultFormComponent;
 
     return (<Component
       schema={schema}
 
-      formData={this.state.formData}
+      formData={formData}
       onSubmit={this.onSubmit}
       onChange={this.onChange}
 
-      {...renderSettings}
+      {...formProps}
     />);
   }
 }

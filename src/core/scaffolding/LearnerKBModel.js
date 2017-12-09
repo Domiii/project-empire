@@ -10,8 +10,8 @@ export const LearnerQuestionTypes = {
   YesNo: 3,
   Radios: 4,
   Checkboxes: 5,
-  Date: 6,
-  Time: 7
+  // Date: 6,
+  // Time: 7
 };
 
 const readers = {
@@ -63,6 +63,7 @@ export default {
                   }
                 }
               },
+              isOptional: 'isOptional',
               order: 'order',
               createdAt: 'createdAt',
               updatedAt: 'updatedAt'

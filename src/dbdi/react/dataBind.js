@@ -63,7 +63,7 @@ class ErrorBoundary extends React.Component {
     const { wrapperId } = this.props;
     if (!_errorState[wrapperId]) {
       console.error('[Component render ERROR]', info, '\n ', err.stack);
-      _errorState[wrapperId] = (<pre style={{color: 'red'}}>[Component render ERROR] {err.stack}</pre>);
+      _errorState[wrapperId] = (<pre style={{ color: 'red' }}>[Component render ERROR] {err.stack}</pre>);
     }
   }
 
@@ -122,7 +122,7 @@ export default (propsOrPropCb) => WrappedComponent => {
       this._dataSourceTree = getDataSourceTreeFromReactContext(context);
       this._customContext = Object.assign({}, getCustomContextFromReactContext(context) || {});
       this._dataAccessTracker = new DataAccessTracker(
-        this._dataSourceTree, this._onNewData, 
+        this._dataSourceTree, this._onNewData,
         WrappedComponent.name || '<unnamed component>');
 
 
@@ -190,7 +190,7 @@ export default (propsOrPropCb) => WrappedComponent => {
           //    (injectRenderArgs returns a new class)
           //const proto = Object.getPrototypeOf(this);
           return this[methodName] = partialRight(
-            this[methodName], 
+            this[methodName],
             ..._injectedArguments
           );
           // (...ownArgs) => {
@@ -266,6 +266,30 @@ export default (propsOrPropCb) => WrappedComponent => {
             console.error(`DI failed - Component requested props/context "${toString(name)}" but it does not exist`);
           }
           return undefined;
+        },
+        
+        has: (target, name) => {
+          // 1) check custom data
+          if (name in this._customProps) {
+            return true;
+          }
+
+          // 2) check props
+          if (name in this.props) {
+            return true;
+          }
+
+          // 3) check context
+          if (name in this.context) {
+            return true;
+          }
+
+          // 4) check custom context
+          if (name in this._customContext) {
+            return true;
+          }
+          
+          return false;
         }
       });
     }
@@ -299,6 +323,28 @@ export default (propsOrPropCb) => WrappedComponent => {
             console.error(`DI failed - Component requested function "${toString(name)}" but it does not exist.`);
           }
           return null;
+        },
+
+        has: (target, name) => {
+          // 1) check custom actions
+          const customFunction = this._customFunctions[name];
+          if (customFunction) {
+            return true;
+          }
+
+          // 2) check readers
+          const readData = this._dataAccessTracker.resolveReadData(name);
+          if (readData) {
+            return true;
+          }
+
+          // 3) check writers
+          const writeData = this._dataAccessTracker.resolveWriteData(name);
+          if (writeData) {
+            return true;
+          }
+
+          return false;
         }
       });
     }
@@ -325,6 +371,9 @@ export default (propsOrPropCb) => WrappedComponent => {
     )
 
     _prepareInjectedProps() {
+
+      // TODO: use caching, so we don't create new wrapper objects every time
+
       if (propsOrPropCb) {
         // prepare _customProps object
         let props = propsOrPropCb;
@@ -335,8 +384,6 @@ export default (propsOrPropCb) => WrappedComponent => {
           // already done, don't do it again!
           return;
         }
-
-        // TODO: if a function is supplied, be smart about it
 
         if (props && !isPlainObject(props)) {
           throw new Error('Invalid props returned from dataBind callback: ' +
@@ -361,7 +408,7 @@ export default (propsOrPropCb) => WrappedComponent => {
     // ################################################
 
     get wrappedComponentName() {
-      return WrappedComponent.name || 
+      return WrappedComponent.name ||
         '<unnamed component>';
     }
 

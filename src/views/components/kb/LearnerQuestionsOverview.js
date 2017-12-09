@@ -28,7 +28,7 @@ import LearnerQuestionList from './LearnerQuestionList';
 @dataBind({
   addQuestionClick(evt, { }, { push_learnerQuestion }) {
     const q = {
-      title: 'untitled',
+      title: '',
       description: '',
       questionType: LearnerQuestionTypes.YesNo
     };
@@ -45,8 +45,41 @@ export default class LearnerQuestionsOverview extends Component {
     };
 
     this.dataBindMethods(
+      '_onUpdate',
       'clickAdd'
     );
+  }
+
+  componentWillMount() {
+    this._onUpdate(this.props);
+  }
+
+  /**
+   * This works even when we use DB data since DB data is sent via context updates.
+   * see: https://github.com/facebook/react/pull/5787
+   */
+  componentWillReceiveProps(nextProps) {
+    this._onUpdate(nextProps);
+  }
+
+  _onUpdate(nextProps,
+    { },
+    { },
+    { learnerQuestionList }
+  ) {
+    // check if question has been deleted
+    const {
+      editQuestionId
+    } = this.state;
+
+    if (editQuestionId && (
+        !learnerQuestionList ||
+        !learnerQuestionList[editQuestionId]
+      )) {
+      this.setState({
+        editQuestionId: null
+      });
+    }
   }
 
   clickAdd = (evt, { }, { addQuestionClick }, { }) => {
@@ -56,22 +89,33 @@ export default class LearnerQuestionsOverview extends Component {
     });
   }
 
+  setEditing = (editQuestionId) => {
+    this.setState({
+      editQuestionId
+    });
+  }
+
   render(
     { },
     { },
-    { }
+    { learnerQuestionList }
   ) {
     return (<div>
       <h3>
-        Learner Questions
+        Learner Questions ({size(learnerQuestionList)})
       </h3>
-      
-      <LearnerQuestionList editQuestionId={this.state.editQuestionId} />
+
+      <LearnerQuestionList
+        editQuestionId={this.state.editQuestionId}
+        setEditing={this.setEditing}
+      />
 
       <center className="full-width">
-        <Button bsStyle="success" onClick={this.clickAdd}>
-          <FAIcon name="plus" /> Add Question!
-        </Button>
+        {!this.state.editQuestionId &&
+          <Button bsStyle="success" onClick={this.clickAdd}>
+            <FAIcon name="plus" /> Add Question!
+          </Button>
+        }
       </center>
     </div>);
   }

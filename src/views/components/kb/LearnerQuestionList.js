@@ -19,7 +19,6 @@ import {
 import { LinkContainer } from 'react-router-bootstrap';
 import Flexbox from 'flexbox-react';
 
-import UserBadge from 'src/views/components/users/UserBadge';
 import LoadIndicator from 'src/views/components/util/loading';
 import FAIcon from 'src/views/components/util/FAIcon';
 
@@ -27,9 +26,8 @@ import LearnerQuestionItem from './LearnerQuestionItem';
 
 
 
-const LearnerQuestionList = dataBind({
-})(function LearnerQuestionsOverview(
-  { editQuestionId },
+const LearnerQuestionList = dataBind({})(function LearnerQuestionsOverview(
+  { editQuestionId, setEditing },
   { },
   { learnerQuestionList, learnerQuestionList_isLoaded }
 ) {
@@ -49,8 +47,11 @@ const LearnerQuestionList = dataBind({
   else {
     contentEl = (<ListGroup>
       {map(questions, ({ _, questionId }) => (
-        <LearnerQuestionItem editing={editQuestionId === questionId}
-          key={questionId} questionId={questionId} />
+        <LearnerQuestionItem
+          key={questionId} questionId={questionId}
+          editing={editQuestionId === questionId}
+          setEditing={setEditing}
+        />
       ))}
     </ListGroup>);
   }

@@ -12,7 +12,7 @@ import {
   ButtonProject, Button
 } from 'react-bootstrap';
 
-import { FAIcon } from 'src/views/components/util';
+import FAIcon from 'src/views/components/util/FAIcon';
 
 import ConfirmModal, {
   DefaultButtonCreator

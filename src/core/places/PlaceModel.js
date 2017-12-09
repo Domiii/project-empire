@@ -1,5 +1,4 @@
 import { EmptyObject } from 'src/util';
-import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 
 /**
  * Place data

@@ -102,6 +102,7 @@ export const ProjectHeader = dataBind({})(function ProjectHeader(
   const finishTime = thisProject.finishTime;
   const projectStatus = thisProject.status || ProjectStatus.None;
   const hasProjectFinished = isProjectStatusOver(projectStatus);
+  
   return (
     <Flexbox justifyContent="space-between" alignItems="center">
       <Flexbox>
