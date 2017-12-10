@@ -30,14 +30,27 @@ export const schemaTemplate = {
   type: 'object',
   properties: [
     {
-      id: 'title',
+      id: 'title_en',
       type: 'string',
-      title: 'Title'
+      title: 'Title (En)',
+      isOptional: true
     },
     {
-      id: 'description',
+      id: 'title_zh',
       type: 'string',
-      title: 'Description',
+      title: 'Title (中文)',
+      isOptional: true
+    },
+    {
+      id: 'description_en',
+      type: 'string',
+      title: 'Description (En)',
+      isOptional: true
+    },
+    {
+      id: 'description_zh',
+      type: 'string',
+      title: 'Description (中文)',
       isOptional: true
     },
     {
@@ -123,15 +136,16 @@ export const LearnerQuestionForm = dataBind({})(function LearnerQuestionForm(
 
 const LeanerQuestionHeader = dataBind({})(function LeanerQuestionHeader(
   { questionId, editing, toggleEdit },
-  { get_learnerQuestion },
+  { get_learnerQuestion, lookupLocalized },
   { }
 ) {
   const question = get_learnerQuestion({ questionId });
+  const title = (lookupLocalized({ obj: question, prop: 'title' }) || '').trim();
   return question && (
     <Flexbox justifyContent="space-between" alignItems="center">
       <Flexbox>
-        <h4 className={!question.title.trim() && 'color-gray' || ''}>
-          {question.title || 'new question'}
+        <h4 className={!title && 'color-gray' || ''}>
+          {title || 'new question'}
         </h4>
       </Flexbox>
       <Flexbox>
@@ -154,11 +168,13 @@ const LearnerQuestionItem = dataBind({
   { }
 ) {
   if (!get_learnerQuestion.isLoaded({ questionId })) {
-    return <LoadIndicator />;
+    return <LoadIndicator block />;
   }
 
   const headerProps = { questionId, editing, toggleEdit };
   const formProps = { questionId };
+
+  //const description = lookupLocalized({ obj: question, prop: 'description' });
 
   return (
     <Panel header={<LeanerQuestionHeader {...headerProps} />} bsStyle="info" className="no-margin">

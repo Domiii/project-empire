@@ -61,9 +61,9 @@ export default class FirebaseDataProvider extends DataProviderBase {
 
     //console.warn('R [', query.remotePath, '] ', val);
 
-    if (val !== undefined && val !== null) {
+    //if (val !== undefined && val !== null) {
       setDataIn(this.firebaseCache, query.localPath, val);
-    }
+    //}
 
     this.notifyNewData(query, val);
   }

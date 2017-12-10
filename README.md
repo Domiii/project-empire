@@ -24,6 +24,9 @@
 ## TODO
 
 ### Next big goal(s)
+* Learner KB editing
+  * edit multiple choices
+  * categories + tags
 * LearnerStatus forms
 * complete Meeting SOP + Meeting forms
 * complete Project SOP
