@@ -5,13 +5,12 @@ import groupBy from 'lodash/groupBy';
 import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 
 export const LearnerQuestionTypes = {
-  ShortAnswer: 1,
-  ParagraphAnswer: 2,
-  YesNo: 3,
-  Radios: 4,
-  Checkboxes: 5,
-  // Date: 6,
-  // Time: 7
+  Text: 1,
+  YesNo: 2,
+  Radios: 3,
+  Checkboxes: 4,
+  // Date: 5,
+  // Time: 6
 };
 
 const readers = {

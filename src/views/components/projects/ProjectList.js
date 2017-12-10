@@ -3,6 +3,7 @@
 import isEmpty from 'lodash/isEmpty';
 import map from 'lodash/map';
 import sortBy from 'lodash/sortBy';
+import size from 'lodash/size';
 
 //import { EmptyObject, EmptyArray } from 'src/util';
 
@@ -13,7 +14,7 @@ import autoBind from 'react-autobind';
 import dataBind from 'src/dbdi/react/dataBind';
 
 import {
-  Button, ListGroup, Alert
+  Button, ListGroup, Alert, Panel
 } from 'react-bootstrap';
 
 import { LoadOverlay } from 'src/views/components/overlays';
@@ -25,6 +26,7 @@ import ProjectPanel from './ProjectPanel';
 import ProjectEditor from './ProjectEditor';
 
 
+const itemsPerPage = 2;
 
 @dataBind({
 })
@@ -34,12 +36,12 @@ export default class ProjectList extends Component {
 
     this.state = {
       adding: false,
-      page: 0
+      page: 1
     };
 
     this.dataBindMethods(
       this.getProjectIds,
-      this.makeListHeader
+      this.renderToolbar
     );
 
     autoBind(this);
@@ -55,6 +57,7 @@ export default class ProjectList extends Component {
 
   get ProjectListArgs() {
     return {
+      itemsPerPage,
       page: this.CurrentPage
     };
   }
@@ -66,7 +69,7 @@ export default class ProjectList extends Component {
   toggleAdding = () => {
     this.setAdding(!this.state.adding);
   }
-  
+
   setAdding = (adding) => {
     this.setState({ adding });
   }
@@ -75,18 +78,22 @@ export default class ProjectList extends Component {
     this.setAdding(false);
   }
 
+  nextPage = () => {
+    this.setPage(this.state.page + 1);
+  }
+
   setPage = (page) => {
     this.setState({ page });
   }
 
-  makeListHeader({ }, { }, { isCurrentUserGuardian }) {
+  renderToolbar({ }, { }, { isCurrentUserGuardian }) {
     return !isCurrentUserGuardian ? null : (
       <div>
         <Button active={this.IsAdding}
           bsStyle="success" bsSize="small"
           onClick={this.toggleAdding}>
           <FAIcon name="plus" className="color-green" /> create new project
-          </Button>
+        </Button>
 
         {this.IsAdding &&
           <ProjectEditor projectId={null} onSave={this.onAddedProject} />
@@ -96,33 +103,45 @@ export default class ProjectList extends Component {
   }
 
   render({ }, { sortedProjectIdsOfPage }, { }) {
-    if (!sortedProjectIdsOfPage.isLoaded(this.ProjectListArgs)) {
-      // still loading
-      return (<LoadOverlay />);
-    }
-
     const projectIds = this.getProjectIds();
+    const nProjects = size(projectIds);
+    const stillLoading = !sortedProjectIdsOfPage.isLoaded(this.ProjectListArgs);
 
     let projectListEl;
-    if (isEmpty(projectIds)) {
+    if (!nProjects) {
+      if (stillLoading) {
+        return <LoadOverlay />;
+      }
       projectListEl = (<Alert bsStyle="warning">there are no projects</Alert>);
     }
     else {
-      projectListEl = (<ListGroup> {
-        map(projectIds, (projectId) => {
+      const { page } = this.state;
+      projectListEl = (<Panel header={`Projects (${nProjects})`}>
+        <ListGroup> {
+          map(projectIds, (projectId) => {
 
-          return (<li key={projectId} className="list-group-item">
-            <ProjectPanel {...{
-              readonly: false,
-              projectId
-            }} />
-          </li>);
-        })
-      } </ListGroup>);
+            return (<li key={projectId} className="list-group-item">
+              <ProjectPanel {...{
+                readonly: false,
+                projectId
+              }} />
+            </li>);
+          })
+        } </ListGroup>
+        { (
+          <Button disabled={nProjects < page * itemsPerPage} block
+            onClick={this.nextPage} >
+            more...
+          </Button>
+        ) }
+        {stillLoading && (
+          <LoadIndicator block />
+        )}
+      </Panel>);
     }
 
     return (<div>
-      {this.makeListHeader()}
+      {this.renderToolbar()}
       {projectListEl}
     </div>);
   }

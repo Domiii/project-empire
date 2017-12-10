@@ -17,8 +17,7 @@ import LoadIndicator from 'src/views/components/util/loading';
 
 const questionTypeKeys = Object.keys(LearnerQuestionTypes);
 const questionTypeTitles = {
-  ShortAnswer: 'short answer',
-  ParagraphAnswer: 'paragraph answer',
+  Text: 'Text',
   YesNo: 'Yes/No',
   Radios: 'Radios',
   Checkboxes: 'Checkboxes'
