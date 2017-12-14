@@ -54,17 +54,23 @@ export const schemaTemplate = {
       isOptional: true
     },
     {
+      id: 'questionType',
+      type: 'number',
+      title: 'Question Type',
+      enum: questionTypeKeys.map(key => LearnerQuestionTypes[key]),
+      enumNames: questionTypeKeys.map(key => questionTypeTitles[key])
+    },
+    {
       id: 'isOptional',
       title: 'Optional?',
       type: 'boolean',
       isOptional: true
     },
     {
-      id: 'questionType',
-      type: 'number',
-      title: 'Question Type',
-      enum: questionTypeKeys.map(key => LearnerQuestionTypes[key]),
-      enumNames: questionTypeKeys.map(key => questionTypeTitles[key])
+      id: 'meta',
+      title: 'Meta',
+      type: 'string',
+      isOptional: true
     },
     {
       id: 'createdAt',
