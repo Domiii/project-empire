@@ -33,6 +33,8 @@
 * 上台分享：  一切都透過系統表現
 * event system: keep track of all important events
 * disable unnecessary features
+* Unity: game feature list
+* Unity: 學習地圖
 
 ### Learner Record
 * 
