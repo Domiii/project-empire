@@ -1,4 +1,3 @@
-import { hasDisplayRole } from 'src/core/users/Roles';
 import {
   ProjectStatus,
   isProjectStatusOver
@@ -24,6 +23,11 @@ import {
 import Flexbox from 'flexbox-react';
 
 
+import {
+  MissionHeader,
+  MissionBody
+} from 'src/views/components/missions/MissionPanel';
+
 import ProjectEditor from './ProjectEditor';
 import ProjectEditTools from './ProjectEditTools';
 import ProjectTeamList from './ProjectTeamList';
@@ -39,52 +43,6 @@ import { FAIcon } from 'src/views/components/util';
 import {
   projectStatusProps
 } from './projectRenderSettings';
-
-export const MissionHeader = dataBind({})(function MissionHeader(
-  { missionId },
-  { missionById }
-) {
-  const isMissionLoaded = missionById.isLoaded({ missionId });
-  let missionHeader;
-  if (isMissionLoaded) {
-    const mission = missionById({ missionId });
-    if (mission) {
-      missionHeader = `${mission.code} - ${mission.title}`;
-    }
-    else {
-      missionHeader = '<unknown mission>';
-    }
-  }
-  else {
-    missionHeader = <LoadIndicator />;
-  }
-
-  return missionHeader;
-});
-
-
-export const MissionBody = dataBind({})(function MissionBody(
-  { missionId },
-  { get_missionDescription }
-) {
-  const isMissionLoaded = get_missionDescription.isLoaded({ missionId });
-  let missionEl;
-  if (isMissionLoaded) {
-    const missionDescription = get_missionDescription({ missionId });
-    if (missionDescription) {
-      missionEl = (<Well>
-        <h4 className="no-margin no-padding">{missionDescription}</h4>
-      </Well>);
-    }
-    else {
-      missionEl = (<Alert bsStyle="danger">mission doesn{'\''}t exist (anymore)</Alert>);
-    }
-  }
-  else {
-    missionEl = <LoadIndicator block message="loading mission..." />;
-  }
-  return missionEl;
-});
 
 export const ProjectHeader = dataBind({})(function ProjectHeader(
   { projectId },

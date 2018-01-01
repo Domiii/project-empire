@@ -119,7 +119,6 @@ export default class ProjectList extends Component {
       projectListEl = (<Panel header={`Projects (${nProjects})`}>
         <ListGroup> {
           map(projectIds, (projectId) => {
-
             return (<li key={projectId} className="list-group-item">
               <ProjectPanel {...{
                 readonly: false,

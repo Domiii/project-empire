@@ -23,6 +23,15 @@
 
 ## TODO
 
+
+### Fundamentals
+* mission editor
+* project: be able to comment + make records for project
+* project: finish + archive
+* ActiveProjectsPage vs. FinishedProjectsPage
+* event system: keep track of all important events
+* proper mission list
+
 ### Next big goal(s)
 * Learner KB editing
   * edit multiple choices

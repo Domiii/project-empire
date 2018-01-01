@@ -52,7 +52,11 @@ export const MissionSelect = dataBind({
     }
     onChange(missionId);
   }
-})(({ value }, { onChangeOption, missionOptions }, { allMissions_isLoaded }) => {
+})((
+  { value }, 
+  { onChangeOption, missionOptions }, 
+  { allMissions_isLoaded }
+) => {
   if (!allMissions_isLoaded) {
     return <LoadIndicator block message="loading missions..." />;
   }
