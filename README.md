@@ -26,11 +26,19 @@
 
 ### Fundamentals
 * mission editor
-* project: be able to comment + make records for project
+* import all missions
+* project: be able to run, comment + make records for project
 * project: finish + archive
 * ActiveProjectsPage vs. FinishedProjectsPage
+* 上台分享：  一切都透過系統表現
 * event system: keep track of all important events
-* proper mission list
+* disable unnecessary features
+
+### Learner Record
+* 
+
+### 學習地圖
+* Unity/Scratch 50 個遊戲功能清單
 
 ### Next big goal(s)
 * Learner KB editing
