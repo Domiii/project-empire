@@ -175,6 +175,11 @@ export default class Header extends Component {
         <LinkContainer key="gm" to="/gm">
           <NavItem eventKey={13}>GM Tools</NavItem>
         </LinkContainer>
+      ),
+      (
+        <LinkContainer key="places" to="/places">
+          <NavItem eventKey={14}>Places</NavItem>
+        </LinkContainer>
       )
     ];
 
@@ -182,12 +187,12 @@ export default class Header extends Component {
       {/* {warningEl} */}
       <header className="header">
         <Navbar inverse collapseOnSelect className=" no-margin">
-          <Navbar.Header>
+          {/* <Navbar.Header>
             <Navbar.Brand>
               <Link to="/"><span>Home</span></Link>
             </Navbar.Brand>
             <Navbar.Toggle />
-          </Navbar.Header>
+          </Navbar.Header> */}
           <Navbar.Collapse>
             <Nav>
               <LinkContainer to="/myprojects">
@@ -198,9 +203,6 @@ export default class Header extends Component {
               </LinkContainer>
               <LinkContainer to="/missions">
                 <NavItem eventKey={3}>Missions</NavItem>
-              </LinkContainer>
-              <LinkContainer to="/places">
-                <NavItem eventKey={4}>Places</NavItem>
               </LinkContainer>
               {adminEls}
             </Nav>

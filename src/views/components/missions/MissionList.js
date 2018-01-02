@@ -19,13 +19,17 @@ import {
 import { LoadOverlay } from 'src/views/components/overlays';
 
 import { FAIcon } from 'src/views/components/util';
+import Loading from 'src/views/components/util/loading';
 
 const MissionList = dataBind({})(function MissionList(
   { },
   { },
-  { allMissions },
+  { allMissions, allMissions_isLoaded },
   { }
 ) {
+  if (!allMissions_isLoaded) {
+    return <Loading size={2} block />;
+  }
   return (<ListGroup>
     {map(allMissions, (mission, missionId) => {
       const header = <MissionHeader missionId={missionId} />;

@@ -27,10 +27,22 @@
 ### Fundamentals
 * mission editor
 * import all missions
-* project: be able to run, comment + make records for project
-* project: finish + archive
+* 每個人可以開始執行任務
+* 每個人可以觀察自己的任務狀態
+* 每個人可以放棄自己在做的任務
+* 每個人可以提交任務的結果到自己的任務裡面去
+* 公會長、守門人、GM 可以給回饋 comment
+* 公會長、守門人、GM 可以幫忙把更多人加到 任務團隊
+* 公會長、守門人、GM 可以按一個按鈕：『任務完成了，可以分享』
+* 公會長、守門人、GM： 『開始分享』
+* GM 有 button：可以 check 任務每個 checkpoint
+* GM 有 button：可以讓任務過
+* GM 有 button：『團隊檢定沒過』
+* GM 有 button：『上台沒過』
+
+### Next
+* 公會長應該要看到自己的人的狀況
 * ActiveProjectsPage vs. FinishedProjectsPage
-* 上台分享：  一切都透過系統表現
 * event system: keep track of all important events
 * disable unnecessary features
 * Unity: game feature list

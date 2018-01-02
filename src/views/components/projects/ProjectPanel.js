@@ -60,6 +60,8 @@ export const ProjectHeader = dataBind({})(function ProjectHeader(
   const finishTime = thisProject.finishTime;
   const projectStatus = thisProject.status || ProjectStatus.None;
   const hasProjectFinished = isProjectStatusOver(projectStatus);
+  const finishStatus = projectStatus === ProjectStatus.Failed ?
+    'failed' : 'finished';
   
   return (
     <Flexbox justifyContent="space-between" alignItems="center">
@@ -67,7 +69,7 @@ export const ProjectHeader = dataBind({})(function ProjectHeader(
         <h4><MissionHeader missionId={thisProject.missionId} /></h4>
       </Flexbox>
       {hasProjectFinished && <Flexbox>
-        <span className="color-red">finished</span>&nbsp;
+        <span className="color-red">{finishStatus}</span>&nbsp;
         <Moment fromNow>{finishTime}</Moment>&nbsp;
         (<Moment format="ddd, MMMM Do YYYY, h:mm:ss a">{finishTime}</Moment>)
       </Flexbox>}
@@ -176,7 +178,7 @@ export default class ProjectPanel extends Component {
       <Panel {...projectStatusProps[status]} header={<ProjectHeader projectId={projectId} />}>
         <div>
           {this.editorHeader()}
-          <p>Guardian: {
+          <p>Started by: {
             !project.guardianUid ?
               <span className="color-gray">no guardian</span> :
               <UserBadge uid={project.guardianUid} />

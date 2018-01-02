@@ -45,7 +45,7 @@ const AppRoutes = dataBind()(function AppRoutes(
   else {
     return (
       <Switch>
-        <Route exact path={routeTemplates.ROOT} component={LandingPage} />
+        <Route exact path={routeTemplates.ROOT} component={MissionControlPage} />
         <Route exact path={routeTemplates.USER_PROFILE + '*'} component={UserProfilePage} />
 
         <Route exact path={routeTemplates.PLACES} component={PlacePage} />
