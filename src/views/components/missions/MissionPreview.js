@@ -15,30 +15,8 @@ import LoadIndicator from 'src/views/components/util/loading';
 import { FAIcon } from 'src/views/components/util';
 
 
-export const MissionHeader = dataBind({})(function MissionHeader(
-  { missionId },
-  { missionById }
-) {
-  const isMissionLoaded = missionById.isLoaded({ missionId });
-  let missionHeader;
-  if (isMissionLoaded) {
-    const mission = missionById({ missionId });
-    if (mission) {
-      missionHeader = `${mission.code} - ${mission.title}`;
-    }
-    else {
-      missionHeader = '<unknown mission>';
-    }
-  }
-  else {
-    missionHeader = <LoadIndicator />;
-  }
 
-  return missionHeader;
-});
-
-
-export const MissionBody = dataBind({})(function MissionBody(
+const MissionPreview = dataBind({})(function MissionPreview(
   { missionId },
   { get_missionDescription }
 ) {
@@ -60,3 +38,5 @@ export const MissionBody = dataBind({})(function MissionBody(
   }
   return missionEl;
 });
+
+export default MissionPreview;

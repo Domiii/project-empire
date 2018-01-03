@@ -12,15 +12,18 @@ export default {
         path: '$(missionId)',
 
         children: {
-          code: 'code',
           title: 'title',
-          missionDescription: 'description',
-          prereqs: 'prereqs',
-          goals: 'goals',
-          rewards: 'rewards',
-          responsibleGm: 'responsibleGm',
+          missionGoals: 'goals',
+          missionDetails: 'details',
+          author: 'author',
+          category: 'category',
+          subCategory: 'subCategory',
+          difficulty: 'difficulty',
+          recommendedTime: 'recommendedTime',
+          isRepeatable: 'isRepeatable',
           link: 'link',
-          meetingFrequency: 'meetingFrequency'
+          tags: 'tags',
+          rubrics: 'rubrics'
         }
       }
     }

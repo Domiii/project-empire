@@ -92,7 +92,7 @@ export default class ProjectList extends Component {
         <Button active={this.IsAdding}
           bsStyle="success" bsSize="small"
           onClick={this.toggleAdding}>
-          <FAIcon name="plus" className="color-green" /> start new project
+          <FAIcon name="plus" className="color-green" />start new mission
         </Button>
 
         {this.IsAdding &&

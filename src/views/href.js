@@ -23,3 +23,11 @@ export function hrefLearnerStatusEntry(mode, uid, scheduleId, cycleId) {
 export function hrefLearnerStatusList() {
   return `${routePaths.LEARNER_STATUS}`;
 }
+
+export function hrefMission(missionId) {
+  return `${routePaths.MISSIONS}/${missionId}`;
+}
+
+export function hrefMissionList() {
+  return `${routePaths.MISSIONS}`;
+}

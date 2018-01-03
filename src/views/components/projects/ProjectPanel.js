@@ -26,7 +26,7 @@ import Flexbox from 'flexbox-react';
 import {
   MissionHeader,
   MissionBody
-} from 'src/views/components/missions/MissionPanel';
+} from 'src/views/components/missions/MissionView';
 
 import ProjectEditor from './ProjectEditor';
 import ProjectEditTools from './ProjectEditTools';
