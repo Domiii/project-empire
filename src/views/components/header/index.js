@@ -195,12 +195,14 @@ export default class Header extends Component {
           </Navbar.Header> */}
           <Navbar.Collapse>
             <Nav>
-              <LinkContainer to="/myprojects">
+              { isCurrentUserAdmin && <LinkContainer to="/myprojects">
                 <NavItem eventKey={2}>My Projects</NavItem>
               </LinkContainer>
-              <LinkContainer to="/projects">
+              }
+              { isCurrentUserAdmin && <LinkContainer to="/projects">
                 <NavItem eventKey={3}>All Projects</NavItem>
               </LinkContainer>
+              }
               <LinkContainer to="/missions">
                 <NavItem eventKey={3}>Missions</NavItem>
               </LinkContainer>

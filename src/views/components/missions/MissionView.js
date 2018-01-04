@@ -49,7 +49,7 @@ export const MissionView = dataBind({})(function MissionView(
   }
   return (<div>
     <MissionHeader missionId={missionId} editing={editing} />
-    { editing && <MissionEditorForm missionId={missionId} /> }
+    {editing && <MissionEditorForm missionId={missionId} />}
     {goalEl}
     <h4>
       {subCategory}
@@ -59,10 +59,12 @@ export const MissionView = dataBind({})(function MissionView(
     </Well>
     <h3>
       <center>
-        <a href={link} target="_blank">Link</a>
+        {link && <a href={'//' + link} target="_blank">Link</a>}
       </center>
     </h3>
   </div>);
 });
 
 export default MissionView;
+
+// var obj = _.zipObject(_.map(arr, (m, i) => 'm'+i), arr); copy(JSON.stringify(obj, null, 2));
