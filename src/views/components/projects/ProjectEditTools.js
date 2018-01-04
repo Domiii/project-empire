@@ -19,14 +19,14 @@ import ConfirmModal, {
 } from 'src/views/components/util/ConfirmModal';
 
 const ProjectDescription = dataBind()(
-  ({ projectId }, { missionById, projectById, uidsOfProject, userDisplayName }, { }) => {
+  ({ projectId }, { get_mission, projectById, uidsOfProject, userDisplayName }, { }) => {
     const project = projectById({ projectId });
 
     if (!project) {
       return (<span>???</span>);
     }
 
-    const mission = missionById({ missionId: project.missionId });
+    const mission = get_mission({ missionId: project.missionId });
     const uids = uidsOfProject({ projectId });
 
 

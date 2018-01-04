@@ -14,28 +14,30 @@ import Flexbox from 'flexbox-react';
 import Markdown from 'src/views/components/markdown';
 
 import MissionHeader from 'src/views/components/missions/MissionHeader';
+import MissionEditorForm from 'src/views/components/missions/MissionEditorForm';
 
 import LoadIndicator from 'src/views/components/util/loading';
 import { FAIcon } from 'src/views/components/util';
 
 export const MissionView = dataBind({})(function MissionView(
-  { missionId },
-  { missionById }
+  { editing, missionId },
+  { get_mission, lookupLocalized }
 ) {
-  const isMissionLoaded = missionById.isLoaded({ missionId });
+  const isMissionLoaded = get_mission.isLoaded({ missionId });
   let goalEl;
   if (!isMissionLoaded) {
     return <LoadIndicator block message="loading mission..." />;
   }
 
-  const mission = missionById({ missionId });
+  const mission = get_mission({ missionId });
   const {
-    goals,
-    details,
     subCategory,
     link,
     difficulty
   } = mission;
+
+  const goals = lookupLocalized({ obj: mission, prop: 'goals' });
+  const details = lookupLocalized({ obj: mission, prop: 'details' });
 
   if (goals) {
     goalEl = (
@@ -43,9 +45,11 @@ export const MissionView = dataBind({})(function MissionView(
     );
   }
   else {
-    goalEl = (<Alert bsStyle="warning">mission doesn{'\''}t have any goals</Alert>);
+    goalEl = (<Alert bsStyle="warning">mission goals are empty</Alert>);
   }
   return (<div>
+    <MissionHeader missionId={missionId} editing={editing} />
+    { editing && <MissionEditorForm missionId={missionId} /> }
     {goalEl}
     <h4>
       {subCategory}
@@ -53,8 +57,11 @@ export const MissionView = dataBind({})(function MissionView(
     <Well>
       <Markdown source={details} />
     </Well>
-    TODO: prettier linkage + START! button
-    <a href={link} target="_blank">Link</a>
+    <h3>
+      <center>
+        <a href={link} target="_blank">Link</a>
+      </center>
+    </h3>
   </div>);
 });
 

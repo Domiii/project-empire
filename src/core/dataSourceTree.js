@@ -64,14 +64,6 @@ const dataStructureConfig = {
       PlaceModel,
       MissionModel,
       ProjectModel,
-      {
-        missions: {
-          path: 'missions',
-          children: {
-            mission: '$(missionId)'
-          }
-        }
-      },
 
       LearnerKBModel,
       LearnerScheduleModel,

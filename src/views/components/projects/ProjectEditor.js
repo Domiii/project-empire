@@ -39,15 +39,15 @@ import {
 // ##########################################################################
 
 export const MissionSelect = dataBind({
-  missionOptions({ }, { }, { allMissions }) {
-    return allMissions && map(allMissions, (mission, missionId) => ({
+  missionOptions({ }, { }, { missionList }) {
+    return missionList && map(missionList, (mission, missionId) => ({
       value: missionId,
       label: `${mission.code} - ${mission.title}`
     }));
   },
-  onChangeOption(option, { onChange }, { }, { allMissions }) {
+  onChangeOption(option, { onChange }, { }, { missionList }) {
     let missionId = option && option.value;
-    if (!allMissions[missionId]) {
+    if (!missionList[missionId]) {
       missionId = null;
     }
     onChange(missionId);
@@ -55,9 +55,9 @@ export const MissionSelect = dataBind({
 })((
   { value }, 
   { onChangeOption, missionOptions }, 
-  { allMissions_isLoaded }
+  { missionList_isLoaded }
 ) => {
-  if (!allMissions_isLoaded) {
+  if (!missionList_isLoaded) {
     return <LoadIndicator block message="loading missions..." />;
   }
 

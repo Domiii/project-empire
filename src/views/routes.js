@@ -37,7 +37,7 @@ export const routeTemplates = {
   PLACES: `${routePaths.PLACES}`,
   MISSION_CONTROL: `${routePaths.MISSION_CONTROL}/:projectId?/:stagePath?`,
   PROJECTS: `${routePaths.PROJECTS}`,
-  MISSIONS: `${routePaths.MISSIONS}/:missionId?`,
+  MISSIONS: `${routePaths.MISSIONS}/:missionId?/:editing?`,
   GROUPS: `${routePaths.GROUPS}`,
   GM: `${routePaths.GM}`,
   LEARNER_KB: `${routePaths.LEARNER_KB}`,

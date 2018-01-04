@@ -22,7 +22,7 @@ import LearnerQuestionItem from './LearnerQuestionItem';
 
 
 const LearnerQuestionList = dataBind({})(function LearnerQuestionsOverview(
-  { editQuestionId, setEditing },
+  { editId, setEditing },
   { },
   { learnerQuestionList, learnerQuestionList_isLoaded }
 ) {
@@ -44,7 +44,7 @@ const LearnerQuestionList = dataBind({})(function LearnerQuestionsOverview(
       {map(questions, ({ _, questionId }) => (
         <LearnerQuestionItem
           key={questionId} questionId={questionId}
-          editing={editQuestionId === questionId}
+          editing={editId === questionId}
           setEditing={setEditing}
         />
       ))}

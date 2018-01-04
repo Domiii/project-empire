@@ -1,61 +1,77 @@
-import map from 'lodash/map';
-
-import { 
+import {
   hrefMission
 } from 'src/views/href';
 
-import React, { Component } from 'react';
+import size from 'lodash/size';
+import map from 'lodash/map';
+
+import React from 'react';
 import PropTypes from 'prop-types';
 
 import dataBind from 'src/dbdi/react/dataBind';
 
 import {
-  Button, Alert, Panel,
+  Alert, Button, Panel,
   ListGroup, ListGroupItem
 } from 'react-bootstrap';
 
-import MissionPreview from 'src/views/components/missions/MissionPreview';
-import MissionHeader from 'src/views/components/missions/MissionHeader';
+import { withRouter } from 'react-router-dom';
 
-import { LoadOverlay } from 'src/views/components/overlays';
+import Flexbox from 'flexbox-react';
 
-import { FAIcon } from 'src/views/components/util';
-import Loading from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/loading';
+import FAIcon from 'src/views/components/util/FAIcon';
 
-const MissionToolbar = dataBind({})(function MissionList(
-  { },
-  { },
-  { allMissions, allMissions_isLoaded },
+
+import MissionHeader from './MissionHeader';
+import MissionPreview from './MissionPreview';
+
+const MissionListItem = withRouter(dataBind({
+  goToMission(evt, { history, missionId }) {
+    history.push(hrefMission(missionId, false));
+  }
+})(function MissionListItem(
+  { missionId },
+  { goToMission },
   { }
 ) {
-  return (<div>
+  const header = <MissionHeader onClick={goToMission} missionId={missionId} editing={false} />;
+  const body = <MissionPreview missionId={missionId} />;
+  return (<Panel header={header}>
+    <div onClick={goToMission}>
+      {body}
+    </div>
+  </Panel>);
+}));
 
-  </div>);
-});
 
-const MissionList = dataBind()(function MissionList(
+const MissionList = dataBind({
+})(function MissionList(
   { },
   { },
-  { },
-  { allMissions, allMissions_isLoaded },
-  { }
+  { missionList, missionList_isLoaded }
 ) {
-  if (!allMissions_isLoaded) {
-    return <Loading size={2} block />;
+  if (!missionList_isLoaded) {
+    return <LoadIndicator />;
   }
 
-  return (<div>
-    <MissionToolbar />
-    <ListGroup>
-      {map(allMissions, (mission, missionId) => {
-        const header = <MissionHeader missionId={missionId} />;
-        const body = <MissionPreview missionId={missionId} />;
-        return (<ListGroupItem header={header} bsStyle="info">
-          {body}
-        </ListGroupItem>);
-      })}
-    </ListGroup>
-  </div>);
+  let missions = map(missionList, (mission, missionId) => ({ mission, missionId }));
+  // TODO: sort missions
+
+  let contentEl;
+  if (!missions.length) {
+    contentEl = (<Alert bsStyle="warning">
+      no questions yet
+    </Alert>);
+  }
+  else {
+    contentEl = (<ListGroup>
+      {map(missions, ({ _, missionId }) => (
+        <MissionListItem key={missionId} missionId={missionId} />
+      ))}
+    </ListGroup>);
+  }
+  return contentEl;
 });
 
 export default MissionList;

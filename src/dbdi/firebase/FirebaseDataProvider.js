@@ -59,7 +59,7 @@ export default class FirebaseDataProvider extends DataProviderBase {
       console.warn('LOAD', query.localPath);
     }
 
-    //console.warn('R [', query.remotePath, '] ', val);
+    //console.warn('DATA [', query.remotePath, '] ', val);
 
     //if (val !== undefined && val !== null) {
       setDataIn(this.firebaseCache, query.localPath, val);
@@ -120,6 +120,7 @@ export default class FirebaseDataProvider extends DataProviderBase {
   }
 
   readData(queryInput) {
+    //console.warn('R [', queryInput, '] ', query && this.loadedPaths[query.localPath]);
     const query = this.getQueryByQueryInput(queryInput);
     if (!query) {
       return undefined;

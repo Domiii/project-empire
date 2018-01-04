@@ -24,8 +24,8 @@ export function hrefLearnerStatusList() {
   return `${routePaths.LEARNER_STATUS}`;
 }
 
-export function hrefMission(missionId) {
-  return `${routePaths.MISSIONS}/${missionId}`;
+export function hrefMission(missionId, isEditing) {
+  return `${routePaths.MISSIONS}/${missionId}${isEditing ? '/edit' : ''}`;
 }
 
 export function hrefMissionList() {

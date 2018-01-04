@@ -1,6 +1,6 @@
 
 export default {
-  allMissions: {
+  missionList: {
     path: '/missions',
 
     methods: {
@@ -8,13 +8,16 @@ export default {
     },
 
     children: {
-      missionById: {
+      mission: {
         path: '$(missionId)',
 
         children: {
-          title: 'title',
-          missionGoals: 'goals',
-          missionDetails: 'details',
+          title_en: 'title_en',
+          goals_en: 'goals_en',
+          details_en: 'details_en',
+          title_zh: 'title_zh',
+          goals_zh: 'goals_zh',
+          details_zh: 'details_zh',
           author: 'author',
           category: 'category',
           subCategory: 'subCategory',

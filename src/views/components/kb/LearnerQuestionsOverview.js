@@ -13,10 +13,8 @@ import dataBind from 'src/dbdi/react/dataBind';
 import Moment from 'react-moment';
 import {
   Alert, Button,
-  Panel,
-  ListGroup, ListGroupItem
+  Panel
 } from 'react-bootstrap';
-import { LinkContainer } from 'react-router-bootstrap';
 
 import UserBadge from 'src/views/components/users/UserBadge';
 import LoadIndicator from 'src/views/components/util/loading';
@@ -40,7 +38,7 @@ export default class LearnerQuestionsOverview extends Component {
     super(...args);
 
     this.state = {
-      editQuestionId: null
+      editId: null
     };
 
     this.dataBindMethods(
@@ -68,15 +66,15 @@ export default class LearnerQuestionsOverview extends Component {
   ) {
     // check if question has been deleted
     const {
-      editQuestionId
+      editId
     } = this.state;
 
-    if (editQuestionId && (
+    if (editId && (
         !learnerQuestionList ||
-        !learnerQuestionList[editQuestionId]
+        !learnerQuestionList[editId]
       )) {
       this.setState({
-        editQuestionId: null
+        editId: null
       });
     }
   }
@@ -84,13 +82,13 @@ export default class LearnerQuestionsOverview extends Component {
   clickAdd = (evt, { }, { addQuestionClick }, { }) => {
     const newRef = addQuestionClick(evt);
     this.setState({
-      editQuestionId: newRef.key
+      editId: newRef.key
     });
   }
 
-  setEditing = (editQuestionId) => {
+  setEditing = (editId) => {
     this.setState({
-      editQuestionId
+      editId
     });
   }
 
@@ -105,12 +103,12 @@ export default class LearnerQuestionsOverview extends Component {
       </h3>
 
       <LearnerQuestionList
-        editQuestionId={this.state.editQuestionId}
+        editId={this.state.editId}
         setEditing={this.setEditing}
       />
 
       <center className="full-width">
-        {!this.state.editQuestionId &&
+        {!this.state.editId &&
           <Button bsStyle="success" onClick={this.clickAdd}>
             <FAIcon name="plus" /> Add Question!
           </Button>

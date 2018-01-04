@@ -16,41 +16,45 @@ import {
 import { LoadOverlay } from 'src/views/components/overlays';
 import Loading from 'src/views/components/util/loading';
 
-import MissionList from 'src/views/components/missions/MissionList';
+import MissionOverview from 'src/views/components/missions/MissionOverview';
+import MissionView from 'src/views/components/missions/MissionView';
 
 
 const MissionPage = withRouter(dataBind()(function MissionPage(
   { match },
-  { missionById },
+  { mission },
   { currentUser_isLoaded }
 ) {
 
-  const { missionId } = match.params;
+  const { 
+    missionId,
+    editing
+   } = match.params;
 
   if (!currentUser_isLoaded) {
     return (<LoadOverlay />);
   }
 
   if (missionId) {
-    if (!missionById.isLoaded({ missionId })) {
+    if (!mission.isLoaded({ missionId })) {
       return <Loading size={2} block />;
     }
 
-    if (!missionById({ missionId })) {
+    if (!mission({ missionId })) {
       // invalid missionId
       return <Redirect to={hrefMissionList()} />;
     }
 
-    return (<MissionView missionId={missionId} />);
+    return (<MissionView missionId={missionId} editing={editing === 'edit'} />);
   }
   else {
     return (
       <div>
-        <Panel bsStyle="primary" header="Missions">
-          <MissionList />
-        </Panel>
+        <MissionOverview />
       </div>
     );
   }
 }
 ));
+
+export default MissionPage;

@@ -18,16 +18,16 @@ import { FAIcon } from 'src/views/components/util';
 
 const MissionPreview = dataBind({})(function MissionPreview(
   { missionId },
-  { get_missionDescription }
+  { get_mission }
 ) {
-  const isMissionLoaded = get_missionDescription.isLoaded({ missionId });
+  const isMissionLoaded = get_mission.isLoaded({ missionId });
   let missionEl;
   if (isMissionLoaded) {
-    const missionDescription = get_missionDescription({ missionId });
-    if (missionDescription) {
-      missionEl = (<Well>
-        <h4 className="no-margin no-padding">{missionDescription}</h4>
-      </Well>);
+    const mission = get_mission({ missionId });
+    if (mission) {
+      missionEl = (
+        <h4 className="no-margin no-padding">{mission.goals_zh}</h4>
+      );
     }
     else {
       missionEl = (<Alert bsStyle="danger">mission doesn{'\''}t exist (anymore)</Alert>);
