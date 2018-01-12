@@ -30,11 +30,16 @@ export const MissionView = dataBind({})(function MissionView(
   }
 
   const mission = get_mission({ missionId });
-  const {
+  let {
     subCategory,
     link,
     difficulty
   } = mission;
+
+  if (link && !link.includes('//')) {
+    link = '//' + link;
+  }
+
 
   const goals = lookupLocalized({ obj: mission, prop: 'goals' });
   const details = lookupLocalized({ obj: mission, prop: 'details' });
@@ -59,7 +64,7 @@ export const MissionView = dataBind({})(function MissionView(
     </Well>
     <h3>
       <center>
-        {link && <a href={'//' + link} target="_blank">Link</a>}
+        {link && <a href={link} target="_blank">Link</a>}
       </center>
     </h3>
   </div>);
