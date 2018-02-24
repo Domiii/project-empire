@@ -38,9 +38,6 @@ export default class HomePage extends Component {
     if (!currentUser_isLoaded | !currentLearnerScheduleId_isLoaded | !currentLearnerScheduleCycleId) {
       return (<LoadOverlay />);
     }
-    if (!isCurrentUserAdmin) {
-      return (<Alert bsStyle="warning">GMs only :/</Alert>);
-    }
 
     var currentLeader,
         lateReflections = 0,
@@ -89,11 +86,11 @@ export default class HomePage extends Component {
         <Panel bsStyle="primary">
           <Panel.Heading>
             <FancyPanelToggleTitle>
-              （本 cycle 的）反思 checklist
+              歷史紀錄
             </FancyPanelToggleTitle>
           </Panel.Heading>
-          <Panel.Body>
-            學習目標 (+ 反思結果) 的歷史紀錄
+          <Panel.Body collapsible>
+            TODO
           </Panel.Body>
         </Panel>
 

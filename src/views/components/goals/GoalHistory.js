@@ -20,7 +20,7 @@ const GoalHistory = dataBind({
   const entries = currentGoalHistory;
   const entryCount = size(entries);
   return (<div>
-    你之前定的目標（{entryCount}）：
+    妳想到過的目標包含（{entryCount}）：
     {
       map(entries, (entry, i) => (
         <Badge key={i}>

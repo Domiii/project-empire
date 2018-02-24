@@ -19,6 +19,7 @@ import { EmptyObject } from '../../../util';
 
 
 export const schemaTemplate = {
+  name: 'goalData',
   type: 'object',
   properties: [
     {
@@ -49,17 +50,26 @@ export const schemaTemplate = {
 };
 
 const uiSchema = {
+  'ui:options': {
+    inline: true
+  },
   goalDescription: {
     'ui:placeholder': '很棒的新目標～',
     'ui:options': {
       inline: true
     }
-  }
+  },
+  createdAt: {
+    'ui:widget': 'hidden',
+  },
+  updatedAt: {
+    'ui:widget': 'hidden',
+  },
 };
 
 function GoalUpdateButton({ open }) {
   return (<Button bsStyle="danger" onClick={open}>
-     更新這期的目標！
+    更新這期的目標！
   </Button>);
 }
 GoalUpdateButton.propTypes = {
@@ -76,7 +86,7 @@ const GoalForm = dataBind({})(function GoalForm(
   }
 
   let currentGoal,
-      __doUpdate;
+    __doUpdate;
 
   // name of current goal list in model?
   const dbName = 'currentGoal';
@@ -101,9 +111,9 @@ const GoalForm = dataBind({})(function GoalForm(
         </ConfirmModal>
       ) || (
         <Button type="submit" bsStyle="success">
-          存下新的目標
+            存下新的目標
         </Button>
-      )
+        )
       }
     </div>
   </DynamicForm>);

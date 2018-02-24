@@ -25,6 +25,7 @@ import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import Markdown from 'src/views/components/markdown';
 
 import UserBadge from 'src/views/components/users/UserBadge';
+import { EmptyObject } from '../../../util';
 
 
 // ###########################################################################
@@ -43,6 +44,7 @@ function FieldTemplate(props) {
     children,
     //errors,
     help,
+    rawHelp,
     description,
     hidden,
     required,
@@ -53,16 +55,16 @@ function FieldTemplate(props) {
   }
 
   return (
-    <span className={classNames}>
+    <div className={classNames + ' flex-child full-width'}>
       {displayLabel && (
-        <label className={''} required={required} id={id} >
+        <label className={'form-label full-width'} required={required} id={id} >
           {label} {description} {children}
         </label>
       )}
       {!displayLabel && children}
       {/* errors */}
-      {help && help}
-    </span>
+      {rawHelp && help}
+    </div>
   );
 }
 if (process.env.NODE_ENV !== 'production') {
@@ -93,13 +95,51 @@ FieldTemplate.defaultProps = {
   displayLabel: true,
 };
 
+
+// ###########################################################################
+// ObjectFieldTemplate
+// see: https://github.com/mozilla-services/react-jsonschema-form/tree/master/src/components/fields/ObjectField.js#L10
+// ###########################################################################
+
+function DefaultObjectFieldTemplate(props) {
+  const { TitleField, DescriptionField } = props;
+  const {
+    inline
+  } = props.uiSchema["ui:options"] || EmptyObject;
+
+  const content = (
+    <div className="flex-child">
+      {(props.uiSchema["ui:title"] || props.title) && (
+        <TitleField
+          id={`${props.idSchema.$id}__title`}
+          title={props.title || props.uiSchema["ui:title"]}
+          required={props.required}
+          formContext={props.formContext}
+        />
+      )}
+      {props.description && (
+        <DescriptionField
+          id={`${props.idSchema.$id}__description`}
+          description={props.description}
+          formContext={props.formContext}
+        />
+      )}
+      {props.properties.map(prop => prop.content)}
+    </div>
+  );
+  return inline &&  
+    content || 
+    (<fieldset>{content}</fieldset>)
+  ;
+}
+
 /**
  * DescriptionField: Allow displaying markdown
  * @see https://github.com/mozilla-services/react-jsonschema-form/tree/master/src/components/fields/DescriptionField.js
  */
 function DescriptionField(props) {
   const { id, description } = props;
-  console.log(description);
+  
   return (
     !description ? '' :
     <Markdown id={id} className="field-description color-gray" source={description} />
@@ -112,7 +152,7 @@ DescriptionField.propTypes = {
 
 
 // ###########################################################################
-// Default renderering
+// Some commonly used fields + widgets
 // ###########################################################################
 
 const fields = {
@@ -123,7 +163,8 @@ const widgets = {
   momentTime({ value }) {
     return (!value && <span /> || <span>
       <Moment fromNow>{value}</Moment> (
-        <Moment format="MMMM Do YYYY, hh:mm:ss">{value}</Moment>)
+      <Moment format="MMMM Do YYYY, hh:mm:ss">{value}</Moment>
+      )
     </span>);
   },
   user({ value }) {
@@ -156,14 +197,15 @@ const defaultFormProps = {
   fields,
   liveValidate: true,
   showErrorList: false,
-  FieldTemplate
+  FieldTemplate,
+  ObjectFieldTemplate: DefaultObjectFieldTemplate
   // onChange: itemLog('changed'),
   // onError: itemLog('errors'),
 };
 
 
 // ###########################################################################
-// Default form components
+// Default children
 // ###########################################################################
 
 
@@ -228,8 +270,8 @@ export const DefaultFormChildren = dataBind({
     </Flexbox>);
 });
 
-function DefaultFormComponent(allProps) {
-  return (<Form {...allProps}>
+function DefaultFormComponent({className, ...allProps}) {
+  return (<Form className={'spaced-row ' + className} {...allProps}>
     {/* the Form children are the control elements, rendered at the bottom of the form */}
     {allProps.children || <DefaultFormChildren {...allProps} />}
   </Form>);

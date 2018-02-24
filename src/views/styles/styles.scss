@@ -409,6 +409,10 @@ button:active { outline:none !important; }
   font-weight: normal !important;
 }
 
+.form-label > * {
+  font-weight:initial;
+}
+
 /**
  * #######################################################
  * Utility classes for content embedding

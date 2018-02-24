@@ -20,6 +20,15 @@ function ClosedIndicatorDefault() {
 }
 
 export default class FancyPanelToggleTitle extends Panel {
+  static contextTypes = {
+    $bs_panel: PropTypes.shape({
+      headingId: PropTypes.string,
+      bodyId: PropTypes.string,
+      bsClass: PropTypes.string,
+      expanded: PropTypes.bool
+    })
+  };
+
   constructor(...args) {
     super(...args);
     this.state = {
@@ -28,7 +37,10 @@ export default class FancyPanelToggleTitle extends Panel {
   }
 
   render() {
-    const { expanded } = this.context.$bs_panel || {};
+    const { 
+      expanded
+    } = this.context.$bs_panel;
+    console.log(this.context.$bs_panel);
     let {
       children,
       className,
@@ -38,7 +50,7 @@ export default class FancyPanelToggleTitle extends Panel {
     } = this.props;
 
     const expandStateClass = expanded && 'panel-toggle-fancy-open' || 'panel-toggle-fancy-closed';
-    className = 'panel-toggle-fancy ' + expandStateClass + ' ' + (className || '');
+    className = 'panel-toggle-fancy no-margin no-padding ' + expandStateClass + ' ' + (className || '');
 
     let StatusIndicator;
     if (expanded) {
@@ -48,17 +60,15 @@ export default class FancyPanelToggleTitle extends Panel {
       StatusIndicator = closedIndicatorComponent || ClosedIndicatorDefault;
     }
 
-    return (<Panel.Toggle className={className} {...otherProps}>
+    return (<Panel.Title className={className} {...otherProps} toggle>
       <Flexbox justifyContent="space-between" alignItems="center">
         <Flexbox>
-          <Panel.Title className="no-margin no-padding">
-            {children}
-          </Panel.Title>
+          {children}
         </Flexbox>
         <Flexbox>
           <StatusIndicator expanded={expanded} />
         </Flexbox>
       </Flexbox>
-    </Panel.Toggle>);
+    </Panel.Title>);
   }
 }

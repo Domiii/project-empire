@@ -46,7 +46,7 @@
     "react-autobind": "^1.0.6",
     "react-bootstrap": "^0.32.1",
     "react-dom": "^16.2.0",
-    "react-jsonschema-form": "^0.50.1",
+    "react-jsonschema-form": "^1.0.1",
     "react-keydown": "^1.9.6",
     "react-markdown": "^2.5.1",
     "react-moment": "^0.2.2",

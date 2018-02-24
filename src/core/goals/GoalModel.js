@@ -98,6 +98,8 @@ export default {
           if (oldGoal && oldGoal.goalDescription && 
             oldGoal.goalDescription !== newGoal.goalDescription) {
             // add old goal as history entry
+            // (the creation time of this goal is the time it got last updated)
+            oldGoal.createdAt = oldGoal.updatedAt;
             historyUpdate = push_goalHistoryEntry(currentGoalPathQuery, oldGoal);
           }
 

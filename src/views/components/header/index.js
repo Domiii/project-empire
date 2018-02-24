@@ -187,12 +187,12 @@ export default class Header extends Component {
       {/* {warningEl} */}
       <header className="header">
         <Navbar inverse collapseOnSelect className=" no-margin">
-          {/* <Navbar.Header>
+          <Navbar.Header>
             <Navbar.Brand>
               <Link to="/"><span>Home</span></Link>
             </Navbar.Brand>
             <Navbar.Toggle />
-          </Navbar.Header> */}
+          </Navbar.Header>
           <Navbar.Collapse>
             <Nav>
               {/* { <LinkContainer to="/myprojects">
