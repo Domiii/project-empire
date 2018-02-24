@@ -42,14 +42,14 @@ const readers = {
 
   currentGoalHistory(
     { },
-    { get_goalHistory },
+    { get_goalHistoryByUser },
     { currentGoalPathQuery }
   ) {
     if (!currentGoalPathQuery) {
       return NOT_LOADED;
     }
 
-    const entries = get_goalHistory(currentGoalPathQuery);
+    const entries = get_goalHistoryByUser(currentGoalPathQuery);
     const arr = Object.values(entries || EmptyObject);
     return sortBy(arr, (entry) => -entry.updatedAt);
   }
@@ -69,43 +69,43 @@ export default {
       currentGoal: {
         reader(
           { },
-          { get_goalOfUserAndCycle },
+          { get_goalsByUser },
           { currentGoalPathQuery }
         ) {
           if (!currentGoalPathQuery) {
             return NOT_LOADED;
           }
 
-          return get_goalOfUserAndCycle(currentGoalPathQuery);
+          return get_goalsByUser(currentGoalPathQuery);
         },
         writer(
-         goalArgs,
-          { get_goalOfUserAndCycle, goalOfUserAndCycle_isLoaded },
+          goalArgs,
+          { get_goalsByUser, goalsByUser_isLoaded },
           { currentGoalPathQuery },
-          { set_goalOfUserAndCycle, push_goalHistoryEntry }
+          { set_goalsByUser, push_goalHistoryByUserEntry }
         ) {
           if (!currentGoalPathQuery |
-            !goalOfUserAndCycle_isLoaded(currentGoalPathQuery)) {
+            !goalsByUser_isLoaded(currentGoalPathQuery)) {
             return NOT_LOADED;
           }
-          
+
           const newGoal = pick(goalArgs, Object.keys(goalDataModel.children));
 
           // check if we already had a goal
           let historyUpdate;
-          const oldGoal = get_goalOfUserAndCycle(currentGoalPathQuery);
+          const oldGoal = get_goalsByUser(currentGoalPathQuery);
           console.log(oldGoal);
-          if (oldGoal && oldGoal.goalDescription && 
+          if (oldGoal && oldGoal.goalDescription &&
             oldGoal.goalDescription !== newGoal.goalDescription) {
             // add old goal as history entry
             // (the creation time of this goal is the time it got last updated)
             oldGoal.createdAt = oldGoal.updatedAt;
-            historyUpdate = push_goalHistoryEntry(currentGoalPathQuery, oldGoal);
+            historyUpdate = push_goalHistoryByUserEntry(currentGoalPathQuery, oldGoal);
           }
 
           // update goal
-          const goalUpdate = set_goalOfUserAndCycle(currentGoalPathQuery, newGoal);
-          
+          const goalUpdate = set_goalsByUser(currentGoalPathQuery, newGoal);
+
           return Promise.all([
             goalUpdate,
             historyUpdate
@@ -115,17 +115,22 @@ export default {
       goalsByCycle: {
         path: '$(scheduleId)/$(cycleId)',
         children: {
-          goalDataOfUser: {
-            path: '$(uid)',
+          allGoals: {
+            path: 'goals',
             children: {
-              goalOfUserAndCycle: {
-                path: 'goal',
-                ...goalDataModel
+              goalsByUser: {
+                path: '$(uid)',
+                ...goalDataModel,
               },
-              goalHistory: {
-                path: 'history',
+            }
+          },
+          goalHistory: {
+            path: 'history',
+            children: {
+              goalHistoryByUser: {
+                path: '$(uid)',
                 children: {
-                  goalHistoryEntry: {
+                  goalHistoryByUserEntry: {
                     path: '$(goalId)',
                     ...goalDataModel
                   }

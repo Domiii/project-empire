@@ -40,7 +40,7 @@ export default class FancyPanelToggleTitle extends Panel {
     const { 
       expanded
     } = this.context.$bs_panel;
-    console.log(this.context.$bs_panel);
+    
     let {
       children,
       className,

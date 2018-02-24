@@ -1,7 +1,7 @@
 
-// TODO: fix this!
+import isEqual from 'lodash/isEqual';
 
-import React from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import dataBind from 'src/dbdi/react/dataBind';
 
@@ -30,18 +30,18 @@ export const schemaTemplate = {
     },
     {
       id: 'createdAt',
-      if(formData) {
-        return !!formData && formData.createdAt;
-      },
+      // if(formData) {
+      //   return !!formData && !!formData.createdAt;
+      // },
 
       'title': 'Created',
       'type': 'number'
     },
     {
       id: 'updatedAt',
-      if(formData) {
-        return !!formData && formData.updatedAt;
-      },
+      // if(formData) {
+      //   return !!formData && !!formData.updatedAt;
+      // },
 
       'title': 'Last Updated',
       'type': 'number'
@@ -67,57 +67,93 @@ const uiSchema = {
   },
 };
 
-function GoalUpdateButton({ open }) {
-  return (<Button bsStyle="danger" onClick={open}>
-    更新這期的目標！
-  </Button>);
-}
-GoalUpdateButton.propTypes = {
-  open: PropTypes.func.isRequired
-};
 
-const GoalForm = dataBind({})(function GoalForm(
-  { },
-  { },
-  { isCurrentUserAdmin }
-) {
-  if (!isCurrentUserAdmin) {
-    return '';
+          /* {currentGoal && (
+          <ConfirmModal
+            header="你改變了本期的目標嗎?"
+            ButtonCreator={GoalUpdateButton}
+            onConfirm={__doUpdate}>
+
+            {/* { <span>{data.title}</span>} }
+          </ConfirmModal>
+        ) || (
+          )
+        } */
+// function GoalUpdateButton({ open }) {
+//   return (<Button bsStyle="danger" onClick={open}>
+//     更新這期的目標！
+//   </Button>);
+// }
+// GoalUpdateButton.propTypes = {
+//   open: PropTypes.func.isRequired
+// };
+
+function UpdateButtonUnsaved() {
+  return (
+    <Button disabled={false} type="submit" 
+      bsStyle="warning">
+      <FAIcon name="exclamation-triangle" /> 存！ <FAIcon name="exclamation-triangle" />
+    </Button>
+  );
+}
+
+function UpdateButtonSaved() {
+  return (
+    <Button disabled={true} type="submit" 
+      bsStyle="success">
+      <FAIcon name="check" /> 已存 <FAIcon name="check" />
+    </Button>
+  );
+}
+
+@dataBind({})
+class GoalForm extends Component {
+  constructor(...args) {
+    super(...args);
+
+    this.state = {
+    };
   }
 
-  let currentGoal,
-    __doUpdate;
+  onChange = ({ formData }) => {
+    this.setState({ formData });
+  }
 
-  // name of current goal list in model?
-  const dbName = 'currentGoal';
+  render(
+    { },
+    { },
+    { isCurrentUserAdmin, currentGoal, currentGoal_isLoaded }
+  ) {
+    if (!currentGoal_isLoaded) {
+      return <LoadIndicator />;
+    }
 
-  const props = {
-    schemaTemplate,
-    uiSchema,
+    // name of current goal list in model?
+    const dbName = 'currentGoal';
 
-    dbName,
-    alwaysSet: true
-  };
+    const props = {
+      schemaTemplate,
+      uiSchema,
 
-  return (<DynamicForm {...props}>
-    <div>
-      {currentGoal && (
-        <ConfirmModal
-          header="你改變了本期的目標嗎?"
-          ButtonCreator={GoalUpdateButton}
-          onConfirm={__doUpdate}>
+      dbName,
+      alwaysSet: true,
 
-          {/* { <span>{data.title}</span>} */}
-        </ConfirmModal>
-      ) || (
-        <Button type="submit" bsStyle="success">
-            存下新的目標
-        </Button>
-        )
-      }
-    </div>
-  </DynamicForm>);
-});
+      onChange: this.onChange
+    };
+
+    const latestGoal = this.state.formData && this.state.formData.goalDescription || '';
+    const oldGoal = currentGoal && currentGoal.goalDescription || '';
+    const isUnsaved = this.state.formData && !isEqual(latestGoal, oldGoal);
+
+    return (<div>
+      <DynamicForm {...props}>
+        <div>
+          { isUnsaved ? <UpdateButtonUnsaved /> : <UpdateButtonSaved /> }
+        </div>
+      </DynamicForm>
+    </div>);
+  }
+}
 
 
 export default GoalForm;

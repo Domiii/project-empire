@@ -5,6 +5,7 @@ import mapValues from 'lodash/mapValues';
 import map from 'lodash/map';
 import pickBy from 'lodash/pickBy';
 import isEmpty from 'lodash/isEmpty';
+import omit from 'lodash/omit';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -55,7 +56,7 @@ function FieldTemplate(props) {
   }
 
   return (
-    <div className={classNames + ' flex-child full-width'}>
+    <div className={classNames + ' flex-child full-width no-margin'}>
       {displayLabel && (
         <label className={'form-label full-width'} required={required} id={id} >
           {label} {description} {children}
@@ -127,10 +128,10 @@ function DefaultObjectFieldTemplate(props) {
       {props.properties.map(prop => prop.content)}
     </div>
   );
-  return inline &&  
-    content || 
+  return inline &&
+    content ||
     (<fieldset>{content}</fieldset>)
-  ;
+    ;
 }
 
 /**
@@ -139,10 +140,10 @@ function DefaultObjectFieldTemplate(props) {
  */
 function DescriptionField(props) {
   const { id, description } = props;
-  
+
   return (
     !description ? '' :
-    <Markdown id={id} className="field-description color-gray" source={description} />
+      <Markdown id={id} className="field-description color-gray" source={description} />
   );
 }
 DescriptionField.propTypes = {
@@ -270,8 +271,8 @@ export const DefaultFormChildren = dataBind({
     </Flexbox>);
 });
 
-function DefaultFormComponent({className, ...allProps}) {
-  return (<Form className={'spaced-row ' + className} {...allProps}>
+function DefaultFormComponent({ className, ...allProps }) {
+  return (<Form className={'spaced-row ' + (className || '')} {...allProps}>
     {/* the Form children are the control elements, rendered at the bottom of the form */}
     {allProps.children || <DefaultFormChildren {...allProps} />}
   </Form>);
@@ -288,6 +289,7 @@ function getAccessor(fns, writerName) {
   }
   return fn;
 }
+let ii = 0;
 
 /**
  * Adds dynamicity, some default components and more features to default jsonschema forms.
@@ -394,7 +396,7 @@ export default class DynamicForm extends Component {
 
     this.state = {
       originalFormData: null,
-      formData: null
+      formData: NOT_LOADED
     };
 
     this.dataBindMethods(
@@ -427,18 +429,27 @@ export default class DynamicForm extends Component {
       formData
     } = nextProps;
 
-    const stateUpdate = {};
+    let stateUpdate;
     if (dbName) {
-      // formData is queried from DB
-      if (formData) {
-        console.error('DynamicForm ignores `formData` when `dbName` is set.');
-      }
+      if (!this.state.originalFormData) {
+        // formData is queried from DB
+        if (formData) {
+          console.error('DynamicForm should not set `formData` when `dbName` is set - ignored.');
+        }
 
-      const readerName = `get_${dbName}`;
-      const doGet = getAccessor(fns, readerName);
-      const newFormData = doGet(idArgs);
-      //if (newFormData !== stateUpdate.formData) {}
-      stateUpdate.formData = newFormData;
+        const readerName = `get_${dbName}`;
+        const doGet = getAccessor(fns, readerName);
+        const newFormData = doGet(idArgs);
+
+        // only fetch data from DB initially
+        //if (newFormData !== stateUpdate.formData) {}
+        if (!!newFormData) {
+          stateUpdate = {
+            formData: newFormData,
+            originalFormData: newFormData
+          };
+        }
+      }
     }
     else {
       // formData must be passed explicitely
@@ -446,14 +457,17 @@ export default class DynamicForm extends Component {
         !formData ||
         formData !== this.state.originalFormData) {
         // formData changed
-        stateUpdate.formData = formData;
-        stateUpdate.originalFormData = formData;
+        stateUpdate = {
+          formData: formData,
+          originalFormData: formData
+        };
       }
       else {
         // nothing to do!
       }
     }
-    if (!isEmpty(stateUpdate)) {
+    if (stateUpdate) {
+      console.warn(stateUpdate);
       this.setState(stateUpdate);
     }
   }
@@ -466,13 +480,15 @@ export default class DynamicForm extends Component {
   }
 
   onChange = (formArgs) => {
-    const { idArgs } = this.props;
+    //const { idArgs } = this.props;
     const { formData } = formArgs;
+
+    this.props.onChange && this.props.onChange(formArgs);
+
+    console.warn(formData);
     this.setState({
       formData
     });
-
-    this.props.onChange && this.props.onChange(idArgs, formArgs);
   }
 
   render(...allArgs) {
@@ -480,8 +496,11 @@ export default class DynamicForm extends Component {
       formData
     } = this.state;
     if (formData === NOT_LOADED) {
+      console.error('formData === NOT_LOADED');
       return <LoadIndicator />;
     }
+
+    //setTimeout(() => this.forceUpdate(), 300);
 
     const [
       { },
@@ -499,31 +518,37 @@ export default class DynamicForm extends Component {
       ...otherProps
     } = getProps();
 
-    const formProps = merge({}, defaultFormProps, otherProps);
+    let formProps = merge({}, defaultFormProps, otherProps);
 
-    if (!!schema + !!schemaBuilder + !!schemaTemplate !== 1) {
-      throw new Error('one and only one of the three properties [schema, schemaBuilder, schemaTemplate] must be defined!');
+    if (this.schema) {
+      schema = this.schema;
+    }
+    else {
+      if (!!schema + !!schemaBuilder + !!schemaTemplate !== 1) {
+        throw new Error('one and only one of the three properties [schema, schemaBuilder, schemaTemplate] must be defined!');
+      }
+
+      if (schemaTemplate) {
+        // template overrides builder
+        schemaBuilder = new DynamicFormSchemaBuilder(schemaTemplate);
+      }
+
+      if (schemaBuilder) {
+        // builder overrides schema
+        schema = schemaBuilder.build(formProps.uiSchema, [formData, ...allArgs]);
+      }
+      this.schema = schema;
     }
 
-    if (schemaTemplate) {
-      // template overrides builder
-      schemaBuilder = new DynamicFormSchemaBuilder(schemaTemplate);
-    }
-
-    if (schemaBuilder) {
-      // builder overrides schema
-      schema = schemaBuilder.build(formProps.uiSchema, [formData, ...allArgs]);
-    }
+    formProps = merge(formProps, {
+      schema,
+      formData,
+      onSubmit: this.onSubmit,
+      onChange: this.onChange
+    });
 
     const Component = component || DefaultFormComponent;
-
     return (<Component
-      schema={schema}
-
-      formData={formData}
-      onSubmit={this.onSubmit}
-      onChange={this.onChange}
-
       {...formProps}
     />);
   }

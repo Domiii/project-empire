@@ -30,21 +30,21 @@ const LearnerStatusList = dataBind({
 })(
   function LearnerStatusList(
     { scheduleId, cycleId },
-    { learnerEntryIdsOfCycleByAllUsers, get_learnerSchedule, createDefaultScheduleClick },
+    { get_allGoals, get_learnerSchedule, createDefaultScheduleClick },
     { }
   ) {
     if (!get_learnerSchedule.isLoaded({ scheduleId }) |
-      !learnerEntryIdsOfCycleByAllUsers.isLoaded({ scheduleId, cycleId })) {
+      !get_allGoals.isLoaded({ scheduleId, cycleId })) {
       return <LoadIndicator />;
     }
     else {
       const schedule = get_learnerSchedule({ scheduleId });
-      let currentCycleLearnerEntries = learnerEntryIdsOfCycleByAllUsers({ scheduleId, cycleId });
-      currentCycleLearnerEntries = map(currentCycleLearnerEntries, (entryId, uid) => ({ entryId, uid }));
-      const nUsers = size(currentCycleLearnerEntries);
+      let goals = get_allGoals({ scheduleId, cycleId });
+      goals = map(goals, (goal, uid) => ({ goal, uid }));
+      const nUsers = size(goals);
 
-      // sort by whether there already is an entryId
-      currentCycleLearnerEntries = sortBy(currentCycleLearnerEntries, ({ entryId, uid }) => !entryId);
+      // sort by whether they have a goal and if so, by last update time
+      goals = sortBy(goals, ({ goal, uid }) => goal && -goal.updatedAt || 0);
 
       let contentEl;
       if (!schedule) {
@@ -57,14 +57,15 @@ const LearnerStatusList = dataBind({
       }
       else if (!nUsers) {
         contentEl = (<Alert bsStyle="warning" style={{ display: 'inline' }} className="no-padding">
-          <span>user has no entries yet</span>
+          <span>no goals have been defined in this cycle</span>
         </Alert>);
       }
       else {
         contentEl = (<div>
-          {map(currentCycleLearnerEntries, ({entryId, uid}) => (
-            <LearnerStatusEntryView key={uid} learnerEntryId={entryId}
-              uid={uid} scheduleId={scheduleId} cycleId={cycleId} />
+          {map(goals, ({goal, uid}) => (
+            <Well key={uid}>{goal}</Well>
+            // <LearnerStatusEntryView key={uid} learnerEntryId={goal}
+            //   uid={uid} scheduleId={scheduleId} cycleId={cycleId} />
           ))}
         </div>);
       }

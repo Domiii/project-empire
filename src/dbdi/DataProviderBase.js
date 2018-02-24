@@ -8,6 +8,13 @@ import pull from 'lodash/pull';
 import { EmptyObject, EmptyArray } from 'src/util';
 
 
+
+/**
+ * The amount of time to wait before deleting data + metadata 
+ * from cache after unloading (in ms)
+ */
+const purgeCacheDelayDefault = 60 * 1000;
+
 export default class DataProviderBase {
   _listenersByPath = {};
   _queriesByLocalPath = new Map();
@@ -98,7 +105,7 @@ export default class DataProviderBase {
     if (!this._listenerData.get(listener).byPath[localPath]) {
       // if not already listening on path, register!
       //console.warn(who, '[registerListener]', localPath);
-      
+
       const query = this._useQueryInput(localPath, queryInput);
       const customData = this.onListenerAdd(query, listener);
       this._listenerData.get(listener).byPath[localPath] = {
@@ -122,7 +129,6 @@ export default class DataProviderBase {
 
   _unregisterListenerPath(localPath, pathData, listener) {
     //console.log('unregister path: ' + localPath);
-
     const listeners = this.getListeners(localPath);
 
     const listenerData = this._listenerData.get(listener);
@@ -137,35 +143,37 @@ export default class DataProviderBase {
       return;
     }
 
-    const byPathData = listenerData.byPath[localPath];
-    const {
-      query,
-      customData
-    } = byPathData;
+    setTimeout(() => {
+      const byPathData = listenerData.byPath[localPath];
+      const {
+        query,
+        customData
+      } = byPathData;
 
 
-    // delete all kinds of stuff
-    delete listenerData.byPath[localPath];
+      // delete all kinds of stuff
+      delete listenerData.byPath[localPath];
 
-    // reduce queryInputCache useCount
-    --query._useCount;
-    if (!query._useCount) {
-      // delete it
-      this._queriesByLocalPath.delete(query.localPath);
-    }
-
-    if (isEmpty(listenerData.byPath)) {
-      // we removed the last path for listener: delete listener, as well
-      listeners.delete(listener);
-      this._listenerData.delete(listener);
-
-      if (isEmpty(listeners)) {
-        // we removed the last listener at path
-        delete this._listenersByPath[localPath];
+      // reduce queryInputCache useCount
+      --query._useCount;
+      if (!query._useCount) {
+        // delete it
+        this._queriesByLocalPath.delete(query.localPath);
       }
-    }
 
-    this.onListenerRemove(query, listener, customData);
+      if (isEmpty(listenerData.byPath)) {
+        // we removed the last path for listener: delete listener, as well
+        listeners.delete(listener);
+        this._listenerData.delete(listener);
+
+        if (isEmpty(listeners)) {
+          // we removed the last listener at path
+          delete this._listenersByPath[localPath];
+        }
+      }
+
+      this.onListenerRemove(query, listener, customData);
+    }, purgeCacheDelayDefault);
   }
 
   // #################################################################
