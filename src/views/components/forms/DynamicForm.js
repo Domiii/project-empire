@@ -53,16 +53,16 @@ function FieldTemplate(props) {
   }
 
   return (
-    <div className={classNames}>
+    <span className={classNames}>
       {displayLabel && (
-        <label className={'full-width'} required={required} id={id} >
+        <label className={''} required={required} id={id} >
           {label} {description} {children}
         </label>
       )}
       {!displayLabel && children}
       {/* errors */}
       {help && help}
-    </div>
+    </span>
   );
 }
 if (process.env.NODE_ENV !== 'production') {
@@ -99,7 +99,9 @@ FieldTemplate.defaultProps = {
  */
 function DescriptionField(props) {
   const { id, description } = props;
+  console.log(description);
   return (
+    !description ? '' :
     <Markdown id={id} className="field-description color-gray" source={description} />
   );
 }
@@ -136,11 +138,17 @@ const defaultFormProps = {
   uiSchema: {
     createdAt: {
       'ui:readonly': true,
-      'ui:widget': 'momentTime'
+      'ui:widget': 'momentTime',
+      'ui:options': {
+        inline: true
+      }
     },
     updatedAt: {
       'ui:readonly': true,
-      'ui:widget': 'momentTime'
+      'ui:widget': 'momentTime',
+      'ui:options': {
+        inline: true
+      }
     }
   },
 

@@ -1,10 +1,36 @@
+import size from 'lodash/size';
+import map from 'lodash/map';
+
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import dataBind from 'src/dbdi/react/dataBind';
 
-const GoalHistory = dataBind({})(function GoalForm(
+import {
+  Alert, Button, Badge
+} from 'react-bootstrap';
+import Moment from 'react-moment';
+
+const GoalHistory = dataBind({
+
+})(function GoalForm(
+  { },
+  { },
+  { currentGoalHistory }
 ) {
-  return (<div>hi</div>);
+  const entries = currentGoalHistory;
+  const entryCount = size(entries);
+  return (<div>
+    你之前定的目標（{entryCount}）：
+    {
+      map(entries, (entry, i) => (
+        <Badge key={i}>
+          {entry.goalDescription} <span className="color-lightgray">(
+            <Moment fromNow>{entry.updatedAt}</Moment>
+            )</span>
+        </Badge>
+      ))
+    } 
+  </div>);
 });
 
 export default GoalHistory;

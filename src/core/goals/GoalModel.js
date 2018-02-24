@@ -1,4 +1,6 @@
 import pick from 'lodash/pick';
+import sortBy from 'lodash/sortBy';
+
 import isPlainObject from 'lodash/isPlainObject';
 
 import { EmptyObject } from 'src/util';
@@ -21,7 +23,36 @@ const goalDataModel = {
 };
 
 const readers = {
+  currentGoalPathQuery(
+    { },
+    { },
+    { currentUid, currentLearnerScheduleId, currentLearnerScheduleCycleId,
+      currentUid_isLoaded, currentLearnerScheduleId_isLoaded }
+  ) {
+    if (!currentLearnerScheduleId_isLoaded | !currentUid_isLoaded) {
+      return NOT_LOADED;
+    }
 
+    return {
+      uid: currentUid,
+      scheduleId: currentLearnerScheduleId,
+      cycleId: currentLearnerScheduleCycleId,
+    };
+  },
+
+  currentGoalHistory(
+    { },
+    { get_goalHistory },
+    { currentGoalPathQuery }
+  ) {
+    if (!currentGoalPathQuery) {
+      return NOT_LOADED;
+    }
+
+    const entries = get_goalHistory(currentGoalPathQuery);
+    const arr = Object.values(entries || EmptyObject);
+    return sortBy(arr, (entry) => -entry.updatedAt);
+  }
 };
 
 const writers = {
@@ -39,61 +70,45 @@ export default {
         reader(
           { },
           { get_goalOfUserAndCycle },
-          { currentUid, currentLearnerScheduleId, currentLearnerScheduleCycleId,
-            currentUid_isLoaded, currentLearnerScheduleId_isLoaded }
+          { currentGoalPathQuery }
         ) {
-          if (!currentLearnerScheduleId_isLoaded || !currentUid_isLoaded) {
+          if (!currentGoalPathQuery) {
             return NOT_LOADED;
           }
 
-          const pathIds = {
-            uid: currentUid,
-            scheduleId: currentLearnerScheduleId,
-            cycleId: currentLearnerScheduleCycleId,
-          };
-
-          return get_goalOfUserAndCycle(pathIds);
+          return get_goalOfUserAndCycle(currentGoalPathQuery);
         },
         writer(
          goalArgs,
           { get_goalOfUserAndCycle, goalOfUserAndCycle_isLoaded },
-          { currentUid, currentLearnerScheduleId, currentLearnerScheduleCycleId,
-            currentUid_isLoaded, currentLearnerScheduleId_isLoaded },
-          { set_goalOfUserAndCycle, push_goalHistoryOfUserAndCycle }
+          { currentGoalPathQuery },
+          { set_goalOfUserAndCycle, push_goalHistoryEntry }
         ) {
-          const pathIds = {
-            uid: currentUid,
-            scheduleId: currentLearnerScheduleId,
-            cycleId: currentLearnerScheduleCycleId,
-          };
-
-          const newGoal = pick(goalArgs, Object.keys(goalDataModel.children));
-
-          if (!currentLearnerScheduleId_isLoaded | !currentUid_isLoaded |
-            !goalOfUserAndCycle_isLoaded(pathIds)) {
+          if (!currentGoalPathQuery |
+            !goalOfUserAndCycle_isLoaded(currentGoalPathQuery)) {
             return NOT_LOADED;
           }
-
-          // update goal
-          const goalUpdate = set_goalOfUserAndCycle(pathIds, newGoal);
+          
+          const newGoal = pick(goalArgs, Object.keys(goalDataModel.children));
 
           // check if we already had a goal
           let historyUpdate;
-          const oldGoal = get_goalOfUserAndCycle(pathIds);
+          const oldGoal = get_goalOfUserAndCycle(currentGoalPathQuery);
+          console.log(oldGoal);
           if (oldGoal && oldGoal.goalDescription && 
             oldGoal.goalDescription !== newGoal.goalDescription) {
             // add old goal as history entry
-            historyUpdate = push_goalHistoryOfUserAndCycle(pathIds, oldGoal);
+            historyUpdate = push_goalHistoryEntry(currentGoalPathQuery, oldGoal);
           }
+
+          // update goal
+          const goalUpdate = set_goalOfUserAndCycle(currentGoalPathQuery, newGoal);
           
           return Promise.all([
             goalUpdate,
             historyUpdate
           ]);
         }
-      },
-      currentGoalHistory: {
-
       },
       goalsByCycle: {
         path: '$(scheduleId)/$(cycleId)',
@@ -105,10 +120,10 @@ export default {
                 path: 'goal',
                 ...goalDataModel
               },
-              goalHistoryOfUserAndCycle: {
+              goalHistory: {
                 path: 'history',
                 children: {
-                  goalHistoryList: {
+                  goalHistoryEntry: {
                     path: '$(goalId)',
                     ...goalDataModel
                   }

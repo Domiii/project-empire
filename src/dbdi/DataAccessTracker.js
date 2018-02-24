@@ -152,7 +152,6 @@ export default class DataAccessTracker {
       const allArgs = processArguments(node, writeArgs);
       allArgs.queryArgs = this._wrapArgs(allArgs.queryArgs, node);
       
-      console.log(writeArgs, allArgs.queryArgs.goalDescription);
       return node.writeData(allArgs, this._readerProxy, this._injectProxy, this._writerProxy, this);
     };
 
