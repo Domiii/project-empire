@@ -50,8 +50,13 @@ const LearnerStatusEntryForm = dataBind({})(function LearnerEntryList(
     </h3>);
 
     return (<div>
-      <Panel bsStyle="info" header={header}>
-        form
+      <Panel bsStyle="info" >
+        <Panel.Heading>
+          {header}
+        </Panel.Heading>
+        <Panel.Body>
+          form
+        </Panel.Body>
       </Panel>
     </div>);
   }

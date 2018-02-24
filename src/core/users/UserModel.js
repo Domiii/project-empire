@@ -194,6 +194,7 @@ export default {
               userLocale: 'locale',
               userRole: 'role',
               userDisplayRole: 'displayRole',
+              userCohortId: 'cohortId',
               userPlaceId: 'placeId'
             }
           }

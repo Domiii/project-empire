@@ -142,14 +142,17 @@ export default class DataAccessTracker {
 
     // get parameter config for action
     const paramConfig = writeParameterConfig[writeDescriptor.actionName];
-    console.assert(paramConfig);
-    const { processArguments } = paramConfig;
+    console.assert(paramConfig, 'writeParameterConfig in _wrapWriteData');
+    const {
+      processArguments
+    } = paramConfig;
 
     const wrappedWriteData = (...writeArgs) => {
       // figure out the arguments for this action and wrap them
       const allArgs = processArguments(node, writeArgs);
       allArgs.queryArgs = this._wrapArgs(allArgs.queryArgs, node);
       
+      console.log(writeArgs, allArgs.queryArgs.goalDescription);
       return node.writeData(allArgs, this._readerProxy, this._injectProxy, this._writerProxy, this);
     };
 

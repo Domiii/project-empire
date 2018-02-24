@@ -7,7 +7,7 @@ import dataBind from 'src/dbdi/react/dataBind';
 
 import SignInPage from './pages/SignInPage';
 import UserProfilePage from './pages/UserProfilePage';
-import LandingPage from './pages/LandingPage';
+import HomePage from './pages/HomePage';
 import PlacePage from './pages/PlacePage';
 import MissionControlPage from './pages/MissionControlPage';
 import MissionPage from './pages/MissionPage';
@@ -45,8 +45,10 @@ const AppRoutes = dataBind()(function AppRoutes(
   else {
     return (
       <Switch>
-        <Route exact path={routeTemplates.ROOT} component={MissionPage} />
+        <Route exact path={routeTemplates.ROOT} component={HomePage} />
         <Route exact path={routeTemplates.USER_PROFILE + '*'} component={UserProfilePage} />
+
+        {/* <Route exact path={routeTemplates.PLACES} component={PlacePage} /> */}
 
         <Route exact path={routeTemplates.PLACES} component={PlacePage} />
         <Route path={routeTemplates.MISSION_CONTROL} component={MissionControlPage} />

@@ -35,7 +35,9 @@ const MissionListItem = withRouter(dataBind({
   { goToMission },
   { }
 ) {
-  const header = <MissionHeader onClick={goToMission} missionId={missionId} editing={false} />;
+  const header = (<MissionHeader 
+    onClick={goToMission} missionId={missionId} editing={false}
+  />);
   const body = <MissionPreview missionId={missionId} />;
   return (<Panel header={header}>
     <div onClick={goToMission}>
@@ -55,18 +57,21 @@ const MissionList = dataBind({
     return <LoadIndicator />;
   }
 
-  let missions = map(missionList, (mission, missionId) => ({ mission, missionId }));
+  // let missions = map(missionList, (mission, missionId) => (
+  //   { mission, missionId }
+  // ));
   // TODO: sort missions
 
   let contentEl;
-  if (!missions.length) {
+  const missionCount = size(missionList);
+  if (!missionCount) {
     contentEl = (<Alert bsStyle="warning">
       no questions yet
     </Alert>);
   }
   else {
     contentEl = (<ListGroup>
-      {map(missions, ({ _, missionId }) => (
+      {map(missionList, (_, missionId ) => (
         <MissionListItem key={missionId} missionId={missionId} />
       ))}
     </ListGroup>);

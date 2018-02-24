@@ -195,17 +195,17 @@ export default class Header extends Component {
           </Navbar.Header> */}
           <Navbar.Collapse>
             <Nav>
-              { isCurrentUserAdmin && <LinkContainer to="/myprojects">
+              {/* { <LinkContainer to="/myprojects">
                 <NavItem eventKey={2}>My Projects</NavItem>
               </LinkContainer>
               }
-              { isCurrentUserAdmin && <LinkContainer to="/projects">
+              { <LinkContainer to="/projects">
                 <NavItem eventKey={3}>All Projects</NavItem>
               </LinkContainer>
               }
               <LinkContainer to="/missions">
                 <NavItem eventKey={3}>Missions</NavItem>
-              </LinkContainer>
+              </LinkContainer> */}
               {adminEls}
             </Nav>
             <Nav pullRight className="header-right-container">

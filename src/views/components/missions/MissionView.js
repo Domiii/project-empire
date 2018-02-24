@@ -19,6 +19,7 @@ import MissionEditorForm from 'src/views/components/missions/MissionEditorForm';
 import LoadIndicator from 'src/views/components/util/loading';
 import { FAIcon } from 'src/views/components/util';
 
+
 export const MissionView = dataBind({})(function MissionView(
   { editing, missionId },
   { get_mission, lookupLocalized }

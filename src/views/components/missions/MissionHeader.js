@@ -1,4 +1,8 @@
 import {
+  MissionCompletionStatus
+ } from 'src/core/missions/MissionModel';
+
+import {
   hrefMission
 } from 'src/views/href';
 
@@ -57,6 +61,10 @@ const MissionHeader = dataBind({})(function MissionHeader(
       <Flexbox justifyContent="space-between" alignItems="center">
         <Flexbox {...moreProps}>
           {title}
+        </Flexbox>
+        <Flexbox>
+          {/* { TODO: MissionCompletionStatus} */}
+          Status
         </Flexbox>
         <Flexbox>
           <Badge>{category}</Badge>

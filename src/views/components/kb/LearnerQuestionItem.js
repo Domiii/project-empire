@@ -183,8 +183,13 @@ const LearnerQuestionItem = dataBind({
   //const description = lookupLocalized({ obj: question, prop: 'description' });
 
   return (
-    <Panel header={<LeanerQuestionHeader {...headerProps} />} bsStyle="info" className="no-margin">
-      {editing && <LearnerQuestionForm {...formProps} />}
+    <Panel bsStyle="info" className="no-margin">
+      <Panel.Heading>
+        <LeanerQuestionHeader {...headerProps} />
+      </Panel.Heading>
+      <Panel.Body>
+        {editing && <LearnerQuestionForm {...formProps} />}
+      </Panel.Body>
     </Panel>
   );
 });

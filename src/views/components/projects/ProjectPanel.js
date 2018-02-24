@@ -62,7 +62,7 @@ export const ProjectHeader = dataBind({})(function ProjectHeader(
   const hasProjectFinished = isProjectStatusOver(projectStatus);
   const finishStatus = projectStatus === ProjectStatus.Failed ?
     'failed' : 'finished';
-  
+
   return (
     <Flexbox justifyContent="space-between" alignItems="center">
       <Flexbox>
@@ -175,30 +175,35 @@ export default class ProjectPanel extends Component {
     } = project;
 
     return (<div>
-      <Panel {...projectStatusProps[status]} header={<ProjectHeader projectId={projectId} />}>
-        <div>
-          {this.editorHeader()}
-          <p>Started by: {
-            !project.guardianUid ?
-              <span className="color-gray">no guardian</span> :
-              <UserBadge uid={project.guardianUid} />
-          }</p>
+      <Panel {...projectStatusProps[status]}>
+        <Panel.Heading>
+          <ProjectHeader projectId={projectId} />
+        </Panel.Heading>
+        <Panel.Body>
+          <div>
+            {this.editorHeader()}
+            <p>Started by: {
+              !project.guardianUid ?
+                <span className="color-gray">no guardian</span> :
+                <UserBadge uid={project.guardianUid} />
+            }</p>
 
-          <div className="margin-half" />
+            <div className="margin-half" />
 
-          <MissionBody missionId={missionId} />
+            <MissionBody missionId={missionId} />
 
-          <div className="margin-half" />
+            <div className="margin-half" />
 
-          {this.IsEditing && (
-            <ProjectEditor {...{ projectId }} />
-          )}
-          {this.ShowDetails &&
-            <ProjectControlView projectId={projectId} />
-          }
+            {this.IsEditing && (
+              <ProjectEditor {...{ projectId }} />
+            )}
+            {this.ShowDetails &&
+              <ProjectControlView projectId={projectId} />
+            }
 
-          {children}
-        </div>
+            {children}
+          </div>
+        </Panel.Body>
       </Panel>
     </div>);
   }

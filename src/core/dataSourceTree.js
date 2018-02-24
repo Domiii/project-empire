@@ -6,7 +6,10 @@ import LearnerKBModel from 'src/core/scaffolding/LearnerKBModel';
 import LearnerScheduleModel from 'src/core/scaffolding/LearnerScheduleModel';
 import LearnerEntryModel from 'src/core/scaffolding/LearnerEntryModel';
 
+import GoalModel from 'src/core/goals/GoalModel';
+
 import PlaceModel from 'src/core/places/PlaceModel';
+import CohortModel from 'src/core/cohorts/CohortModel';
 import ProjectModel from 'src/core/projects/projectModel';
 import MissionModel from 'src/core/missions/MissionModel';
 
@@ -34,7 +37,10 @@ const utility = {
 
   writers: {
     updateAll(
-      { pathArgs, readers, val }, { }, { }, { update_db }
+      { pathArgs, readers, val }, 
+      { },
+      { }, 
+      { update_db }
     ) {
       console.log(readers.length, times(readers.length, val));
       const updateObj = zipObject(
@@ -61,12 +67,17 @@ const dataStructureConfig = {
     children: merge({},
       UserModel,
 
+      CohortModel,
+      
+      LearnerScheduleModel,
+      GoalModel,
+
+      // unused...
       PlaceModel,
       MissionModel,
       ProjectModel,
 
       LearnerKBModel,
-      LearnerScheduleModel,
       LearnerEntryModel
     )
   }

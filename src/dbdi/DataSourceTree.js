@@ -180,15 +180,21 @@ export default class DataSourceTree {
     // nodes that potentially have both readers and writers
     const newNodes = {};
     forEach(cfgChildren, (configNode, name) => {
+      // build node
+      const newDataNode = newNodes[name] = this._buildNode(configNode, parent, name,
+        this._buildDataReadDescriptor,
+        this._buildCustomDataSetDescriptor);
+
       if (configNode.pathConfig) {
         // add default writers at path
         this._buildDefaultWriters(configNode, parent, name, newNodes);
       }
-
-      // build node
-      const newDataNode = newNodes[name] = this._buildNode(configNode, parent, name,
-        this._buildDataReadDescriptor,
-        this._dataWriteCustomBuilder);
+      else if (newDataNode.isWriter) {
+        // has no default writers, but does have a custom writer
+        const writerName = 'set_' + name;
+        this._addDataWriteNode(configNode, parent, writerName,
+          this._buildCustomDataSetDescriptor, newNodes);
+      }
 
       if (newDataNode.isReader) {
         // also register under the "get_*" alias
@@ -280,16 +286,21 @@ export default class DataSourceTree {
           // push has a special path
           pathDescriptor = customPathDescriptorBuilder(pathDescriptor, fullName);
         }
-        return new DataWriteDescriptor(pathDescriptor, metaCfg, fullName);
+        if (actionName === 'set' && configNode.writer) {
+          // set can be custmized through the "writer" config entry
+          return this._buildCustomDataSetDescriptor(fullName, configNode);
+        }
+        else {
+          return new DataWriteDescriptor(pathDescriptor, metaCfg, fullName);
+        }
       }
     )
   )
 
-  _dataWriteCustomBuilder(fullName, configNode, _) {
+  _buildCustomDataSetDescriptor(fullName, configNode, _) {
     const metaCfg = this._buildMetaWriteCfg(configNode, 'custom');
     return configNode.writer && new DataWriteDescriptor(configNode.writer, metaCfg, fullName);
   }
-
 
   _addDataWriteNode(configNode, parent, name, descriptorBuilder, newChildren) {
     const newDataNode = this._buildNode(
@@ -302,7 +313,7 @@ export default class DataSourceTree {
   _buildAdditionalDataWriteNodes(parent, cfgChildren) {
     const newChildren = {};
     forEach(cfgChildren, (configNode, name) => {
-      this._addDataWriteNode(configNode, parent, name, this._dataWriteCustomBuilder, newChildren);
+      this._addDataWriteNode(configNode, parent, name, this._buildCustomDataSetDescriptor, newChildren);
     });
     return newChildren;
   }
@@ -339,6 +350,11 @@ export default class DataSourceTree {
     Object.assign(descendants, children);
   }
 
+  /**
+   * Copy all non-conflicting nodes in all descendants into the node itself.
+   * 
+   * @param {*} node 
+   */
   _compressHierarchy(node) {
     const readDescendants = {};
     const writeDescendants = {};

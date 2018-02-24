@@ -164,8 +164,11 @@ export default class RoleManager extends Component {
           list
         } = userList;
 
-        return (<Panel key={name} header={name}>
-          <UserList uids={Object.keys(list)} renderUser={RenderUser} />
+        return (<Panel key={name}>
+          <Panel.Heading>{name}</Panel.Heading>
+          <Panel.Body>
+            <UserList uids={Object.keys(list)} renderUser={RenderUser} />
+          </Panel.Body>
         </Panel>);
       })
     }</div>);

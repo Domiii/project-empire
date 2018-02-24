@@ -1,6 +1,7 @@
 import isFunction from 'lodash/isFunction';
 import isArray from 'lodash/isArray';
 
+import { EmptyObject } from 'src/util';
 import autoBind from 'src/util/auto-bind';
 
 import DataDescriptorNode from './DataDescriptorNode';
@@ -9,10 +10,21 @@ import PathDescriptor from './PathDescriptor';
 
 const DEBUG_WRITES = true;
 
+/**
+ * Writer functions (except for delete) by default accept one or two arguments.
+ * If only one argument is given, it is the value to be written.
+ * If two arguments are given, the first argument is the queryArgs object passed to the PathDescriptor, and the second argument is the value to be written.
+ * 
+ * @param {*} node 
+ * @param {*} writeArgs 
+ */
 function processArgumentsDefault(node, writeArgs) {
   let res;
   let queryArgs, val;
   switch (writeArgs.length) {
+    // case 0:
+    //   res = EmptyObject;
+    //   break;
     case 1:
       [val] = writeArgs;
       res = { val };
@@ -26,6 +38,19 @@ function processArgumentsDefault(node, writeArgs) {
           ${JSON.stringify(writeArgs)}`);
   }
   return res;
+}
+
+/**
+ * Assume only the first argument to be valid,
+ * but if first argument is not given, take second.
+ * Will only have queryArgs (which will be wrapped with proxy by DataAccessTracker).
+ */
+function processCustomSetter(node, writeArgs) {
+  let [queryArgs, val] = writeArgs;
+  if (!queryArgs) {
+    queryArgs = val;
+  }
+  return { queryArgs };
 }
 
 function processArgumentsNoValue(node, writeArgs) {
@@ -56,9 +81,9 @@ export const writeParameterConfig = Object.freeze({
     processArguments: processArgumentsNoValue
   },
   custom: {
-    parameterCount: '?',
+    parameterCount: 1,
     //processArguments: processArgumentsUndetermined
-    processArguments: processArgumentsNoValue
+    processArguments: processCustomSetter
   }
 });
 
@@ -129,7 +154,8 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
 
       const {
         //varArgs
-        queryArgs
+        queryArgs,
+        //val
       } = args;
 
       this.onWrite && this.onWrite(queryArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);

@@ -1,8 +1,8 @@
 /**
- * Learner status updates, observations, reflections and other data needs to be collected
- * over a fixed period of time (e.g. daily, weekly, bi-weekly) which we call "cycle". 
- * 
  * The ScheduleModel helps organize data by cycles (periods of time).
+ * 
+ * Learner status updates, observations, reflections and other data needs to be collected
+ * over a fixed period of time (e.g. daily, weekly, bi-weekly) which we call "cycle".
  */
 
 import moment from 'moment';
@@ -51,10 +51,10 @@ const writers = {
     // starting now
     const startTime = Date.now();
 
-    // each cycle is 1 week
+    // by default, each cycle is 1 week
     const cycleTime = 1000 * 60 * 60 * 24 * 7;
 
-    // each cycle starts on Monday
+    // each cycle starts on Monday at 6 am
     const firstCycleStart = moment().day(1).hour(6).minute(0).second(0);
     const cycleOffset = startTime - firstCycleStart.toDate().getTime();
 

@@ -19,35 +19,36 @@ import UserList from 'src/views/components/users/UserList';
 
 import LoadIndicator from 'src/views/components/util/loading';
 
-const PlaceList = dataBind({})(function PlaceList(
+const CohortList = dataBind({})(function CohortList(
   { },
   { lookupLocalized },
-  { placeList, usersPublic, placeList_isLoaded, usersPublic_isLoaded }
+  { cohortList, usersPublic, cohortList_isLoaded, usersPublic_isLoaded }
 ) {
-  if (!placeList_isLoaded | !usersPublic_isLoaded) {
+  if (!cohortList_isLoaded | !usersPublic_isLoaded) {
     return <LoadIndicator />;
   }
 
   const uids = Object.keys(usersPublic || EmptyObject);
-  const uidsByPlaceId = groupBy(uids, (uid) => usersPublic[uid].placeId);
-  let unassignedUids = pickBy(uidsByPlaceId, (uids, placeId) => !placeId || !placeList[placeId]);
+  const uidsByCohortId = groupBy(uids, (uid) => usersPublic[uid].cohortId);
+  let unassignedUids = pickBy(uidsByCohortId, (uids, cohortId) => !cohortId || !cohortList[cohortId]);
   unassignedUids = flatten(Object.values(unassignedUids));
 
   return (<div>
-    {map(placeList, (place, placeId) => {
-      const desc = lookupLocalized({ obj: place, prop: 'description' });
-      const uidsOfPlace = uidsByPlaceId[placeId];
+    {map(cohortList, (cohort, cohortId) => {
+      const desc = lookupLocalized({ obj: cohort, prop: 'description' });
+      const uidsOfCohort = uidsByCohortId[cohortId];
       return (
-        <Panel key={placeId} bsStyle="info">
+        <Panel key={cohortId} bsStyle="info">
           <Panel.Heading>
-            {`${lookupLocalized({ obj: place, prop: 'name' })} (${size(uidsOfPlace)})`}
+            {lookupLocalized({ obj: cohort, prop: 'name' })}
+            ({size(uidsOfCohort)})
           </Panel.Heading>
           <Panel.Body>
             {desc && <Well>
               {desc}
             </Well>}
-            {!isEmpty(uidsOfPlace) && <UserList uids={uidsOfPlace} /> || (
-              <Alert bsStyle="warning">this place is empty</Alert>
+            {!isEmpty(uidsOfCohort) && <UserList uids={uidsOfCohort} /> || (
+              <Alert bsStyle="warning">this cohort is empty</Alert>
             )}
           </Panel.Body>
         </Panel>
@@ -55,9 +56,7 @@ const PlaceList = dataBind({})(function PlaceList(
     })}
     {!isEmpty(unassignedUids) &&
       (<Panel bsStyle="danger">
-        <Panel.Heading>
-          Lost Users ({size(unassignedUids)})
-        </Panel.Heading>
+        <Panel.Heading>Lost Users ({size(unassignedUids)})</Panel.Heading>
         <Panel.Body>
           <UserList uids={unassignedUids} />
         </Panel.Body>
@@ -69,4 +68,4 @@ const PlaceList = dataBind({})(function PlaceList(
   </div>);
 });
 
-export default PlaceList;
+export default CohortList;

@@ -53,8 +53,8 @@ export const MissionSelect = dataBind({
     onChange(missionId);
   }
 })((
-  { value }, 
-  { onChangeOption, missionOptions }, 
+  { value },
+  { onChangeOption, missionOptions },
   { missionList_isLoaded }
 ) => {
   if (!missionList_isLoaded) {
@@ -222,7 +222,7 @@ const AddUserEl = dataBind({
       </span>
     </Badge>);
   }
-  );
+);
 
 
 const ProjectUserList = dataBind({})(function ProjectUserList(
@@ -302,23 +302,38 @@ export class ProjectUserEditor extends Component {
     return (<Flexbox flexDirection="row" justifyContent="flex-start" alignItems="stretch"
       className="full-width">
       <Flexbox flex="20" alignItems="stretch" className="full-width">
-        <Panel header="Remove user from project" className="full-width full-height">
-          {existingUsersEl}
+        <Panel className="full-width full-height">
+          <Panel.Heading>
+            Remove user from project
+          </Panel.Heading>
+          <Panel.Body>
+            {existingUsersEl}
+          </Panel.Body>
         </Panel>
       </Flexbox>
       <Flexbox flex="1" />
       <Flexbox flex="20" className="full-width" flexDirection="column" alignItems="stretch">
-        <Panel header="Users w/o project">
-          <ProjectUserList emptyText="no users without project"
-            userFn={uidsWithoutProject} />
+        <Panel header="">
+          <Panel.Heading>
+            Users w/o project
+          </Panel.Heading>
+          <Panel.Body>
+            <ProjectUserList emptyText="no users without project"
+              userFn={uidsWithoutProject} />
+          </Panel.Body>
         </Panel>
-        <Panel header={<Button onClick={this.toggleAddAllUsers} active={addAllUsers}>
-          <FAIcon name="users" /> Show users with projects
-          </Button>} className="no-margin">
-          {addAllUsers && (<div>
-            <ProjectUserList emptyText="no users with project"
-              userFn={getAllUidsWithProjectButNotInCurrent} />
-          </div>)}
+        <Panel className="no-margin">
+          <Panel.Heading>
+            <Button onClick={this.toggleAddAllUsers} active={addAllUsers}>
+              <FAIcon name="users" /> Show users with projects
+            </Button>
+          </Panel.Heading>
+          <Panel.Body>
+            {addAllUsers && (<div>
+              <ProjectUserList emptyText="no users with project"
+                userFn={getAllUidsWithProjectButNotInCurrent} />
+            </div>)}
+          </Panel.Body>
         </Panel>
       </Flexbox>
     </Flexbox>);

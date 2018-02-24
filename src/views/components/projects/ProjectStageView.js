@@ -81,14 +81,19 @@ const ProjectStageView = dataBind({
     </Alert>);
   }
   return (
-    <Panel header={header}
+    <Panel
       className="full-width no-margin project-stage-panel"
       bsStyle={bsStyle}>
-      {alertEl}
-      {(isActive || hasStageFinished || hasProjectFinished) &&
-        <StageButtons />
-      }
-      <StageContent />
+      <Panel.Heading>
+        {header}
+      </Panel.Heading>
+      <Panel.Body>
+        {alertEl}
+        {(isActive || hasStageFinished || hasProjectFinished) &&
+          <StageButtons />
+        }
+        <StageContent />
+      </Panel.Body>
     </Panel>
   );
 });

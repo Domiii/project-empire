@@ -20,7 +20,6 @@ import {
 
 /**
  * TODO: advanced features:
- *  updatedAt
  *  implicit (one-to-one + one-to-many) indices
  *  explicit (many-to-many) indices
  *  groupBy

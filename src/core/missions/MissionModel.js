@@ -1,4 +1,12 @@
 
+
+export const MissionCompletionStatus = {
+  NotStarted: 0,
+  Started: 1,
+  Finished: 2,
+  Failed: 3
+};
+
 export default {
   missionList: {
     path: '/missions',

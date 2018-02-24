@@ -48,17 +48,17 @@ const dataProviders = {
 const dataStructureConfig = {
   auth: {
     dataProvider: 'firebaseAuth',
-      children: {
+    children: {
       // currentUser represents everything provided by `firebaseAuth` provider
       currentUser: '',
-        currentUid: 'uid'
+      currentUid: 'uid'
     }
   },
   testData: {
     dataProvider: 'firebase',
-      path: 'test',
-        readers: {
-      sortedItemIds({}, {}, { itemList }) {
+    path: 'test',
+    readers: {
+      sortedItemIds({ }, { }, { itemList }) {
         if (!itemList) return;
         const ids = Object.keys(itemList);
         return sortBy(ids, (itemId) => -itemList[itemId].updatedAt);
@@ -67,10 +67,10 @@ const dataStructureConfig = {
     children: {
       itemList: {
         path: 'items',
-          children: {
+        children: {
           item: {
             path: '$(itemId)',
-              onWrite(queryArgs, val) {
+            onWrite(queryArgs, val) {
               val && (val.updatedAt = firebase.database.ServerValue.TIMESTAMP);
             },
             children: {
@@ -196,8 +196,11 @@ const ItemList = dataBind()(
     let i = 0;
     return (<div>
       {/* add new item item */}
-      <Panel header="Add new" bsStyle="primary">
-        <ItemEditor itemId={null} />
+      <Panel bsStyle="primary">
+        <Panel.Heading>Add new</Panel.Heading>
+        <Panel.Body>
+          <ItemEditor itemId={null} />
+        </Panel.Body>
       </Panel>
 
       {/* list all item items */}
@@ -205,15 +208,20 @@ const ItemList = dataBind()(
       {map(sortedIds, itemId => {
         const item = items[itemId];
         return (<Panel
-          key={itemId} bsStyle={item.good ? 'success' : 'danger'}
-          header={`(${++i}) ${item.title}`}>
-          <ItemEditor itemId={itemId} />
+          key={itemId} bsStyle={item.good ? 'success' : 'danger'}>
+          <Panel.Heading>{`(${++i}) ${item.title}`}</Panel.Heading>
+          <Panel.Body>
+            <ItemEditor itemId={itemId} />
+          </Panel.Body>
         </Panel>);
       })}
 
       {/* Debug data view */}
-      <Panel header="Debug data view" bsStyle="warning">
-        <pre>{JSON.stringify(items, null, 2)}</pre>
+      <Panel bsStyle="warning">
+        <Panel.Heading>Debug data view</Panel.Heading>
+        <Panel.Body>
+          <pre>{JSON.stringify(items, null, 2)}</pre>
+        </Panel.Body>
       </Panel>
     </div>);
   }
@@ -294,7 +302,7 @@ const ItemEditor = dataBind({
       </Form>
     </div>);
   }
-  );
+);
 
 
 // ##########################################################################

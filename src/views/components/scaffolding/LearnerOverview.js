@@ -30,46 +30,51 @@ import LearnerEntryView from './LearnerEntryView';
 // TODO: (future) summarize entries?
 
 const LearnerOverview = dataBind({})(function LearnerEntryList(
-    { uid }, 
-    { userPublic, learnerEntriesOfUser }
-  ) {
-    if (!learnerEntriesOfUser.isLoaded({ uid }) | !userPublic.isLoaded({ uid })) {
-      return <LoadIndicator />;
+  { uid },
+  { userPublic, learnerEntriesOfUser }
+) {
+  if (!learnerEntriesOfUser.isLoaded({ uid }) | !userPublic.isLoaded({ uid })) {
+    return <LoadIndicator />;
+  }
+  else {
+    const user = userPublic({ uid });
+    if (!user) {
+      // TODO
+      return <Redirect />;
+    }
+    const learnerEntries = learnerEntriesOfUser({ uid });
+    const nEntries = size(learnerEntries);
+
+    let contentEl;
+    if (!nEntries) {
+      contentEl = (<Alert bsStyle="warning" style={{ display: 'inline' }} className="no-padding">
+        <span>user has no entries yet</span>
+      </Alert>);
     }
     else {
-      const user = userPublic({ uid });
-      if (!user) {
-        // TODO
-        return <Redirect />;
-      }
-      const learnerEntries = learnerEntriesOfUser({ uid });
-      const nEntries = size(learnerEntries);
 
-      let contentEl;
-      if (!nEntries) {
-        contentEl = (<Alert bsStyle="warning" style={{ display: 'inline' }} className="no-padding">
-          <span>user has no entries yet</span>
-        </Alert>);
-      }
-      else {
-
-        contentEl = (<div>
-          {map(learnerEntries, (entry, entryId) => (
-            <LearnerEntryView key={entryId} learnerEntryId={entryId} />
-          ))}
-        </div>);
-      }
-
-      const header = (<span>
-        <UserIcon user={user} size="small" /> &nbsp;
-        {user.displayName} &nbsp;
-        ({nEntries})
-      </span>);
-      return (<Panel header={header}>
-        {contentEl}
-      </Panel>);
+      contentEl = (<div>
+        {map(learnerEntries, (entry, entryId) => (
+          <LearnerEntryView key={entryId} learnerEntryId={entryId} />
+        ))}
+      </div>);
     }
+
+    const header = (<span>
+      <UserIcon user={user} size="small" /> &nbsp;
+      {user.displayName} &nbsp;
+      ({nEntries})
+    </span>);
+    return (<Panel>
+      <Panel.Heading>
+        {header}
+      </Panel.Heading>
+      <Panel.Body>
+        {contentEl}
+      </Panel.Body>
+    </Panel>);
   }
+}
 );
 
 export default LearnerOverview;

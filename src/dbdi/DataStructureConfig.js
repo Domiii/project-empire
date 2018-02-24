@@ -213,7 +213,7 @@ export class DataStructureConfigNode {
       const { writers } = cfg;
 
       // check for name conflict between "readers" and "children"
-      this._checkSpecializedChildrenStructure(this.children, writers, 'readers');
+      this._checkSpecializedChildrenStructure(this.children, writers, 'writers');
 
       // add writer-only children
       const writerNodes = mapValues(writers, (writer, name) =>

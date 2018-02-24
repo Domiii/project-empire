@@ -193,7 +193,7 @@ const ConceptsRef = makeRefWrapper({
         }
       }
 
-      if (oldOrder == newOrder) {
+      if (oldOrder === newOrder) {
         // nothing to do here
         return Promise.resolve();
       }

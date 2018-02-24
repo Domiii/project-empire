@@ -83,7 +83,7 @@ export default class GroupEditTools extends Component {
     };
 
     return (
-      <ConfirmModal {...modalProps}  />
+      <ConfirmModal {...modalProps} />
     );
   }
 

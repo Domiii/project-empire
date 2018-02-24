@@ -116,26 +116,31 @@ export default class ProjectList extends Component {
     }
     else {
       const { page } = this.state;
-      projectListEl = (<Panel header={`Projects (${nProjects})`}>
-        <ListGroup> {
-          map(projectIds, (projectId) => {
-            return (<li key={projectId} className="list-group-item">
-              <ProjectPanel {...{
-                readonly: false,
-                projectId
-              }} />
-            </li>);
-          })
-        } </ListGroup>
-        { (
-          <Button disabled={nProjects < page * itemsPerPage} block
-            onClick={this.nextPage} >
-            more...
-          </Button>
-        ) }
-        {stillLoading && (
-          <LoadIndicator block />
-        )}
+      projectListEl = (<Panel>
+        <Panel.Heading>
+          Projects ({nProjects})
+        </Panel.Heading>
+        <Panel.Body>
+          <ListGroup> {
+            map(projectIds, (projectId) => {
+              return (<li key={projectId} className="list-group-item">
+                <ProjectPanel {...{
+                  readonly: false,
+                  projectId
+                }} />
+              </li>);
+            })
+          } </ListGroup>
+          {(
+            <Button disabled={nProjects < page * itemsPerPage}
+              onClick={this.nextPage} block>
+              more...
+            </Button>
+          )}
+          {stillLoading && (
+            <LoadIndicator block />
+          )}
+        </Panel.Body>
       </Panel>);
     }
 

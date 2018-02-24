@@ -6,6 +6,18 @@
         ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
       }
     },
+    "cohorts": {
+      ".read": "auth !== null",
+      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+    },
+    "learnerSchedules": {
+      ".read": "auth !== null",
+      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+    },
+    "goals": {
+      ".read": "auth !== null",
+      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+    },
     "places": {
       ".read": "auth !== null",
       ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
@@ -33,10 +45,6 @@
           "$uid": {}
         }
       }
-    },
-    "learnerSchedules": {
-      ".read": "auth !== null",
-      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
     },
     "learnerEntries": {
       ".read": "auth !== null",

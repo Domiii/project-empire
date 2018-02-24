@@ -6,37 +6,38 @@ import {
   Alert, Button, Jumbotron, Well, Panel
 } from 'react-bootstrap';
 
-import {
-  LinkContainer
-} from 'react-router-bootstrap';
 import { LoadOverlay } from 'src/views/components/overlays';
 
-import RoleManager from 'src/views/components/admin/RoleManager';
+import CohortList from 'src/views/components/cohorts/CohortList';
 
-@dataBind({
 
-})
-export default class GMPage extends Component {
+@dataBind()
+export default class CohortPage extends Component {
+  static propTypes = {
+
+  };
+
   constructor(...args) {
     super(...args);
   }
 
-  render({ }, { }, { isCurrentUserAdmin, currentUser_isLoaded }) {
+  render(
+    { },
+    { },
+    { currentUser_isLoaded }
+  ) {
     if (!currentUser_isLoaded) {
       return (<LoadOverlay />);
-    }
-    if (!isCurrentUserAdmin) {
-      return (<Alert bsStyle="warning">GMs only :/</Alert>);
     }
 
     return (
       <div>
         <Panel bsStyle="primary">
           <Panel.Heading>
-            Roles
+            Cohorts
           </Panel.Heading>
           <Panel.Body>
-            <RoleManager />
+            <CohortList />
           </Panel.Body>
         </Panel>
       </div>

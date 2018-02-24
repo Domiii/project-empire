@@ -55,7 +55,7 @@ function FieldTemplate(props) {
   return (
     <div className={classNames}>
       {displayLabel && (
-        <label className="full-width" required={required} id={id} >
+        <label className={'full-width'} required={required} id={id} >
           {label} {description} {children}
         </label>
       )}
@@ -179,6 +179,7 @@ export const DefaultFormChildren = dataBind({
     ] = getOptionalArguments(allArgs, 'dbName', 'idArgs');
 
     if (!dbName) {
+      console.error('Cannot delete in DynamicForm, because `dbName` is not given');
       return Promise.resolve();
     }
 
@@ -230,6 +231,13 @@ function DefaultFormComponent(allProps) {
 // Putting it all together
 // ###########################################################################
 
+function getAccessor(fns, writerName) {
+  const fn = fns[writerName];
+  if (!fn) {
+    throw new Error('Invalid dbName, accessor does not exist in dataBind context: ' + writerName);
+  }
+  return fn;
+}
 
 /**
  * Adds dynamicity, some default components and more features to default jsonschema forms.
@@ -242,25 +250,34 @@ function DefaultFormComponent(allProps) {
     //var _xx = [allArgs.dbName, allArgs.idArgs];
     const [
       dbName,
-      idArgs
-    ] = getOptionalArguments(allArgs, 'dbName', 'idArgs');
+      idArgs,
+      write,
+      alwaysSet
+    ] = getOptionalArguments(allArgs, 'dbName', 'idArgs', 'write', 'alwaysSet');
 
     if (!dbName) {
       return Promise.resolve();
     }
 
-    const doSet = fns[`set_${dbName}`];
-    const doPush = fns[`push_${dbName}`];
     // get rid of undefined fields, created by (weird) form editor
     formData = pickBy(formData, val => val !== undefined);
 
-    if (!idArgs) {
+    if (write) {
+      return write(idArgs, formData);
+    }
+
+    let writerName;
+    if (!idArgs && !alwaysSet) {
       // new item data
-      return doPush(formData);
+      writerName = `push_${dbName}`;
+      const doWrite = getAccessor(fns, writerName);
+      return doWrite(formData);
     }
     else {
       // existing item data
-      return doSet(idArgs, formData);
+      writerName = `set_${dbName}`;
+      const doWrite = getAccessor(fns, writerName);
+      return doWrite(idArgs, formData);
     }
   }
 })
@@ -276,19 +293,35 @@ export default class DynamicForm extends Component {
 
     /**
      * The name of the data in the database.
+     * 
+     * The form will be filled with data from the reader `get_${dbName}`.
+     * 
      * If given, `onSubmit` is called after trying to save the entry to DB,
      * using:
      * `push_${dbName}` if `idArgs` are not given (does not exist yet)
      * `set_${dbName}` if `idArgs` are given (exists already)
+     * 
+     * If delete button is added, data will be deleted via `delete_${dbName}`.
      */
     dbName: PropTypes.string,
 
     /**
      * `idArgs` should be an object containing all args required for 
-     * selecting a given object from the reader of name `dbName`.
+     * producing the path of object at `dbName`.
+     * If not provided, the form will stay empty.
      * If not provided, submitting will push to db as new entry (instead of setting it).
      */
     idArgs: PropTypes.object,
+
+    /**
+     * If true, only use the set writer, never try to push, even if idArgs are not given.
+     */
+    alwaysSet: PropTypes.bool,
+
+    /**
+     * Custom writer to write to on submit. If set, will never call push or set writer.
+     */
+    write: PropTypes.func,
 
     /**
      * callback has three arguments:
@@ -351,7 +384,8 @@ export default class DynamicForm extends Component {
         console.error('DynamicForm ignores `formData` when `dbName` is set.');
       }
 
-      const doGet = fns[`get_${dbName}`];
+      const readerName = `get_${dbName}`;
+      const doGet = getAccessor(fns, readerName);
       const newFormData = doGet(idArgs);
       //if (newFormData !== stateUpdate.formData) {}
       stateUpdate.formData = newFormData;
