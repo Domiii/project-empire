@@ -117,7 +117,7 @@ export default class PathDescriptor extends DataDescriptorNode {
         // get queryParams
         const queryParamsRaw = isFunction(_queryParamsInput) ? 
           _queryParamsInput(args, readerProxy, injectProxy, callerNode, accessTracker) :
-          queryParamsRaw;
+          _queryParamsInput;
 
         // apply transform
         const queryParams = this._transformQueryParams(queryParamsRaw);

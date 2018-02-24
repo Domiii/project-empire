@@ -114,17 +114,17 @@ const IndexUtils = {
       throw new Error('[ERROR] Cannot encode element or function values - ' + val);
     }
     if (_.isString(val) || _.isBoolean(val) || _.isNumber(val) || _.isNull(val)) {
-      return val + '';
+      return val;
+    }
+    if (_.isDate(val)) {
+      return val.getTime();
     }
     if (forceSimple) {
       if (_.isArrayLike(val)) {
         return _.join(val, '\uFFFF');
       }
-      else if (_.isDate(val)) {
-        return val.getTime() + '';
-      }
       else if (_.isPlainObject(val)) {
-        // object should already have be converted to a sorted array
+        // object should already have been converted to a sorted array
         throw new Error('[ERROR] Something went wrong... object could not be encoded: ' + JSON.stringify(val));
       }
       else if (_.isMap(val) || _.isSet(val) || _.isBuffer(val) || _.isSymbol(val) || _.isRegExp(val)) {
@@ -135,7 +135,7 @@ const IndexUtils = {
       }
     }
     else {
-      return JSON.stringify(val);
+      return _.isArrayLike(val) && JSON.stringify(val) || val;
     }
   },
 

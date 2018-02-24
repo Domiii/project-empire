@@ -53,6 +53,19 @@ const readers = {
     const arr = Object.values(entries || EmptyObject);
     return sortBy(arr, (entry) => -entry.updatedAt);
   }
+
+  // allUidsWithGoalsOfCycle(
+  //   { scheduleId, cycleId },
+  //   { allGoalsOfUsers },
+  //   { }
+  // ) {
+  //   if (!allGoalsOfUsers.isLoaded({ scheduleId, cycleId })) {
+  //     return undefined;
+  //   }
+
+  //   const entries = allGoalsOfUsers({ scheduleId, cycleId });
+  //   return Object.keys(entries);
+  // }
 };
 
 const writers = {
@@ -115,7 +128,7 @@ export default {
       goalsByCycle: {
         path: '$(scheduleId)/$(cycleId)',
         children: {
-          allGoals: {
+          allGoalsOfUsers: {
             path: 'goals',
             children: {
               goalsByUser: {

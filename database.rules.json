@@ -88,6 +88,9 @@
     },
     "users": {
       "public": {
+        ".indexOn": [
+          "cohortId"
+        ],
         ".read": "true",
         "$uid": {
           "displayName": {

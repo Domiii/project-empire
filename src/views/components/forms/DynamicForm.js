@@ -467,7 +467,6 @@ export default class DynamicForm extends Component {
       }
     }
     if (stateUpdate) {
-      console.warn(stateUpdate);
       this.setState(stateUpdate);
     }
   }

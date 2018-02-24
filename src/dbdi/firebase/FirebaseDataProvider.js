@@ -55,7 +55,7 @@ export default class FirebaseDataProvider extends DataProviderBase {
     const val = snap.val();
     if (!this.loadedPaths[query.localPath]) {
       this.loadedPaths[query.localPath] = true;
-      console.warn('LOAD', query.localPath);
+      console.warn('LOAD', query.localPath, ' -> ', val);
     }
 
     //console.warn('DATA [', query.remotePath, '] ', val);

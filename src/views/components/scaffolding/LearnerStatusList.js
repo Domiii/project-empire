@@ -2,6 +2,7 @@ import map from 'lodash/map';
 import isEmpty from 'lodash/isEmpty';
 import size from 'lodash/size';
 import sortBy from 'lodash/sortBy';
+import filter from 'lodash/filter';
 
 import moment from 'moment';
 
@@ -20,6 +21,7 @@ import Flexbox from 'flexbox-react';
 import LoadIndicator from 'src/views/components/util/loading';
 
 import LearnerStatusEntryView from './LearnerStatusEntryView';
+import { EmptyObject } from '../../../util';
 
 
 const LearnerStatusList = dataBind({
@@ -30,21 +32,24 @@ const LearnerStatusList = dataBind({
 })(
   function LearnerStatusList(
     { scheduleId, cycleId },
-    { get_allGoals, get_learnerSchedule, createDefaultScheduleClick },
-    { }
+    { allGoalsOfUsers, get_learnerSchedule, createDefaultScheduleClick },
+    { usersOfCurrentCohort, usersOfCurrentCohort_isLoaded }
   ) {
-    if (!get_learnerSchedule.isLoaded({ scheduleId }) |
-      !get_allGoals.isLoaded({ scheduleId, cycleId })) {
+    if (!usersOfCurrentCohort_isLoaded |
+        !get_learnerSchedule.isLoaded({ scheduleId }) |
+        !allGoalsOfUsers.isLoaded({ scheduleId, cycleId })
+      ) {
       return <LoadIndicator />;
     }
     else {
       const schedule = get_learnerSchedule({ scheduleId });
-      let goals = get_allGoals({ scheduleId, cycleId });
-      goals = map(goals, (goal, uid) => ({ goal, uid }));
-      const nUsers = size(goals);
+      const entries = allGoalsOfUsers({ scheduleId, cycleId });
+      let uids = Object.keys(usersOfCurrentCohort || EmptyObject);
+      //entries = map(entries, (entry, uid) => ({ entry, uid }));
 
       // sort by whether they have a goal and if so, by last update time
-      goals = sortBy(goals, ({ goal, uid }) => goal && -goal.updatedAt || 0);
+      uids = sortBy(uids, uid => entries[uid] && -entries[uid].updatedAt || 0);
+      const nUsers = size(uids);
 
       let contentEl;
       if (!schedule) {
@@ -57,15 +62,14 @@ const LearnerStatusList = dataBind({
       }
       else if (!nUsers) {
         contentEl = (<Alert bsStyle="warning" style={{ display: 'inline' }} className="no-padding">
-          <span>no goals have been defined in this cycle</span>
+          <span>ther are no users!</span>
         </Alert>);
       }
       else {
         contentEl = (<div>
-          {map(goals, ({goal, uid}) => (
-            <Well key={uid}>{goal}</Well>
-            // <LearnerStatusEntryView key={uid} learnerEntryId={goal}
-            //   uid={uid} scheduleId={scheduleId} cycleId={cycleId} />
+          {map(uids, uid => (
+            <LearnerStatusEntryView key={uid} uid={uid}
+              scheduleId={scheduleId} cycleId={cycleId} />
           ))}
         </div>);
       }
@@ -83,6 +87,6 @@ const LearnerStatusList = dataBind({
       </div>);
     }
   }
-  );
+);
 
 export default LearnerStatusList;

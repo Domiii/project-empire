@@ -2,7 +2,7 @@ import map from 'lodash/map';
 import isEmpty from 'lodash/isEmpty';
 import size from 'lodash/size';
 
-import { hrefLearnerStatusEntry } from 'src/views/href';
+//import { hrefLearnerStatusEntry } from 'src/views/href';
 
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -27,41 +27,51 @@ import LoadIndicator from 'src/views/components/util/loading';
  * Overview of a single learner for one cycle
  */
 const LearnerStatusEntryView = dataBind({
-  createLearnerEntryClick(evt,
-    { uid, scheduleId, cycleId },
-    { createLearnerEntry },
-    { }
-  ) {
-    return createLearnerEntry({ uid, scheduleId, cycleId });
-  }
+  // createLearnerEntryClick(evt,
+  //   { uid, scheduleId, cycleId },
+  //   { createLearnerEntry },
+  //   { }
+  // ) {
+  //   return createLearnerEntry({ uid, scheduleId, cycleId });
+  // }
 })(function LearnerStatusEntryView(
-  { uid, learnerEntryId, scheduleId, cycleId },
-  { userPublic, createLearnerEntryClick },
+  { uid, scheduleId, cycleId },
+  { goalsByUser },
   { }
 ) {
+  if (!goalsByUser.isLoaded({scheduleId, cycleId, uid})) {
+    return <LoadIndicator />;
+  }
+  const entry = goalsByUser({scheduleId, cycleId, uid});
+
   const userEl = <UserBadge uid={uid} size="small" />;
 
   let contentEl;
-  if (learnerEntryId) {
+  if (entry) {
     // user already has an entry for the cycle
+    const { updatedAt } = entry;
     contentEl = (<div>
-      <span className="color-gray">TODO: ProgressBar</span>
-      <LinkContainer to={hrefLearnerStatusEntry('edit', uid, scheduleId, cycleId)}>
+      { entry.goalDescription }
+      <span className="color-gray">
+        <Moment fromNow>{updatedAt}</Moment> (
+        <Moment format="ddd, MMMM Do YYYY, h:mm:ss a">{updatedAt}</Moment>)
+      </span>
+      {/* <LinkContainer to={hrefLearnerStatusEntry('edit', uid, scheduleId, cycleId)}>
         <Button bsStyle="warning">
           Edit
         </Button>
-      </LinkContainer>
+      </LinkContainer> */}
     </div>);
   }
   else {
     // user has no entry yet
     contentEl = (<div>
-      <span className="color-gray">no entry yet</span>
-      <LinkContainer to={hrefLearnerStatusEntry('edit', uid, scheduleId, cycleId)}>
+      <Alert bsStyle="warning" className="no-margin no-padding">no entry yet</Alert>
+      {/* <LinkContainer to={hrefLearnerStatusEntry('edit', uid, scheduleId, cycleId)}>
         <Button bsStyle="success" onClick={createLearnerEntryClick}>
           Start!
       </Button>
-      </LinkContainer>
+      </LinkContainer> */}
     </div>);
   }
 

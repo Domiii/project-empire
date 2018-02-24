@@ -46,10 +46,10 @@ export default {
       },
 
 
-      
+
 
       userHasRole({ uid, role }, { userPublic }, { }) {
-        const user = userPublic({uid});
+        const user = userPublic({ uid });
         if (!user) {
           return user;
         }
@@ -89,10 +89,10 @@ export default {
 
         //setTimeout(() => {
         const {
-            providerData,
+          providerData,
           displayName,
           email
-          } = currentUserAuthData;
+        } = currentUserAuthData;
 
         // user logged in, but has no record of user data yet
         // -> get user data and add to userInfo DB
@@ -186,8 +186,20 @@ export default {
               queryParams: [['orderByChild', 'role'], ['startAt', Roles.GM]]
             }
           },
+          usersOfCohort: {
+            path: {
+              indices: {
+                cohortId: ['cohortId']
+              },
+              queryParams({ cohortId }) {
+                return { cohortId: cohortId || null };
+              }
+            }
+          },
           userPublic: {
-            path: '$(uid)',
+            path: {
+              path: '$(uid)'
+            },
             children: {
               userDisplayName: 'displayName',
               userPhotoURL: 'photoURL',
