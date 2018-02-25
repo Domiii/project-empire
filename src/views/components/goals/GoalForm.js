@@ -35,7 +35,8 @@ export const schemaTemplate = {
       // },
 
       'title': 'Created',
-      'type': 'number'
+      'type': 'number',
+      isOptional: true
     },
     {
       id: 'updatedAt',
@@ -44,7 +45,8 @@ export const schemaTemplate = {
       // },
 
       'title': 'Last Updated',
-      'type': 'number'
+      'type': 'number',
+      isOptional: true
     }
   ]
 };

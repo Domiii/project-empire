@@ -459,7 +459,7 @@ export default class DynamicForm extends Component {
 
         // only fetch data from DB initially
         //if (newFormData !== stateUpdate.formData) {}
-        if (!!newFormData) {
+        if (newFormData !== NOT_LOADED) {
           stateUpdate = {
             formData: newFormData,
             originalFormData: newFormData

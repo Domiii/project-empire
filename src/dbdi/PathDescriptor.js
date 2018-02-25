@@ -22,9 +22,12 @@ const defaultIndexSettings = {
 
 export default class PathDescriptor extends DataDescriptorNode {
   getPath;
+  parent;
 
-  constructor(pathConfig, name) {
+  constructor(parent, pathConfig, name) {
     super(pathConfig, name);
+
+    this.parent = parent;
 
     autoBind(this);
 
@@ -40,15 +43,8 @@ export default class PathDescriptor extends DataDescriptorNode {
     return 'Path';
   }
 
-  buildParentPathDescriptor(name) {
-    const { pathTemplate, pathFn } = this.config;
-    if (isString(pathTemplate) && !pathFn) {
-      const newPathTemplate = pathTemplate.split('/').slice(0, -1).join('/');
-      return new PathDescriptor({
-        pathTemplate: newPathTemplate
-      }, name);
-    }
-    return this;
+  getParentPathDescriptor() {
+    return this.parent;
   }
 
   // ################################################
@@ -106,8 +102,19 @@ export default class PathDescriptor extends DataDescriptorNode {
     
     //const argNames = getPathRaw.pathInfo && getPathRaw.pathInfo.varNames;
     if (!_queryParamsInput) {
-      // simpler!
-      return (args, readerProxy, injectProxy, callerNode, accessTracker) => {
+      // no custom query parameters: keep it simple!
+      return (args, readerProxy, injectProxy, callerNode, _accessTracker) => {
+        if (this.indices && this.indices.doesQueryMatchAnyIndex(args)) {
+          // console.log({
+          //   path: getPathRaw(args),
+          //   indx: this.indices.getIndexNameByKeys(args)
+          //   //queryParams: this.indices.where(args)
+          // });
+          return {
+            path: getPathRaw(args),
+            queryParams: this.indices.where(args)
+          };
+        }
         return getPathRaw(args);
       };
     }

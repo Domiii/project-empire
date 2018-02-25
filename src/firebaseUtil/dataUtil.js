@@ -15,6 +15,9 @@ export function _makePathVariable(val, varName, variableTransform) {
 // creates a function that plugs in path variables 
 //  from a single plain object argument that names variables explicitely
 export function createPathGetterFromTemplateProps(pathTemplate, variableTransform) {
+
+  // TODO: check if provided arguments match any index?
+
   const varLookup = (props, varName, iArg) => {
     const prop = props && props[varName];
     if (prop === undefined) {

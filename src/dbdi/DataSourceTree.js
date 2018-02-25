@@ -138,7 +138,8 @@ export default class DataSourceTree {
   _buildNode(configNode, parent, name, buildDataReadDescriptor, buildDataWriteDescriptor) {
     const dataProvider = this._dataProviders[configNode.dataProviderName];
     const fullName = (parent && parent.fullName && (parent.fullName + '.') || '') + name;
-    const pathDescriptor = configNode.pathConfig && new PathDescriptor(configNode.pathConfig, fullName);
+    const pathDescriptor = configNode.pathConfig && 
+      new PathDescriptor(parent && parent.pathDescriptor, configNode.pathConfig, fullName);
 
     return new DataSourceNode(
       this, parent, dataProvider,
@@ -239,8 +240,8 @@ export default class DataSourceTree {
   _defaultWriteOps = ['push', 'set', 'update', 'delete']
 
   _customWritePathDescriptors = {
-    push(pathDescriptor, name) {
-      return pathDescriptor.buildParentPathDescriptor(name);
+    push(pathDescriptor) {
+      return pathDescriptor.getParentPathDescriptor();
     }
   }
 
@@ -251,6 +252,7 @@ export default class DataSourceTree {
   }
 
   _buildMetaWriteCfg(configNode, actionName) {
+    // TODO: Generalize this for an "event" or "plugin" concept, to more easily plugin additional functionality
     let { onWrite } = configNode;
 
     if (isArray(onWrite)) {
@@ -284,7 +286,11 @@ export default class DataSourceTree {
         const customPathDescriptorBuilder = this._customWritePathDescriptors[actionName];
         if (customPathDescriptorBuilder) {
           // push has a special path
-          pathDescriptor = customPathDescriptorBuilder(pathDescriptor, fullName);
+          pathDescriptor = customPathDescriptorBuilder(pathDescriptor);
+          if (!pathDescriptor) {
+            // this path does not have a sensical writer for this action (e.g. pushing to root)
+            return null;
+          }
         }
         if (actionName === 'set' && configNode.writer) {
           // set can be custmized through the "writer" config entry

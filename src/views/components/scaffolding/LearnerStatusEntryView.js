@@ -36,13 +36,14 @@ const LearnerStatusEntryView = dataBind({
   // }
 })(function LearnerStatusEntryView(
   { uid, scheduleId, cycleId },
-  { goalsByUser },
+  { get_goalById },
   { }
 ) {
-  if (!goalsByUser.isLoaded({scheduleId, cycleId, uid})) {
+  const q = {scheduleId, cycleId, uid};
+  if (!get_goalById.isLoaded(q)) {
     return <LoadIndicator />;
   }
-  const entry = goalsByUser({scheduleId, cycleId, uid});
+  const entry = get_goalById(q);
 
   const userEl = <UserBadge uid={uid} size="small" />;
 

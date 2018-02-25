@@ -16,7 +16,14 @@
     },
     "goals": {
       ".read": "auth !== null",
-      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)",
+      "actualGoals": {
+        "list": {
+          ".indexOn": [
+              "uidScheduleId"
+          ]
+        }
+      }
     },
     "places": {
       ".read": "auth !== null",

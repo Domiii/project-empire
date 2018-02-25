@@ -8,7 +8,10 @@ import {
 } from 'react-bootstrap';
 
 import GoalForm from 'src/views/components/goals/GoalForm';
-import GoalHistory from 'src/views/components/goals/GoalHistory';
+import {
+  GoalCurrentHistory,
+  GoalUserHistory
+} from 'src/views/components/goals/GoalHistory';
 
 import LearnerStatusList from 'src/views/components/scaffolding/LearnerStatusList';
 
@@ -32,6 +35,7 @@ export default class HomePage extends Component {
     { }, 
     { }, 
     { currentUser_isLoaded,
+      currentLearnerScheduleCycleId,
       currentLearnerScheduleCycleId_isLoaded }
   ) {
     if (!currentUser_isLoaded | 
@@ -67,12 +71,12 @@ export default class HomePage extends Component {
         
         <Panel bsStyle="primary">
           <Panel.Heading>
-            我目前的目標 ❤️
+            我目前的目標 ❤️ (第 {currentLearnerScheduleCycleId} 週)
           </Panel.Heading>
           <Panel.Body>
             <Well>
               <GoalForm />
-              <GoalHistory />
+              <GoalCurrentHistory />
             </Well>
             <Button block>
               TODO: Toggle (本 cycle) 學習反思調查～
@@ -87,7 +91,7 @@ export default class HomePage extends Component {
             </FancyPanelToggleTitle>
           </Panel.Heading>
           <Panel.Body collapsible>
-            TODO
+            <GoalUserHistory />
           </Panel.Body>
         </Panel>
       </div>

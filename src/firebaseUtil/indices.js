@@ -1,17 +1,29 @@
 import _ from 'lodash';
+import isArray from 'lodash/isArray';
+import isArrayLike from 'lodash/isArrayLike';
+import sortBy from 'lodash/sortBy';
 
+/**
+ * Determine whether two arrays contain exactly the same elements, independent of order.
+ * @see https://stackoverflow.com/questions/32103252/expect-arrays-to-be-equal-ignoring-order/48973444#48973444
+ */
+function cmpIgnoreOrder(a, b) {
+  const { every, includes } = _;
+  return a.length === b.length && every(a, v => includes(b, v));
+}
 
 const globalDefaultConfig = {
   keys: [],
 
   /**
    * Whether the index should be handled as property, and added as property to object on write.
-   * Difference to `updateOnWrite` is that: 
+   * Set this to false for indices representing parent path keys/ids.
+   * 
+   * Relation to `updateOnWrite`: 
    * If `isProperty` is set to `false`, 
    *    the index will never be written.
    * If `isProperty` is `true` and `updateOnWrite` is `false`, 
    *    it will at least be written initially.
-   * Set this to false for indices representing parent path keys/ids.
    * 
    * Default: true.
    */
@@ -56,7 +68,7 @@ const IndexUtils = {
     return _.zipObject(_.keys(cfg), 
       _.map(cfg, (indexCfg, indexName) => {
         let cfgEntry;
-        if (_.isArray(indexCfg)) {
+        if (isArray(indexCfg)) {
           // only provide array of keys
           cfgEntry = { 
             keys: indexCfg
@@ -70,7 +82,7 @@ const IndexUtils = {
         }
         else if (_.isPlainObject(indexCfg)) {
           // provide full configuration for index
-          if (!_.isArray(indexCfg.keys)) {
+          if (!isArray(indexCfg.keys)) {
             //console.warn('Invalid index config missing or invalid keys property (should be array): ' + JSON.stringify(cfg));
           }
           cfgEntry = indexCfg;
@@ -104,7 +116,7 @@ const IndexUtils = {
     else if (_.isPlainObject(val)) {
       // make sure, entries in resulting string representation are sorted by key
       const converted = _.flatten(_.map(val, (v, k) => [k, this.convertToSortedValueSet(v)]));
-      return _.sortBy(converted, ([k, v]) => k);
+      return sortBy(converted, ([k, v]) => k);
     }
     return val;
   },
@@ -156,20 +168,28 @@ class IndexSet {
     const completeCfg = IndexUtils.sanitizeConfig(cfg, defaultSettings);
 
     // create object of type { indexName => [ key1, key2...] }
-    const keysByIndexName = _.zipObject(_.keys(completeCfg), _.map(completeCfg, 'keys'));
+    let allKeySets = _.map(completeCfg, 'keys');
+    allKeySets = _.map(allKeySets, keySet => sortBy(keySet));
+    const keysByIndexName = _.zipObject(_.keys(completeCfg), allKeySets);
 
     // create object of type { key => [indexName1, indexName2...] }
     const indexNamesByKey = {};
     for (const indexName in keysByIndexName) {
       const keys = keysByIndexName[indexName];
-      keys.forEach(key => 
-        indexNamesByKey[key] = indexNamesByKey[key] && indexNamesByKey[key].push(indexName) || [indexName]);
+      keys.forEach(key => {
+        //console.assert(isArrayLike(indexNamesByKey[key]), 'invalid index with key `' + key + '` (is not but) must be array ' + indexNamesByKey[key]);
+        let arr = indexNamesByKey[key];
+        if (!arr) {
+          arr = indexNamesByKey[key] = [];
+        }
+        arr.push(indexName);
+      });
     }
 
     this.cfg = completeCfg;
 
     this.indexNames = _.keys(keysByIndexName);
-    this.keys = _.keys(indexNamesByKey);
+    this.allKeys = _.keys(indexNamesByKey);
 
     this.keysByIndexName = keysByIndexName;
     this.indexNamesByKey = indexNamesByKey;
@@ -181,19 +201,23 @@ class IndexSet {
   }
 
   getIndexNameByKeys(keys) {
-    return _.findKey(this.keysByIndexName, v => _.isEqual(v, keys));
+    //return _.findKey(this.keysByIndexName, v => _.isEqual(v, keys));
+    return _.findKey(this.keysByIndexName, keyArr => cmpIgnoreOrder(keyArr, keys));
+  }
+
+  doesQueryMatchAnyIndex(query) {
+    return !!this.getIndexNameOfQuery(query);
   }
 
   // array of keys participating in the given query
   getKeysOfQuery(query) {
-    return _.keys(query);
+    return Object.keys(query);
   }
 
   //  
   getIndexNameOfQuery(query) {
-    const name = _.findKey(this.keysByIndexName, _.keys(query));
-    console.assert(name,
-      `Query contains keys that are not indexed: ${JSON.stringify(query)}. - All keys: ${this.keys}`);
+    const name = this.getIndexNameByKeys(Object.keys(query));
+    //console.assert(name,);
     return name;
   }
 
@@ -202,15 +226,20 @@ class IndexSet {
     return !!this.indexNamesByKey[key];
   }
 
+  _invalidQuery(query) {
+    throw new Error(`Keys of query do not match any index: ${JSON.stringify(query)}.
+All indices: ${JSON.stringify(this.keysByIndexName, null, 2)}`);
+  }
+
   where(query) {
     // console.log({
     //   orderByChild: indexName,
     //   equalTo: queryValue
     // });
-    const keys = _.keys(query);
+    const keys = Object.keys(query);
     const indexName = this.getIndexNameByKeys(keys);
     if (!indexName) {
-      throw new Error('invalid query - keys did not match any index: ' + JSON.stringify(query));
+      this._invalidQuery(query);
     }
     return [
       ['orderByChild', indexName],
@@ -222,7 +251,7 @@ class IndexSet {
     const keys = _.keys(query);
     const indexName = this.getIndexNameByKeys(keys);
     if (!indexName) {
-      throw new Error('invalid query - keys did not match any index: ' + JSON.stringify(query));
+      this._invalidQuery(query);
     }
     return this.encodeQueryValueByKeys(query, keys);
   }
@@ -234,6 +263,11 @@ class IndexSet {
     }
 
     const indexName = this.getIndexNameByKeys(keys);
+    if (!indexName) {
+      this._invalidQuery(keys);
+    }
+    keys = this.keysByIndexName[indexName];
+    
     const settings = this.getCfg(indexName);
 
     if (keys.length === 1) {
@@ -264,7 +298,7 @@ class IndexSet {
         if (_.some(keys, key => !_.has(val, key))) {
           // problem: at least one of the participating keys is missing!
           if (this.cfg[indexName].isRequired) {
-            console.warn(`Updated value did not define index "${indexName}", and is also missing some of its keys: 
+            console.warn(`Could not update indices on object because value did not define index "${indexName}", and is also missing some of its keys: 
               [${keys}]\n${JSON.stringify(val)}`);
           }
           continue;

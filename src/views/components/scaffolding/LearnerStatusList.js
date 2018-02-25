@@ -32,23 +32,24 @@ const LearnerStatusList = dataBind({
 })(
   function LearnerStatusList(
     { scheduleId, cycleId },
-    { allGoalsOfUsers, get_learnerSchedule, createDefaultScheduleClick },
+    { goalsOfAllUsers, get_learnerSchedule, createDefaultScheduleClick },
     { usersOfCurrentCohort, usersOfCurrentCohort_isLoaded }
   ) {
     if (!usersOfCurrentCohort_isLoaded |
         !get_learnerSchedule.isLoaded({ scheduleId }) |
-        !allGoalsOfUsers.isLoaded({ scheduleId, cycleId })
+        !goalsOfAllUsers.isLoaded({ scheduleId, cycleId })
       ) {
       return <LoadIndicator />;
     }
     else {
       const schedule = get_learnerSchedule({ scheduleId });
-      const entries = allGoalsOfUsers({ scheduleId, cycleId });
+      const entries = goalsOfAllUsers({ scheduleId, cycleId });
+      const entriesByUid = map(entries, 'uid');
       let uids = Object.keys(usersOfCurrentCohort || EmptyObject);
       //entries = map(entries, (entry, uid) => ({ entry, uid }));
 
       // sort by whether they have a goal and if so, by last update time
-      uids = sortBy(uids, uid => entries[uid] && -entries[uid].updatedAt || 0);
+      uids = sortBy(uids, uid => entriesByUid[uid] && -entriesByUid[uid].updatedAt || 0);
       const nUsers = size(uids);
 
       let contentEl;

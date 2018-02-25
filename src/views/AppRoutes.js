@@ -58,7 +58,7 @@ const AppRoutes = dataBind()(function AppRoutes(
 
         <Route exact path={routeTemplates.GM} component={GMPage} />
 
-        <Route exact path={routeTemplates.Dev} component={DevPage} />
+        <Route exact path={routeTemplates.DEV} component={DevPage} />
 
         <Route exact path={routeTemplates.LEARNER_KB} component={LearnerKBPage} />
 
@@ -67,6 +67,7 @@ const AppRoutes = dataBind()(function AppRoutes(
         <Route exact path={routeTemplates.LEARNER_STATUS_ENTRY} component={LearnerStatusEntryPage} />
 
         <Route exact path={routeTemplates.TEST} component={TestPage} />
+        
         <Redirect to={routeTemplates.ROOT} />
       </Switch>
     );

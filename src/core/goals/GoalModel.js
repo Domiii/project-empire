@@ -22,14 +22,38 @@ const goalDataModel = {
   }
 };
 
+
+const goalIndices = {
+  uid: ['uid'],
+  scheduleId: ['scheduleId'],
+  uidScheduleId: ['scheduleId', 'uid'],
+  scheduleCycle: ['scheduleId', 'cycleId'],
+  goalId: {
+    keys: ['uid', 'scheduleId', 'cycleId'],
+    isProperty: false // this should never be written as a property
+  }
+};
+
+const goalHistoryIndices = {
+  uid: ['uid'],
+  scheduleId: ['scheduleId'],
+  uidScheduleId: ['scheduleId', 'uid'],
+  scheduleCycle: ['scheduleId', 'cycleId'],
+  goalHistoryId: {
+    keys: ['uid', 'scheduleId', 'cycleId'],
+    isProperty: false // this should never be written as a property
+  }
+};
+
 const readers = {
-  currentGoalPathQuery(
+  currentGoalId(
     { },
     { },
-    { currentUid, currentLearnerScheduleId, currentLearnerScheduleCycleId,
-      currentUid_isLoaded, currentLearnerScheduleId_isLoaded }
+    { currentUid, currentUid_isLoaded,
+      currentLearnerScheduleCycleId, currentLearnerScheduleCycleId_isLoaded,
+      currentLearnerScheduleId }
   ) {
-    if (!currentLearnerScheduleId_isLoaded | !currentUid_isLoaded) {
+    if (!currentLearnerScheduleCycleId_isLoaded | !currentUid_isLoaded) {
       return NOT_LOADED;
     }
 
@@ -40,36 +64,84 @@ const readers = {
     };
   },
 
-  currentGoalHistory(
+  currentGoalQuery(
     { },
-    { get_goalHistoryByUser },
-    { currentGoalPathQuery }
+    { },
+    { currentGoalId, currentGoalId_isLoaded }
   ) {
-    if (!currentGoalPathQuery) {
+    if (!currentGoalId_isLoaded) {
       return NOT_LOADED;
     }
 
-    const entries = get_goalHistoryByUser(currentGoalPathQuery);
+    return {
+      goalId: currentGoalId
+    };
+  },
+
+  currentGoalHistoryQuery(
+    { },
+    { },
+    { currentGoalId, currentGoalId_isLoaded }
+  ) {
+    if (!currentGoalId_isLoaded) {
+      return NOT_LOADED;
+    }
+
+    return {
+      goalHistoryId: currentGoalId
+    };
+  },
+
+  currentGoalHistory(
+    { },
+    { get_goalHistoryById },
+    { currentGoalHistoryQuery, currentGoalHistoryQuery_isLoaded }
+  ) {
+    if (!currentGoalHistoryQuery_isLoaded) {
+      return NOT_LOADED;
+    }
+
+    const entries = get_goalHistoryById(currentGoalHistoryQuery);
     const arr = Object.values(entries || EmptyObject);
     return sortBy(arr, (entry) => -entry.updatedAt);
+  },
+
+  goalsOfAllCycles(
+    { scheduleId, uid },
+    { get_goalList },
+    { }
+  ) {
+    const query = {
+      uid,
+      scheduleId
+    };
+
+    if (!get_goalList.isLoaded(query)) {
+      return NOT_LOADED;
+    }
+
+    return get_goalList(query) || EmptyObject;
+  },
+
+  goalsOfAllUsers(
+    {scheduleId, cycleId},
+    { get_goalList },
+    { }
+  ) {
+    const query = {
+      scheduleId,
+      cycleId
+    };
+
+    if (!get_goalList.isLoaded(query)) {
+      return NOT_LOADED;
+    }
+
+    return get_goalList(query) || EmptyObject;
   }
-
-  // allUidsWithGoalsOfCycle(
-  //   { scheduleId, cycleId },
-  //   { allGoalsOfUsers },
-  //   { }
-  // ) {
-  //   if (!allGoalsOfUsers.isLoaded({ scheduleId, cycleId })) {
-  //     return undefined;
-  //   }
-
-  //   const entries = allGoalsOfUsers({ scheduleId, cycleId });
-  //   return Object.keys(entries);
-  // }
 };
 
 const writers = {
-
 };
 
 
@@ -82,42 +154,46 @@ export default {
       currentGoal: {
         reader(
           { },
-          { get_goalsByUser },
-          { currentGoalPathQuery }
+          { get_goalById },
+          { currentGoalQuery, currentGoalQuery_isLoaded }
         ) {
-          if (!currentGoalPathQuery) {
+          if (!currentGoalQuery_isLoaded) {
             return NOT_LOADED;
           }
 
-          return get_goalsByUser(currentGoalPathQuery);
+          return get_goalById(currentGoalQuery);
         },
         writer(
           goalArgs,
-          { get_goalsByUser, goalsByUser_isLoaded },
-          { currentGoalPathQuery },
-          { set_goalsByUser, push_goalHistoryByUserEntry }
+          { get_goalById, get_currentGoalHistoryQuery },
+          { currentUid, currentUid_isLoaded,
+            currentGoalQuery, currentGoalQuery_isLoaded,
+            currentLearnerScheduleId, currentLearnerScheduleCycleId },
+          { set_goalById, push_goalHistoryByUserEntry }
         ) {
-          if (!currentGoalPathQuery |
-            !goalsByUser_isLoaded(currentGoalPathQuery)) {
+          if ((!currentUid_isLoaded | !currentGoalQuery_isLoaded) ||
+            !get_goalById.isLoaded(currentGoalQuery)) {
             return NOT_LOADED;
           }
 
           const newGoal = pick(goalArgs, Object.keys(goalDataModel.children));
+          newGoal.scheduleId = currentLearnerScheduleId;
+          newGoal.cycleId = currentLearnerScheduleCycleId;
+          newGoal.uid = currentUid;
 
           // check if we already had a goal
           let historyUpdate;
-          const oldGoal = get_goalsByUser(currentGoalPathQuery);
-          console.log(oldGoal);
+          const oldGoal = get_goalById(currentGoalQuery);
           if (oldGoal && oldGoal.goalDescription &&
             oldGoal.goalDescription !== newGoal.goalDescription) {
             // add old goal as history entry
             // (the creation time of this goal is the time it got last updated)
             oldGoal.createdAt = oldGoal.updatedAt;
-            historyUpdate = push_goalHistoryByUserEntry(currentGoalPathQuery, oldGoal);
+            historyUpdate = push_goalHistoryByUserEntry(get_currentGoalHistoryQuery(), oldGoal);
           }
 
           // update goal
-          const goalUpdate = set_goalsByUser(currentGoalPathQuery, newGoal);
+          const goalUpdate = set_goalById(currentGoalQuery, newGoal);
 
           return Promise.all([
             goalUpdate,
@@ -125,26 +201,43 @@ export default {
           ]);
         }
       },
-      goalsByCycle: {
-        path: '$(scheduleId)/$(cycleId)',
+      allGoals: {
+        path: 'actualGoals',
         children: {
-          allGoalsOfUsers: {
-            path: 'goals',
+          goalList: {
+            path: {
+              path: 'list',
+              indices: goalIndices
+            },
             children: {
-              goalsByUser: {
-                path: '$(uid)',
+              goalById: {
+                path: {
+                  path: '$(goalId)',
+                  indices: goalIndices
+                },
                 ...goalDataModel,
               },
             }
-          },
-          goalHistory: {
-            path: 'history',
+          }
+        }
+      },
+      allGoalHistory: {
+        path: 'history',
+        children: {
+          goalHistroyList: {
+            path: 'list',
             children: {
-              goalHistoryByUser: {
-                path: '$(uid)',
+              goalHistoryById: {
+                path: {
+                  path: '$(goalHistoryId)',
+                  indices: goalHistoryIndices
+                },
                 children: {
                   goalHistoryByUserEntry: {
-                    path: '$(goalId)',
+                    path: {
+                      path: '$(archivedGoalId)',
+                      indices: goalHistoryIndices
+                    },
                     ...goalDataModel
                   }
                 }

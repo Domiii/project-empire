@@ -82,19 +82,19 @@ export default class DataAccessTracker {
   }
 
   _resolveArgumentHandler = {
-    get(target, name) {
+    get: (target, name) => {
       if (name === '____isWrapperProxy') {
         // need to hack this, because Proxies are transparently virtualized
         // https://stackoverflow.com/questions/36372611/how-to-test-if-an-object-is-a-proxy
         return true;
       }
       if (!(name in target)) {
-        console.warn(`Requested argument was not supplied: ${name}`);
+        console.warn(`Requested argument was not supplied for ${this._name}:`, name);
       }
       return target[name];
     },
 
-    has(target, name) {
+    has: (target, name) => {
       return target.hasOwnProperty(name);
     }
   };

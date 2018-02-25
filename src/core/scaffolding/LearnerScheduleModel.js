@@ -118,8 +118,6 @@ const writers = {
 
     const newStartTime = (now - inCycleOffset) - ((cycleId-1) * cycleTime);
 
-    //console.warn({ startTime, cycleTime }, now - inCycleOffset, cycleId * cycleTime, newStartTime);
-
     return set_scheduleStartTime({ scheduleId }, newStartTime);
   }
 };
