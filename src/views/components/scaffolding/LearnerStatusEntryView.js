@@ -51,9 +51,10 @@ const LearnerStatusEntryView = dataBind({
   if (entry) {
     // user already has an entry for the cycle
     const { updatedAt } = entry;
-    contentEl = (<div>
+    contentEl = (<span>
       { entry.goalDescription }
       <span className="color-gray">
+        &nbsp;
         <Moment fromNow>{updatedAt}</Moment> (
         <Moment format="ddd, MMMM Do YYYY, h:mm:ss a">{updatedAt}</Moment>)
       </span>
@@ -62,23 +63,24 @@ const LearnerStatusEntryView = dataBind({
           Edit
         </Button>
       </LinkContainer> */}
-    </div>);
+    </span>);
   }
   else {
     // user has no entry yet
-    contentEl = (<div>
-      <Alert bsStyle="warning" className="no-margin no-padding">no entry yet</Alert>
+    contentEl = (<span>
+      <Alert bsStyle="warning" className="inline no-margin no-padding">no entry yet</Alert>
       {/* <LinkContainer to={hrefLearnerStatusEntry('edit', uid, scheduleId, cycleId)}>
         <Button bsStyle="success" onClick={createLearnerEntryClick}>
           Start!
       </Button>
       </LinkContainer> */}
-    </div>);
+    </span>);
   }
 
   return (
     <div className="learner-status-entry">
-      <h4>{userEl}</h4>
+      <h4 className="inline">{userEl}</h4>
+      &nbsp;
       {contentEl}
     </div>
   );

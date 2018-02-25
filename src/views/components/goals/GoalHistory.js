@@ -75,6 +75,7 @@ export const GoalUserHistory = dataBind({
       map(cycles, (cycleId) => {
         const entry = entriesByCycle[cycleId];
         if (entry) {
+          // has goal
           return (<Alert key={cycleId} bsStyle="success" className="no-margin">
             [第 {cycleId} 週] {entry.goalDescription} <span className="color-gray"> (
               <Moment fromNow>{entry.createdAt}</Moment>
@@ -82,6 +83,7 @@ export const GoalUserHistory = dataBind({
           </Alert>);
         }
         else {
+          // no goal this cycle
           return (<Alert key={cycleId} bsStyle="warning" className="no-margin">
             [第 {cycleId} 週] <span className="color-gray">(無目標)</span>
           </Alert>);

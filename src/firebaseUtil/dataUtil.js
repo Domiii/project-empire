@@ -5,7 +5,7 @@ import some from 'lodash/some';
 
 export function _makePathVariable(val, varName, variableTransform) {
   if (isPlainObject(val) && variableTransform) {
-    // use index transformation for variable
+    // use transformation for variable
     return variableTransform(val, varName);
   }
   return val;
@@ -15,16 +15,17 @@ export function _makePathVariable(val, varName, variableTransform) {
 // creates a function that plugs in path variables 
 //  from a single plain object argument that names variables explicitely
 export function createPathGetterFromTemplateProps(pathTemplate, variableTransform) {
-
-  // TODO: check if provided arguments match any index?
-
   const varLookup = (props, varName, iArg) => {
+    if (variableTransform) {
+      return variableTransform(props, varName, iArg);
+    }
     const prop = props && props[varName];
     if (prop === undefined) {
       throw new Error(`invalid arguments: ${varName} was not provided for path ${pathTemplate}`);
     }
 
-    return _makePathVariable(prop, varName, variableTransform);
+    //return _makePathVariable(prop, varName, variableTransform);
+    return prop;
   };
 
   const getPathWithVariables = function getPathWithVariables(props) {

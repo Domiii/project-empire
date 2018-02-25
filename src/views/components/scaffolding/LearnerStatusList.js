@@ -3,6 +3,7 @@ import isEmpty from 'lodash/isEmpty';
 import size from 'lodash/size';
 import sortBy from 'lodash/sortBy';
 import filter from 'lodash/filter';
+import mapKeys from 'lodash/mapKeys';
 
 import moment from 'moment';
 
@@ -44,12 +45,12 @@ const LearnerStatusList = dataBind({
     else {
       const schedule = get_learnerSchedule({ scheduleId });
       const entries = goalsOfAllUsers({ scheduleId, cycleId });
-      const entriesByUid = map(entries, 'uid');
+      const entriesByUid = mapKeys(entries, 'uid');
       let uids = Object.keys(usersOfCurrentCohort || EmptyObject);
       //entries = map(entries, (entry, uid) => ({ entry, uid }));
 
       // sort by whether they have a goal and if so, by last update time
-      uids = sortBy(uids, uid => entriesByUid[uid] && -entriesByUid[uid].updatedAt || 0);
+      uids = sortBy(uids, uid => !!entriesByUid[uid] && -entriesByUid[uid].updatedAt || 1e12);
       const nUsers = size(uids);
 
       let contentEl;

@@ -2,6 +2,9 @@ import _ from 'lodash';
 import isArray from 'lodash/isArray';
 import isArrayLike from 'lodash/isArrayLike';
 import sortBy from 'lodash/sortBy';
+import zipObject from 'lodash/zipObject';
+import map from 'lodash/map';
+import mapValues from 'lodash/mapValues';
 
 /**
  * Determine whether two arrays contain exactly the same elements, independent of order.
@@ -168,9 +171,8 @@ class IndexSet {
     const completeCfg = IndexUtils.sanitizeConfig(cfg, defaultSettings);
 
     // create object of type { indexName => [ key1, key2...] }
-    let allKeySets = _.map(completeCfg, 'keys');
-    allKeySets = _.map(allKeySets, keySet => sortBy(keySet));
-    const keysByIndexName = _.zipObject(_.keys(completeCfg), allKeySets);
+    let keysByIndexName = mapValues(completeCfg, 'keys');
+    keysByIndexName = mapValues(keysByIndexName, keySet => sortBy(keySet));
 
     // create object of type { key => [indexName1, indexName2...] }
     const indexNamesByKey = {};
@@ -207,6 +209,11 @@ class IndexSet {
 
   doesQueryMatchAnyIndex(query) {
     return !!this.getIndexNameOfQuery(query);
+  }
+
+  doesQueryMatchAnyPropertyIndex(query) {
+    const indexName = this.getIndexNameOfQuery(query);
+    return indexName && this.cfg[indexName].isProperty;
   }
 
   // array of keys participating in the given query
@@ -247,10 +254,23 @@ All indices: ${JSON.stringify(this.keysByIndexName, null, 2)}`);
     ];
   }
 
-  encodeQueryValue(query) {
-    const keys = _.keys(query);
-    const indexName = this.getIndexNameByKeys(keys);
-    if (!indexName) {
+  //encodeQueryValueForProps(query) {
+  encodeQueryValueForProps(props, varName, iArg) {
+    let query = props[varName];
+    let keys;
+    if (!query) {
+      // variable value was not explicitely provided, but maybe the props match the index signature
+      query = props;
+      const indexName = this.getIndexNameOfQuery(query);
+      if (!indexName || indexName !== varName) {
+        throw new Error(`tryEncodeQueryValueForProps failed. props do not contain index ${varName} ` +
+          'and does not match index signature either: ' + JSON.stringify(props));
+      }
+    }
+    
+    keys = Object.keys(query);
+
+    if (!this.getIndexNameByKeys(keys)) {
       this._invalidQuery(query);
     }
     return this.encodeQueryValueByKeys(query, keys);

@@ -773,7 +773,7 @@ function createRefWrapperBase() {
     }
 
     setByIndex(indexData, childValue) {
-      const key = this.indices.encodeQueryValue(indexData);
+      const key = this.indices.encodeQueryValueForProps(indexData);
       return this.setChild(key, childValue);
     }
 
@@ -1037,7 +1037,7 @@ function createRefWrapperBase() {
 //   }
 
 //   setByIndex(indexData, childValue) {
-//     const key = this.indices.encodeQueryValue(indexData);
+//     const key = this.indices.encodeQueryValueForProps(indexData);
 //     return this.setChild(key, childValue);
 //   }
 

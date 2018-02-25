@@ -20,7 +20,8 @@
       "actualGoals": {
         "list": {
           ".indexOn": [
-              "uidScheduleId"
+              "uidScheduleId",
+              "scheduleCycle"
           ]
         }
       }

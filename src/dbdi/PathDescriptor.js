@@ -97,14 +97,14 @@ export default class PathDescriptor extends DataDescriptorNode {
 
   _buildGetPathFromTemplateString(pathTemplate, _queryParamsInput) {
     const indices = this.indices;
-    const variableTransform = indices && indices.encodeQueryValue.bind(indices);
+    const variableTransform = indices && indices.encodeQueryValueForProps.bind(indices);
     const getPathRaw = createPathGetterFromTemplateProps(pathTemplate, variableTransform);
     
     //const argNames = getPathRaw.pathInfo && getPathRaw.pathInfo.varNames;
     if (!_queryParamsInput) {
       // no custom query parameters: keep it simple!
       return (args, readerProxy, injectProxy, callerNode, _accessTracker) => {
-        if (this.indices && this.indices.doesQueryMatchAnyIndex(args)) {
+        if (this.indices && this.indices.doesQueryMatchAnyPropertyIndex(args)) {
           // console.log({
           //   path: getPathRaw(args),
           //   indx: this.indices.getIndexNameByKeys(args)
