@@ -6,6 +6,7 @@
  */
 
 import moment from 'moment';
+import { NOT_LOADED } from '../../dbdi/react';
 
 const readers = {
   currentSchedule(
@@ -13,31 +14,58 @@ const readers = {
     { learnerSchedule },
     { currentLearnerScheduleId, currentLearnerScheduleId_isLoaded }
   ) {
-    if (!currentLearnerScheduleId_isLoaded ||
-      !learnerSchedule.isLoaded({ scheduleId: currentLearnerScheduleId })) {
-      return undefined;
+    if (!currentLearnerScheduleId_isLoaded) {
+      return NOT_LOADED;
     }
 
     return learnerSchedule({ scheduleId: currentLearnerScheduleId });
   },
+
   currentLearnerScheduleCycleId(
     { },
-    { },
-    { currentSchedule, currentSchedule_isLoaded }
+    { learnerScheduleCycleId },
+    { currentLearnerScheduleId, currentLearnerScheduleId_isLoaded }
   ) {
-    if (!currentSchedule_isLoaded) {
-      return undefined;
+    if (!currentLearnerScheduleId_isLoaded) {
+      return NOT_LOADED;
     }
 
-    if (!currentSchedule) {
-      return null;
+    return learnerScheduleCycleId({ scheduleId: currentLearnerScheduleId });
+  },
+
+  learnerScheduleCycleId(
+    { scheduleId },
+    { learnerSchedule },
+    { }
+  ) {
+    if (!learnerSchedule.isLoaded({ scheduleId })) {
+      return NOT_LOADED;
     }
 
     const now = Date.now();
-    const { startTime, cycleOffset, cycleTime } = currentSchedule;
+    const { startTime, cycleOffset, cycleTime } = learnerSchedule({ scheduleId });
     const dt = now - startTime + cycleOffset;
     return Math.floor(dt / cycleTime) + 1;
   },
+
+  /**
+   * Provide properly formatted schedule settings for schedule editing forms
+   */
+  learnerScheduleSettings(
+    { scheduleId },
+    { learnerScheduleCycleId },
+    { }
+  ) {
+    if (!learnerScheduleCycleId.isLoaded({ scheduleId })) {
+      return NOT_LOADED;
+    }
+
+    const cycleId = learnerScheduleCycleId({ scheduleId });
+    return {
+      scheduleId,
+      cycleId
+    };
+  }
 };
 
 const writers = {
@@ -63,9 +91,36 @@ const writers = {
       cycleTime,
       cycleOffset
     });
+
     return newEntry.then(() => {
       return set_currentLearnerScheduleId({}, newEntry.key);
     });
+  },
+
+  /**
+   * 
+   */
+  learnerScheduleAdjustOffsetForCycleId(
+    { scheduleId, cycleId },
+    { learnerSchedule },
+    { },
+    { set_scheduleStartTime }
+  ) {
+    if (!learnerSchedule.isLoaded({ scheduleId })) {
+      return NOT_LOADED;
+    }
+    const now = Date.now();
+
+    const { startTime, cycleTime } = learnerSchedule({ scheduleId });
+
+    const totalTimePassed = now - startTime;
+    const inCycleOffset = totalTimePassed % cycleTime;
+
+    const newStartTime = (now - inCycleOffset) - ((cycleId-1) * cycleTime);
+
+    //console.warn({ startTime, cycleTime }, now - inCycleOffset, cycleId * cycleTime, newStartTime);
+
+    return set_scheduleStartTime({ scheduleId }, newStartTime);
   }
 };
 

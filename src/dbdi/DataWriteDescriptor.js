@@ -1,5 +1,6 @@
 import isFunction from 'lodash/isFunction';
 import isArray from 'lodash/isArray';
+import isEmpty from 'lodash/isEmpty';
 
 import { EmptyObject } from 'src/util';
 import autoBind from 'src/util/auto-bind';
@@ -47,6 +48,11 @@ function processArgumentsDefault(node, writeArgs) {
  */
 function processCustomSetter(node, writeArgs) {
   let [queryArgs, val] = writeArgs;
+  
+  if (!isEmpty(queryArgs) && !isEmpty(val)) {
+    console.error('custom writer should only provide one argument but found two:', writeArgs);
+  }
+
   if (!queryArgs) {
     queryArgs = val;
   }

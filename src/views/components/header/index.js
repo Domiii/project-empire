@@ -177,10 +177,15 @@ export default class Header extends Component {
         </LinkContainer>
       ),
       (
-        <LinkContainer key="places" to="/places">
-          <NavItem eventKey={14}>Places</NavItem>
+        <LinkContainer key="dev" to="/dev">
+          <NavItem eventKey={14}>Dev</NavItem>
         </LinkContainer>
-      )
+      ),
+      // (
+      //   <LinkContainer key="places" to="/places">
+      //     <NavItem eventKey={14}>Places</NavItem>
+      //   </LinkContainer>
+      // )
     ];
 
     return (<div>

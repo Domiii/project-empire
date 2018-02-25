@@ -157,6 +157,10 @@ button:active { outline:none !important; }
   color: yellow;
 }
 
+.color-lightyellow {
+  color: lightyellow;
+}
+
 .color-lightred {
   color: IndianRed;
 }
@@ -173,6 +177,11 @@ button:active { outline:none !important; }
 }
 .color-darkblue {
   color: darkblue;
+}
+
+.background-lightyellow {
+  background-color: lightyellow;
+  background-image: none;
 }
 
 .background-red {

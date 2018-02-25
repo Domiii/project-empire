@@ -17,8 +17,16 @@ export default {
         return !!currentUid;
       },
 
+      isCurrentUserDev({ }, { }, { currentUserDisplayRole }) {
+        return currentUserDisplayRole && hasDisplayRole(currentUserDisplayRole, Roles.Dev);
+      },
+
       isCurrentUserAdminReal({ }, { hasCurrentUserRole }, { }) {
         return hasCurrentUserRole({ role: Roles.Admin });
+      },
+
+      isCurrentUserAdmin({ }, { }, { currentUserDisplayRole }) {
+        return currentUserDisplayRole && hasDisplayRole(currentUserDisplayRole, Roles.Admin);
       },
 
       isCurrentUserGuardian({ }, { hasCurrentUserDisplayRole }, { }) {
@@ -31,10 +39,6 @@ export default {
 
       hasCurrentUserDisplayRole({ role }, { }, { currentUserDisplayRole }) {
         return currentUserDisplayRole && hasDisplayRole(currentUserDisplayRole, role);
-      },
-
-      isCurrentUserAdmin({ }, { }, { currentUserDisplayRole }) {
-        return currentUserDisplayRole && hasDisplayRole(currentUserDisplayRole, Roles.Admin);
       },
 
       currentUserRole({ }, { }, { currentUser }) {

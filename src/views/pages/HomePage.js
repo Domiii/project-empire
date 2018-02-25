@@ -31,18 +31,15 @@ export default class HomePage extends Component {
   render(
     { }, 
     { }, 
-    { isCurrentUserAdmin, currentUser_isLoaded,
-      currentLearnerScheduleId, currentLearnerScheduleCycleId, 
-      currentLearnerScheduleId_isLoaded }
+    { currentUser_isLoaded,
+      currentLearnerScheduleCycleId_isLoaded }
   ) {
-    if (!currentUser_isLoaded | !currentLearnerScheduleId_isLoaded | !currentLearnerScheduleCycleId) {
+    if (!currentUser_isLoaded | 
+      !currentLearnerScheduleCycleId_isLoaded) {
       return (<LoadOverlay />);
     }
 
-    var currentLeader,
-        lateReflections = 0,
-        currentReflection,
-        reflectionHistoryList;
+    let lateReflections;
 
     return (
       <div>
@@ -93,16 +90,6 @@ export default class HomePage extends Component {
             TODO
           </Panel.Body>
         </Panel>
-
-        <Well>
-          TODO:
-          <pre>{`* 學習菜單: https://pecu.gitbooks.io/-r/content/
-* 上次的目標是不是讓妳很想要投入的？
-* 上次的目標怎麼選的？
-* 你需不需要設定目標的幫助？
-* TODO: 直接他們有哪一些需要幫助的需求？列出一大堆～`}
-          </pre>
-        </Well>
       </div>
     );
   }

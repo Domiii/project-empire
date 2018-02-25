@@ -10,8 +10,10 @@ const Roles = {
 
   Guardian: 5,
 
+  GM: 99,
   Admin: 99,
-  GM: 99
+  
+  Dev: 9000
 };
 export default Roles;
 
@@ -69,6 +71,14 @@ export function hasDisplayRole(a, b) {
 
 export function hasRole(a, b) {
   return getRole(a) >= getRole(b);
+}
+
+export function isDev(roleObj) {
+  return getDisplayRole(roleObj) >= Roles.Dev;
+}
+
+export function isAdmin(roleObj) {
+  return getDisplayRole(roleObj) >= Roles.Admin;
 }
 
 export function isGM(roleObj) {

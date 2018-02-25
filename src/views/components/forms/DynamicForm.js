@@ -5,7 +5,8 @@ import mapValues from 'lodash/mapValues';
 import map from 'lodash/map';
 import pickBy from 'lodash/pickBy';
 import isEmpty from 'lodash/isEmpty';
-import omit from 'lodash/omit';
+import every from 'lodash/every';
+import isEqual from 'lodash/isEqual';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -28,6 +29,16 @@ import Markdown from 'src/views/components/markdown';
 import UserBadge from 'src/views/components/users/UserBadge';
 import { EmptyObject } from '../../../util';
 
+
+/**
+ * Determine whether "small" is a subset of "big"
+ * @see https://stackoverflow.com/questions/35737312/find-if-an-object-is-subset-of-another-object-in-javascript/48971177#48971177
+ */
+ function isSubset(big, small) {
+  return every(small, 
+    (v, k) => isEqual(v, big[k])
+  );
+}
 
 // ###########################################################################
 // FieldTemplate
@@ -226,15 +237,16 @@ export const DefaultFormChildren = dataBind({
   __doDelete(allArgs, fns, { }) {
     const [
       dbName,
-      idArgs
-    ] = getOptionalArguments(allArgs, 'dbName', 'idArgs');
+      idArgs,
+      deleter
+    ] = getOptionalArguments(allArgs, 'dbName', 'idArgs', 'deleter');
 
-    if (!dbName) {
-      console.error('Cannot delete in DynamicForm, because `dbName` is not given');
+    if (!dbName && !deleter) {
+      console.error('Cannot delete in DynamicForm, because neither `dbName` nor `deleter` is given');
       return Promise.resolve();
     }
 
-    const doDelete = fns[`delete_${dbName}`];
+    const doDelete = deleter || getAccessor(fns, [`delete_${dbName}`]);
     return doDelete(idArgs);
   }
 })(function DefaultFormChildren(
@@ -282,14 +294,13 @@ function DefaultFormComponent({ className, ...allProps }) {
 // Putting it all together
 // ###########################################################################
 
-function getAccessor(fns, writerName) {
-  const fn = fns[writerName];
+function getAccessor(fns, name) {
+  const fn = fns[name];
   if (!fn) {
-    throw new Error('Invalid dbName, accessor does not exist in dataBind context: ' + writerName);
+    throw new Error('Accessor does not exist in dataBind context (does `dbName` exist?): ' + name);
   }
   return fn;
 }
-let ii = 0;
 
 /**
  * Adds dynamicity, some default components and more features to default jsonschema forms.
@@ -303,23 +314,24 @@ let ii = 0;
     const [
       dbName,
       idArgs,
-      write,
-      alwaysSet
-    ] = getOptionalArguments(allArgs, 'dbName', 'idArgs', 'write', 'alwaysSet');
+      writer
+    ] = getOptionalArguments(allArgs,
+      'dbName', 'idArgs', 'writer');
 
-    if (!dbName) {
+    if (!dbName && !writer) {
+      console.error('Cannot submit in DynamicForm, because neither `dbName` nor `writer` is given');
       return Promise.resolve();
     }
 
     // get rid of undefined fields, created by (weird) form editor
     formData = pickBy(formData, val => val !== undefined);
 
-    if (write) {
-      return write(idArgs, formData);
+    if (writer) {
+      return writer(formData);
     }
 
     let writerName;
-    if (!idArgs && !alwaysSet) {
+    if (!idArgs) {
       // new item data
       writerName = `push_${dbName}`;
       const doWrite = getAccessor(fns, writerName);
@@ -366,14 +378,22 @@ export default class DynamicForm extends Component {
     idArgs: PropTypes.object,
 
     /**
-     * If true, only use the set writer, never try to push, even if idArgs are not given.
+     * Custom reader to get data initially. If set, will not use dbName for reading.
+     * Passes idArgs as single argument.
      */
-    alwaysSet: PropTypes.bool,
+    reader: PropTypes.func,
 
     /**
-     * Custom writer to write to on submit. If set, will never call push or set writer.
+     * Custom writer to write to on submit. If set, will not use dbName for writing.
+     * Only passes the formData as single argument, does not pass idArgs.
      */
-    write: PropTypes.func,
+    writer: PropTypes.func,
+
+    /**
+     * Custom deleter. If set, will not use dbName for deleting.
+     * Passes idArgs as single argument.
+     */
+    deleter: PropTypes.func,
 
     /**
      * callback has three arguments:
@@ -426,19 +446,15 @@ export default class DynamicForm extends Component {
     const {
       dbName,
       idArgs,
-      formData
+      formData,
+      reader
     } = nextProps;
 
     let stateUpdate;
-    if (dbName) {
+    if (dbName || reader) {
       if (!this.state.originalFormData) {
         // formData is queried from DB
-        if (formData) {
-          console.error('DynamicForm should not set `formData` when `dbName` is set - ignored.');
-        }
-
-        const readerName = `get_${dbName}`;
-        const doGet = getAccessor(fns, readerName);
+        const doGet = reader || getAccessor(fns, `get_${dbName}`);
         const newFormData = doGet(idArgs);
 
         // only fetch data from DB initially
@@ -448,6 +464,17 @@ export default class DynamicForm extends Component {
             formData: newFormData,
             originalFormData: newFormData
           };
+        }
+
+        if (formData) {
+          // merge formData into the mix (if not already mixed in)
+          const latest = newFormData || this.state.formData;
+          if (!latest || !isSubset(latest, formData)) {
+            stateUpdate = merge(
+              stateUpdate || { formData: this.state.formData },
+              { formData }
+            );
+          }
         }
       }
     }
@@ -484,7 +511,6 @@ export default class DynamicForm extends Component {
 
     this.props.onChange && this.props.onChange(formArgs);
 
-    console.warn(formData);
     this.setState({
       formData
     });
@@ -495,7 +521,6 @@ export default class DynamicForm extends Component {
       formData
     } = this.state;
     if (formData === NOT_LOADED) {
-      console.error('formData === NOT_LOADED');
       return <LoadIndicator />;
     }
 

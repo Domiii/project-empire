@@ -121,8 +121,8 @@ class GoalForm extends Component {
 
   render(
     { },
-    { },
-    { isCurrentUserAdmin, currentGoal, currentGoal_isLoaded }
+    { set_currentGoal },
+    { currentGoal, currentGoal_isLoaded }
   ) {
     if (!currentGoal_isLoaded) {
       return <LoadIndicator />;
@@ -131,19 +131,21 @@ class GoalForm extends Component {
     // name of current goal list in model?
     const dbName = 'currentGoal';
 
+    const latestGoal = this.state.formData && this.state.formData.goalDescription || '';
+    const oldGoal = currentGoal && currentGoal.goalDescription || '';
+    const isUnsaved = this.state.formData && !isEqual(latestGoal, oldGoal);
+
     const props = {
       schemaTemplate,
       uiSchema,
 
       dbName,
-      alwaysSet: true,
+      writer: set_currentGoal,
 
-      onChange: this.onChange
+      onChange: this.onChange,
+
+      className: isUnsaved ? 'background-lightyellow' : ''
     };
-
-    const latestGoal = this.state.formData && this.state.formData.goalDescription || '';
-    const oldGoal = currentGoal && currentGoal.goalDescription || '';
-    const isUnsaved = this.state.formData && !isEqual(latestGoal, oldGoal);
 
     return (<div>
       <DynamicForm {...props}>

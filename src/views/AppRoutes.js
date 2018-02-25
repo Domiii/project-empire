@@ -14,6 +14,7 @@ import MissionPage from './pages/MissionPage';
 import ProjectPage from './pages/ProjectPage';
 
 import GMPage from './pages/GMPage';
+import DevPage from './pages/DevPage';
 
 import LearnerKBPage from './pages/LearnerKBPage';
 
@@ -56,6 +57,8 @@ const AppRoutes = dataBind()(function AppRoutes(
         <Route exact path={routeTemplates.PROJECTS} component={ProjectPage} />
 
         <Route exact path={routeTemplates.GM} component={GMPage} />
+
+        <Route exact path={routeTemplates.Dev} component={DevPage} />
 
         <Route exact path={routeTemplates.LEARNER_KB} component={LearnerKBPage} />
 
