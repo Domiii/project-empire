@@ -140,7 +140,7 @@ export const LearnerQuestionForm = dataBind({})(function LearnerQuestionForm(
   />);
 });
 
-const LeanerQuestionHeader = dataBind({})(function LeanerQuestionHeader(
+export const LeanerQuestionHeader = dataBind({})(function LeanerQuestionHeader(
   { questionId, editing, toggleEdit },
   { get_learnerQuestion, lookupLocalized },
   { }
@@ -163,6 +163,8 @@ const LeanerQuestionHeader = dataBind({})(function LeanerQuestionHeader(
     </Flexbox>
   );
 });
+
+
 
 const LearnerQuestionItem = dataBind({
   toggleEdit(evt, { questionId, editing, setEditing }) {
