@@ -13,10 +13,14 @@ import {
 } from 'react-bootstrap';
 import Moment from 'react-moment';
 
-import { NOT_LOADED } from 'src/dbdi/react/dataBind';
+//import { NOT_LOADED } from 'src/dbdi/react/dataBind';
 
 import LoadIndicator from 'src/views/components/util/loading';
 
+
+const textAlignStart = {
+  textAlign: 'start'
+};
 
 export const GoalCurrentHistory = dataBind({
 
@@ -31,10 +35,12 @@ export const GoalCurrentHistory = dataBind({
     妳想到過的目標包含（{entryCount}）：
     {
       map(entries, (entry, i) => (
-        <Badge key={i}>
-          {entry.goalDescription} <span className="color-lightgray">(
-            <Moment fromNow>{entry.updatedAt}</Moment>
-            )</span>
+        <Badge style={textAlignStart} key={i}>
+          <span className="multiline-text">
+            {entry.goalDescription} <span className="color-lightgray">(
+              <Moment fromNow>{entry.updatedAt}</Moment>
+              )</span>
+          </span>
         </Badge>
       ))
     } 

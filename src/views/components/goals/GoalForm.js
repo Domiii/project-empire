@@ -56,9 +56,11 @@ const uiSchema = {
     inline: true
   },
   goalDescription: {
+    'ui:widget': 'textarea',
     'ui:placeholder': '很棒的新目標～',
     'ui:options': {
-      inline: true
+      inline: true,
+      rows: 3
     }
   },
   createdAt: {
@@ -90,11 +92,20 @@ const uiSchema = {
 //   open: PropTypes.func.isRequired
 // };
 
+function UpdateButtonEmpty() {
+  return (
+    <Button disabled={true} type="submit" 
+      bsStyle="danger">
+      <FAIcon name="exclamation-triangle" /> 目標是空的! <FAIcon name="exclamation-triangle" />
+    </Button>
+  );
+}
+
 function UpdateButtonUnsaved() {
   return (
     <Button disabled={false} type="submit" 
       bsStyle="warning">
-      <FAIcon name="exclamation-triangle" /> 存！ <FAIcon name="exclamation-triangle" />
+      <FAIcon name="exclamation-triangle" /> 存下！ <FAIcon name="exclamation-triangle" />
     </Button>
   );
 }
@@ -133,9 +144,24 @@ class GoalForm extends Component {
     // name of current goal list in model?
     const dbName = 'currentGoal';
 
-    const latestGoal = this.state.formData && this.state.formData.goalDescription || '';
+    const currentInput = this.state.formData && this.state.formData.goalDescription || '';
     const oldGoal = currentGoal && currentGoal.goalDescription || '';
-    const isUnsaved = this.state.formData && !isEqual(latestGoal, oldGoal);
+    const latestGoal = this.state.formData ? currentInput : oldGoal;
+    const isUnsaved = !isEqual(latestGoal, oldGoal);
+
+    const isEmpty = !latestGoal.trim();
+    uiSchema.goalDescription.classNames = isUnsaved ? 'background-lightyellow' : '';
+
+    let btn;
+    if (isEmpty) {
+      btn = <UpdateButtonEmpty />;
+    }
+    else if (isUnsaved) {
+      btn = <UpdateButtonUnsaved />;
+    }
+    else {
+      btn = <UpdateButtonSaved />;
+    }
 
     const props = {
       schemaTemplate,
@@ -144,15 +170,13 @@ class GoalForm extends Component {
       dbName,
       writer: set_currentGoal,
 
-      onChange: this.onChange,
-
-      className: isUnsaved ? 'background-lightyellow' : ''
+      onChange: this.onChange
     };
 
     return (<div>
       <DynamicForm {...props}>
         <div>
-          { isUnsaved ? <UpdateButtonUnsaved /> : <UpdateButtonSaved /> }
+          { btn }
         </div>
       </DynamicForm>
     </div>);

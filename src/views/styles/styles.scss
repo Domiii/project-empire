@@ -179,9 +179,9 @@ button:active { outline:none !important; }
   color: darkblue;
 }
 
-.background-lightyellow {
-  background-color: lightyellow;
-  background-image: none;
+.background-lightyellow * {
+  background-color: lightyellow !important;
+  background-image: none !important;
 }
 
 .background-red {
@@ -214,6 +214,13 @@ button:active { outline:none !important; }
 
 .right-bound {
   direction: rtl;
+}
+
+.multiline-text {
+  word-break: break-all;
+  word-wrap: break-word;
+  white-space: pre;
+  text-align: start !important;
 }
 
 /**

@@ -45,42 +45,43 @@ const LearnerStatusEntryView = dataBind({
   }
   const entry = get_goalById(q);
 
-  const userEl = <UserBadge uid={uid} size="small" />;
+  const userEl = (<h4 className="inline">
+    <UserBadge uid={uid} size="small" />&nbsp;
+  </h4>);
 
   let contentEl;
   if (entry) {
     // user already has an entry for the cycle
     const { updatedAt } = entry;
-    contentEl = (<span>
+    contentEl = (<Alert bsStyle="success" className="no-margin">
+      {userEl}
       { entry.goalDescription }
       <span className="color-gray">
         &nbsp;
-        <Moment fromNow>{updatedAt}</Moment> (
-        <Moment format="ddd, MMMM Do YYYY, h:mm:ss a">{updatedAt}</Moment>)
+        (<Moment fromNow>{updatedAt}</Moment>, <Moment format="ddd, MMMM Do YYYY, h:mm:ss a">{updatedAt}</Moment>)
       </span>
       {/* <LinkContainer to={hrefLearnerStatusEntry('edit', uid, scheduleId, cycleId)}>
         <Button bsStyle="warning">
           Edit
         </Button>
       </LinkContainer> */}
-    </span>);
+    </Alert>);
   }
   else {
     // user has no entry yet
-    contentEl = (<span>
-      <Alert bsStyle="warning" className="inline no-margin no-padding">no entry yet</Alert>
+    contentEl = (<Alert bsStyle="warning" className="no-margin">
+      {userEl}
+      <span className="color-gray">(無目標)</span>
       {/* <LinkContainer to={hrefLearnerStatusEntry('edit', uid, scheduleId, cycleId)}>
         <Button bsStyle="success" onClick={createLearnerEntryClick}>
           Start!
       </Button>
       </LinkContainer> */}
-    </span>);
+    </Alert>);
   }
 
   return (
     <div className="learner-status-entry">
-      <h4 className="inline">{userEl}</h4>
-      &nbsp;
       {contentEl}
     </div>
   );
