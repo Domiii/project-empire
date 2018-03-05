@@ -91,8 +91,6 @@ export default class UserProfilePage extends Component {
       isSaved
     } = this.state;
 
-    console.log('render', isSaved);
-
     return (<DynamicForm {...props}>
       {/* the Form children are rendered at the bottom of the form */}
       <div>

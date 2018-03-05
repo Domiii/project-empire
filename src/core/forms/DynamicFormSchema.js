@@ -132,14 +132,30 @@ export function normalizeSchema(o, uiSchema) {
 
 export function isFormDataEqual(formData1, formData2, schema) {
   if (schema.type === 'array') {
-    throw new Error('cannot compare array properties in dynamic form schema yet :/');
+    //throw new Error('cannot compare array properties in dynamic form schema yet :/');
+    if (!!formData1 !== !!formData2) {
+      return false;
+    }
+    if (!formData1) {
+      // both sides are not set yet
+      return true;
+    }
+    for (let i = 0; i < formData1.length; ++i) {
+      if (!isFormDataEqual(formData1[i], formData2[i], schema.items)) {
+        return false;
+      }
+    }
+    return true;
   }
   else if (schema.type === 'object') {
     for (const key in schema.properties) {
       const prop = schema.properties[key];
       
-      return isFormDataEqual(formData1[key], formData2[key], prop);
+      if (!isFormDataEqual(formData1[key], formData2[key], prop)) {
+        return false;
+      }
     }
+    return true;
   }
   return isEqual(formData1, formData2);
 }
