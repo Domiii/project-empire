@@ -3,8 +3,13 @@ import {span} from 'react-dom';
 
 import PropTypes from 'prop-types';
 
+
+import {
+  Alert
+} from 'react-bootstrap';
+import FAIcon from 'src/views/components/util/FAIcon';
+
 const Status = {
-  PENDING: 'pending',
   LOADING: 'loading',
   LOADED: 'loaded',
   FAILED: 'failed',
@@ -28,7 +33,7 @@ export default class ImageLoader extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = {status: props.src ? Status.LOADING : Status.PENDING};
+    this.state = {status: Status.LOADING};
   }
 
   componentDidMount() {
@@ -40,7 +45,7 @@ export default class ImageLoader extends React.Component {
   componentWillReceiveProps(nextProps) {
     if (this.props.src !== nextProps.src) {
       this.setState({
-        status: nextProps.src ? Status.LOADING : Status.PENDING,
+        status: Status.LOADING
       });
     }
   }
@@ -89,6 +94,11 @@ export default class ImageLoader extends React.Component {
     this.destroyLoader();
     this.setState({status: Status.FAILED});
 
+    const {
+      src
+    } = this.props;
+    console.error('Unable to load image at URL: ' + src || '<missing img url>');
+
     if (this.props.onError) this.props.onError(error);
   }
 
@@ -100,20 +110,27 @@ export default class ImageLoader extends React.Component {
 
   render() {
     const {
-      src,
       children,
       preloader
     } = this.props;
+
+    const Preloader = preloader;
 
     switch (this.state.status) {
       case Status.LOADED:
         return this.renderImg();
 
       case Status.FAILED:
-        return <span>{children || src || '<missing img url>'}</span>;
+        //return <span>{children}</span>;
+        return (<span>{children || 
+          <Alert bsStyle="danger" className="inline no-margin no-padding">
+            <FAIcon name="exclamation-triangle" />
+            invalid URL
+          </Alert>
+        }</span>);
 
       default:
-        return preloader();
+        return <Preloader />;
     }
   }
 }

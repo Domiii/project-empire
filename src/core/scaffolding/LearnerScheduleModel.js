@@ -9,6 +9,14 @@ import moment from 'moment';
 import { NOT_LOADED } from '../../dbdi/react';
 
 const readers = {
+  currentScheduleCycleName(
+    {},
+    {},
+    {}
+  ) {
+    return '周';
+  },
+
   currentSchedule(
     { },
     { learnerSchedule },

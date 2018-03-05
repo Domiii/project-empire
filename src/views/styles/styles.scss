@@ -256,6 +256,21 @@ button:active { outline:none !important; }
 
 .footer  { order: 3; }
 
+.max-size-2 {
+  max-width: 2em;
+  max-height: 2em;
+}
+
+.max-size-3 {
+  max-width: 3em;
+  max-height: 3em;
+}
+
+.max-size-4 {
+  max-width: 4em;
+  max-height: 4em;
+}
+
 /**
  * #######################################################
  * App-specific classes: User Profile

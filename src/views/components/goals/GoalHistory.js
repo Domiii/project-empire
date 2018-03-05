@@ -54,10 +54,12 @@ export const GoalUserHistory = dataBind({
   { },
   { goalsOfAllCycles },
   { currentUid, currentUid_isLoaded,
+    currentScheduleCycleName, currentScheduleCycleName_isLoaded,
     currentLearnerScheduleId, currentLearnerScheduleId_isLoaded,
     currentLearnerScheduleCycleId, currentLearnerScheduleCycleId_isLoaded }
 ) {
   if (!currentUid_isLoaded | 
+    !currentScheduleCycleName_isLoaded |
     !currentLearnerScheduleId_isLoaded |
     !currentLearnerScheduleCycleId_isLoaded) {
     return <LoadIndicator />;
@@ -83,7 +85,7 @@ export const GoalUserHistory = dataBind({
         if (entry) {
           // has goal
           return (<Alert key={cycleId} bsStyle="success" className="no-margin">
-            [第 {cycleId} 週] {entry.goalDescription} <span className="color-gray"> (
+            [第 {cycleId} {currentScheduleCycleName}] {entry.goalDescription} <span className="color-gray"> (
               <Moment fromNow>{entry.createdAt}</Moment>
               )</span>
           </Alert>);
@@ -91,7 +93,7 @@ export const GoalUserHistory = dataBind({
         else {
           // no goal this cycle
           return (<Alert key={cycleId} bsStyle="warning" className="no-margin">
-            [第 {cycleId} 週] <span className="color-gray">(無目標)</span>
+            [第 {cycleId} {currentScheduleCycleName}] <span className="color-gray">(無目標)</span>
           </Alert>);
         }
       })

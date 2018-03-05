@@ -17,7 +17,7 @@ import Flexbox from 'flexbox-react';
 import LoadIndicator from 'src/views/components/util/loading';
 import FAIcon from 'src/views/components/util/FAIcon';
 
-import LearnerQuestionItem from './LearnerQuestionItem';
+import LearnerQuestionItemForm from './LearnerQuestionForm';
 
 
 
@@ -42,7 +42,7 @@ const LearnerQuestionList = dataBind({})(function LearnerQuestionsOverview(
   else {
     contentEl = (<ListGroup>
       {map(questions, ({ _, questionId }) => (
-        <LearnerQuestionItem
+        <LearnerQuestionItemForm
           key={questionId} questionId={questionId}
           editing={editId === questionId}
           setEditing={setEditing}

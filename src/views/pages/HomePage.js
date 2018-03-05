@@ -35,10 +35,12 @@ export default class HomePage extends Component {
     { }, 
     { }, 
     { currentUser_isLoaded,
-      currentLearnerScheduleCycleId,
-      currentLearnerScheduleCycleId_isLoaded }
+      currentScheduleCycleName, currentScheduleCycleName_isLoaded,
+      currentLearnerScheduleCycleId, currentLearnerScheduleCycleId_isLoaded
+    }
   ) {
     if (!currentUser_isLoaded | 
+      !currentScheduleCycleName_isLoaded |
       !currentLearnerScheduleCycleId_isLoaded) {
       return (<LoadOverlay />);
     }
@@ -47,16 +49,16 @@ export default class HomePage extends Component {
 
     return (
       <div>
-        <Panel bsStyle="primary">
+        {/* <Panel bsStyle="primary">
           <Panel.Heading>
             我們的學習環境
           </Panel.Heading>
           <Panel.Body>
             <Well className="no-margin">
-            TODO: 這週的學生主持人： ...
+            TODO: 這 {currentScheduleCycleName} 的學生主持人： ...
             </Well>
           </Panel.Body>
-        </Panel>
+        </Panel> */}
 
         { lateReflections && (
         <Panel bsStyle="danger">
@@ -71,7 +73,7 @@ export default class HomePage extends Component {
         
         <Panel bsStyle="primary">
           <Panel.Heading>
-            我目前的目標 ❤️ (第 {currentLearnerScheduleCycleId} 週)
+            第 {currentLearnerScheduleCycleId} {currentScheduleCycleName}的狀態 ❤️
           </Panel.Heading>
           <Panel.Body>
             <Well>
@@ -88,6 +90,7 @@ export default class HomePage extends Component {
           <Panel.Heading>
             <FancyPanelToggleTitle>
               歷史紀錄
+              {currentLearnerScheduleCycleId > 1 && `（第 1 至 ${currentLearnerScheduleCycleId-1} ${currentScheduleCycleName}的狀態）` }
             </FancyPanelToggleTitle>
           </Panel.Heading>
           <Panel.Body collapsible>

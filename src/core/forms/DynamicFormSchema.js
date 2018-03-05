@@ -11,6 +11,7 @@ import groupBy from 'lodash/groupBy';
 import isArray from 'lodash/isArray';
 import isFunction from 'lodash/isFunction';
 import isPlainObject from 'lodash/isPlainObject';
+import isEqual from 'lodash/isEqual';
 
 
 function fixOrderedProperties(arr, uiSchema) {
@@ -126,6 +127,21 @@ export function normalizeSchema(o, uiSchema) {
   });
 
   return normalizedSchema;
+}
+
+
+export function isFormDataEqual(formData1, formData2, schema) {
+  if (schema.type === 'array') {
+    throw new Error('cannot compare array properties in dynamic form schema yet :/');
+  }
+  else if (schema.type === 'object') {
+    for (const key in schema.properties) {
+      const prop = schema.properties[key];
+      
+      return isFormDataEqual(formData1[key], formData2[key], prop);
+    }
+  }
+  return isEqual(formData1, formData2);
 }
 
 /**
