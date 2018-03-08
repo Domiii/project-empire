@@ -3,6 +3,7 @@ import Roles, {
 } from 'src/core/users/Roles';
 
 import pick from 'lodash/pick';
+import { NOT_LOADED } from '../../dbdi/react';
 
 export default {
   allUserRecords: {
@@ -72,23 +73,25 @@ export default {
        */
       ensureUserInitialized(
         { },
-        { userPublic, userPrivate },
-        { currentUserAuthData },
-        { setUserData }) {
-        if (!currentUserAuthData || !currentUserAuthData.uid) return;
+        { userPublic, userPrivate, userPrivateData },
+        { currentUid, currentUid_isLoaded, currentUserAuthData },
+        { setUserData, set_userPrivateData }) {
 
-        const {
-          uid
-        } = currentUserAuthData;
-
-        if (!userPublic.isLoaded({ uid }) | !userPrivate.isLoaded({ uid })) {
-          // not loaded yet
-          return;
+        if (!currentUid_isLoaded) {
+          return NOT_LOADED;
         }
 
-        if (!!userPublic({ uid }) && !!userPrivate({ uid })) {
+        const uid = currentUid;
+        const userArgs = {uid};
+
+        if (!userPublic.isLoaded(userArgs) | !userPrivate.isLoaded(userArgs)) {
+          // not loaded yet
+          return NOT_LOADED;
+        }
+
+        if (!!userPublic(userArgs) && !!userPrivate(userArgs)) {
           // already saved this guy
-          return;
+          return NOT_LOADED;
         }
 
         //setTimeout(() => {
@@ -109,7 +112,15 @@ export default {
           };
         }
 
-        setUserData({ uid, userData });
+        let privateUpdatePromise;
+        if (!userPrivateData(userArgs)) {
+          privateUpdatePromise = set_userPrivateData(userArgs, userData);
+        }
+
+        return Promise.all([
+          setUserData({ uid, userData }),
+          privateUpdatePromise
+        ]);
         //});
       },
 
@@ -119,17 +130,14 @@ export default {
 
       setUserData(
         { uid, userData },
-        { userPrivateData },
         { },
-        { set_userPrivateData, set_userPhotoURL, set_userDisplayName }) {
+        { },
+        { set_userPhotoURL, set_userDisplayName }) {
         console.log('Writing user data: ' + JSON.stringify(userData));
 
         const updates = [];
 
         const userArgs = { uid };
-        if (!userPrivateData(userArgs)) {
-          updates.push(set_userPrivateData(userArgs, userData));
-        }
 
         if (userData.photoURL) {
           updates.push(set_userPhotoURL(userArgs, userData.photoURL));
@@ -140,6 +148,16 @@ export default {
         }
 
         return Promise.all(updates);
+      },
+
+      setCurrentUserData(
+        { ...userData },
+        { },
+        { currentUid },
+        { setUserData }
+      ) {
+        const uid = currentUid;
+        return setUserData({ uid, userData });
       },
 
       setRole({ uid, role }, { }, { }, { update_userPublic }) {
@@ -181,8 +199,16 @@ export default {
       usersPublic: {
         path: 'public',
         readers: {
-          currentUser: ({ }, { userPublic }, { currentUid }) =>
-            currentUid && userPublic({ uid: currentUid })
+          currentUser(
+            { },
+            { userPublic },
+            { currentUid, currentUid_isLoaded }
+          ) {
+            if (!currentUid_isLoaded) {
+              return NOT_LOADED;
+            }
+            return currentUid && userPublic({ uid: currentUid });
+          }
         },
         children: {
           gms: {

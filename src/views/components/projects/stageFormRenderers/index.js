@@ -1,4 +1,4 @@
-import DynamicFormSchemaBuilder from 'src/core/forms/DynamicFormSchemaBuilder';
+import DynamicFormSchemaBuilder from 'src/core/forms/DynamicFormSchema';
 
 import merge from 'lodash/merge';
 import mapValues from 'lodash/mapValues';

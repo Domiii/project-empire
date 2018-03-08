@@ -128,8 +128,8 @@ class GoalForm extends Component {
     };
   }
 
-  onChange = ({ formData }) => {
-    this.setState({ formData });
+  onStateChange = ({ formData, isSaved }) => {
+    this.setState({ formData, isSaved });
   }
 
   render(
@@ -144,19 +144,22 @@ class GoalForm extends Component {
     // name of current goal list in model?
     const dbName = 'currentGoal';
 
-    const currentInput = this.state.formData && this.state.formData.goalDescription || '';
+    const {
+      isSaved,
+      formData
+    } = this.state;
+    const currentInput = formData && formData.goalDescription || '';
     const oldGoal = currentGoal && currentGoal.goalDescription || '';
-    const latestGoal = this.state.formData ? currentInput : oldGoal;
-    const isUnsaved = !isEqual(latestGoal, oldGoal);
+    const latestGoal = formData ? currentInput : oldGoal;
 
     const isEmpty = !latestGoal.trim();
-    uiSchema.goalDescription.classNames = isUnsaved ? 'background-lightyellow' : '';
+    uiSchema.goalDescription.classNames = (!isSaved || isEmpty) ? 'background-lightyellow' : '';
 
     let btn;
     if (isEmpty) {
       btn = <UpdateButtonEmpty />;
     }
-    else if (isUnsaved) {
+    else if (!isSaved) {
       btn = <UpdateButtonUnsaved />;
     }
     else {
@@ -170,7 +173,7 @@ class GoalForm extends Component {
       dbName,
       writer: set_currentGoal,
 
-      onChange: this.onChange
+      onStateChange: this.onStateChange
     };
 
     return (<div>

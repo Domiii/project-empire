@@ -166,11 +166,11 @@ export const LeanerQuestionHeader = dataBind({})(function LeanerQuestionHeader(
 
 
 
-const LearnerQuestionItem = dataBind({
+const LearnerQuestionItemForm = dataBind({
   toggleEdit(evt, { questionId, editing, setEditing }) {
     return setEditing(editing ? null : questionId);
   }
-})(function LearnerQuestionItem(
+})(function LearnerQuestionItemForm(
   { questionId, editing },
   { get_learnerQuestion, toggleEdit },
   { }
@@ -196,4 +196,4 @@ const LearnerQuestionItem = dataBind({
   );
 });
 
-export default LearnerQuestionItem;
+export default LearnerQuestionItemForm;

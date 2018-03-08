@@ -1,4 +1,6 @@
-import DynamicFormSchemaBuilder from 'src/core/forms/DynamicFormSchemaBuilder';
+import DynamicFormSchemaBuilder, {
+  isFormDataEqual
+} from 'src/core/forms/DynamicFormSchema';
 
 import merge from 'lodash/merge';
 import mapValues from 'lodash/mapValues';
@@ -7,6 +9,7 @@ import pickBy from 'lodash/pickBy';
 import isEmpty from 'lodash/isEmpty';
 import every from 'lodash/every';
 import isEqual from 'lodash/isEqual';
+import isEqualWith from 'lodash/isEqualWith';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -22,6 +25,7 @@ import dataBind, { NOT_LOADED } from 'src/dbdi/react/dataBind';
 import { getOptionalArgument, getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 
 import FAIcon from 'src/views/components/util/FAIcon';
+import ImageLoader from 'src/views/components/util/react-imageloader';
 import LoadIndicator from 'src/views/components/util/loading';
 import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import Markdown from 'src/views/components/markdown';
@@ -34,8 +38,8 @@ import { EmptyObject } from '../../../util';
  * Determine whether "small" is a subset of "big"
  * @see https://stackoverflow.com/questions/35737312/find-if-an-object-is-subset-of-another-object-in-javascript/48971177#48971177
  */
- function isSubset(big, small) {
-  return every(small, 
+function isSubset(big, small) {
+  return every(small,
     (v, k) => isEqual(v, big[k])
   );
 }
@@ -184,6 +188,53 @@ const widgets = {
       <UserBadge uid={value} /> ||
       <span className="color-lightgray">無</span>);
   },
+  userIcon(props) {
+    const {
+      size, className,
+      value,
+      readonly,
+      disabled,
+      autofocus,
+      onBlur,
+      onFocus,
+
+      // some props who should not participate
+      options,
+      schema,
+      formContext,
+      registry,
+      rawErrors,
+      ...inputProps
+    } = props;
+
+    inputProps.type = options.inputType || inputProps.type || 'text';
+    const _onChange = ({ target: { value } }) => {
+      //return props.onChange(value === '' ? options.emptyValue : value);
+      return props.onChange(value);
+    };
+
+    const iconClassName = 'max-size-3 user-icon ' + (className || '');
+
+    return (<span>
+      <ImageLoader
+        src={value}
+        preloader={LoadIndicator}
+        className={iconClassName}
+        title={value}>
+      </ImageLoader>
+      <input
+        className="form-control"
+        readOnly={readonly}
+        disabled={disabled}
+        autoFocus={autofocus}
+        value={value === null ? '' : value}
+        {...inputProps}
+        onChange={_onChange}
+        onBlur={onBlur && (event => onBlur(inputProps.id, event.target.value))}
+        onFocus={onFocus && (event => onFocus(inputProps.id, event.target.value))}
+      />
+    </span>);
+  }
   //mission: MissionSelect
 };
 
@@ -284,7 +335,16 @@ export const DefaultFormChildren = dataBind({
 });
 
 function DefaultFormComponent({ className, ...allProps }) {
-  return (<Form className={'spaced-row ' + (className || '')} {...allProps}>
+  const {
+    uiSchema
+  } = allProps;
+  const options = uiSchema['ui:options'] || EmptyObject;
+  const {
+    inline
+  } = options;
+
+  const clazz = inline ? 'spaced-row ' : '';
+  return (<Form className={clazz + (className || '')} {...allProps}>
     {/* the Form children are the control elements, rendered at the bottom of the form */}
     {allProps.children || <DefaultFormChildren {...allProps} />}
   </Form>);
@@ -327,6 +387,7 @@ function getAccessor(fns, name) {
     formData = pickBy(formData, val => val !== undefined);
 
     if (writer) {
+      // NOTE: idArgs are not provided to custom writer!
       return writer(formData);
     }
 
@@ -372,8 +433,8 @@ export default class DynamicForm extends Component {
     /**
      * `idArgs` should be an object containing all args required for 
      * producing the path of object at `dbName`.
-     * If not provided, the form will stay empty.
-     * If not provided, submitting will push to db as new entry (instead of setting it).
+     * If there is no custom `reader`, and `idArgs` is not provided, the form will stay empty.
+     * If there is no custom `writer`, and `idArgs` is not provided, submitting will push to db as new entry (instead of setting it).
      */
     idArgs: PropTypes.object,
 
@@ -404,25 +465,32 @@ export default class DynamicForm extends Component {
     onSubmit: PropTypes.func,
 
     /**
-     * callback has two arguments:
-     * 1. `idArgs`
-     * 2. default jsonschema-form argument
+     * callback has one argument:
+     * DynamicForm's state (formData, savedFormData, isSaved)
      */
-    onChange: PropTypes.func
+    onChange: PropTypes.func,
+
+    /**
+     * callback has one argument:
+     * DynamicForm's state (formData, savedFormData, isSaved)
+     */
+    onStateChange: PropTypes.func
   };
 
   constructor(...args) {
     super(...args);
 
     this.state = {
-      originalFormData: null,
+      savedFormData: NOT_LOADED,
+      isSaved: true,
       formData: NOT_LOADED
     };
 
     this.dataBindMethods(
       '_onUpdate',
       'onSubmit',
-      'onChange'
+      'onChange',
+      'getSchema'
     );
   }
 
@@ -436,6 +504,45 @@ export default class DynamicForm extends Component {
    */
   componentWillReceiveProps(nextProps) {
     this._onUpdate(nextProps);
+  }
+
+  getSchema = (...allArgs) => {
+    const [
+      { },
+      { getProps }
+    ] = allArgs;
+
+    // TODO: dynamic re-evaluation of conditional form elements is not handled properly...
+
+    if (!this.schema) {
+      let {
+        schema,
+        schemaTemplate,
+        schemaBuilder,
+        uiSchema
+      } = getProps();
+
+      const {
+        formData
+      } = this.state;
+
+      if (!!schema + !!schemaBuilder + !!schemaTemplate !== 1) {
+        throw new Error('one and only one of the three properties [schema, schemaBuilder, schemaTemplate] must be defined!');
+      }
+
+      if (schemaTemplate) {
+        // template overrides builder
+        schemaBuilder = new DynamicFormSchemaBuilder(schemaTemplate);
+      }
+
+      if (schemaBuilder) {
+        // builder overrides schema
+        uiSchema = merge({}, defaultFormProps.uiSchema, uiSchema);
+        schema = schemaBuilder.build(uiSchema, [formData, ...allArgs]);
+      }
+      this.schema = schema;
+    }
+    return this.schema;
   }
 
   _onUpdate(nextProps,
@@ -452,28 +559,34 @@ export default class DynamicForm extends Component {
 
     let stateUpdate;
     if (dbName || reader) {
-      if (!this.state.originalFormData) {
-        // formData is queried from DB
-        const doGet = reader || getAccessor(fns, `get_${dbName}`);
-        const newFormData = doGet(idArgs);
+      // formData is queried from DB
+      const doGet = reader || getAccessor(fns, `get_${dbName}`);
+      const newFormData = doGet(idArgs);
 
+      const schema = this.getSchema();
+
+      if (this.state.savedFormData === NOT_LOADED || !isFormDataEqual(this.state.savedFormData, newFormData, schema)) {
         // only fetch data from DB initially
         //if (newFormData !== stateUpdate.formData) {}
-        if (newFormData !== NOT_LOADED) {
+        if (newFormData !== NOT_LOADED && newFormData !== this.state.savedFormData) {
           stateUpdate = {
-            formData: newFormData,
-            originalFormData: newFormData
+            savedFormData: newFormData
           };
-        }
 
-        if (formData) {
-          // merge formData into the mix (if not already mixed in)
-          const latest = newFormData || this.state.formData;
-          if (!latest || !isSubset(latest, formData)) {
-            stateUpdate = merge(
-              stateUpdate || { formData: this.state.formData },
-              { formData }
-            );
+          if (this.state.formData === NOT_LOADED) {
+            // only override, if not loaded before
+            stateUpdate.formData = newFormData;
+          }
+
+          if (formData) {
+            // merge formData into the mix (if not already mixed in)
+            const latest = newFormData || this.state.formData;
+            if (!latest || !isSubset(latest, formData)) {
+              stateUpdate = merge(
+                stateUpdate || { formData: this.state.formData },
+                { formData }
+              );
+            }
           }
         }
       }
@@ -481,20 +594,22 @@ export default class DynamicForm extends Component {
     else {
       // formData must be passed explicitely
       if (!this.state.formData ||
-        !formData ||
-        formData !== this.state.originalFormData) {
+        formData === null ||
+        formData !== this.state.savedFormData) {
         // formData changed
         stateUpdate = {
           formData: formData,
-          originalFormData: formData
+          savedFormData: formData
         };
       }
       else {
         // nothing to do!
       }
     }
+
     if (stateUpdate) {
-      this.setState(stateUpdate);
+      this._fixStateUpdate(stateUpdate);
+      this._stateChange(stateUpdate);
     }
   }
 
@@ -505,15 +620,32 @@ export default class DynamicForm extends Component {
     this.props.onSubmit && this.props.onSubmit(idArgs, formArgs, promise);
   }
 
-  onChange = (formArgs) => {
+  onChange = (stateUpdate) => {
     //const { idArgs } = this.props;
-    const { formData } = formArgs;
+    stateUpdate = Object.assign({}, stateUpdate);
 
-    this.props.onChange && this.props.onChange(formArgs);
+    this._fixStateUpdate(stateUpdate);
 
-    this.setState({
-      formData
-    });
+    this.props.onChange && this.props.onChange(stateUpdate);
+
+    this._stateChange(stateUpdate);
+  }
+
+  _fixStateUpdate = (stateUpdate) => {
+    const newFormData = stateUpdate.formData || this.state.formData;
+    const savedData = stateUpdate.savedFormData || this.state.savedFormData;
+    //console.log(isEqual(newFormData, savedData), newFormData, savedData);
+    stateUpdate.isSaved = isFormDataEqual(newFormData, savedData, this.getSchema());
+  }
+
+  _stateChange = (stateUpdate) => {
+    //console.error('_stateChange', this.state, stateUpdate);
+    console.log('_stateChange', this.state, stateUpdate);
+
+    if (stateUpdate) {
+      this.setState(stateUpdate);
+      this.props.onStateChange && setTimeout(() => this.props.onStateChange(this.state));
+    }
   }
 
   render(...allArgs) {
@@ -544,25 +676,7 @@ export default class DynamicForm extends Component {
 
     let formProps = merge({}, defaultFormProps, otherProps);
 
-    if (this.schema) {
-      schema = this.schema;
-    }
-    else {
-      if (!!schema + !!schemaBuilder + !!schemaTemplate !== 1) {
-        throw new Error('one and only one of the three properties [schema, schemaBuilder, schemaTemplate] must be defined!');
-      }
-
-      if (schemaTemplate) {
-        // template overrides builder
-        schemaBuilder = new DynamicFormSchemaBuilder(schemaTemplate);
-      }
-
-      if (schemaBuilder) {
-        // builder overrides schema
-        schema = schemaBuilder.build(formProps.uiSchema, [formData, ...allArgs]);
-      }
-      this.schema = schema;
-    }
+    schema = this.getSchema();
 
     formProps = merge(formProps, {
       schema,
