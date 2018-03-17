@@ -18,7 +18,16 @@ import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import { EmptyObject } from '../../../util';
 
 
-// TODO: make KB work
+/**
+ * TODO
+  * Goal: Evaluate and optimize learning path, problem solving + collaboration
+  * coachee can customize own form
+  * coach can also customize everyone's form
+  * coach/coachee can see/visualize own statistics
+  * coach can produce overall statistics
+  * coach gives feedback on things
+  * coach/coachee can send follow-up questions
+ */
 
 export const schemaTemplate = {
   name: 'goalData',
@@ -37,16 +46,6 @@ export const schemaTemplate = {
       // },
 
       'title': 'Created',
-      'type': 'number',
-      isOptional: true
-    },
-    {
-      id: 'updatedAt',
-      // if(formData) {
-      //   return !!formData && !!formData.updatedAt;
-      // },
-
-      'title': 'Last Updated',
       'type': 'number',
       isOptional: true
     }

@@ -87,7 +87,7 @@ export default class HomePage extends Component {
               TODO: Toggle (本 cycle) 學習反思調查～
             </Button>
             <div>
-                TODO: 更新你本週的分享狀態
+              TODO: 更新你本週的分享狀態?
             </div>
           </Panel.Body>
         </Panel>
