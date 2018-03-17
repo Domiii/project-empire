@@ -24,6 +24,7 @@ import { EmptyObject } from '../../../util';
   * Goal: Create a proper method of (self-) evaluation of learning that can be as an objective evaluation method to replace other grading and assessment schemes?
     * Arguing on your own behalf? (Against yourself?)
     * Peers + trust?
+    * (also, in many cases, needs 提交 作品集 link)
   * coachee can customize own form
   * coach can also customize everyone's form
   * coach/coachee can see/visualize own statistics
