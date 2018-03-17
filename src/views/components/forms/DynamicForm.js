@@ -1,5 +1,6 @@
 import DynamicFormSchemaBuilder, {
-  isFormDataEqual
+  isFormDataEqual,
+  extractSchemaData
 } from 'src/core/forms/DynamicFormSchema';
 
 import merge from 'lodash/merge';
@@ -564,7 +565,6 @@ export default class DynamicForm extends Component {
       const newFormData = doGet(idArgs);
 
       const schema = this.getSchema();
-
       if (this.state.savedFormData === NOT_LOADED || !isFormDataEqual(this.state.savedFormData, newFormData, schema)) {
         // only fetch data from DB initially
         //if (newFormData !== stateUpdate.formData) {}
@@ -634,13 +634,15 @@ export default class DynamicForm extends Component {
   _fixStateUpdate = (stateUpdate) => {
     const newFormData = stateUpdate.formData || this.state.formData;
     const savedData = stateUpdate.savedFormData || this.state.savedFormData;
-    //console.log(isEqual(newFormData, savedData), newFormData, savedData);
-    stateUpdate.isSaved = isFormDataEqual(newFormData, savedData, this.getSchema());
+    const schema = this.getSchema();
+    stateUpdate.isSaved = isFormDataEqual(newFormData, savedData, schema);
+    //console.warn(stateUpdate.isSaved, extractSchemaData(newFormData, schema), extractSchemaData(savedData, schema));
+    console.warn(stateUpdate.isSaved, newFormData, savedData);
   }
 
   _stateChange = (stateUpdate) => {
     //console.error('_stateChange', this.state, stateUpdate);
-    console.log('_stateChange', this.state, stateUpdate);
+    //console.log('_stateChange', this.state, stateUpdate);
 
     if (stateUpdate) {
       this.setState(stateUpdate);

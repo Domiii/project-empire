@@ -37,16 +37,6 @@ export const schemaTemplate = {
       'title': 'Created',
       'type': 'number',
       isOptional: true
-    },
-    {
-      id: 'updatedAt',
-      // if(formData) {
-      //   return !!formData && !!formData.updatedAt;
-      // },
-
-      'title': 'Last Updated',
-      'type': 'number',
-      isOptional: true
     }
   ]
 };

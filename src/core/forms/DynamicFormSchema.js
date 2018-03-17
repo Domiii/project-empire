@@ -129,6 +129,29 @@ export function normalizeSchema(o, uiSchema) {
   return normalizedSchema;
 }
 
+/**
+ * Only get the data from formData that is defined in the schema
+ */
+export function extractSchemaData(formData, schema) {
+  if (schema.type === 'array') {
+    const arr = [];
+    for (let i = 0; i < formData.length; ++i) {
+      extractSchemaData[i] = extractSchemaData(formData[i], schema.items);
+    }
+    return arr;
+  }
+  else if (schema.type === 'object') {
+    const obj = {};
+    for (const key in schema.properties) {
+      const propSchema = schema.properties[key];
+      
+      obj[key] = extractSchemaData(formData, propSchema);
+    }
+    return obj;
+  }
+  return formData;
+}
+
 
 export function isFormDataEqual(formData1, formData2, schema) {
   if (schema.type === 'array') {
@@ -140,6 +163,9 @@ export function isFormDataEqual(formData1, formData2, schema) {
       return true;
     }
     if (formData1.length !== formData2.length) {
+      return false;
+    }
+    if (!isArray(formData1) || !isArray(formData2) || formData1.length !== formData2.length) {
       return false;
     }
     for (let i = 0; i < formData1.length; ++i) {
@@ -158,9 +184,9 @@ export function isFormDataEqual(formData1, formData2, schema) {
       return true;
     }
     for (const key in schema.properties) {
-      const prop = schema.properties[key];
+      const propSchema = schema.properties[key];
       
-      if (!isFormDataEqual(formData1[key], formData2[key], prop)) {
+      if (!isFormDataEqual(formData1[key], formData2[key], propSchema)) {
         return false;
       }
     }
