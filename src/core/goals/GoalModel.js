@@ -7,6 +7,36 @@ import { EmptyObject } from 'src/util';
 
 import { NOT_LOADED } from 'src/dbdi/react/dataBind';
 
+
+export const goalSchemaTemplate = {
+  name: 'goalData',
+  type: 'object',
+  properties: [
+    {
+      id: 'goalTitle',
+      type: 'string',
+      title: '目標',
+      isOptional: true
+    },
+    {
+      id: 'goalDescription',
+      type: 'string',
+      title: '額外的描述',
+      isOptional: false
+    },
+    {
+      id: 'createdAt',
+      // if(formData) {
+      //   return !!formData && !!formData.createdAt;
+      // },
+
+      'title': 'Created',
+      'type': 'number',
+      isOptional: true
+    }
+  ]
+};
+
 /**
  * Cohort data
  */
@@ -16,6 +46,7 @@ const goalDataModel = {
     'createdAt'
   ],
   children: {
+    goalTitle: 'goalTitle',
     goalDescription: 'goalDescription',
     updatedAt: 'updatedAt',
     createdAt: 'createdAt'
@@ -184,8 +215,9 @@ export default {
           // check if we already had a goal
           let historyUpdate;
           const oldGoal = get_goalById(currentGoalQuery);
-          if (oldGoal && oldGoal.goalDescription &&
-            oldGoal.goalDescription !== newGoal.goalDescription) {
+          if (oldGoal && 
+            (oldGoal.goalTitle && oldGoal.goalTitle !== newGoal.goalTitle) ||
+            (oldGoal.goalDescription && oldGoal.goalDescription !== newGoal.goalDescription)) {
             // add old goal as history entry
             // (the creation time of this goal is the time it got last updated)
             oldGoal.createdAt = oldGoal.updatedAt;

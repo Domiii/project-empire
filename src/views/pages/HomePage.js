@@ -9,11 +9,10 @@ import {
 
 import GoalForm from 'src/views/components/goals/GoalForm';
 import {
-  GoalCurrentHistory,
-  GoalUserHistory
-} from 'src/views/components/goals/GoalHistory';
+  CycleStatusListOfUser
+} from 'src/views/components/scaffolding/CycleStatusList';
 
-import LearnerStatusList from 'src/views/components/scaffolding/LearnerStatusList';
+//import LearnerStatusList from 'src/views/components/scaffolding/LearnerStatusList';
 
 import FancyPanelToggleTitle from 'src/views/components/util/FancyPanelToggleTitle';
 
@@ -34,18 +33,28 @@ export default class HomePage extends Component {
   render(
     { },
     { },
-    { currentUser_isLoaded,
+    { currentUid, currentUid_isLoaded,
+      currentLearnerScheduleId, currentLearnerScheduleId_isLoaded,
       currentScheduleCycleName, currentScheduleCycleName_isLoaded,
       currentLearnerScheduleCycleId, currentLearnerScheduleCycleId_isLoaded
     }
   ) {
-    if (!currentUser_isLoaded | 
+    if (!currentUid_isLoaded | 
       !currentScheduleCycleName_isLoaded |
       !currentLearnerScheduleCycleId_isLoaded) {
       return (<LoadOverlay />);
     }
 
     let lateReflections;
+    const scheduleId = currentLearnerScheduleId;
+    const cycleId = currentLearnerScheduleCycleId;
+    const uid = currentUid;
+    const goalFormArgs1 = {
+      scheduleId, cycleId, uid
+    };
+    const goalFormArgs2 = cycleId > 1 && {
+      scheduleId, cycleId: cycleId-1, uid
+    };
 
     return (
       <div>
@@ -74,35 +83,12 @@ export default class HomePage extends Component {
           </Panel>
         ) || ''}
 
-        <Panel bsStyle="primary">
-          <Panel.Heading>
-            第 {currentLearnerScheduleCycleId} {currentScheduleCycleName}的狀態 ❤️
-          </Panel.Heading>
-          <Panel.Body>
-            <Well>
-              <GoalForm />
-              <GoalCurrentHistory />
-            </Well>
-            <Button block>
-              TODO: Toggle (本 cycle) 學習反思調查～
-            </Button>
-            <div>
-              TODO: 更新你本週的分享狀態?
-            </div>
-          </Panel.Body>
-        </Panel>
+        <CycleStatusListOfUser />
 
-        <Panel bsStyle="primary">
-          <Panel.Heading>
-            <FancyPanelToggleTitle>
-              歷史紀錄
-              {currentLearnerScheduleCycleId > 1 && `（第 1 至 ${currentLearnerScheduleCycleId-1} ${currentScheduleCycleName}的狀態）` }
-            </FancyPanelToggleTitle>
-          </Panel.Heading>
-          <Panel.Body collapsible>
-            <GoalUserHistory />
-          </Panel.Body>
-        </Panel>
+        {/* <div>
+          TODO: 本 cycle 學習反思調查～
+          TODO: 本週的分享狀態
+        </div> */}
       </div>
     );
   }

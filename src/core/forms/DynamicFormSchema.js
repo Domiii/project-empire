@@ -27,7 +27,7 @@ function fixOrderedProperties(arr, uiSchema) {
 }
 
 
-function unravelProperties(o, uiSchema) {
+function normalizeProperties(o, uiSchema) {
   let propertiesObj;
   if (isArray(o)) {
     propertiesObj = fixOrderedProperties(o, uiSchema);
@@ -77,7 +77,11 @@ export function buildSchemaFromTemplate(o, allBuilderArgs) {
 }
 
 
-export function requiredProperties(resultSchema, properties) {
+/**
+ * Unlike the original format, we want all properties to be required by default,
+ * unless they are tagged as "isOptional".
+ */
+export function collectRequiredProperties(resultSchema, properties) {
   if (!resultSchema.required) {
     resultSchema.required = [];
     forEach(properties, (v, k) => {
@@ -100,19 +104,21 @@ export function normalizeSchema(o, uiSchema) {
   const normalizedSchema = {};
   
   forEach(o, (v, k) => {
-    const isProps = k === 'properties' && o.type === 'object';
-    const isItems = k === 'items' && o.type === 'array';
-    const goDeeper = isProps || isItems;
+    const isObject = k === 'properties' && o.type === 'object';
+    const isArray = k === 'items' && o.type === 'array';
+    const needsRecurse = isObject || isArray;
 
     let child;
-    if (goDeeper) {
-      if (isProps) {
+    if (needsRecurse) {
+      if (isObject) {
         // convert properties from array to object, and remember order in uiSchema instead
-        child = unravelProperties(v, uiSchema);
-        requiredProperties(normalizedSchema, child);
+        child = normalizeProperties(v, uiSchema);
+
+        // automatically build required properties array
+        collectRequiredProperties(normalizedSchema, child);
       }
-      else if (isItems) {
-        // go deeper
+      else if (isArray) {
+        // recurse
         child = normalizeSchema(v, uiSchema.items = {});
       }
       else {

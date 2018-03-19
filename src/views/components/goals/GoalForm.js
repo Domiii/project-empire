@@ -1,4 +1,7 @@
 
+import {
+  goalSchemaTemplate
+} from 'src/core/goals/GoalModel';
 import isEqual from 'lodash/isEqual';
 
 import React, { Component } from 'react';
@@ -18,36 +21,20 @@ import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import { EmptyObject } from '../../../util';
 
 
-export const schemaTemplate = {
-  name: 'goalData',
-  type: 'object',
-  properties: [
-    {
-      id: 'goalDescription',
-      type: 'string',
-      title: ' ',
-      isOptional: false
-    },
-    {
-      id: 'createdAt',
-      // if(formData) {
-      //   return !!formData && !!formData.createdAt;
-      // },
-
-      'title': 'Created',
-      'type': 'number',
-      isOptional: true
-    }
-  ]
-};
-
 const uiSchema = {
   'ui:options': {
-    inline: true
+    inline: false
+  },
+  goalTitle: {
+    'ui:widget': 'text',
+    'ui:placeholder': '很棒的新目標～',
+    'ui:options': {
+      inline: true
+    }
   },
   goalDescription: {
     'ui:widget': 'textarea',
-    'ui:placeholder': '很棒的新目標～',
+    'ui:placeholder': '有更多細節來描述這目標嗎？',
     'ui:options': {
       inline: true,
       rows: 3
@@ -62,17 +49,17 @@ const uiSchema = {
 };
 
 
-          /* {currentGoal && (
-          <ConfirmModal
-            header="你改變了本期的目標嗎?"
-            ButtonCreator={GoalUpdateButton}
-            onConfirm={__doUpdate}>
+/* {currentGoal && (
+<ConfirmModal
+  header="你改變了本期的目標嗎?"
+  ButtonCreator={GoalUpdateButton}
+  onConfirm={__doUpdate}>
 
-            {/* { <span>{data.title}</span>} }
-          </ConfirmModal>
-        ) || (
-          )
-        } */
+  {/* { <span>{data.title}</span>} }
+</ConfirmModal>
+) || (
+)
+} */
 // function GoalUpdateButton({ open }) {
 //   return (<Button bsStyle="danger" onClick={open}>
 //     更新這期的目標！
@@ -84,7 +71,7 @@ const uiSchema = {
 
 function UpdateButtonEmpty() {
   return (
-    <Button disabled={true} type="submit" 
+    <Button disabled={true} type="submit"
       bsStyle="danger">
       <FAIcon name="exclamation-triangle" /> 目標是空的! <FAIcon name="exclamation-triangle" />
     </Button>
@@ -93,7 +80,7 @@ function UpdateButtonEmpty() {
 
 function UpdateButtonUnsaved() {
   return (
-    <Button disabled={false} type="submit" 
+    <Button disabled={false} type="submit"
       bsStyle="warning">
       <FAIcon name="exclamation-triangle" /> 存下！ <FAIcon name="exclamation-triangle" />
     </Button>
@@ -102,7 +89,7 @@ function UpdateButtonUnsaved() {
 
 function UpdateButtonSaved() {
   return (
-    <Button disabled={true} type="submit" 
+    <Button disabled={true} type="submit"
       bsStyle="success">
       <FAIcon name="check" /> 已存 <FAIcon name="check" />
     </Button>
@@ -123,30 +110,41 @@ class GoalForm extends Component {
   }
 
   render(
-    { },
-    { set_currentGoal },
-    { currentGoal, currentGoal_isLoaded }
+    { scheduleId, cycleId, uid },
+    { get_goalById },
+    { }
   ) {
-    if (!currentGoal_isLoaded) {
+    const goalId = {
+      scheduleId, cycleId, uid
+    };
+    const goalQuery = { goalId };
+    if (!get_goalById.isLoaded(goalQuery)) {
       return <LoadIndicator />;
     }
 
+    const currentGoal = get_goalById(goalQuery);
+
     // name of current goal list in model?
-    const dbName = 'currentGoal';
+    const dbName = 'goalById';
 
     const {
       isSaved,
       formData
     } = this.state;
-    const currentInput = formData && formData.goalDescription || '';
-    const oldGoal = currentGoal && currentGoal.goalDescription || '';
-    const latestGoal = formData ? currentInput : oldGoal;
 
-    const isEmpty = !latestGoal.trim();
-    uiSchema.goalDescription.classNames = (!isSaved || isEmpty) ? 'background-lightyellow' : '';
+    const currentTitle = formData && formData.goalTitle || '';
+    const currentDescription = formData && formData.currentDescription || '';
+    const oldTitle = currentGoal && currentGoal.goalTitle || '';
+    const oldDescription = currentGoal && currentGoal.goalDescription || '';
+    const latestTitle = formData ? currentTitle : oldTitle;
+    const latestDescription = formData ? currentDescription : oldDescription;
+
+    const isTitleEmpty = !latestTitle.trim();
+    uiSchema.goalTitle.classNames = (!isSaved || isTitleEmpty) ? 'background-lightyellow' : '';
+    uiSchema.goalDescription.classNames = (!isSaved || !latestDescription.trim()) ? 'background-lightyellow' : '';
 
     let btn;
-    if (isEmpty) {
+    if (isTitleEmpty) {
       btn = <UpdateButtonEmpty />;
     }
     else if (!isSaved) {
@@ -157,11 +155,10 @@ class GoalForm extends Component {
     }
 
     const props = {
-      schemaTemplate,
+      goalSchemaTemplate,
       uiSchema,
 
       dbName,
-      writer: set_currentGoal,
 
       onStateChange: this.onStateChange
     };
@@ -169,7 +166,7 @@ class GoalForm extends Component {
     return (<div>
       <DynamicForm {...props}>
         <div>
-          { btn }
+          {btn}
         </div>
       </DynamicForm>
     </div>);
