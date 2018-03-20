@@ -263,8 +263,9 @@ All indices: ${JSON.stringify(this.keysByIndexName, null, 2)}`);
       query = props;
       const indexName = this.getIndexNameOfQuery(query);
       if (!indexName || indexName !== varName) {
+        debugger;
         throw new Error(`tryEncodeQueryValueForProps failed. props do not contain index ${varName} ` +
-          'and does not match index signature either: ' + JSON.stringify(props));
+          'and does not match index signature either: ' + Object.keys(query));
       }
     }
     

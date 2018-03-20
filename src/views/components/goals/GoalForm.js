@@ -154,11 +154,13 @@ class GoalForm extends Component {
       btn = <UpdateButtonSaved />;
     }
 
+    const idArgs = goalId;
     const props = {
-      goalSchemaTemplate,
+      schemaTemplate: goalSchemaTemplate,
       uiSchema,
 
       dbName,
+      idArgs,
 
       onStateChange: this.onStateChange
     };

@@ -10,11 +10,15 @@ import { NOT_LOADED } from '../../dbdi/react';
 
 const readers = {
   currentScheduleCycleName(
-    {},
-    {},
-    {}
+    { },
+    { scheduleCycleName },
+    { scheduleId, scheduleId_isLoaded }
   ) {
-    return '周';
+    if (!scheduleId_isLoaded) {
+      return NOT_LOADED;
+    }
+
+    return scheduleCycleName({ scheduleId });
   },
 
   currentSchedule(
@@ -124,7 +128,7 @@ const writers = {
     const totalTimePassed = now - startTime;
     const inCycleOffset = totalTimePassed % cycleTime;
 
-    const newStartTime = (now - inCycleOffset) - ((cycleId-1) * cycleTime);
+    const newStartTime = (now - inCycleOffset) - ((cycleId - 1) * cycleTime);
 
     return set_scheduleStartTime({ scheduleId }, newStartTime);
   }
@@ -143,6 +147,9 @@ const LearnerScheduleModel = {
           learnerSchedule: {
             path: '$(scheduleId)',
             children: {
+              scheduleCycleName: {
+                path: 'scheduleCycleName'
+              },
               scheduleStartTime: 'startTime', // in ticks
               scheduleCycleTime: 'cycleTime', // in ticks
               scheduleCycleOffset: 'cycleOffset' // in ticks
