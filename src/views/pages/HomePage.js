@@ -7,10 +7,8 @@ import {
   Panel
 } from 'react-bootstrap';
 
-import GoalForm from 'src/views/components/goals/GoalForm';
-import {
-  CycleStatusListOfUser
-} from 'src/views/components/scaffolding/CycleStatusList';
+
+import UserCycleStatusList from 'src/views/components/scaffolding/UserCycleStatusList';
 
 //import LearnerStatusList from 'src/views/components/scaffolding/LearnerStatusList';
 
@@ -33,28 +31,9 @@ export default class HomePage extends Component {
   render(
     { },
     { },
-    { currentUid, currentUid_isLoaded,
-      currentLearnerScheduleId, currentLearnerScheduleId_isLoaded,
-      currentScheduleCycleName, currentScheduleCycleName_isLoaded,
-      currentLearnerScheduleCycleId, currentLearnerScheduleCycleId_isLoaded
-    }
+    { }
   ) {
-    if (!currentUid_isLoaded | 
-      !currentScheduleCycleName_isLoaded |
-      !currentLearnerScheduleCycleId_isLoaded) {
-      return (<LoadOverlay />);
-    }
-
     let lateReflections;
-    const scheduleId = currentLearnerScheduleId;
-    const cycleId = currentLearnerScheduleCycleId;
-    const uid = currentUid;
-    const goalFormArgs1 = {
-      scheduleId, cycleId, uid
-    };
-    const goalFormArgs2 = cycleId > 1 && {
-      scheduleId, cycleId: cycleId-1, uid
-    };
 
     return (
       <div>
@@ -84,7 +63,7 @@ export default class HomePage extends Component {
           </Panel>
         ) || ''}
 
-        <CycleStatusListOfUser />
+        <UserCycleStatusList />
 
 
         {/* <div>

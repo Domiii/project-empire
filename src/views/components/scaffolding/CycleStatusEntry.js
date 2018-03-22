@@ -42,37 +42,3 @@ import Moment from 'react-moment';
 
 
       
-
-const goal = (<Panel bsStyle="primary">
-<Panel.Heading>
-  第 {currentLearnerScheduleCycleId} {currentScheduleCycleName}的狀態 ❤️
-  </Panel.Heading>
-<Panel.Body>
-  <Well>
-    <GoalForm {...goalFormArgs1} />
-  </Well>
-</Panel.Body>
-</Panel>);
-
-
-const entry = entriesByCycle[cycleId];
-if (entry) {
-  // has goal
-  return (<Alert key={cycleId} bsStyle="success" className="no-margin">
-    [第 {cycleId} {currentScheduleCycleName}] {entry.goalTitle} <span className="color-gray"> (
-      <Moment fromNow>{entry.createdAt}</Moment>
-      )</span>
-  </Alert>);
-}
-else {
-  // no goal this cycle
-  return (<Alert key={cycleId} bsStyle="warning" className="no-margin">
-    [第 {cycleId} {currentScheduleCycleName}] <span className="color-gray">(無目標)</span>
-  </Alert>);
-}
-
-export default class CycleStatusEntry extends Component {
-  render() {
-    return 'hi';
-  }
-}
