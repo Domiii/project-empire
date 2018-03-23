@@ -68,7 +68,26 @@ export default class HomePage extends Component {
 
         {/* <div>
           The main and core concept:
-            * Take your own learning journey into your own hand.
+            * Goal: Take your own learning journey into your own hand.
+            * Basic actions / commitment of (opt in) students every week:
+              * set goals
+              * reflect on your own goals
+              * check others' feedback -> reply / bounce back / archive
+            * Mentors/Coaches: 
+              * (relatively quickly) get to know the cohort
+                (* name + pic?)
+              * give feedback
+              * affirm + motivate
+              * customized guiding questions
+              * check on commitment
+              * action recommendations
+            * TODO: Analysis
+              * meta-affect, efficacy, productivity + progress and stagnation?
+              * identify those who have not been convinced yet
+              * identify those who need more help
+              * Define affect (caring) as a core metric of successful learning?
+                * everything else is allowed to go up and down over time (but ideally of course, still up for the most part)
+
             * Allows us (and hopefully soon peers) to bring every week's MVPs onto the stage.
               * Multiple categories, including:
                 * great outcome
@@ -95,24 +114,7 @@ export default class HomePage extends Component {
               * TODO: Learning path + concepts pub-sub system for co-learning time
                 * Exploring "concepts" (currently)
                 * Pitching and working on common "goals"
-            * Mentors/Coaches: 
-              * (relatively) quickly get to know the cohort
-              * give feedback
-              * affirm + motivate
-              * customized guiding questions
-              * check on commitment
-              * action recommendations
-            * TODO: Analysis
-              * meta-affect, efficacy, productivity + progress and stagnation?
-              * identify those who have not been convinced yet
-              * identify those who need more help
-              * Define affect (caring) as a core metric of successful learning?
-                * everything else is allowed to go up and down over time (but ideally of course, still up for the most part)
             * TODO: 後續？
-          * Basic commitment of (opt in) students every week:
-            * set goals
-            * reflect on your own goals
-            * check others' feedback -> reply / bounce back / archive
           
         </div> */}
 
