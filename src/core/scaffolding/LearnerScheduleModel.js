@@ -148,7 +148,11 @@ const LearnerScheduleModel = {
             path: '$(scheduleId)',
             children: {
               scheduleCycleName: {
-                path: 'scheduleCycleName'
+                path: 'scheduleCycleName',
+                reader(result) {
+                  // default name
+                  return result || '週';
+                }
               },
               scheduleStartTime: 'startTime', // in ticks
               scheduleCycleTime: 'cycleTime', // in ticks

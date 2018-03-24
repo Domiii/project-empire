@@ -256,9 +256,8 @@ All indices: ${JSON.stringify(this.keysByIndexName, null, 2)}`);
 
   //encodeQueryValueForProps(query) {
   encodeQueryValueForProps(props, varName, iArg) {
-    let query = props[varName];
-    let keys;
-    if (!query) {
+    let query;
+    if (!props.hasOwnProperty(varName)) {
       // variable value was not explicitely provided, but maybe the props match the index signature
       query = props;
       const indexName = this.getIndexNameOfQuery(query);
@@ -268,8 +267,11 @@ All indices: ${JSON.stringify(this.keysByIndexName, null, 2)}`);
           'and does not match index signature either: ' + Object.keys(query));
       }
     }
+    else {
+      query = props[varName];
+    }
     
-    keys = Object.keys(query);
+    const keys = Object.keys(query);
 
     if (!this.getIndexNameByKeys(keys)) {
       this._invalidQuery(query);

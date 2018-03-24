@@ -33,38 +33,37 @@ const GoalView = dataBind({
   { get_goalById, get_scheduleCycleName },
   { }
 ) {
-  const goalQuery = {
+  const goalId = {
     scheduleId, cycleId, uid
   };
   const scheduleQuery = {
     scheduleId
   };
-  //const goalQuery = { goalId };
-  if (!get_goalById.isLoaded(goalQuery) | !get_scheduleCycleName.isLoaded(scheduleQuery)) {
+  if (!get_goalById.isLoaded(goalId) | !get_scheduleCycleName.isLoaded(scheduleQuery)) {
     return <LoadIndicator />;
   }
 
-  const entry = get_goalById(goalQuery);
-  const idEl = (<span>[第 {cycleId} {cycleName}]</span>);
+  const goal = get_goalById(goalId);
   const cycleName = get_scheduleCycleName(scheduleQuery);
-  const desc = entry && entry.goalDescription;
-  const timeEl = entry && (<span className="color-lightgray"> (
-    <Moment fromNow>{entry.createdAt}</Moment>
+  const idEl = (<span>[第 {cycleId} {cycleName}]</span>);
+  const desc = goal && goal.goalDescription;
+  const timeEl = goal && (<span className="color-lightgray"> (
+    <Moment fromNow>{goal.createdAt}</Moment>
     )</span>);
   const descEl = desc && (<Well className="no-margin"> {desc} </Well>);
 
-  if (entry) {
+  if (goal) {
     // has goal
     return (<Alert key={cycleId} bsStyle="success" className="no-margin">
       {idEl}
-      {entry.goalTitle} {timeEl}
+      {goal.goalTitle} {timeEl}
       {descEl}
     </Alert>);
   }
   else {
     // no goal this cycle
     return (<Alert key={cycleId} bsStyle="warning" className="no-margin">
-      {idEl}
+      {idEl} &nbsp;
       <span className="color-gray">(無目標)</span>
     </Alert>);
   }
@@ -74,30 +73,33 @@ const GoalView = dataBind({
 export class UserCycleStatusEntry extends Component {
   render(
     { scheduleId, cycleId, uid },
-    { get_scheduleCycleName },
+    { get_scheduleCycleName, get_goalById },
     { }
   ) {
 
-    const scheduleQuery = {
-      scheduleId
-    };
-    if (!get_scheduleCycleName.isLoaded(scheduleQuery)) {
-      return <LoadIndicator />;
-    }
-
-    const cycleName = get_scheduleCycleName(scheduleQuery);
     const goalId = {
       scheduleId, cycleId, uid
     };
-    let goal;
+    const scheduleQuery = {
+      scheduleId
+    };
+    //const goalQuery = { goalId };
+    if (!get_goalById.isLoaded(goalId) | !get_scheduleCycleName.isLoaded(scheduleQuery)) {
+      return <LoadIndicator />;
+    }
+  
+    const hasGoal = !!get_goalById(goalId);
+
+    const cycleName = get_scheduleCycleName(scheduleQuery);
+    let goalEl;
     const isEditing = true;
-    if (isEditing) {
-      goal = (<Well>
+    if (hasGoal && isEditing) {
+      goalEl = (<Well>
         <GoalForm {...goalId} />
       </Well>);
     }
     else {
-      goal = <GoalView {...goalId} />;
+      goalEl = <GoalView {...goalId} />;
     }
 
     return (<Panel bsStyle="primary">
@@ -105,7 +107,7 @@ export class UserCycleStatusEntry extends Component {
         第 {cycleId} {cycleName}的狀態 ❤️
       </Panel.Heading>
       <Panel.Body>
-        {goal}
+        {goalEl}
       </Panel.Body>
     </Panel>);
   }
@@ -143,7 +145,7 @@ const UserCycleStatusList = dataBind({
   //const entries = goalsOfAllCycles({ uid, scheduleId });
   //const entriesByCycle = zipObject(map(entries, 'cycleId'), Object.values(entries));
 
-  const cycles = range(currentLearnerScheduleCycleId, 0);
+  const cycles = range(currentLearnerScheduleCycleId, currentLearnerScheduleCycleId-1);
 
   return (<div>
     {
