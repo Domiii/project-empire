@@ -15,13 +15,11 @@ export const goalSchemaTemplate = {
     {
       id: 'goalTitle',
       type: 'string',
-      title: '目標',
       isOptional: true
     },
     {
       id: 'goalDescription',
       type: 'string',
-      title: '額外的描述',
       isOptional: false
     },
     {
@@ -194,44 +192,44 @@ export default {
 
           return get_goalById(currentGoalQuery);
         },
-        writer(
-          goalArgs,
-          { get_goalById, get_currentGoalHistoryQuery },
-          { currentUid, currentUid_isLoaded,
-            currentGoalQuery, currentGoalQuery_isLoaded,
-            currentLearnerScheduleId, currentLearnerScheduleCycleId },
-          { set_goalById, push_goalHistoryByUserEntry }
-        ) {
-          if ((!currentUid_isLoaded | !currentGoalQuery_isLoaded) ||
-            !get_goalById.isLoaded(currentGoalQuery)) {
-            return NOT_LOADED;
-          }
+        // writer(
+        //   goalArgs,
+        //   { get_goalById, get_currentGoalHistoryQuery },
+        //   { currentUid, currentUid_isLoaded,
+        //     currentGoalQuery, currentGoalQuery_isLoaded,
+        //     currentLearnerScheduleId, currentLearnerScheduleCycleId },
+        //   { set_goalById, push_goalHistoryByUserEntry }
+        // ) {
+        //   if ((!currentUid_isLoaded | !currentGoalQuery_isLoaded) ||
+        //     !get_goalById.isLoaded(currentGoalQuery)) {
+        //     return NOT_LOADED;
+        //   }
 
-          const newGoal = pick(goalArgs, Object.keys(goalDataModel.children));
-          newGoal.scheduleId = currentLearnerScheduleId;
-          newGoal.cycleId = currentLearnerScheduleCycleId;
-          newGoal.uid = currentUid;
+        //   const newGoal = pick(goalArgs, Object.keys(goalDataModel.children));
+        //   newGoal.scheduleId = currentLearnerScheduleId;
+        //   newGoal.cycleId = currentLearnerScheduleCycleId;
+        //   newGoal.uid = currentUid;
 
-          // check if we already had a goal
-          let historyUpdate;
-          const oldGoal = get_goalById(currentGoalQuery);
-          if (oldGoal && 
-            (oldGoal.goalTitle && oldGoal.goalTitle !== newGoal.goalTitle) ||
-            (oldGoal.goalDescription && oldGoal.goalDescription !== newGoal.goalDescription)) {
-            // add old goal as history entry
-            // (the creation time of this goal is the time it got last updated)
-            oldGoal.createdAt = oldGoal.updatedAt;
-            historyUpdate = push_goalHistoryByUserEntry(get_currentGoalHistoryQuery(), oldGoal);
-          }
+        //   // check if we already had a goal
+        //   let historyUpdate;
+        //   const oldGoal = get_goalById(currentGoalQuery);
+        //   if (oldGoal && 
+        //     (oldGoal.goalTitle && oldGoal.goalTitle !== newGoal.goalTitle) ||
+        //     (oldGoal.goalDescription && oldGoal.goalDescription !== newGoal.goalDescription)) {
+        //     // add old goal as history entry
+        //     // (the creation time of this goal is the time it got last updated)
+        //     oldGoal.createdAt = oldGoal.updatedAt;
+        //     historyUpdate = push_goalHistoryByUserEntry(get_currentGoalHistoryQuery(), oldGoal);
+        //   }
 
-          // update goal
-          const goalUpdate = set_goalById(currentGoalQuery, newGoal);
+        //   // update goal
+        //   const goalUpdate = set_goalById(currentGoalQuery, newGoal);
 
-          return Promise.all([
-            goalUpdate,
-            historyUpdate
-          ]);
-        }
+        //   return Promise.all([
+        //     goalUpdate,
+        //     historyUpdate
+        //   ]);
+        // }
       },
       allGoals: {
         path: 'actualGoals',

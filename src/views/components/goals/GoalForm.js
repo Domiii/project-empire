@@ -29,6 +29,7 @@ const uiSchema = {
     'ui:widget': 'text',
     'ui:placeholder': '很棒的新目標～',
     'ui:options': {
+      label: false,
       inline: true
     }
   },
@@ -36,6 +37,7 @@ const uiSchema = {
     'ui:widget': 'textarea',
     'ui:placeholder': '有更多細節來描述這目標嗎？',
     'ui:options': {
+      label: false,
       inline: true,
       rows: 3
     }
@@ -144,15 +146,15 @@ class GoalForm extends Component {
     uiSchema.goalDescription.classNames = (!isSaved || !latestDescription.trim()) ? 'background-lightyellow' : '';
 
     let btn;
-    if (isTitleEmpty) {
-      btn = <UpdateButtonEmpty />;
-    }
-    else if (!isSaved) {
-      btn = <UpdateButtonUnsaved />;
-    }
-    else {
-      btn = <UpdateButtonSaved />;
-    }
+    // if (isTitleEmpty) {
+    //   btn = <UpdateButtonEmpty />;
+    // }
+    // else if (!isSaved) {
+    //   btn = <UpdateButtonUnsaved />;
+    // }
+    // else {
+    //   btn = <UpdateButtonSaved />;
+    // }
 
     const idArgs = goalId;
     const props = {

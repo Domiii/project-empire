@@ -109,7 +109,7 @@ FieldTemplate.defaultProps = {
   hidden: false,
   readonly: false,
   required: false,
-  displayLabel: true,
+  displayLabel: false
 };
 
 
@@ -345,9 +345,13 @@ function DefaultFormComponent({ className, ...allProps }) {
   } = options;
 
   const clazz = inline ? 'spaced-row ' : '';
+  let { children } = allProps;
+  if (children === undefined) {
+    children = <DefaultFormChildren {...allProps} />;
+  }
   return (<Form className={clazz + (className || '')} {...allProps}>
     {/* the Form children are the control elements, rendered at the bottom of the form */}
-    {allProps.children || <DefaultFormChildren {...allProps} />}
+    {children}
   </Form>);
 }
 
@@ -637,17 +641,15 @@ export default class DynamicForm extends Component {
     const schema = this.getSchema();
     stateUpdate.isSaved = isFormDataEqual(newFormData, savedData, schema);
     //console.warn(stateUpdate.isSaved, extractSchemaData(newFormData, schema), extractSchemaData(savedData, schema));
-    console.warn(stateUpdate.isSaved, newFormData, savedData);
+    //console.warn(stateUpdate.isSaved, newFormData, savedData);
   }
 
   _stateChange = (stateUpdate) => {
     //console.error('_stateChange', this.state, stateUpdate);
     //console.log('_stateChange', this.state, stateUpdate);
 
-    if (stateUpdate) {
-      this.setState(stateUpdate);
-      this.props.onStateChange && setTimeout(() => this.props.onStateChange(this.state));
-    }
+    this.setState(stateUpdate);
+    this.props.onStateChange && setTimeout(() => this.props.onStateChange(this.state));
   }
 
   render(...allArgs) {

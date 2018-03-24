@@ -73,6 +73,13 @@ export default class HomePage extends Component {
               * set goals
               * reflect on your own goals
               * check others' feedback -> reply / bounce back / archive
+            * TODO: Figure out how they can learn to make sense of, set and act on goals!!!
+              * "TODO item" vs. goal?!
+              * single goal or multiple goals per week? (focus? problem decomposition?)
+              * exploration vs. pursuing goals vs. seeking/exploring opportunities?
+              * alone vs. together/collaborative?
+              * allocating time devoted to "trying to do the right thing"?
+                * matching energy levels against allocated time + actions?
             * Mentors/Coaches: 
               * (relatively quickly) get to know the cohort
                 (* name + pic?)
