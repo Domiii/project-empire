@@ -67,12 +67,27 @@ export default class HomePage extends Component {
 
 
         {/* <div>
-          The main and core concept:
+          系統 v0.1
+          * submit your stuff
+            * help us to keep track of your stuff
+            * help yourself keep track of your stuff
+          * keep track of changes/notifications
+          * show changes/notifications in backend, so coaches can make use of it
+          * gain feedback
+
+          The main and core concepts:
             * Goal: Take your own learning journey into your own hand.
-            * Basic actions / commitment of (opt in) students every week:
+            * Approach
+              * Try to take it one component at a time
+              * Paradigm: Breadth-first exploration; make sure you are on solid footing on all the impprtant variables, and don't dwell too deeply into one?
+                * Inspiration source: Sim City talk @ GDC 2018
+                * (it still implies making progress all the time; just going not letting any dimension alone for too long!)
+              * Paradigm: Do the minimal amount of work to solve the problem at hand
+              * Work only/mostly on a single component each week.
+            * Basic actions / commitment of (opting in) students every week:
               * set goals
               * reflect on your own goals
-              * check others' feedback -> reply / bounce back / archive
+              * check others' feedback -> reply / reject? / archive
             * TODO: Figure out how they can learn to make sense of, set and act on goals!!!
               * "TODO item" vs. goal?!
               * single goal or multiple goals per week? (focus? problem decomposition?)

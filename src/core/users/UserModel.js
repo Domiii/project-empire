@@ -184,6 +184,10 @@ export default {
       // private user information is not available to other users
       usersPrivate: {
         path: 'private',
+        onWrite: [
+          'updatedAt',
+          'createdAt'
+        ],
         children: {
           userPrivate: {
             path: '$(uid)',
@@ -230,6 +234,10 @@ export default {
             path: {
               path: '$(uid)'
             },
+            onWrite: [
+              'updatedAt',
+              'createdAt'
+            ],
             children: {
               userDisplayName: 'displayName',
               userPhotoURL: 'photoURL',

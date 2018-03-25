@@ -26,6 +26,10 @@
         }
       }
     },
+    "learnerStatus": {
+      ".read": "auth !== null",
+      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)",
+    },
     "places": {
       ".read": "auth !== null",
       ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
