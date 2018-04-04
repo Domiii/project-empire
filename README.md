@@ -11,14 +11,32 @@
   * https://docs.google.com/presentation/d/1PEDof6WXYTD4ejQWoBBlglemhnPD9OAx_4yTjyRLcBw/edit#slide=id.g1ff0478143_0_7
 
 
-## 系統目標：輔助彈性學習環境的架構
+## Goal Setting + Checking 系統設計原則
 
-* 搞清楚自己的目標、把雙手弄髒、從自己的 action 明顯感受到成就感、平時反省
-* 陪養做 Project 的好習慣
-* 進行一個好的與 Mentor Meeting、檢討方式
-* Promise (學習能力差 = 答應的事情容易會忘記，我們要想辦法紀錄)
-* Inspiration, Sharing, Exploration, Curiosity
-* Feedback (了解說人家給我們的 feedback，我們怎麼要轉換成 action？)
+* 協助自己設定且追蹤自己的目標
+* 每個步驟有：
+  * 名字
+  * connections to other 步驟s (it's a full (non-DAG) graph)
+  * 『原則』與『有什麼好處？』的清單
+  * reflective questions 的清單？
+    * TODO: 怎麼處理？
+* 關於每個步驟有多個 action 的選項
+  * 就做啊！ (一開始的 default？如果不是進階的話)
+    * (variety of implementations (which each have clearly identifiable pros (maybe cons?))?)
+  * 提出這個步驟提出疑惑、抱怨、回饋
+  * 不做（各種各樣的原因，例如：看不懂, 不知道, 拒絕, 還好吧, 先不做之後再看看吧, 討厭, 沒時間, 覺得不夠重要, 需要幫忙　等等）
+  * （進階功能：討論這個步驟本身的討論看板？(must be by cohort w/ staff picks of good feedback?) ）
+  * 改 default action
+* 進階功能
+  * 使用者可以加自己的步驟
+  * 使用者可以加完全 customize 步驟
+* PROBLEM
+  * 參與過程的 incentive 需要夠明確
+    * 最大的麻煩：mental/cognitive strain/load 的問題　－　關於這種動作的要思考與動腦的動機本來就不一定存在，尤其是小孩比較無法
+  * 繼續跑這些過程的 incentive == ?
+    * Gamification is needed (to some degree?!)
+    * 分析/視覺化　過程 （個人/cohort 趨勢 等等）
+    * 一起討論他人跑過的過程？
 
 
 ## TODO
