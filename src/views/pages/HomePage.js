@@ -77,7 +77,10 @@ export default class HomePage extends Component {
 
           The main and core concepts:
             * Goal: Take your own learning journey into your own hand.
-            * Approach
+            * Feature: Goal Exploration + Setting
+            * Feature: Explore + take actions (list/map of (repeatable) mini activities)
+              * But beware of too many choices - it can lead to decision-making paralysis! [Barry Schwartz; The Paradox of Choice]
+            * More Ideas
               * Try to take it one component at a time
               * Paradigm: Breadth-first exploration; make sure you are on solid footing on all the impprtant variables, and don't dwell too deeply into one?
                 * Inspiration source: Sim City talk @ GDC 2018
