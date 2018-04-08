@@ -84,7 +84,7 @@ export default class HomePage extends Component {
               * Try to take it one component at a time
               * Paradigm: Breadth-first exploration; make sure you are on solid footing on all the impprtant variables, and don't dwell too deeply into one?
                 * Inspiration source: Sim City talk @ GDC 2018
-                * (it still implies making progress all the time; just going not letting any dimension alone for too long!)
+                * (it still implies making progress all the time; just not letting any dimension alone for too long!)
               * Paradigm: Do the minimal amount of work to solve the problem at hand
               * Work only/mostly on a single component each week.
             * Basic actions / commitment of (opting in) students every week:
