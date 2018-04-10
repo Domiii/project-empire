@@ -80,6 +80,7 @@ export default class HomePage extends Component {
             * Feature: Goal Exploration + Setting
             * Feature: Explore + take actions (list/map of (repeatable) mini activities)
               * But beware of too many choices - it can lead to decision-making paralysis! [Barry Schwartz; The Paradox of Choice]
+              * Ideally: 3-5 choices at a time (related to the cognitive "chunking size", or effective capacity of short-term memory)
             * More Ideas
               * Try to take it one component at a time
               * Paradigm: Breadth-first exploration; make sure you are on solid footing on all the impprtant variables, and don't dwell too deeply into one?
