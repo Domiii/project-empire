@@ -14,6 +14,8 @@ export const routeNames = {
   MISSIONS: 'missions',
   GROUPS: 'groups',
 
+  VIDEO_RECORDING: 'video',
+
   LEARNER_KB: 'kb',
 
   TEST: 'test'
@@ -34,6 +36,7 @@ export const routePaths = {
   PROJECTS: `/${routeNames.PROJECTS}`,
   MISSIONS: `/${routeNames.MISSIONS}`,
   GROUPS: `/${routeNames.GROUPS}`,
+  VIDEO_RECORDING: `/${routeNames.VIDEO_RECORDING}`,
   LEARNER_KB: `/${routeNames.LEARNER_KB}`,
 
   TEST: `/${routeNames.TEST}`
@@ -56,6 +59,7 @@ export const routeTemplates = {
   PROJECTS: `${routePaths.PROJECTS}`,
   MISSIONS: `${routePaths.MISSIONS}/:missionId?/:editing?`,
   GROUPS: `${routePaths.GROUPS}`,
+  VIDEO_RECORDING: `${routePaths.VIDEO_RECORDING}`,
   LEARNER_KB: `${routePaths.LEARNER_KB}`,
 
   TEST: `${routePaths.TEST}`

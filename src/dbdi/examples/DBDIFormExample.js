@@ -55,6 +55,7 @@ const dataStructureConfig = {
     }
   },
   testData: {
+    // we have a path `test` in our db which we can access via name `testData`
     dataProvider: 'firebase',
     path: 'test',
     readers: {
@@ -66,9 +67,11 @@ const dataStructureConfig = {
     },
     children: {
       itemList: {
+        // we have a path `test/items` which we can access via name `itemList`
         path: 'items',
         children: {
           item: {
+            // we have many paths `test/items/$(itemId)` where we can access each via name `item` (with single argument `itemId`)
             path: '$(itemId)',
             onWrite(queryArgs, val) {
               val && (val.updatedAt = firebase.database.ServerValue.TIMESTAMP);

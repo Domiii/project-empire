@@ -12,6 +12,7 @@ import PlacePage from './pages/PlacePage';
 import MissionControlPage from './pages/MissionControlPage';
 import MissionPage from './pages/MissionPage';
 import ProjectPage from './pages/ProjectPage';
+import VideoRecordingPage from './pages/VideoRecordingPage';
 
 import GMPage from './pages/GMPage';
 import DevPage from './pages/DevPage';
@@ -55,6 +56,9 @@ const AppRoutes = dataBind()(function AppRoutes(
         <Route path={routeTemplates.MISSION_CONTROL} component={MissionControlPage} />
         <Route exact path={routeTemplates.MISSIONS} component={MissionPage} />
         <Route exact path={routeTemplates.PROJECTS} component={ProjectPage} />
+
+        <Route exact path={routeTemplates.VIDEO_RECORDING} component={VideoRecordingPage} />
+      
 
         <Route exact path={routeTemplates.GM} component={GMPage} />
 

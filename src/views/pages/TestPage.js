@@ -1,6 +1,6 @@
 import React from 'react';
 
-import DBDIFormTest from 'src/dbdi/tests/DBDIFormTest';
+import DBDIFormTest from 'src/dbdi/examples/DBDIFormTest';
 
 
 export default () => {
