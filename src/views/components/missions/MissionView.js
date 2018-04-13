@@ -20,7 +20,7 @@ import LoadIndicator from 'src/views/components/util/loading';
 import { FAIcon } from 'src/views/components/util';
 
 
-export const MissionView = dataBind({})(function MissionView(
+export const MissionBody = dataBind({})(function MissionBody(
   { editing, missionId },
   { get_mission, lookupLocalized }
 ) {
@@ -31,6 +31,13 @@ export const MissionView = dataBind({})(function MissionView(
   }
 
   const mission = get_mission({ missionId });
+  if (!mission) {
+    return (<div>
+      <h4>
+        (mission does not exist (anymore))
+      </h4>
+    </div>);
+  }
   let {
     subCategory,
     link,
@@ -54,7 +61,6 @@ export const MissionView = dataBind({})(function MissionView(
     goalEl = (<Alert bsStyle="warning">mission goals are empty</Alert>);
   }
   return (<div>
-    <MissionHeader missionId={missionId} editing={editing} />
     {editing && <MissionEditorForm missionId={missionId} />}
     {goalEl}
     <h4>
@@ -68,6 +74,31 @@ export const MissionView = dataBind({})(function MissionView(
         {link && <a href={link} target="_blank">Link</a>}
       </center>
     </h3>
+  </div>);
+});
+
+
+const MissionView = dataBind({})(function MissionView(
+  { editing, canEdit, missionId },
+  { get_mission }
+) {
+  const isMissionLoaded = get_mission.isLoaded({ missionId });
+  if (!isMissionLoaded) {
+    return <LoadIndicator block message="loading mission..." />;
+  }
+
+  const mission = get_mission({ missionId });
+  if (!mission) {
+    return (<div>
+      <h4>
+        (mission does not exist (anymore))
+      </h4>
+    </div>);
+  }
+
+  return (<div>
+    <MissionHeader missionId={missionId} canEdit={canEdit} editing={editing} />
+    <MissionBody missionId={missionId} editing={editing} />
   </div>);
 });
 

@@ -116,9 +116,12 @@ export default class ProjectList extends Component {
     }
     else {
       const { page } = this.state;
+      const proj0 = (page-1) * itemsPerPage + 1;
+      const proj1 = Math.min(nProjects, page * itemsPerPage);
+
       projectListEl = (<Panel>
         <Panel.Heading>
-          Projects ({nProjects})
+          Projects ({proj0}-{proj1} of {nProjects})
         </Panel.Heading>
         <Panel.Body>
           <ListGroup> {

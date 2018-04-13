@@ -17,16 +17,15 @@ import dataBind from 'src/dbdi/react/dataBind';
 
 import Moment from 'react-moment';
 import {
-  Alert, Button,
-  Well, Panel
+  Alert, Button, Well, Panel
 } from 'react-bootstrap';
 import Flexbox from 'flexbox-react';
 
 
 import {
-  MissionHeader,
   MissionBody
 } from 'src/views/components/missions/MissionView';
+import MissionHeader from 'src/views/components/missions/MissionHeader';
 
 import ProjectEditor from './ProjectEditor';
 import ProjectEditTools from './ProjectEditTools';
@@ -159,6 +158,7 @@ export default class ProjectPanel extends Component {
       projectId
     } = this.props;
     const children = getOptionalArgument(args, 'children');
+    debugger;
 
     if (!projectById.isLoaded({ projectId })) {
       return <LoadIndicator block message="loading project..." />;

@@ -162,6 +162,11 @@ export default class Header extends Component {
         </NavWrap>
       ),
       (
+        <LinkContainer key="projects" to="/projects">
+          <NavItem eventKey={10}>Projects</NavItem>
+        </LinkContainer>
+      ),
+      (
         <LinkContainer key="learnerstatus" to="/learnerstatus">
           <NavItem eventKey={11}>Learner Status</NavItem>
         </LinkContainer>

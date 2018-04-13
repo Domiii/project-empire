@@ -36,6 +36,7 @@ const MissionHeader = dataBind({})(function MissionHeader(
   const {
     missionId,
     editing,
+    canEdit,
     ...moreProps
   } = getProps();
 
@@ -68,7 +69,7 @@ const MissionHeader = dataBind({})(function MissionHeader(
         </Flexbox>
         <Flexbox>
           <Badge>{category}</Badge>
-          {isCurrentUserAdmin && <span>
+          {isCurrentUserAdmin && canEdit && <span>
             <LinkContainer to={hrefMission(missionId, !editing)}>
               <Button active={editing}
                 className="" bsSize="small">

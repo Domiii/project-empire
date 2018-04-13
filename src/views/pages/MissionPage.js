@@ -45,7 +45,9 @@ const MissionPage = withRouter(dataBind()(function MissionPage(
       return <Redirect to={hrefMissionList()} />;
     }
 
-    return (<MissionView missionId={missionId} editing={editing === 'edit'} />);
+    return (<MissionView missionId={missionId} 
+      canEdit={true}
+      editing={editing === 'edit'} />);
   }
   else {
     return (

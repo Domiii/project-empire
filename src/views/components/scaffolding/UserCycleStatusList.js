@@ -146,18 +146,19 @@ const UserCycleStatusList = dataBind({
     currentLearnerScheduleId, currentLearnerScheduleId_isLoaded,
     currentLearnerScheduleCycleId, currentLearnerScheduleCycleId_isLoaded }
 ) {
-  if (!currentUid_isLoaded |
-    !currentLearnerScheduleId_isLoaded |
-    !currentLearnerScheduleCycleId_isLoaded |
-    !get_scheduleCycleName.isLoaded(scheduleQuery)) {
-    return <LoadIndicator />;
-  }
 
   const uid = currentUid;
   const scheduleId = currentLearnerScheduleId;
   const scheduleQuery = {
     scheduleId
   };
+  
+  if (!currentUid_isLoaded |
+    !currentLearnerScheduleId_isLoaded |
+    !currentLearnerScheduleCycleId_isLoaded ||
+    !get_scheduleCycleName.isLoaded(scheduleQuery)) {
+    return <LoadIndicator />;
+  }
 
   const cycleName = get_scheduleCycleName(scheduleQuery);
 
@@ -168,11 +169,16 @@ const UserCycleStatusList = dataBind({
   const commonProps = { uid, scheduleId };
 
   return (<div>
-    <UserCycleStatusEntry key={cycle0} cycleId={cycle0} bsStyle="primary" title={`本${cycleName}的狀態`} {...commonProps} />
-    <UserCycleStatusEntry key={cycle1} cycleId={cycle1} bsStyle="primary" {...commonProps} />
+    <UserCycleStatusEntry key={cycle0} cycleId={cycle0} 
+      bsStyle="primary" title={`本${cycleName}的狀態`} {...commonProps} />
+    <UserCycleStatusEntry key={cycle1} cycleId={cycle1} 
+      bsStyle="primary" {...commonProps} />
     {
       map(otherCycles, (cycleId) => {
-        return (<UserCycleStatusEntry key={cycleId} cycleId={cycleId} bsStyle="default" {...commonProps} />);
+        return (<UserCycleStatusEntry 
+          key={cycleId} cycleId={cycleId} bsStyle="default" 
+          {...commonProps} 
+        />);
       })
     }
   </div>);

@@ -1,10 +1,10 @@
 import React from 'react';
 
-import DBDIFormTest from 'src/dbdi/examples/DBDIFormTest';
+import DBDIFormExample from 'src/dbdi/examples/DBDIFormExample';
 
 
 export default () => {
   return (<div>
-    <DBDIFormTest />
+    <DBDIFormExample />
   </div>);
 };
