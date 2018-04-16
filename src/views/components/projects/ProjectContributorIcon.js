@@ -18,6 +18,8 @@ import LoadIndicator from 'src/views/components/util/loading';
 import UserIcon from 'src/views/components/users/UserIcon';
 
 
+// #bd3d55 4px solid
+
 export function ProjectContributorStatusIcon({ status, ...props }) {
   const iconCfg = constributorStatusIcons[status];
   const style = contributorStatusStyles[status];

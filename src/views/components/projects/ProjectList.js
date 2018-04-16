@@ -23,7 +23,7 @@ import { FAIcon } from 'src/views/components/util';
 
 import LoadIndicator from 'src/views/components/util/loading';
 import ProjectPanel from './ProjectPanel';
-import ProjectEditor from './ProjectEditor';
+import ProjectForm from './ProjectForm';
 
 
 const itemsPerPage = 2;

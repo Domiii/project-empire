@@ -33,43 +33,6 @@ import {
 } from 'src/views/components/util';
 
 
-
-// ##########################################################################
-// MissionSelect component to select missions
-// ##########################################################################
-
-export const MissionSelect = dataBind({
-  missionOptions({ }, { }, { missionList }) {
-    return missionList && map(missionList, (mission, missionId) => ({
-      value: missionId,
-      label: `${mission.code} - ${mission.title}`
-    }));
-  },
-  onChangeOption(option, { onChange }, { }, { missionList }) {
-    let missionId = option && option.value;
-    if (!missionList[missionId]) {
-      missionId = null;
-    }
-    onChange(missionId);
-  }
-})((
-  { value },
-  { onChangeOption, missionOptions },
-  { missionList_isLoaded }
-) => {
-  if (!missionList_isLoaded) {
-    return <LoadIndicator block message="loading missions..." />;
-  }
-
-  const options = missionOptions();
-  return (<Select
-    value={value}
-    placeholder="select mission"
-    options={options}
-    onChange={onChangeOption}
-  />);
-});
-
 // ##########################################################################
 // Data Schema of our Form
 // (as defined by `react-jsonschema-form` library)
@@ -80,13 +43,9 @@ const FormSchema = {
   'description': '',
   'type': 'object',
   'required': [
-    'missionId'
+    //'missionId'
   ],
   'properties': {
-    'missionId': {
-      'type': 'string',
-      'title': 'Mission'
-    },
     'reviewerUid': {
       'type': 'string',
       'title': 'Reviewer (GM)'
@@ -114,7 +73,7 @@ const widgets = {
   momentTime({ value }) {
     return (!value && <span /> || <span>
       <Moment fromNow>{value}</Moment> (
-        <Moment format="MMMM Do YYYY, hh:mm:ss">{value}</Moment>)
+      <Moment format="MMMM Do YYYY, hh:mm:ss">{value}</Moment>)
     </span>);
   },
   user({ value }) {
@@ -122,15 +81,14 @@ const widgets = {
       <UserBadge uid={value} /> ||
       <span className="color-lightgray">無</span>);
   },
-  mission: MissionSelect
+  //mission: MissionSelect
 };
 
 const FormUISchema = {
-
-  missionId: {
-    'ui:autofocus': true,
-    'ui:widget': 'mission'
-  },
+  // missionId: {
+  //   'ui:autofocus': true,
+  //   'ui:widget': 'mission'
+  // },
   createdAt: {
     'ui:readonly': true,
     'ui:widget': 'momentTime'

@@ -68,6 +68,14 @@ export default class HomePage extends Component {
 
         {/* <div>
           系統 v0.1
+
+          * Collaborative Projects
+          * visualize status/project participation status timeline of users
+          * connect presentations/supporting files (links) to users + projects
+          * 徵才
+
+
+
           * submit your stuff
             * help us to keep track of your stuff
             * help yourself keep track of your stuff

@@ -9,6 +9,16 @@ import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 import readers from './readers';
 import writers from './writers';
 
+
+/**
+ * user roles: owner + supporting user roles in projects
+ * seriousness of project/and participants
+ * 每週分享狀態
+ * length/output/efficiency/value of project?
+ * timeline of project / of all projects
+ * active vs. archived projects
+ */
+
 /**
  * Project main data
  */
@@ -19,24 +29,26 @@ const projectById = {
     'createdAt'
   ],
   children: {
-    projectMissionId: 'missionId',
+    projectTitle: 'title',
+    projectDescription: 'description',
 
-    // only one reviewer (GM) for now
-    projectReviewerUid: 'reviewerUid',
+    // icon URL
+    projectIcon: 'icon',
 
+    // the person guarding/watching over this project/helping the project succeed
     projectGuardianUid: 'guardianUid',
-
-    activeStagePath: {
-      path: 'activeStagePath',
-
-      reader(res) {
-        if (res === undefined) return res;
-        return !res && projectStageTree.root.firstChild.stageId || res;
-      },
-    },
 
     projectStatus: 'status',
     projectFinishTime: 'finishTime'
+
+    // activeStagePath: {
+    //   path: 'activeStagePath',
+
+    //   reader(res) {
+    //     if (res === undefined) return res;
+    //     return !res && projectStageTree.root.firstChild.stageId || res;
+    //   },
+    // },
   }
 };
 
