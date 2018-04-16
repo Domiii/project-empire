@@ -92,8 +92,8 @@ export default class ProjectForm extends Component {
   }
 
   render(
-    { projectId },
     { },
+    { getProps },
     { }
   ) {
     // name of current goal list in model?
@@ -104,10 +104,15 @@ export default class ProjectForm extends Component {
     //   formData
     // } = this.state;
     const { uiSchema } = this;
-    
+
     //uiSchema.goalTitle.classNames = (!isSaved) ? 'background-lightyellow' : '';
 
-    const idArgs = projectId;
+    const {
+      projectId,
+      ...otherProps
+    } = getProps();
+
+    const idArgs = projectId && { projectId };
     const props = {
       schemaTemplate: projectSchemaTemplate,
       uiSchema,
@@ -115,7 +120,9 @@ export default class ProjectForm extends Component {
       dbName,
       idArgs,
 
-      onStateChange: this.onStateChange
+      onStateChange: this.onStateChange,
+
+      ...otherProps
     };
 
     return (<div>

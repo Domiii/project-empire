@@ -8,6 +8,7 @@ import {
   Alert
 } from 'react-bootstrap';
 import FAIcon from 'src/views/components/util/FAIcon';
+import LoadIndicator from 'src/views/components/util/loading';
 
 const Status = {
   LOADING: 'loading',
@@ -22,6 +23,7 @@ export default class ImageLoader extends React.Component {
     style: PropTypes.object,
     preloader: PropTypes.func,
     src: PropTypes.string,
+    title: PropTypes.string,
     onLoad: PropTypes.func,
     onError: PropTypes.func,
     imgProps: PropTypes.object,
@@ -103,8 +105,11 @@ export default class ImageLoader extends React.Component {
   }
 
   renderImg() {
-    const {src, style, className, preloader, children, ...imgProps} = this.props;
+    let {src, style, className, preloader, children, title, ...imgProps} = this.props;
     let props = {src};
+    if (title === undefined) {
+      title = src;
+    }
     return <img {...props} {...imgProps} style={style} className={className} />;
   }
 
@@ -114,20 +119,20 @@ export default class ImageLoader extends React.Component {
       preloader
     } = this.props;
 
-    const Preloader = preloader;
+    const Preloader = preloader || LoadIndicator;
 
     switch (this.state.status) {
       case Status.LOADED:
         return this.renderImg();
 
       case Status.FAILED:
-        //return <span>{children}</span>;
-        return (<span>{children || 
-          <Alert bsStyle="danger" className="inline no-margin no-padding">
-            <FAIcon name="exclamation-triangle" />
-            invalid URL
-          </Alert>
-        }</span>);
+        return this.renderImg();    // show the default broken image
+        // return (<span>{children || 
+        //   <Alert bsStyle="danger" className="inline no-margin no-padding">
+        //     <FAIcon name="exclamation-triangle" />
+        //     invalid URL
+        //   </Alert>
+        // }</span>);
 
       default:
         return <Preloader />;

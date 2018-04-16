@@ -14,6 +14,18 @@ export function hrefProjectControl(projectId, stagePath) {
   return url.join('/');
 }
 
+export function hrefProjectEntry(mode, projectId) {
+  mode = mode || 'view';
+
+  return `${routePaths.PROJECTS}/${mode}#${projectId}`;
+}
+
+export function hrefProjectList(mode) {
+  mode = mode || 'view';
+
+  return `${routePaths.PROJECTS}/${mode}`;
+}
+
 export function hrefLearnerStatusEntry(mode, uid, scheduleId, cycleId) {
   mode = mode || 'view';
 

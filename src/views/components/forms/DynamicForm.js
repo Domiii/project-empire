@@ -219,7 +219,6 @@ const widgets = {
     return (<span>
       <ImageLoader
         src={value}
-        preloader={LoadIndicator}
         className={iconClassName}
         title={value}>
       </ImageLoader>
@@ -566,7 +565,7 @@ export default class DynamicForm extends Component {
     if (dbName || reader) {
       // formData is queried from DB
       const doGet = reader || getAccessor(fns, `get_${dbName}`);
-      const newFormData = doGet(idArgs);
+      const newFormData = idArgs && doGet(idArgs) || {};
 
       const schema = this.getSchema();
       if (this.state.savedFormData === NOT_LOADED || !isFormDataEqual(this.state.savedFormData, newFormData, schema)) {
@@ -678,7 +677,13 @@ export default class DynamicForm extends Component {
       ...otherProps
     } = getProps();
 
-    let formProps = merge({}, defaultFormProps, otherProps);
+    let formProps;
+    try {
+      formProps = merge({}, defaultFormProps, otherProps);
+    }
+    catch (err) {
+      throw new Error('Could not merge props of DynamicForm. Did you by any chance use destructuring "rest" arguments in a component that has a @dataBind decorator (e.g.: `const { a, b, c, ...moreProps } = myProps;`) and then passed the destructured `moreProps` to DynamicForm (or another component that uses DynamicForm))? In this case use `getProps()` instead. - \n\n' + (err && err.stack || err));
+    }
 
     schema = this.getSchema();
 

@@ -33,7 +33,7 @@ const projectById = {
     projectDescription: 'description',
 
     // icon URL
-    projectIcon: 'icon',
+    projectIconUrl: 'iconUrl',
 
     // the person guarding/watching over this project/helping the project succeed
     projectGuardianUid: 'guardianUid',

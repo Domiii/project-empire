@@ -56,7 +56,7 @@ export const routeTemplates = {
 
   PLACES: `${routePaths.PLACES}`,
   MISSION_CONTROL: `${routePaths.MISSION_CONTROL}/:projectId?/:stagePath?`,
-  PROJECTS: `${routePaths.PROJECTS}`,
+  PROJECTS: `${routePaths.PROJECTS}/:mode?`,
   MISSIONS: `${routePaths.MISSIONS}/:missionId?/:editing?`,
   GROUPS: `${routePaths.GROUPS}`,
   VIDEO_RECORDING: `${routePaths.VIDEO_RECORDING}`,

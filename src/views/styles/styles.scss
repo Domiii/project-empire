@@ -376,6 +376,13 @@ button:active { outline:none !important; }
 };
 
 
+.project-icon {
+  @extend .max-size-2;
+  
+  border: 1px solid #333;
+}
+
+
 /**
  * #######################################################
  * Learner status
