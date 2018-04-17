@@ -42,7 +42,7 @@ const utility = {
       { }, 
       { update_db }
     ) {
-      console.log(readers.length, times(readers.length, val));
+      //console.log(readers.length, times(readers.length, val));
       const updateObj = zipObject(
         map(readers, reader => reader.getPath(pathArgs)),
         times(readers.length, () => val)

@@ -17,30 +17,29 @@ import FAIcon from 'src/views/components/util/FAIcon';
 import ConfirmModal, {
   DefaultButtonCreator
 } from 'src/views/components/util/ConfirmModal';
+import { EmptyObject } from '../../../util';
 
 const ProjectDescription = dataBind()(
-  ({ projectId }, { get_mission, projectById, uidsOfProject, userDisplayName }, { }) => {
+  ({ projectId }, { projectById, uidsOfProject, userDisplayName }, { }) => {
     const project = projectById({ projectId });
 
     if (!project) {
       return (<span>???</span>);
     }
 
-    const mission = get_mission({ missionId: project.missionId });
-    const uids = uidsOfProject({ projectId });
+    const uids = Object.keys(uidsOfProject({ projectId }) || EmptyObject);
 
+    const {
+      title
+    } = project;
 
     const usersString = map(uids, uid => userDisplayName({ uid }) || '?').join(', ');
-    const missionInfo = mission && `${mission.code} - ${mission.title}` || 'mission';
-    const projectDescription = `${missionInfo} (${usersString})`;
+    const projectDescription = `${title} (${usersString})`;
     return (<span> {projectDescription} </span>);
   }
 );
 
 @dataBind({
-  deleteProject({ projectId }, { delete_projectById }) {
-    return delete_projectById({ projectId });
-  }
 })
 export default class ProjectEditTools extends PureComponent {
   static propTypes = {
@@ -106,7 +105,8 @@ export default class ProjectEditTools extends PureComponent {
     const modalProps = {
       header: 'Delete Project?',
       ButtonCreator: DefaultButtonCreator,
-      onConfirm: deleteProject
+      onConfirm: deleteProject,
+      confirmArgs: this.props
     };
 
     return (
@@ -129,7 +129,7 @@ export default class ProjectEditTools extends PureComponent {
 
   render(
     { },
-    { }, 
+    { },
     { isCurrentUserAdmin }
   ) {
     return (<span className="nowrapper-hidden">
