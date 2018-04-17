@@ -33,84 +33,6 @@ import {
 } from 'src/views/components/util';
 
 
-// ##########################################################################
-// Data Schema of our Form
-// (as defined by `react-jsonschema-form` library)
-// ##########################################################################
-
-const FormSchema = {
-  'title': '',
-  'description': '',
-  'type': 'object',
-  'required': [
-    //'missionId'
-  ],
-  'properties': {
-    'reviewerUid': {
-      'type': 'string',
-      'title': 'Reviewer (GM)'
-    },
-    'guardianUid': {
-      'type': 'string',
-      'title': 'Guardian'
-    },
-    'createdAt': {
-      'type': 'number',
-      'title': 'Started'
-    },
-    'guardianNotes': {
-
-    }
-  }
-};
-
-// ##########################################################################
-// UI Schema for displaying our form
-// (as defined by `react-jsonschema-form` library)
-// ##########################################################################
-
-const widgets = {
-  momentTime({ value }) {
-    return (!value && <span /> || <span>
-      <Moment fromNow>{value}</Moment> (
-      <Moment format="MMMM Do YYYY, hh:mm:ss">{value}</Moment>)
-    </span>);
-  },
-  user({ value }) {
-    return (value &&
-      <UserBadge uid={value} /> ||
-      <span className="color-lightgray">無</span>);
-  },
-  //mission: MissionSelect
-};
-
-const FormUISchema = {
-  // missionId: {
-  //   'ui:autofocus': true,
-  //   'ui:widget': 'mission'
-  // },
-  createdAt: {
-    'ui:readonly': true,
-    'ui:widget': 'momentTime'
-  },
-  guardianUid: {
-    'ui:readonly': true,
-    'ui:widget': 'user'
-  },
-  reviewerUid: {
-    'ui:readonly': true,
-    'ui:widget': 'user'
-  },
-  guardianNotes: {
-    'ui:widget': 'textarea',
-    'ui:placeholder': '冒險者有沒有提出疑問或是對 Guardian 不友善？',
-    'ui:options': {
-      rows: 3
-    }
-  }
-};
-
-
 // ###################################################################
 // UserListEditor
 // ###################################################################
@@ -217,7 +139,7 @@ const ProjectUserList = dataBind({})(function ProjectUserList(
     return uidsWithProjectButNotIn({ projectId });
   }
 })
-export class ProjectUserEditor extends Component {
+export default class ProjectUserEditor extends Component {
   constructor(...args) {
     super(...args);
 
@@ -296,93 +218,5 @@ export class ProjectUserEditor extends Component {
         </Panel>
       </Flexbox>
     </Flexbox>);
-  }
-}
-
-
-
-// ###################################################################
-// ProjectEditor
-// ###################################################################
-
-@dataBind({
-  /**
-   * DI-decorated action: create or update item
-   */
-  onSubmit({ formData }, vars,
-    { set_projectById, push_projectById }, { }) {
-    // get required and optional arguments
-    const { projectId } = vars;
-    const onSave = getOptionalArgument(vars, 'onSave');
-
-    // get rid of undefined fields, created by (weird) form editor
-    formData = pickBy(formData, val => val !== undefined);
-
-    let promise;
-    if (!projectId) {
-      // new project
-      promise = push_projectById(formData);
-    }
-    else {
-      // existing project
-      promise = set_projectById({ projectId }, formData);
-    }
-
-    // when finished call the onSave callback
-    return onSave && promise.then(onSave) || promise;
-  }
-})
-export default class ProjectEditor extends Component {
-  static propTypes = {
-    projectId: PropTypes.string,
-    onSave: PropTypes.func
-  };
-
-  constructor() {
-    super();
-
-    this.dataBindMethods(
-      this.createNewProject
-    );
-  }
-
-  createNewProject({ }, { }, { currentUid }) {
-    return this.newProject = {
-      guardianUid: currentUid
-    };
-  }
-
-  render({ projectId }, { projectById, onSubmit }, { }) {
-    const alreadyExists = !!projectId;
-    const project = alreadyExists &&
-      projectById({ projectId }) ||
-      this.createNewProject();
-
-    return (
-      <div>
-        {/* onChange={itemLog('changed')}
-          onError={itemLog('errors')} */}
-        <Form schema={FormSchema}
-          liveValidate={true}
-          uiSchema={FormUISchema}
-          widgets={widgets}
-          formData={project}
-          showErrorList={false}
-          onSubmit={onSubmit}
-        >
-          {/* the Form children are rendered at the bottom of the form */}
-          <div>
-            <p><label>edit users</label></p>
-            {projectId && <ProjectUserEditor
-              setContext={{ thisProjectId: projectId }}
-              projectId={projectId} />}
-
-            <button type="submit" className="btn btn-info">
-              <FAIcon name="save" /> {alreadyExists ? 'Update' : 'Add new'}
-            </button>
-          </div>
-        </Form>
-      </div>
-    );
   }
 }

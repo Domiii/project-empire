@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import dataBind from 'src/dbdi/react/dataBind';
 import {
-  Badge
+  Alert, Badge
 } from 'react-bootstrap';
 
 
@@ -32,9 +32,16 @@ export default class UserBadge extends Component {
       + ' user-tag';
     const size = otherProps.size || 'tiny';
 
-    return (<Badge style={otherProps.style} className={clazzes}>
-      <UserIcon user={user} size={size} /> &nbsp;
-      {user.displayName}
-    </Badge>);
+    if (user) {
+      return (<Badge style={otherProps.style} className={clazzes}>
+        <UserIcon user={user} size={size} /> &nbsp;
+        {user.displayName}
+      </Badge>);
+    }
+    else {
+      return (<Alert bsStyle="danger" className="inline no-margin no-padding">
+        invalid user id
+      </Alert>);
+    }
   }
 }

@@ -10,6 +10,8 @@ import { LoadOverlay } from 'src/views/components/overlays';
 
 import LearnerStatusList from 'src/views/components/scaffolding/LearnerStatusList';
 
+import UserCycleStatusList from 'src/views/components/scaffolding/UserCycleStatusList';
+
 @dataBind()
 export default class LearnerStatusListPage extends Component {
   static propTypes = {
@@ -33,6 +35,25 @@ export default class LearnerStatusListPage extends Component {
     if (!isCurrentUserAdmin) {
       return (<Alert bsStyle="warning">GMs only :/</Alert>);
     }
+
+
+    // let lateReflections;
+
+    // {lateReflections && (
+    //   <Panel bsStyle="danger">
+    //     <Panel.Heading>
+    //       緊急的事
+    //     </Panel.Heading>
+    //     <Panel.Body>
+    //       TODO: 已經過的 cycle，而且還沒填好的反思調查清淡～
+    //       <div>
+    //           TODO: 請更新你之前還沒更新的分享狀態
+    //       </div>
+    //     </Panel.Body>
+    //   </Panel>
+    // ) || ''}
+
+    // <UserCycleStatusList />
 
     return (
       <div>

@@ -14,6 +14,8 @@ import LoadIndicator from 'src/views/components/util/loading';
 import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import { EmptyObject } from '../../../util';
 
+import ProjectUserEditor from './ProjectUserEditor';
+
 export const projectSchemaTemplate = {
   type: 'object',
   properties: [
@@ -28,7 +30,7 @@ export const projectSchemaTemplate = {
       isOptional: false
     },
     {
-      id: 'icon',
+      id: 'iconUrl',
       type: 'string',
       isOptional: false
     },
@@ -42,7 +44,7 @@ export const projectSchemaTemplate = {
 
 
 @dataBind({})
-export default class ProjectForm extends Component {
+export default class ProjectEditor extends Component {
   constructor(...args) {
     super(...args);
 
@@ -130,6 +132,11 @@ export default class ProjectForm extends Component {
         {/* <div>
           {btn}
         </div> */}
+        {projectId && <div>
+          <ProjectUserEditor 
+            setContext={{ thisProjectId: projectId }}
+            projectId={projectId} />
+        </div>}
       </DynamicForm>
     </div>);
   }

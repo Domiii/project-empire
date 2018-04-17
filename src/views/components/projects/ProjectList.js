@@ -33,8 +33,13 @@ import ImageLoader from 'src/views/components/util/react-imageloader';
 import FancyPanelToggleTitle from 'src/views/components/util/FancyPanelToggleTitle';
 
 
-import ProjectForm from './ProjectForm';
+import ProjectEditor from './ProjectEditor';
+import {
+  ProjectBody
+} from './ProjectPanel';
 
+
+const itemsPerPage = 20;
 
 export const ProjectIcon = dataBind({})(function ProjectIcon(
   { projectId },
@@ -71,11 +76,16 @@ export class ProjectHeader extends Component {
       return (<Alert bsStyle="danger">invalid projectId : {projectId}</Alert>);
     }
 
+    const {
+      iconUrl,
+      title
+    } = project;
+
     return (<span>
       <h3 className="inline no-margin">
-        <ProjectIcon projectId={projectId} />
-        {JSON.stringify(project)}
-        {lookupLocalized({ obj: project, prop: 'title' })}
+        <ProjectIcon projectId={projectId} src={iconUrl} />
+        &nbsp;
+        { title }
       </h3>
     </span>);
   }
@@ -97,6 +107,7 @@ export class ProjectPanelHeader extends Component {
   }
 }
 
+
 @withRouter
 export class ProjectPanel extends Component {
   onToggle = (isNowSelected) => {
@@ -108,13 +119,16 @@ export class ProjectPanel extends Component {
   render() {
     const { projectId, isSelected } = this.props;
 
-    return (<Panel expanded={isSelected} onToggle={this.onToggle}>
+    const className = isSelected && 'yellow-highlight-border' || 'no-highlight-border';
+
+    return (<Panel className={className} expanded={isSelected} 
+        onToggle={this.onToggle}>
       <Panel.Heading>
         <ProjectPanelHeader projectId={projectId} isSelected={isSelected} />
       </Panel.Heading>
-      <Panel.Body collapsible>
-        ni hao! {isSelected}
-      </Panel.Body>
+      {isSelected && <Panel.Body collapsible>
+        <ProjectBody projectId={projectId} />
+      </Panel.Body> }
     </Panel>);
   }
 }
@@ -125,8 +139,6 @@ export class ProjectPanel extends Component {
 function getSelectedProjectId() {
   return window.location.hash && window.location.hash.substring(1);
 }
-
-const itemsPerPage = 2;
 
 @withRouter
 @dataBind({
@@ -203,7 +215,7 @@ export default class ProjectList extends Component {
         </Button>
 
         {this.IsAdding &&
-          <ProjectForm projectId={null} onSubmit={this.onAddedProject} />
+          <ProjectEditor projectId={null} onSubmit={this.onAddedProject} />
         }
       </div>
     );
@@ -240,7 +252,7 @@ export default class ProjectList extends Component {
         <Panel.Heading>
           Projects ({proj0}-{proj1} of {nProjects})
         </Panel.Heading>
-        <Panel.Body>
+        <Panel.Body className="no-margin">
           {
             map(projectIds, (projectId) => {
               return (

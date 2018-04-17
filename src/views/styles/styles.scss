@@ -223,6 +223,23 @@ button:active { outline:none !important; }
   text-align: start !important;
 }
 
+.yellow-highlight-border {
+  border: 4px solid rgba(255, 208, 0, 0.774);
+};
+
+.red-highlight-border {
+  border: 4px solid rgba(255, 208, 0, 0.774);
+};
+
+.no-highlight-border {
+  border: 4px solid rgba(255, 208, 0, 0);
+}
+
+.nowrapper-hidden {
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 /**
  * #######################################################
  * App-specific classes: Header + Footer
@@ -273,13 +290,15 @@ button:active { outline:none !important; }
 
 /**
  * #######################################################
- * App-specific classes: User Profile
+ * App-specific classes: Users
  * #######################################################
  */
 
  .user-icon {
    border-radius: 50%;
  }
+
+
 
 //  .user-tag {
 //   /*display: flex;

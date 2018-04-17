@@ -127,13 +127,12 @@ export default class ProjectEditTools extends PureComponent {
   //   );
   // }
 
-  render({ }, { }, { isCurrentUserAdmin }) {
-    const styles = {
-      whiteSpace: 'nowrap',
-      overflow: 'hidden'
-    };
-
-    return (<span style={styles}>
+  render(
+    { },
+    { }, 
+    { isCurrentUserAdmin }
+  ) {
+    return (<span className="nowrapper-hidden">
       {/* {this.changeOrderButtons()}
       {this.togglePublicButton()} */}
       {this.editButton()}
