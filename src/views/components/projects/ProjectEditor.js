@@ -132,9 +132,11 @@ export default class ProjectEditor extends Component {
         {/* <div>
           {btn}
         </div> */}
+        <Button block type="submit" bsStyle="info">
+          Save
+        </Button>
         {projectId && <div>
-          <ProjectUserEditor 
-            setContext={{ thisProjectId: projectId }}
+          <ProjectUserEditor
             projectId={projectId} />
         </div>}
       </DynamicForm>

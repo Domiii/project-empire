@@ -42,8 +42,11 @@
     },
     "projects": {
       ".read": "auth !== null",
-      "$projectId": {
-        ".write": "auth !== null"
+      "list": {
+        ".indexOn": "updatedAt",
+        "$projectId": {
+          ".write": "auth !== null"
+        }
       }
     },
     "meetings": {

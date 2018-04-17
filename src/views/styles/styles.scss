@@ -179,6 +179,11 @@ button:active { outline:none !important; }
   color: darkblue;
 }
 
+.background-lightyellow {
+  background-color: lightyellow !important;
+  background-image: none !important;
+}
+
 .background-lightyellow * {
   background-color: lightyellow !important;
   background-image: none !important;
@@ -272,6 +277,11 @@ button:active { outline:none !important; }
 
 
 .footer  { order: 3; }
+
+.max-size-1-5 {
+  max-width: 1.5em;
+  max-height: 1.5em;
+}
 
 .max-size-2 {
   max-width: 2em;
@@ -396,7 +406,7 @@ button:active { outline:none !important; }
 
 
 .project-icon {
-  @extend .max-size-2;
+  @extend .max-size-1-5;
   
   border: 1px solid #333;
 }

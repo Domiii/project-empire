@@ -98,7 +98,7 @@ export class ProjectBody extends Component {
 
     const {
       readonly
-    } = getOptionalArguments(args, 
+    } = getOptionalArguments(args,
       'children', 'readonly', defaultProjectBodyArgs);
 
     return (readonly || !isCurrentUserGuardian) ? null : (
@@ -131,9 +131,10 @@ export class ProjectBody extends Component {
     const {
       projectId
     } = this.props;
+
     const {
       children, readonly
-    } = getOptionalArguments(args, 
+    } = getOptionalArguments(args,
       'children', 'readonly', defaultProjectBodyArgs);
 
     if (!projectById.isLoaded({ projectId })) {
@@ -145,6 +146,8 @@ export class ProjectBody extends Component {
       return (<Alert bsStyle="danger">invalid project id {projectId}</Alert>);
     }
 
+    const { description } = project;
+
     return (<div>
       {this.editorHeader()}
       <p>Started by: {
@@ -155,7 +158,9 @@ export class ProjectBody extends Component {
 
       <div className="margin-half" />
 
-      ni hao
+      <div className="background-lightyellow">
+        {description}
+      </div>
 
       {this.IsEditing && (
         <div>

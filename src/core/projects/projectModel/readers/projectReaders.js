@@ -135,9 +135,11 @@ export default {
 
 
     // get all uids of users who have at least one project (excluding the given project)
-    debugger;
     return filter(uids, uid => {
-      return !(userProjectIdIndex[uid] && userProjectIdIndex[uid][projectId]);
+      // has projects and is not in given project
+      return userProjectIdIndex[uid] && 
+      size(userProjectIdIndex[uid]) > 0 && 
+        !(userProjectIdIndex[uid][projectId]);
       // const excludeSize = (userProjectIdIndex[uid] && userProjectIdIndex[uid][projectId] && 1) || 0;
       // return size(userProjectIdIndex[uid]) <= excludeSize;
     });

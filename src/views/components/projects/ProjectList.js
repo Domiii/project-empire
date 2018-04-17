@@ -20,6 +20,7 @@ import {
 
 import { Redirect, withRouter } from 'react-router-dom';
 import { HashLink } from 'react-router-hash-link';
+import Flexbox from 'flexbox-react';
 
 import {
   Button, ListGroup, Alert, Panel
@@ -37,6 +38,7 @@ import ProjectEditor from './ProjectEditor';
 import {
   ProjectBody
 } from './ProjectPanel';
+import ProjectContributorBar from './ProjectContributorBar';
 
 
 const itemsPerPage = 20;
@@ -72,22 +74,25 @@ export class ProjectHeader extends Component {
     }
 
     const project = projectById({ projectId });
+    let titleEl;
     if (!project) {
-      return (<Alert bsStyle="danger">invalid projectId : {projectId}</Alert>);
+      titleEl = (<Alert bsStyle="danger">invalid projectId : {projectId}</Alert>);
     }
-
-    const {
-      iconUrl,
-      title
-    } = project;
-
-    return (<span>
-      <h3 className="inline no-margin">
+    else {
+      const {
+        iconUrl,
+        title
+      } = project;
+      titleEl = (<h3 className="inline no-margin">
         <ProjectIcon projectId={projectId} src={iconUrl} />
         &nbsp;
         { title }
-      </h3>
-    </span>);
+      </h3>);
+    }
+
+    return (<div>
+      {titleEl}
+    </div>);
   }
 }
 
@@ -101,7 +106,12 @@ export class ProjectPanelHeader extends Component {
 
     //return (<HashLink smooth to={link}>
     return (<FancyPanelToggleTitle onClick={this.toggleView}>
-      <ProjectHeader projectId={projectId} isSelected={isSelected} />
+      <Flexbox className="full-width" justifyContent="space-between" alignItems="center">
+        <ProjectHeader projectId={projectId} isSelected={isSelected} />
+        <ProjectContributorBar projectId={projectId}>
+          &nbsp;
+        </ProjectContributorBar>
+      </Flexbox>
     </FancyPanelToggleTitle>);
     //</HashLink>);
   }
@@ -109,6 +119,7 @@ export class ProjectPanelHeader extends Component {
 
 
 @withRouter
+@dataBind()
 export class ProjectPanel extends Component {
   onToggle = (isNowSelected) => {
     const { projectId, history } = this.props;
@@ -121,14 +132,14 @@ export class ProjectPanel extends Component {
 
     const className = isSelected && 'yellow-highlight-border' || 'no-highlight-border';
 
-    return (<Panel className={className} expanded={isSelected} 
-        onToggle={this.onToggle}>
+    return (<Panel className={className} expanded={isSelected}
+      onToggle={this.onToggle}>
       <Panel.Heading>
         <ProjectPanelHeader projectId={projectId} isSelected={isSelected} />
       </Panel.Heading>
       {isSelected && <Panel.Body collapsible>
         <ProjectBody projectId={projectId} />
-      </Panel.Body> }
+      </Panel.Body>}
     </Panel>);
   }
 }
@@ -260,6 +271,7 @@ export default class ProjectList extends Component {
                   key: projectId,
                   //readonly: false,
                   projectId,
+                  setContext: { thisProjectId: projectId },
                   isSelected: projectId === getSelectedProjectId()
                 }} />
               );

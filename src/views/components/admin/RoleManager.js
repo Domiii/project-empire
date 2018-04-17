@@ -109,7 +109,7 @@ const RenderUser = dataBind({})(
 
     return (<Badge>
       <span className="user-tag">
-        <UserIcon user={user} size="tiny" /> &nbsp;
+        <UserIcon uid={uid} size="tiny" /> &nbsp;
         {user.displayName} &nbsp;
         {buttonEls}
       </span>

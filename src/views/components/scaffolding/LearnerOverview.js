@@ -61,7 +61,7 @@ const LearnerOverview = dataBind({})(function LearnerEntryList(
     }
 
     const header = (<span>
-      <UserIcon user={user} size="small" /> &nbsp;
+      <UserIcon uid={uid} size="small" /> &nbsp;
       {user.displayName} &nbsp;
       ({nEntries})
     </span>);

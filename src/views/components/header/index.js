@@ -167,15 +167,20 @@ export default class Header extends Component {
         </LinkContainer>
       ),
       (
-        <LinkContainer key="learnerstatus" to="/learnerstatus">
-          <NavItem eventKey={11}>Learner Status</NavItem>
+        <LinkContainer key="video" to="/video">
+          <NavItem eventKey={11}>Video Test</NavItem>
         </LinkContainer>
       ),
-      (
-        <LinkContainer key="kb" to="/kb">
-          <NavItem eventKey={12}>KB</NavItem>
-        </LinkContainer>
-      ),
+      // (
+      //   <LinkContainer key="learnerstatus" to="/learnerstatus">
+      //     <NavItem eventKey={11}>Learner Status</NavItem>
+      //   </LinkContainer>
+      // ),
+      // (
+      //   <LinkContainer key="kb" to="/kb">
+      //     <NavItem eventKey={12}>KB</NavItem>
+      //   </LinkContainer>
+      // ),
       (
         <LinkContainer key="gm" to="/gm">
           <NavItem eventKey={13}>GM Tools</NavItem>

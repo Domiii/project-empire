@@ -132,11 +132,13 @@ export default class ProjectEditTools extends PureComponent {
     { },
     { isCurrentUserAdmin }
   ) {
+    const { editing } = this.props;
+
     return (<span className="nowrapper-hidden">
       {/* {this.changeOrderButtons()}
       {this.togglePublicButton()} */}
+      {isCurrentUserAdmin && editing && this.deleteButton()}
       {this.editButton()}
-      {isCurrentUserAdmin && this.deleteButton()}
     </span>);
   }
 }

@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import { Redirect } from 'react-router-dom';
+
 import dataBind from 'src/dbdi/react/dataBind';
+import { routeTemplates } from 'src/views/routes';
 
 import {
   Alert, Button, Jumbotron, Well,
@@ -15,6 +18,7 @@ import ProjectList from 'src/views/components/projects/ProjectList';
 import FancyPanelToggleTitle from 'src/views/components/util/FancyPanelToggleTitle';
 
 import { LoadOverlay } from 'src/views/components/overlays';
+import { routePaths } from '../routes';
 
 
 
@@ -34,9 +38,10 @@ export default class HomePage extends Component {
     { }
   ) {
     return (
-      <div>
-        <ProjectList />
-      </div>
+      <Redirect to={routePaths.PROJECTS_VIEW} />
+      // <div>
+      //   <ProjectList />
+      // </div>
     );
   }
 }

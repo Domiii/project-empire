@@ -61,8 +61,8 @@ export default class FancyPanelToggleTitle extends Panel {
     }
 
     return (<Panel.Title className={className} {...otherProps} toggle>
-      <Flexbox justifyContent="space-between" alignItems="center">
-        <Flexbox>
+      <Flexbox className="full-width" justifyContent="space-between" alignItems="center">
+        <Flexbox className="full-width" alignItems="center">
           {children}
         </Flexbox>
         <Flexbox>

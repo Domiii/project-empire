@@ -263,7 +263,7 @@ export default (propsOrPropCb) => WrappedComponent => {
           // }
 
           if (this._isMounted) {
-            console.error(`DI failed - Component requested props/context "${toString(name)}" but it does not exist`);
+            console.error(`DI failed - Component requested props/context "${toString(name)}" but was not provided`);
           }
           return undefined;
         },
@@ -320,7 +320,7 @@ export default (propsOrPropCb) => WrappedComponent => {
           }
 
           if (this._isMounted) {
-            console.error(`DI failed - Component requested function "${toString(name)}" but it does not exist.`);
+            console.error(`DI failed - Component requested function "${toString(name)}" but was not provided.`);
           }
           return null;
         },

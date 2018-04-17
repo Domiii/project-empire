@@ -34,6 +34,7 @@ export const routePaths = {
   PLACES: `/${routeNames.PLACES}`,
   MISSION_CONTROL: `/${routeNames.MISSION_CONTROL}`,
   PROJECTS: `/${routeNames.PROJECTS}`,
+  PROJECTS_VIEW: `/${routeNames.PROJECTS}/view`,
   MISSIONS: `/${routeNames.MISSIONS}`,
   GROUPS: `/${routeNames.GROUPS}`,
   VIDEO_RECORDING: `/${routeNames.VIDEO_RECORDING}`,

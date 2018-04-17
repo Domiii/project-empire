@@ -2,6 +2,8 @@ import isNumber from 'lodash/isNumber';
 
 import React from 'react';
 import PropTypes from 'prop-types';
+import dataBind from 'src/dbdi/react/dataBind';
+
 import ImageLoader from 'src/views/components/util/react-imageloader';
 import LoadIndicator from 'src/views/components/util/loading';
 
@@ -16,11 +18,23 @@ const UserIconSizes = {
   huge: '4em'
 };
 
-export default function UserIcon({user, size, ...moreProps}) {
+const UserIcon = dataBind({})(function UserIcon(
+  args,
+  { userPublic, getProps }
+) {
+  let {uid, size, ...moreProps} = getProps();
+
+  const uargs = {uid};
+
+  const isUserLoaded = !uid || userPublic.isLoaded(uargs);
   const style = Object.assign({}, moreProps.style);
   let clazz = moreProps.className || '';
   clazz += ' user-icon';
   
+  if (size === undefined) {
+    size = 1.5;
+  }
+
   if (size) {
     if (UserIconSizes[size]) {
       style.maxWidth = UserIconSizes[size];
@@ -38,6 +52,13 @@ export default function UserIcon({user, size, ...moreProps}) {
       style.maxHeight = size;
     }
   }
+
+  if (!isUserLoaded) {
+    return <LoadIndicator className={clazz} style={style} />;
+  }
+
+  const user = userPublic(uargs);
+
   return (
     <ImageLoader
       src={user.photoURL}
@@ -45,11 +66,15 @@ export default function UserIcon({user, size, ...moreProps}) {
       className={clazz}
       style={style}
       title={user.displayName}>
+
       {user.photoURL}
     </ImageLoader>
   );
-}
+});
+
 UserIcon.propTypes = {
   user: PropTypes.object.isRequired,
   size: PropTypes.string
 };
+
+export default UserIcon;

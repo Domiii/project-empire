@@ -135,7 +135,7 @@ function AddUserButton({open}) {
 function makeAddUserEl(addUserToGroup) {
   return ({user, uid}) => (<Badge>
     <span className="user-tag">
-      <UserIcon user={user} size="tiny" /> &nbsp;
+      <UserIcon uid={uid} size="tiny" /> &nbsp;
       {user.displayName} &nbsp;
 
       <ConfirmModal

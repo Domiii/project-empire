@@ -29,14 +29,16 @@ ProjectContributorStatusIcon.propTypes = {
   status: PropTypes.number.isRequired
 };
 
-const ProjectContributorIcon = dataBind()(
-  ({ uid, groupName, userStatus },
-    { userPublic }) => {
+const ProjectContributorIcon = dataBind()((
+  { uid, groupName, userStatus },
+  { userPublic }
+) => {
     const isUserLoaded = !uid || userPublic.isLoaded({ uid });
     const user = isUserLoaded && uid && userPublic({ uid });
 
     const statusIconEl = (!!userStatus || userStatus === 0) && (
-      <ProjectContributorStatusIcon status={userStatus} className="project-contributor-status-icon" />
+      <ProjectContributorStatusIcon status={userStatus} 
+        className="project-contributor-status-icon" />
     );
 
     if (!isUserLoaded) {
@@ -63,7 +65,7 @@ const ProjectContributorIcon = dataBind()(
       // user icon
       return (
         <div className={classes}>
-          <UserIcon user={user} />
+          <UserIcon uid={uid} />
           {statusIconEl}
         </div>
       );
