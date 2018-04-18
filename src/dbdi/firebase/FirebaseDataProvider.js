@@ -5,7 +5,7 @@ import {
   applyQueryToDataSet
 } from './firebase-util';
 
-import DataProviderBase from '../DataProviderBase';
+import DataProviderBase from '../dataProviders/DataProviderBase';
 
 import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';

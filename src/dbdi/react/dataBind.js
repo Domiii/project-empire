@@ -34,7 +34,7 @@ import {
 } from './lib/dbdi-react-internals';
 import { injectRenderArgs } from './react-util';
 
-export const NOT_LOADED = undefined;
+export { NOT_LOADED } from '../dataProviders/DataProviderBase';
 
 // class ReactContextDataProvider extends DataProviderBase {
 //   // TODO: a data provider to read/write the local React context without it's usual shortcomings
@@ -179,8 +179,8 @@ export default (propsOrPropCb) => WrappedComponent => {
             methodOrName.name;
 
           if (!methodName || !isFunction(this[methodName])) {
-            throw new Error('Could not add data bindings to method: ' +
-              methodOrName + ' - ' + this[methodName]);
+            throw new Error('Could not resolve method when adding data bindings: ' +
+              methodOrName + ' - ' + methodName + ' - ' + this[methodName]);
           }
 
           //const origMethod = this[methodName];

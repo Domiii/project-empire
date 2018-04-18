@@ -7,7 +7,7 @@ import pull from 'lodash/pull';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
-
+export const NOT_LOADED = undefined;
 
 /**
  * The amount of time to wait before deleting data + metadata 
@@ -176,6 +176,16 @@ export default class DataProviderBase {
     }, purgeCacheDelayDefault);
   }
 
+  notifyNewData(query, val) {
+    const {
+      localPath,
+      queryInput
+    } = query;
+
+    const listeners = this.getListeners(localPath) || EmptyArray;
+    setTimeout(() => listeners.forEach(listener => listener(localPath, queryInput, val)));
+  }
+
   // #################################################################
   // Any DataProvider needs to implement the following methods
   // #################################################################
@@ -188,17 +198,27 @@ export default class DataProviderBase {
     //throw new Error('DataProvider did not implement `onListenerRemove` method');
   }
 
-  notifyNewData(query, val) {
-    const {
-      localPath,
-      queryInput
-    } = query;
-
-    const listeners = this.getListeners(localPath) || EmptyArray;
-    setTimeout(() => listeners.forEach(listener => listener(localPath, queryInput, val)));
-  }
-
   readData(queryInput) {
     throw new Error('DataSource did not implement `readData` method');
+  }
+
+  actions = {
+    set: (remotePath, val) => {
+    },
+
+    push: (remotePath, val) => {
+    },
+
+    update: (remotePath, val) => {
+    },
+
+    delete: (remotePath) => {
+    },
+
+    // transaction: () => {
+    // },
+
+    // batchUpdate: () => {
+    // }
   }
 }

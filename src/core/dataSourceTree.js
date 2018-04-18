@@ -13,6 +13,11 @@ import CohortModel from 'src/core/cohorts/CohortModel';
 import ProjectModel from 'src/core/projects/projectModel';
 import MissionModel from 'src/core/missions/MissionModel';
 
+
+import StreamModel from 'src/core/multimedia/StreamModel';
+
+
+
 import dataProviders from './dataProviders.js';
 
 import { lookupLocalized } from 'src/util/localizeUtil';
@@ -79,6 +84,13 @@ const dataStructureConfig = {
 
       LearnerKBModel,
       LearnerEntryModel
+    )
+  },
+  localData: {
+    dataProvider: 'memory',
+    path: '/localData',
+    children: merge({},
+      StreamModel
     )
   }
 };

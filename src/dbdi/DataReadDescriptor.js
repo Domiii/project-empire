@@ -8,6 +8,8 @@ import autoBind from 'src/util/auto-bind';
 import DataDescriptorNode from './DataDescriptorNode';
 import PathDescriptor from './PathDescriptor';
 
+import { NOT_LOADED } from './dataProviders/DataProviderBase';
+
 export default class DataReadDescriptor extends DataDescriptorNode {
   readData;
 
@@ -125,6 +127,6 @@ export default class DataReadDescriptor extends DataDescriptorNode {
     //   return false;
     // }
     const data = this.readData(...allArgs);
-    return data !== undefined;
+    return data !== NOT_LOADED;
   }
 }
