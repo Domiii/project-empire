@@ -39,6 +39,7 @@ export default class DataProviderBase {
       localPath = queryInput;
     }
     else if (isPlainObject(queryInput)) {
+      // local path is any unique string representation of the queryInput
       localPath = JSON.stringify(queryInput);
     }
     return localPath;
@@ -50,6 +51,7 @@ export default class DataProviderBase {
       remotePath = queryInput;
     }
     else if (isPlainObject(queryInput)) {
+      // remote path is the path part of the query (which can include further arguments)
       remotePath = queryInput.path;
     }
     return remotePath;

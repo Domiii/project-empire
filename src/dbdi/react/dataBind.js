@@ -210,6 +210,10 @@ export default (propsOrPropCb) => WrappedComponent => {
       };
     }
 
+    /**
+     * Set of custom functions/special functions that serve as utility
+     * to better integrate the data model with React.
+     */
     _buildCustomFunctions() {
       this._customFunctions = {
         /**
@@ -390,7 +394,7 @@ export default (propsOrPropCb) => WrappedComponent => {
             this.wrappedComponentName);
         }
 
-        // group props into actions and "data" props
+        // group props into custom props (data) and custom functions
         const {
           functions,
           data

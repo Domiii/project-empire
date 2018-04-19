@@ -109,7 +109,15 @@ export default class DataAccessTracker {
       let moreInfo = '';
       if (isObject(args)) {
         if (args.constructor) {
-          moreInfo = 'object of type "' + args.constructor.name + '"';
+          moreInfo = `object of type "${args.constructor.name}"`;
+          try {
+            moreInfo += ` - ${JSON.stringify(args)}`;
+          }
+          catch (err) { 
+            //moreInfo += ` (could not stringify object - ${err.message})`;
+            const keys = Object.keys(args);
+            moreInfo += ` - with ${keys.length} keys: ${keys}`;
+           }
         }
         else {
           moreInfo = `<object of unknown type>\n → keys: ${Object.keys(args)}`;
@@ -118,8 +126,9 @@ export default class DataAccessTracker {
       else {
         moreInfo = args;
       }
-      throw new Error(`Invalid arguments for data node "${node.fullName}"\n→ expected plain object but found: ` +
-        moreInfo + ' ←\n');
+      throw new Error(`Invalid arguments for data node "${node.fullName}"\n` +
+        `→ expected plain object but found: ${moreInfo} ←\n` + 
+        'Did you pass a data accessor as event (use "asEventHandler" instead!)?');
     }
     args = args || EmptyObject;
     return new Proxy(args, this._resolveArgumentHandler);

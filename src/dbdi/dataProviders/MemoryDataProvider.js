@@ -56,6 +56,13 @@ export default class MemoryDataProvider extends DataProviderBase {
 
   _onWrite(action, remotePath, val) {
     console.log('W [', action, remotePath, '] ', val);
+
+    // local and remote path are equal for the MemoryDataProvider (for now)
+    const localPath = remotePath;
+    const query = this.getQueryByLocalPath(localPath);
+
+    // if query object does not exist, it means, no listener has been registered on this path yet
+    query && this.notifyNewData(query, val);
     return true;
   }
 
@@ -73,8 +80,12 @@ export default class MemoryDataProvider extends DataProviderBase {
         node.push(null);
       }
       node.push(val);
-      const result = { key: node.length - 1 };
-      return Promise.resolve(result);
+
+      const key = node.length - 1;
+      const result = key;
+      const promise = Promise.resolve(result);
+      promise.key = key;
+      return promise;
     },
 
     update: (remotePath, val) => {

@@ -1,6 +1,11 @@
+import map from 'lodash/map';
+import zipObject from 'lodash/zipObject';
+
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import dataBind from 'src/dbdi/react/dataBind';
+
+import FAIcon from 'src/views/components/util/FAIcon';
 
 import {
   Alert, Button, Jumbotron, Well, Panel
@@ -9,11 +14,9 @@ import {
 import {
   getDeviceList
 } from 'src/util/mediaUtil';
-import { Z_DEFAULT_COMPRESSION } from 'zlib';
+//import { Z_DEFAULT_COMPRESSION } from 'zlib';
 import { MediaStatus } from '../../../core/multimedia/StreamModel';
 
-const hasGetUserMedia = !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
-  navigator.mozGetUserMedia || navigator.msGetUserMedia);
 
 function log(...args) {
   console.log(...args);
@@ -72,6 +75,64 @@ function getStream(constraints) {
  * ############################################################
  */
 
+
+const actionNames = [
+  'startStreamRecorder',
+  'pauseStreamRecorder',
+  'resumeStreamRecorder'
+];
+const injectedActions = zipObject(
+  map(actionNames, name => 'click_' + name), 
+  map(actionNames, name => (
+    clickEvt,
+    { streamArgs },
+    fns
+  ) => {
+    return fns[name](streamArgs);
+  })
+);
+const RecorderCtrlButton = dataBind(injectedActions)(function RecorderCtrlButton(
+  { streamArgs },
+  fns,
+) {
+  let icon;
+  let text;
+  let action;
+
+  const { get_streamStatus } = fns;
+
+  const status = streamArgs && get_streamStatus(streamArgs);
+  switch (status) {
+    case MediaStatus.Ready:
+      text = 'Start!';
+      icon = 'play';
+      action = fns.click_startStreamRecorder;
+      break;
+    case MediaStatus.Running:
+      text = 'Pause';
+      icon = 'pause';
+      action = fns.click_pauseStreamRecorder;
+      break;
+    case MediaStatus.Paused:
+      text = 'Resume';
+      icon = 'play';
+      action = fns.click_resumeStreamRecorder;
+      break;
+    case MediaStatus.Finished:
+      text = 'Finished';
+      icon = 'stop';
+      break;
+    case MediaStatus.NotReady:
+    default:
+      text = 'not ready';
+      icon = 'play';
+      break;
+  }
+  return (<Button disabled={!action} onClick={action}>
+    <FAIcon name={icon} />{text}
+  </Button>);
+});
+
 @dataBind({})
 export default class MediaStreamPanel extends Component {
   constructor(...args) {
@@ -79,7 +140,8 @@ export default class MediaStreamPanel extends Component {
 
     this.dataBindMethods(
       //'componentDidMount',
-      'onVideoDOMReady'
+      'onVideoDOMReady',
+      'startRecording'
     );
   }
 
@@ -92,7 +154,7 @@ export default class MediaStreamPanel extends Component {
 
   onVideoDOMReady = (videoEl,
     { },
-    { newStreamRecording },
+    { startStreamRecording },
     { }
   ) => {
     //getDeviceList().then(log);
@@ -101,7 +163,7 @@ export default class MediaStreamPanel extends Component {
       constraints: defaultConstraints
     };
 
-    const streamId = newStreamRecording(newStreamArgs).then(
+    const streamId = startStreamRecording(newStreamArgs).then(
       this.startRecording
     );
 
@@ -124,6 +186,9 @@ export default class MediaStreamPanel extends Component {
     const videoEl = this.videoEl;
 
     videoEl.srcObject = stream;
+
+    // force an update
+    this.setState({});
 
     return Promise.all([
       new Promise((resolve, reject) => {
@@ -148,24 +213,37 @@ export default class MediaStreamPanel extends Component {
 
   render(
     { },
-    { get_streamStatus, get_streamSize }
+    { streamStatus, streamSize },
+    { isMediaRecorderCompatible }
   ) {
-    if (!hasGetUserMedia) {
+    if (!isMediaRecorderCompatible) {
       return <Alert bsStyle="danger">Browser does not have media capture support</Alert>;
     }
 
-    const status = this.streamArgs && get_streamStatus(this.streamArgs) || MediaStatus.NotReady;
+    const { streamArgs } = this;
 
-    this.continueSelfUpdate();
+    let infoEl;
+    if (streamArgs) {
+      const status = streamStatus(streamArgs);
+      const size = streamSize(streamArgs);
+      infoEl = (<span>
+        Status: {status},  size: {size}
+      </span>);
+    }
+    else {
+      infoEl = <Alert bsStyle="warning">stream not ready yet</Alert>;
+    }
+
+    //this.continueSelfUpdate();
 
     return (<div className="media-stream-panel">
       <div>
-        <video controls className="media-panel-video"
+        <video muted controls className="media-panel-video"
           ref={this.onVideoDOMReady} />
       </div>
       <div>
-        {status}
-        <Button bsStyle="primary">Start/Pause/Resume</Button>
+        {infoEl}
+        <RecorderCtrlButton streamArgs={streamArgs} />
         <Button bsStyle="primary">Switch playback/live stream</Button>
       </div>
       <div>

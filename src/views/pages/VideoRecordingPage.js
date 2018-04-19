@@ -44,6 +44,8 @@ import MediaStreamPanel from 'src/views/components/multimedia/MediaStreamPanel';
  *    Video duration controller? (e.g. max 1.5min etc...)
  *    Try to cache the video data while streaming / try failsaving streaming process
  *      Track stream/cache size via Blob API https://developer.mozilla.org/en-US/docs/Web/API/Blob
+ *      Use IndexedDB API to cache permanently: https://github.com/muaz-khan/RecordRTC/blob/master/dev/DiskStorage.js
+ *        https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API
  *    Track+limit every user's quota - https://developers.google.com/youtube/v3/determine_quota_cost
  *    Screen recording (be able to record projector output as well as the speaker) - https://github.com/muaz-khan/RecordRTC/blob/master/simple-demos/video-plus-screen-recording.html
  */
