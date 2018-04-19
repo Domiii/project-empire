@@ -99,15 +99,15 @@ export class DataStructureConfigNode {
 
     if (isString(cfg)) {
       // path string
-      this._parsePath(cfg);
+      this._parsePath(cfg, cfg);
     }
     else if (isFunction(cfg)) {
       // path transformation function
-      this._parsePath(cfg);
+      this._parsePath(cfg, cfg);
     }
     else if (isPlainObject(cfg)) {
       // more complex descriptor node
-      this._parsePath(cfg.path || cfg.pathTemplate);
+      this._parsePath(cfg, cfg.path || cfg.pathTemplate);
       this._parseChildren(cfg);
       this._parseReader(cfg);
       this._parseReaders(cfg);
@@ -119,10 +119,17 @@ export class DataStructureConfigNode {
     }
   }
 
-  _parsePath(pathConfig) {
+  _parsePath(cfg, pathConfig) {
+    const { parent } = this;
+    const parentPath = parent && parent.pathConfig && parent.pathConfig.pathTemplate || '';
     if (pathConfig === null || pathConfig === undefined) {
-      this.pathConfig = null;
-      return;
+      if (!parentPath || !cfg || !cfg.children) {
+        this.pathConfig = null;
+        return;
+      }
+      else {
+        pathConfig = '';
+      }
     }
 
     let pathTemplate;
@@ -147,8 +154,6 @@ export class DataStructureConfigNode {
     }
 
     // join with parent path
-    const { parent } = this;
-    const parentPath = parent && parent.pathConfig && parent.pathConfig.pathTemplate || '';
     pathTemplate = pathJoin(parentPath, pathTemplate);
 
     this.pathConfig = {

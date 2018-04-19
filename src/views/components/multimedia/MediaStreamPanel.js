@@ -171,11 +171,11 @@ export default class MediaStreamPanel extends Component {
     this.videoEl = videoEl;
   }
 
-/**
- * ############################################################
- * startRecording
- * ############################################################
- */
+  /**
+   * ############################################################
+   * startRecording
+   * ############################################################
+   */
   /**
    * @see https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
    */
@@ -217,17 +217,17 @@ export default class MediaStreamPanel extends Component {
     });
   }
 
-/**
- * ############################################################
- * clickShutdown
- * ############################################################
- */
+  /**
+   * ############################################################
+   * clickShutdown
+   * ############################################################
+   */
   clickShutdown = (
     evt,
     { streamArgs },
     { stopStream }
   ) => {
-    this.videoEl && this.videoEl.removeAttribute('controls');
+    //this.videoEl && this.videoEl.removeAttribute('controls');
     return stopStream(streamArgs);
   }
 
@@ -239,16 +239,16 @@ export default class MediaStreamPanel extends Component {
     window.requestAnimationFrame(this._selfUpdate);
   }
 
-/**
- * ############################################################
- * render
- * ############################################################
- */
+  /**
+   * ############################################################
+   * render
+   * ############################################################
+   */
   render(
     { streamArgs },
     { streamStatus, streamSize,
       streamObject, streamRecorderObject,
-      isStreamActive },
+      isStreamActive, isStreamReady },
     { isMediaRecorderCompatible }
   ) {
     if (!isMediaRecorderCompatible) {
@@ -260,31 +260,21 @@ export default class MediaStreamPanel extends Component {
     let controls;
     const isOffline = status <= MediaStatus.Preparing;
     if (isOffline) {
+      const isPreparing = status === MediaStatus.Preparing;
       controls = (<Button bsSize="large" bsStyle="success"
-          onClick={this.startRecording} block>
+        disabled={isPreparing}
+        onClick={this.startRecording} block>
         <FAIcon name="play-circle" /> Start!
+        {isPreparing && <FAIcon name="cog" spinning />}
       </Button>);
     }
     else {
-      const streamObj = streamObject(streamArgs);
-      const isActive = isStreamActive(streamArgs);
-
-      let infoEl;
-      if (!!streamObj) {
-        const size = streamSize(streamArgs);
-        const recorder = streamRecorderObject(streamArgs);
-        const recorderState = recorder && recorder.state;
-        infoEl = (<span>
-          Status: {status} ({recorderState}),  size: {size}
-        </span>);
-      }
-      else {
-        infoEl = <Alert bsStyle="warning">stream not ready yet</Alert>;
-      }
+      //const streamObj = streamObject(streamArgs);
+      const isReady = isStreamReady(streamArgs) || isStreamActive(streamArgs);
+      const canUpload = size > 100;
 
       controls = (<div>
         <div>
-          {infoEl}
           <RecorderCtrlButton />
           <Button bsStyle="primary">Switch playback/live stream</Button>
         </div>
@@ -297,12 +287,16 @@ export default class MediaStreamPanel extends Component {
         <div>
           <Flexbox justifyContent="space-between" alignItems="center">
             <Flexbox className="full-width">
-              <Button bsStyle="success" block>Upload!</Button>
+              <Button bsStyle="success" disabled={!canUpload} block>
+                <FAIcon color="" name="upload" />
+                Upload!
+              </Button>
             </Flexbox>
             <Flexbox className="full-width">
               <Button bsStyle="danger" block
-                disabled={!isActive} onClick={this.clickShutdown}>
-                <FAIcon color="yellow" name="alert" /> Shutdown
+                disabled={!isReady} onClick={this.clickShutdown}>
+                <FAIcon color="yellow" name="exclamation-triangle" />
+                Shutdown
               </Button>
             </Flexbox>
           </Flexbox>
@@ -320,10 +314,20 @@ export default class MediaStreamPanel extends Component {
       videoProps.controls = 1;
     }
 
+    const size = streamSize(streamArgs);
+    const recorder = streamRecorderObject(streamArgs);
+    const recorderState = recorder && recorder.state;
+    const infoEl = (<span>
+      Status: {status} ({recorderState}),  size: {size}
+    </span>);
+
     return (<div className="media-stream-panel">
       <div>
         <video {...videoProps} className="media-panel-video"
           ref={this.onVideoDOMReady} />
+      </div>
+      <div>
+        {infoEl}
       </div>
       {controls}
     </div>);

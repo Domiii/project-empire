@@ -28,7 +28,8 @@ export default class MemoryDataProvider extends DataProviderBase {
     let node = getDataIn(root, path);
     if (!node) {
       // in order to mirror firebase' push operation, all nodes are arrays
-      setDataIn(root, path, node = []);
+      // also: make sure, the first element is not an issue
+      setDataIn(root, path, node = [null]);
     }
     return node;
   }
@@ -68,39 +69,43 @@ export default class MemoryDataProvider extends DataProviderBase {
 
   actions = {
     set: (remotePath, val) => {
+      this.getOrCreateNode(remotePath);
+      const promise = Promise.resolve(setDataIn(this.cache, remotePath, val));
       this._onWrite('Set', remotePath, val);
-      return Promise.resolve(setDataIn(this.cache, remotePath, val));
+      return promise;
     },
 
     push: (remotePath, val) => {
-      this._onWrite('Pus', remotePath, val);
       let node = this.getOrCreateNode(remotePath);
-      if (!node.length) {
-        // make sure, the first element is not an issue
-        node.push(null);
-      }
+      debugger;
       node.push(val);
 
       const key = node.length - 1;
       const result = key;
       const promise = Promise.resolve(result);
       promise.key = key;
+      this._onWrite('Pus', remotePath, val);
       return promise;
     },
 
     update: (remotePath, val) => {
-      this._onWrite('Upd', remotePath, val);
       let node = this.getOrCreateNode(remotePath);
-      return Promise.all(map(val, (v, k) => setDataIn(node, k, v)));
+      const promise = Promise.all(map(val, (v, k) => setDataIn(node, k, v)));
+      this._onWrite('Upd', remotePath, val);
+      return promise;
     },
 
     delete: (remotePath) => {
-      this._onWrite('Del', remotePath);
       let node = getDataIn(this.cache, remotePath);
+      let promise;
       if (node !== undefined) {
-        return Promise.resolve(setDataIn(this.cache, remotePath, undefined));
+        promise = Promise.resolve(setDataIn(this.cache, remotePath, undefined));
       }
-      return Promise.resolve();
+      else {
+        return Promise.resolve();
+      }
+      this._onWrite('Del', remotePath);
+      return promise;
     },
 
     // transaction: () => {

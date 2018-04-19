@@ -1,6 +1,12 @@
 import reduce from 'lodash/reduce';
 
 
+/* globals window */
+const {
+  navigator,
+  MediaRecorder
+} = window;
+
 export const MediaStatus = {
   NotReady: 0,
   Preparing: 1,
@@ -21,7 +27,7 @@ export function isElectron() {
  * @see https://github.com/muaz-khan/RecordRTC/blob/d5109285e7f83f45e8a4dad8064d4eb9ab36d321/dev/isMediaRecorderCompatible.js
  */
 export function isMediaRecorderCompatible() {
-  var isOpera = !!window.opera || window.navigator.userAgent.indexOf(' OPR/') >= 0;
+  var isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
   var isChrome = (!!window.chrome && !isOpera) || isElectron();
   var isFirefox = typeof window.InstallTrigger !== 'undefined';
 
@@ -29,10 +35,10 @@ export function isMediaRecorderCompatible() {
     return true;
   }
 
-  var nVer = window.navigator.appVersion;
-  var nAgt = window.navigator.userAgent;
-  var fullVersion = '' + parseFloat(window.navigator.appVersion);
-  var majorVersion = parseInt(window.navigator.appVersion, 10);
+  var nVer = navigator.appVersion;
+  var nAgt = navigator.userAgent;
+  var fullVersion = '' + parseFloat(navigator.appVersion);
+  var majorVersion = parseInt(navigator.appVersion, 10);
   var nameOffset, verOffset, ix;
 
   if (isChrome || isOpera) {
@@ -52,8 +58,8 @@ export function isMediaRecorderCompatible() {
   majorVersion = parseInt('' + fullVersion, 10);
 
   if (isNaN(majorVersion)) {
-    fullVersion = '' + parseFloat(window.navigator.appVersion);
-    majorVersion = parseInt(window.navigator.appVersion, 10);
+    fullVersion = '' + parseFloat(navigator.appVersion);
+    majorVersion = parseInt(navigator.appVersion, 10);
   }
 
   return majorVersion >= 49;
@@ -66,7 +72,7 @@ export function isMediaRecorderCompatible() {
  */
 
 export function getStream(constraints) {
-  return window.navigator.mediaDevices.getUserMedia(constraints)
+  return navigator.mediaDevices.getUserMedia(constraints)
     .then(mediaStream => {
       return mediaStream;
     })
@@ -75,19 +81,45 @@ export function getStream(constraints) {
     }); // always check for errors at the end.
 }
 
-function prepareRecorder(recorder, streamArgs, set_streamBlobs, push_streamBlobs) {
-  set_streamBlobs(streamArgs, []);
+/**
+ * @see https://github.com/webrtc/samples/blob/1269739243f8f6063b3e3c19fb6562ca28d97069/src/content/getusermedia/record/js/main.js#L93
+ */
+function getDefaultRecorderOptions() {
+  var options = { mimeType: 'video/webm;codecs=vp9' };
+  if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+    console.log(options.mimeType + ' is not Supported');
+    options = { mimeType: 'video/webm;codecs=vp8' };
+    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+      console.log(options.mimeType + ' is not Supported');
+      options = { mimeType: 'video/webm' };
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        console.log(options.mimeType + ' is not Supported');
+        options = { mimeType: '' };
+      }
+    }
+  }
+  return options;
+}
 
-  recorder.onstart = function (e) {
+function prepareRecorder(stream, streamArgs,
+  { get_streamBlobs },
+  { set_streamBlobs, push_streamBlob }
+) {
+  const recorder = new MediaRecorder(stream, getDefaultRecorderOptions());
+
+  const blobs = [];
+  set_streamBlobs(streamArgs, blobs);
+
+  recorder.onstart = (e) => {
     console.log('MediaRecorder start');
   };
-  recorder.onpause = function (e) {
+  recorder.onpause = (e) => {
     console.log('MediaRecorder pause');
   };
-  recorder.onresume = function (e) {
+  recorder.onresume = (e) => {
     console.log('MediaRecorder resume');
   };
-  recorder.onstop = function (e) {
+  recorder.onstop = (e) => {
     console.log('MediaRecorder finished recording');
 
     //var blob = new window.Blob(chunks, { 'type': 'audio/ogg; codecs=opus' });
@@ -96,9 +128,15 @@ function prepareRecorder(recorder, streamArgs, set_streamBlobs, push_streamBlobs
   };
 
   recorder.ondataavailable = function (e) {
-    console.log('blob: ' + e.data.size);
-    push_streamBlobs(streamArgs, e.data);
+    //console.log('blob: ' + e.data.size);
+    //push_streamBlob(streamArgs, e.data);
+    blobs.push(e.data);
+    set_streamBlobs(streamArgs, blobs);
   };
+
+  //recorder.start(10);
+
+  return recorder;
 }
 
 /**
@@ -114,29 +152,26 @@ export default {
     writers: {
       startStreamRecording(
         { streamId, constraints },
+        readers,
         { },
-        { },
-        { set_mediaStream,
-          set_streamObject,
-          set_streamRecorderObject,
-          set_streamStatus,
-          set_streamBlobs, push_streamBlobs }
+        writers
       ) {
         const streamArgs = { streamId };
-        const res = set_mediaStream(streamArgs, {
-          streamStatus: MediaStatus.Preparing
-        });
-
-        console.log(res);
+        const { set_mediaStream,
+          set_streamObject,
+          set_streamRecorderObject,
+          set_streamStatus } = writers;
+        set_mediaStream(streamArgs, {});
+        set_streamStatus(streamArgs, MediaStatus.Preparing);
 
         return getStream(constraints).then((stream) => {
           // TODO: properly setup the recorder
           // see: https://github.com/muaz-khan/RecordRTC/tree/master/dev/MediaStreamRecorder.js
-          const mediaRecorder = new window.MediaRecorder(stream);
-          prepareRecorder(mediaRecorder, streamArgs, set_streamBlobs, push_streamBlobs);
+          const mediaRecorder = prepareRecorder(stream, streamArgs, readers, writers);
 
           // return Promise.all([
           set_streamObject(streamArgs, stream);
+          debugger;
           set_streamRecorderObject(streamArgs, mediaRecorder);
           set_streamStatus(streamArgs, MediaStatus.Ready);
           // ]);
@@ -154,11 +189,20 @@ export default {
 
         readers: {
           streamSize(
-            { streamId },
-            { streamBlobs }
+            streamArgs,
+            { streamBlobs, mediaStreams }
           ) {
-            const blobs = streamBlobs({ streamId });
+            const blobs = streamBlobs(streamArgs);
+            console.log('streamSize', mediaStreams.getPath(streamArgs), mediaStreams({}));
             return reduce(blobs, (sum, b) => sum + b.size, 0);
+          },
+
+          isStreamReady(
+            { streamId },
+            { streamStatus }
+          ) {
+            const status = streamStatus({ streamId });
+            return status === MediaStatus.Ready;
           },
 
           isStreamActive(
@@ -166,8 +210,7 @@ export default {
             { streamStatus }
           ) {
             const status = streamStatus({ streamId });
-            return status === MediaStatus.Ready ||
-              status === MediaStatus.Running ||
+            return status === MediaStatus.Running ||
               status === MediaStatus.Paused;
           }
         },
@@ -217,6 +260,7 @@ export default {
           },
 
           streamRecorder: {
+            path: 'streamRecorder',
             children: {
               streamRecorderObject: 'recorderObject'
             },
@@ -230,7 +274,7 @@ export default {
               ) {
                 const { timeout } = streamArgs;
                 const recorder = streamRecorderObject(streamArgs);
-                recorder.start(timeout);
+                recorder.start(timeout || 10);
 
                 return set_streamStatus(streamArgs, MediaStatus.Running);
               },
