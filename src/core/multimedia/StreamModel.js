@@ -3,6 +3,7 @@ import reduce from 'lodash/reduce';
 
 export const MediaStatus = {
   NotReady: 0,
+  Preparing: 1,
   Ready: 2,
   Running: 3,
   Paused: 4,
@@ -77,15 +78,21 @@ export function getStream(constraints) {
 function prepareRecorder(recorder, streamArgs, set_streamBlobs, push_streamBlobs) {
   set_streamBlobs(streamArgs, []);
 
+  recorder.onstart = function (e) {
+    console.log('MediaRecorder start');
+  };
+  recorder.onpause = function (e) {
+    console.log('MediaRecorder pause');
+  };
+  recorder.onresume = function (e) {
+    console.log('MediaRecorder resume');
+  };
   recorder.onstop = function (e) {
-    console.log('data available after MediaRecorder.stop() called.');
+    console.log('MediaRecorder finished recording');
 
-    var audio = window.document.createElement('audio');
-    audio.controls = true;
-    var blob = new window.Blob(chunks, { 'type': 'audio/ogg; codecs=opus' });
-    var audioURL = window.URL.createObjectURL(blob);
-    audio.src = audioURL;
-    console.log('recorder stopped');
+    //var blob = new window.Blob(chunks, { 'type': 'audio/ogg; codecs=opus' });
+    // var audioURL = window.URL.createObjectURL(blob);
+    // audio.src = audioURL;
   };
 
   recorder.ondataavailable = function (e) {
@@ -106,21 +113,20 @@ export default {
 
     writers: {
       startStreamRecording(
-        { constraints },
+        { streamId, constraints },
         { },
         { },
-        { push_mediaStreams,
+        { set_mediaStream,
           set_streamObject,
           set_streamRecorderObject,
           set_streamStatus,
           set_streamBlobs, push_streamBlobs }
       ) {
-        const res = push_mediaStreams({
-          streamStatus: MediaStatus.NotReady
+        const streamArgs = { streamId };
+        const res = set_mediaStream(streamArgs, {
+          streamStatus: MediaStatus.Preparing
         });
 
-        const streamId = res.key;
-        const streamArgs = { streamId };
         console.log(res);
 
         return getStream(constraints).then((stream) => {
@@ -153,6 +159,38 @@ export default {
           ) {
             const blobs = streamBlobs({ streamId });
             return reduce(blobs, (sum, b) => sum + b.size, 0);
+          },
+
+          isStreamActive(
+            { streamId },
+            { streamStatus }
+          ) {
+            const status = streamStatus({ streamId });
+            return status === MediaStatus.Ready ||
+              status === MediaStatus.Running ||
+              status === MediaStatus.Paused;
+          }
+        },
+
+        writers: {
+          stopStream(
+            streamArgs,
+            { streamObject },
+            { },
+            { set_streamObject,
+              set_streamRecorderObject,
+              set_streamStatus,
+              set_streamBlobs }
+          ) {
+            const stream = streamObject(streamArgs);
+            if (stream) {
+              stream.getTracks().forEach(track => track.stop());
+
+              set_streamBlobs(streamArgs, null);
+              set_streamObject(streamArgs, null);
+              set_streamRecorderObject(streamArgs, null);
+              set_streamStatus(streamArgs, MediaStatus.NotReady);
+            }
           }
         },
 
@@ -168,7 +206,7 @@ export default {
           },
 
           streamObject: {
-            path: 'streamObj'
+            path: 'streamObject'
           },
 
           streamBlobs: {
@@ -187,7 +225,7 @@ export default {
               startStreamRecorder(
                 streamArgs,
                 { streamRecorderObject },
-                {},
+                { },
                 { set_streamStatus }
               ) {
                 const { timeout } = streamArgs;
@@ -200,7 +238,7 @@ export default {
               stopStreamRecorder(
                 streamArgs,
                 { streamRecorderObject },
-                {},
+                { },
                 { set_streamStatus }
               ) {
                 //const { timeout } = streamArgs;
@@ -217,7 +255,7 @@ export default {
               pauseStreamRecorder(
                 streamArgs,
                 { streamRecorderObject },
-                {},
+                { },
                 { set_streamStatus }
               ) {
                 //const { timeout } = streamArgs;
@@ -230,7 +268,7 @@ export default {
               resumeStreamRecorder(
                 streamArgs,
                 { streamRecorderObject },
-                {},
+                { },
                 { set_streamStatus }
               ) {
                 //const { timeout } = streamArgs;

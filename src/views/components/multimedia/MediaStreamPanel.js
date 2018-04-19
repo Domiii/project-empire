@@ -11,6 +11,8 @@ import {
   Alert, Button, Jumbotron, Well, Panel
 } from 'react-bootstrap';
 
+import Flexbox from 'flexbox-react';
+
 import {
   getDeviceList
 } from 'src/util/mediaUtil';
@@ -71,10 +73,9 @@ function getStream(constraints) {
 
 /**
  * ############################################################
- * MediaStreamPanel
+ * RecorderCtrlButton
  * ############################################################
  */
-
 
 const actionNames = [
   'startStreamRecorder',
@@ -82,7 +83,7 @@ const actionNames = [
   'resumeStreamRecorder'
 ];
 const injectedActions = zipObject(
-  map(actionNames, name => 'click_' + name), 
+  map(actionNames, name => 'click_' + name),
   map(actionNames, name => (
     clickEvt,
     { streamArgs },
@@ -104,7 +105,7 @@ const RecorderCtrlButton = dataBind(injectedActions)(function RecorderCtrlButton
   const status = streamArgs && get_streamStatus(streamArgs);
   switch (status) {
     case MediaStatus.Ready:
-      text = 'Start!';
+      text = 'Start recording!';
       icon = 'play';
       action = fns.click_startStreamRecorder;
       break;
@@ -122,16 +123,24 @@ const RecorderCtrlButton = dataBind(injectedActions)(function RecorderCtrlButton
       text = 'Finished';
       icon = 'stop';
       break;
+    case MediaStatus.Preparing:
     case MediaStatus.NotReady:
     default:
       text = 'not ready';
-      icon = 'play';
+      icon = '';
       break;
   }
   return (<Button disabled={!action} onClick={action}>
     <FAIcon name={icon} />{text}
   </Button>);
 });
+
+
+/**
+ * ############################################################
+ * MediaStreamPanel
+ * ############################################################
+ */
 
 @dataBind({})
 export default class MediaStreamPanel extends Component {
@@ -141,7 +150,8 @@ export default class MediaStreamPanel extends Component {
     this.dataBindMethods(
       //'componentDidMount',
       'onVideoDOMReady',
-      'startRecording'
+      'startRecording',
+      'clickShutdown'
     );
   }
 
@@ -153,54 +163,72 @@ export default class MediaStreamPanel extends Component {
   // }
 
   onVideoDOMReady = (videoEl,
+    { streamArgs },
     { },
-    { startStreamRecording },
     { }
   ) => {
     //getDeviceList().then(log);
     this.videoEl = videoEl;
-    const newStreamArgs = {
-      constraints: defaultConstraints
-    };
-
-    const streamId = startStreamRecording(newStreamArgs).then(
-      this.startRecording
-    );
-
-    this.streamId = streamId;
-    this.streamIdObj = { streamId };
   }
 
+/**
+ * ############################################################
+ * startRecording
+ * ############################################################
+ */
   /**
    * @see https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
    */
   startRecording = (
-    streamId,
-    { },
-    { get_streamObject }
+    _ignoreFirstArg,
+    { streamArgs },
+    { get_streamObject, startStreamRecording }
   ) => {
-    this.streamId = streamId;
-    const streamArgs = this.streamArgs = { streamId };
-    const stream = get_streamObject(streamArgs);
+    const {
+      streamId
+    } = streamArgs;
 
-    const videoEl = this.videoEl;
+    const newStreamArgs = {
+      constraints: defaultConstraints,
+      streamId
+    };
 
-    videoEl.srcObject = stream;
+    return startStreamRecording(newStreamArgs).then(() => {
+      const stream = get_streamObject(streamArgs);
 
-    // force an update
-    this.setState({});
+      const videoEl = this.videoEl;
 
-    return Promise.all([
-      new Promise((resolve, reject) => {
-        videoEl.onloadedmetadata = e => {
-          videoEl.play();
-          resolve(e);
-        };
-        videoEl.onerror = err => {
-          reject(err);
-        };
-      })
-    ]);
+      videoEl.srcObject = stream;
+
+      // force an update
+      this.setState({});
+
+      return Promise.all([
+        new Promise((resolve, reject) => {
+          videoEl.onloadedmetadata = e => {
+            videoEl.play();
+            resolve(e);
+          };
+          videoEl.onerror = err => {
+            reject(err);
+          };
+        })
+      ]);
+    });
+  }
+
+/**
+ * ############################################################
+ * clickShutdown
+ * ############################################################
+ */
+  clickShutdown = (
+    evt,
+    { streamArgs },
+    { stopStream }
+  ) => {
+    this.videoEl && this.videoEl.removeAttribute('controls');
+    return stopStream(streamArgs);
   }
 
   _selfUpdate = () => {
@@ -211,50 +239,93 @@ export default class MediaStreamPanel extends Component {
     window.requestAnimationFrame(this._selfUpdate);
   }
 
+/**
+ * ############################################################
+ * render
+ * ############################################################
+ */
   render(
-    { },
-    { streamStatus, streamSize },
+    { streamArgs },
+    { streamStatus, streamSize,
+      streamObject, streamRecorderObject,
+      isStreamActive },
     { isMediaRecorderCompatible }
   ) {
     if (!isMediaRecorderCompatible) {
       return <Alert bsStyle="danger">Browser does not have media capture support</Alert>;
     }
 
-    const { streamArgs } = this;
+    const status = streamStatus(streamArgs);
 
-    let infoEl;
-    if (streamArgs) {
-      const status = streamStatus(streamArgs);
-      const size = streamSize(streamArgs);
-      infoEl = (<span>
-        Status: {status},  size: {size}
-      </span>);
+    let controls;
+    const isOffline = status <= MediaStatus.Preparing;
+    if (isOffline) {
+      controls = (<Button bsSize="large" bsStyle="success"
+          onClick={this.startRecording} block>
+        <FAIcon name="play-circle" /> Start!
+      </Button>);
     }
     else {
-      infoEl = <Alert bsStyle="warning">stream not ready yet</Alert>;
+      const streamObj = streamObject(streamArgs);
+      const isActive = isStreamActive(streamArgs);
+
+      let infoEl;
+      if (!!streamObj) {
+        const size = streamSize(streamArgs);
+        const recorder = streamRecorderObject(streamArgs);
+        const recorderState = recorder && recorder.state;
+        infoEl = (<span>
+          Status: {status} ({recorderState}),  size: {size}
+        </span>);
+      }
+      else {
+        infoEl = <Alert bsStyle="warning">stream not ready yet</Alert>;
+      }
+
+      controls = (<div>
+        <div>
+          {infoEl}
+          <RecorderCtrlButton />
+          <Button bsStyle="primary">Switch playback/live stream</Button>
+        </div>
+        <div>
+          <input className="full-width" placeholder="TODO: title" />
+        </div>
+        <div>
+          TODO: tags, users, privacy etc.
+        </div>
+        <div>
+          <Flexbox justifyContent="space-between" alignItems="center">
+            <Flexbox className="full-width">
+              <Button bsStyle="success" block>Upload!</Button>
+            </Flexbox>
+            <Flexbox className="full-width">
+              <Button bsStyle="danger" block
+                disabled={!isActive} onClick={this.clickShutdown}>
+                <FAIcon color="yellow" name="alert" /> Shutdown
+              </Button>
+            </Flexbox>
+          </Flexbox>
+        </div>
+      </div>);
     }
 
     //this.continueSelfUpdate();
 
+    const videoProps = {
+      muted: true
+    };
+
+    if (!isOffline) {
+      videoProps.controls = 1;
+    }
+
     return (<div className="media-stream-panel">
       <div>
-        <video muted controls className="media-panel-video"
+        <video {...videoProps} className="media-panel-video"
           ref={this.onVideoDOMReady} />
       </div>
-      <div>
-        {infoEl}
-        <RecorderCtrlButton streamArgs={streamArgs} />
-        <Button bsStyle="primary">Switch playback/live stream</Button>
-      </div>
-      <div>
-        <input className="full-width" placeholder="TODO: title" />
-      </div>
-      <div>
-        TODO: tags, users, privacy etc.
-      </div>
-      <div>
-        <Button bsStyle="success" block>Upload!</Button>
-      </div>
+      {controls}
     </div>);
   }
 }

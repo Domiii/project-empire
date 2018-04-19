@@ -50,6 +50,12 @@ import MediaStreamPanel from 'src/views/components/multimedia/MediaStreamPanel';
  *    Screen recording (be able to record projector output as well as the speaker) - https://github.com/muaz-khan/RecordRTC/blob/master/simple-demos/video-plus-screen-recording.html
  */
 
+ const streamContext = {
+   streamArgs: {
+     streamId: 1
+   }
+ };
+
 export default class VideoRecordingPage extends Component {
   static propTypes = {
     projectIds: PropTypes.object
@@ -63,7 +69,7 @@ export default class VideoRecordingPage extends Component {
     //{ this.IsGuardian && this.makeGuardianEl() }
     return (
       <div>
-        <MediaStreamPanel />
+        <MediaStreamPanel setContext={streamContext} />
       </div>
     );
   }
