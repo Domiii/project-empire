@@ -556,3 +556,15 @@ button:active { outline:none !important; }
 .project-stage-panel > .panel-body {
   padding: 0 !important;
 }
+
+@font-face {
+  font-family: 'digital';
+  src: url('../../../resources/digital.ttf') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.media-size-label {
+  font-size: 1.5em;
+  font-family: 'digital';
+}

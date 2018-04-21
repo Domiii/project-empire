@@ -7,6 +7,8 @@ import dataBind from 'src/dbdi/react/dataBind';
 
 import FAIcon from 'src/views/components/util/FAIcon';
 
+import filesize from 'filesize';
+
 import {
   Alert, Button, Jumbotron, Well, Panel
 } from 'react-bootstrap';
@@ -23,6 +25,8 @@ import { MediaStatus } from '../../../core/multimedia/StreamModel';
 function log(...args) {
   console.log(...args);
 }
+
+const renderSize = filesize.partial({base: 10});
 
 /**
  * ############################################################
@@ -318,7 +322,8 @@ export default class MediaStreamPanel extends Component {
     const recorder = streamRecorderObject(streamArgs);
     const recorderState = recorder && recorder.state;
     const infoEl = (<span>
-      Status: {status} ({recorderState}),  size: {size}
+      Status: {status} ({recorderState}),  
+      <span className="media-size-label">{renderSize(size)}</span>
     </span>);
 
     return (<div className="media-stream-panel">
