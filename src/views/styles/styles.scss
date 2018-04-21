@@ -15,9 +15,10 @@ body {
 button:focus {outline:none !important;}
 button:active { outline:none !important; }
 
-.hide {
-  display: none !important;
-}
+// don't use this. use Bootstrap's "invisible" instead!
+// .hidden {
+//   visibility: hidden !important;
+// }
 
 .full-height {
   height: 100%;
@@ -278,6 +279,13 @@ button:active { outline:none !important; }
 
 .footer  { order: 3; }
 
+
+/**
+ * #######
+ * max-size-
+ * #######
+ */
+
 .max-size-1-5 {
   max-width: 1.5em;
   max-height: 1.5em;
@@ -296,6 +304,42 @@ button:active { outline:none !important; }
 .max-size-4 {
   max-width: 4em;
   max-height: 4em;
+}
+
+/**
+ * #######
+ * size-
+ * #######
+ */
+
+.size-1-5 {
+  width: 1.5em;
+  height: 1.5em;
+}
+
+.size-2 {
+  width: 2em;
+  height: 2em;
+}
+
+.size-3 {
+  width: 3em;
+  height: 3em;
+}
+
+.size-4 {
+  width: 4em;
+  height: 4em;
+}
+
+/**
+ * #######
+ * width-
+ * #######
+ */
+
+.width-2 {
+  width: 2em;
 }
 
 /**
@@ -496,6 +540,17 @@ button:active { outline:none !important; }
   display: block;
 }
 
+/**
+ * @see https://stackoverflow.com/a/36505930
+ */
+.slow-blink {
+  animation: blinker 1.5s cubic-bezier(.5, 0, 1, 1) infinite alternate;  
+}
+@keyframes blinker {  
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
 
 /**
  * #######################################################
@@ -564,7 +619,14 @@ button:active { outline:none !important; }
   font-style: normal;
 }
 
+@font-face {
+  font-family: 'minisystem';
+  src: url('../../../resources/minisystem.ttf') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
 .media-size-label {
   font-size: 1.5em;
-  font-family: 'digital';
+  font-family: 'minisystem';
 }

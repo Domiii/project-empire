@@ -92,9 +92,13 @@ export default class Header extends Component {
     setAdminDisplayMode({ enabled: !isCurrentUserAdmin, uid: currentUid });
   }
 
-  render({ signOut }, { },
+  render(
+    { signOut },
+    { },
     { currentUid, currentUser, currentUser_isLoaded,
-      isCurrentUserAdmin, isCurrentUserAdminReal }) {
+      isCurrentUserAdmin, isCurrentUserAdminReal,
+      isAnyStreamOnline }
+  ) {
     //const isGuardian = hasDisplayRole(currentUserRef, Roles.Guardian);
     const lang = currentUser && currentUser.locale || 'en';
 
@@ -168,7 +172,9 @@ export default class Header extends Component {
       ),
       (
         <LinkContainer key="video" to="/video">
-          <NavItem eventKey={11}>Video Test</NavItem>
+          <NavItem eventKey={11}>
+            Video Test { isAnyStreamOnline && <FAIcon name="circle" color="red" /> }
+          </NavItem>
         </LinkContainer>
       ),
       // (

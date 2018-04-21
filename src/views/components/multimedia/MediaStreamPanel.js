@@ -1,13 +1,16 @@
 import map from 'lodash/map';
 import zipObject from 'lodash/zipObject';
+import moment from 'moment';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import dataBind from 'src/dbdi/react/dataBind';
 
+import filesize from 'filesize';
+
 import FAIcon from 'src/views/components/util/FAIcon';
 
-import filesize from 'filesize';
+import MediaInputSelect from './MediaInputSelect';
 
 import {
   Alert, Button, Jumbotron, Well, Panel
@@ -26,7 +29,7 @@ function log(...args) {
   console.log(...args);
 }
 
-const renderSize = filesize.partial({base: 10});
+const renderSize = filesize.partial({ base: 10 });
 
 /**
  * ############################################################
@@ -47,24 +50,6 @@ const defaultConstraints = {
   }
 };
 
-
-
-
-/**
- * ############################################################
- * startVideo
- * ############################################################
- */
-
-function getStream(constraints) {
-  return window.navigator.mediaDevices.getUserMedia(constraints)
-    .then(mediaStream => {
-      return mediaStream;
-    })
-    .catch(err => {
-      console.log('Could not get stream: ' + err.stack);
-    }); // always check for errors at the end.
-}
 
 
 /**
@@ -139,6 +124,38 @@ const RecorderCtrlButton = dataBind(injectedActions)(function RecorderCtrlButton
   </Button>);
 });
 
+/**
+ * ############################################################
+ * MediaSettingsPanel
+ * ############################################################
+ */
+@dataBind({})
+class MediaSettingsPanel extends Component {
+  render() {
+    const { disabled } = this.props;
+
+    return (<div>
+      <Flexbox alignItems="center" className="full-width">
+        <Flexbox>
+          <FAIcon name="video-camera" size="2em" className="width-2" />
+        </Flexbox>
+        <Flexbox className="full-width">
+          <MediaInputSelect disabled={disabled} kind="videoinput" />
+        </Flexbox>
+      </Flexbox>
+      <Flexbox alignItems="center" className="full-width">
+        <Flexbox>
+          <FAIcon name="microphone" size="2em" className="width-2" />
+        </Flexbox>
+        <Flexbox className="full-width">
+          <MediaInputSelect disabled={disabled} kind="audioinput" />
+        </Flexbox>
+      </Flexbox>
+    </div >);
+  }
+}
+
+
 
 /**
  * ############################################################
@@ -153,9 +170,10 @@ export default class MediaStreamPanel extends Component {
 
     this.dataBindMethods(
       //'componentDidMount',
-      'onVideoDOMReady',
-      'startRecording',
-      'clickShutdown'
+      '_attachStreamToLiveVideo',
+      'activateStream',
+      'clickShutdown',
+      'renderOfflineView'
     );
   }
 
@@ -166,27 +184,56 @@ export default class MediaStreamPanel extends Component {
   // ) => {
   // }
 
-  onVideoDOMReady = (videoEl,
-    { streamArgs },
-    { },
-    { }
-  ) => {
+  /**
+   * ############################################################
+   * handle live video element
+   * ############################################################
+   */
+
+  onLiveVideoDOMReady = (liveVideoEl) => {
     //getDeviceList().then(log);
-    this.videoEl = videoEl;
+    this.liveVideoEl = liveVideoEl;
+    this._attachStreamToLiveVideo();
+  }
+
+  _attachStreamToLiveVideo = (
+    { streamArgs },
+    { get_streamObject }
+  ) => {
+    const stream = get_streamObject(streamArgs);
+
+    const liveVideoEl = this.liveVideoEl;
+
+    if (liveVideoEl) {
+      liveVideoEl.srcObject = stream;
+
+      // force an update
+      this.setState({});
+
+      return Promise.all([
+        new Promise((resolve, reject) => {
+          liveVideoEl.onloadedmetadata = e => {
+            liveVideoEl.play();
+            resolve(e);
+          };
+          liveVideoEl.onerror = err => {
+            reject(err);
+          };
+        })
+      ]);
+    }
   }
 
   /**
    * ############################################################
-   * startRecording
+   * activateStream
    * ############################################################
    */
-  /**
-   * @see https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
-   */
-  startRecording = (
+
+  activateStream = (
     _ignoreFirstArg,
     { streamArgs },
-    { get_streamObject, startStreamRecording }
+    { startStreamRecording }
   ) => {
     const {
       streamId
@@ -197,28 +244,7 @@ export default class MediaStreamPanel extends Component {
       streamId
     };
 
-    return startStreamRecording(newStreamArgs).then(() => {
-      const stream = get_streamObject(streamArgs);
-
-      const videoEl = this.videoEl;
-
-      videoEl.srcObject = stream;
-
-      // force an update
-      this.setState({});
-
-      return Promise.all([
-        new Promise((resolve, reject) => {
-          videoEl.onloadedmetadata = e => {
-            videoEl.play();
-            resolve(e);
-          };
-          videoEl.onerror = err => {
-            reject(err);
-          };
-        })
-      ]);
-    });
+    return startStreamRecording(newStreamArgs).then(this._attachStreamToLiveVideo);
   }
 
   /**
@@ -231,7 +257,7 @@ export default class MediaStreamPanel extends Component {
     { streamArgs },
     { stopStream }
   ) => {
-    //this.videoEl && this.videoEl.removeAttribute('controls');
+    //this.liveVideoEl && this.liveVideoEl.removeAttribute('controls');
     return stopStream(streamArgs);
   }
 
@@ -243,6 +269,29 @@ export default class MediaStreamPanel extends Component {
     window.requestAnimationFrame(this._selfUpdate);
   }
 
+  renderOfflineView(
+    { streamArgs },
+    { streamStatus },
+    { hasSelectedInputMedia }
+  ) {
+    const status = streamStatus(streamArgs);
+    const isPreparing = status === MediaStatus.Preparing;
+    const mediaReady = hasSelectedInputMedia;
+
+    return (<div>
+      <div>
+        <MediaSettingsPanel />
+      </div>
+      <br />
+      <Button bsSize="large" bsStyle="success"
+        disabled={isPreparing || !mediaReady}
+        onClick={this.activateStream} block>
+        <FAIcon name="play-circle" /> Start!
+          {isPreparing && <FAIcon name="cog" spinning />}
+      </Button>
+    </div>);
+  }
+
   /**
    * ############################################################
    * render
@@ -251,9 +300,10 @@ export default class MediaStreamPanel extends Component {
   render(
     { streamArgs },
     { streamStatus, streamSize,
-      streamObject, streamRecorderObject,
-      isStreamActive, isStreamReady },
-    { isMediaRecorderCompatible }
+      streamDuration,
+      streamRecorderObject,
+      isStreamActive, isStreamReady, isStreamOffline },
+    { isMediaRecorderCompatible, videoDeviceId, audioDeviceId }
   ) {
     if (!isMediaRecorderCompatible) {
       return <Alert bsStyle="danger">Browser does not have media capture support</Alert>;
@@ -261,27 +311,60 @@ export default class MediaStreamPanel extends Component {
 
     const status = streamStatus(streamArgs);
 
-    let controls;
-    const isOffline = status <= MediaStatus.Preparing;
+    let titleEl;
+    let contentEl;
+    let videoProps;
+    const isOffline = isStreamOffline(streamArgs);
+    const isRecording = status === MediaStatus.Running;
     if (isOffline) {
-      const isPreparing = status === MediaStatus.Preparing;
-      controls = (<Button bsSize="large" bsStyle="success"
-        disabled={isPreparing}
-        onClick={this.startRecording} block>
-        <FAIcon name="play-circle" /> Start!
-        {isPreparing && <FAIcon name="cog" spinning />}
-      </Button>);
+      titleEl = 'Setup Stream';
+      contentEl = this.renderOfflineView();
     }
     else {
+      titleEl = (<span>Record&nbsp;
+        {videoDeviceId && <FAIcon color="green" name="video-camera" />}
+        {audioDeviceId && <FAIcon color="green" name="microphone" />}&nbsp;
+        <span>
+          {isRecording && <FAIcon className="slow-blink" name="circle" color="red" />}
+          {!isRecording && <FAIcon name="stop" color="gray" />}
+        </span>
+      </span>);
+
       //const streamObj = streamObject(streamArgs);
       const isReady = isStreamReady(streamArgs) || isStreamActive(streamArgs);
       const canUpload = size > 100;
 
-      controls = (<div>
+      const duration = streamDuration(streamArgs);
+      //const durationStr = 
+      const size = streamSize(streamArgs);
+      const recorder = streamRecorderObject(streamArgs);
+      const recorderState = recorder && recorder.state;
+      const infoEl = (<span>
+        Status: {status} ({recorderState}),
+        {/* Duration: {moment.duration(duration, 'milliseconds').format('h:m:s')}, */}
+        <span className="media-size-label">{renderSize(size)}</span>
+      </span>);
+
+      videoProps = {
+        //currentTime: duration/1000
+      };
+
+      if (this.liveVideoEl) {
+        this.liveVideoEl.currentTime = duration / 1000;
+      }
+
+      if (!isOffline) {
+        videoProps.controls = 1;
+      }
+
+      contentEl = (<div>
         <div>
           <RecorderCtrlButton />
-          <Button bsStyle="primary">Switch playback/live stream</Button>
+          {infoEl}
         </div>
+        {/* <div>
+          <Button bsStyle="primary">Switch playback/live stream</Button>
+        </div> */}
         <div>
           <input className="full-width" placeholder="TODO: title" />
         </div>
@@ -310,31 +393,15 @@ export default class MediaStreamPanel extends Component {
 
     //this.continueSelfUpdate();
 
-    const videoProps = {
-      muted: true
-    };
-
-    if (!isOffline) {
-      videoProps.controls = 1;
-    }
-
-    const size = streamSize(streamArgs);
-    const recorder = streamRecorderObject(streamArgs);
-    const recorderState = recorder && recorder.state;
-    const infoEl = (<span>
-      Status: {status} ({recorderState}),  
-      <span className="media-size-label">{renderSize(size)}</span>
-    </span>);
-
     return (<div className="media-stream-panel">
+      <h2 className="inline-hcentered">
+        {titleEl}
+      </h2>
       <div>
-        <video {...videoProps} className="media-panel-video"
-          ref={this.onVideoDOMReady} />
+        <video {...videoProps} muted className="media-panel-video"
+          ref={this.onLiveVideoDOMReady} />
       </div>
-      <div>
-        {infoEl}
-      </div>
-      {controls}
+      {contentEl}
     </div>);
   }
 }

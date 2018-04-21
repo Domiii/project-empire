@@ -26,7 +26,7 @@ import MediaStreamPanel from 'src/views/components/multimedia/MediaStreamPanel';
  *      Video duration
  *      List all input devices: https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/enumerateDevices
  *          https://developer.mozilla.org/en-US/docs/Web/API/MediaDeviceInfo
- *      be able to select input device/s: https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/enumerateDevices
+ *      be able to select input device/s
  *      Be able to switch picture priority during streaming
  *    Use MediaRecorder to store the data locally: https://developer.mozilla.org/en-US/docs/Web/API/MediaStream_Recording_API
  *    Figure out possibilities of / set correct encoding

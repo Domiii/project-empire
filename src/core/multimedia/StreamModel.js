@@ -1,4 +1,9 @@
-import reduce from 'lodash/reduce';
+import some from 'lodash/some';
+import first from 'lodash/first';
+import last from 'lodash/last';
+
+import { EmptyObject } from '../../util';
+import { NOT_LOADED } from '../../dbdi/react';
 
 
 /* globals window */
@@ -77,9 +82,40 @@ export function getStream(constraints) {
       return mediaStream;
     })
     .catch(err => {
-      console.error('Could not get stream - ' + err.stack);
+      console.error('Could not get stream - ' + (err.stack || err), constraints);
     }); // always check for errors at the end.
 }
+
+
+/**
+ * ############################################################
+ * getDeviceList
+ * ############################################################
+ */
+
+/**
+ * Returns a promise which (if successful), yields an array of MediaDeviceInfo.
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/MediaDeviceInfo
+ */
+export function getDeviceList() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+    return Promise.reject('Could not get media device list - enumerateDevices() not supported.');
+  }
+
+  // List cameras and microphones.
+
+  return navigator.mediaDevices.enumerateDevices()
+    .catch((err) => {
+      throw new Error('Could not get media device list - ' + (err.stack || err));
+    });
+}
+
+
+/**
+ * ############################################################
+ * getDefaultRecorderOptions
+ * ############################################################
+ */
 
 /**
  * @see https://github.com/webrtc/samples/blob/1269739243f8f6063b3e3c19fb6562ca28d97069/src/content/getusermedia/record/js/main.js#L93
@@ -101,13 +137,21 @@ function getDefaultRecorderOptions() {
   return options;
 }
 
+
+/**
+ * ############################################################
+ * prepareRecorder
+ * ############################################################
+ */
+
 function prepareRecorder(stream, streamArgs,
   { get_streamBlobs },
-  { set_streamBlobs, push_streamBlob }
+  { set_streamBlobs, push_streamBlob, add_streamSize }
 ) {
   const recorder = new MediaRecorder(stream, getDefaultRecorderOptions());
 
   const blobs = [];
+
   set_streamBlobs(streamArgs, blobs);
 
   recorder.onstart = (e) => {
@@ -127,17 +171,87 @@ function prepareRecorder(stream, streamArgs,
     // audio.src = audioURL;
   };
 
-  recorder.ondataavailable = function (e) {
+  recorder.ondataavailable = function (blobEvent) {
     //console.log('blob: ' + e.data.size);
     //push_streamBlob(streamArgs, e.data);
-    blobs.push(e.data);
+
+    if (get_streamBlobs(streamArgs) !== blobs) {
+      // a different show is running!
+      return;
+    }
+
+    // add blob
+    // TODO: fix pushing to memory data provider!
+    const blob = blobEvent.data;
+    blobs.push(blobEvent);
     set_streamBlobs(streamArgs, blobs);
+
+    // update size
+    add_streamSize({ ...streamArgs, amount: blob.size });
   };
 
   //recorder.start(10);
 
   return recorder;
 }
+
+
+/**
+ * ############################################################
+ * inputSelection
+ * ############################################################
+ */
+
+const mediaInputSelection = {
+  readers: {
+    mediaInputConstraints(
+      { },
+      { },
+      { hasSelectedInputMedia, videoDeviceId, audioDeviceId }
+    ) {
+      if (!hasSelectedInputMedia) {
+        return NOT_LOADED;
+      }
+
+      const constraints = {};
+      constraints.video = videoDeviceId && {
+        deviceId: videoDeviceId
+      } || false;
+
+      constraints.audio = audioDeviceId && {
+        deviceId: audioDeviceId
+      } || false;
+
+      return constraints;
+    },
+
+    enumerateMediaDevices() {
+      return getDeviceList();
+    },
+
+    hasSelectedInputMedia(
+      { },
+      { },
+      { videoDeviceId, audioDeviceId }
+    ) {
+      return !!videoDeviceId || !!audioDeviceId;
+    },
+
+    isAnyStreamOnline(
+      { },
+      { isStreamOffline },
+      { mediaStreams }
+    ) {
+      return some(mediaStreams, (stream, streamId) => !isStreamOffline({ streamId }));
+    }
+  },
+
+  children: {
+    videoDeviceId: 'videoDeviceId',
+    audioDeviceId: 'audioDeviceId'
+  }
+};
+
 
 /**
  * ############################################################
@@ -151,27 +265,30 @@ export default {
 
     writers: {
       startStreamRecording(
-        { streamId, constraints },
+        { streamId },
         readers,
-        { },
+        { mediaInputConstraints },
         writers
       ) {
         const streamArgs = { streamId };
-        const { set_mediaStream,
+        const { get_mediaStreams } = readers;
+        const { set_mediaStream, set_mediaStreams,
           set_streamObject,
           set_streamRecorderObject,
           set_streamStatus } = writers;
         set_mediaStream(streamArgs, {});
         set_streamStatus(streamArgs, MediaStatus.Preparing);
 
-        return getStream(constraints).then((stream) => {
+        // notify any listener of `isAnyStreamOnline`
+        set_mediaStreams(get_mediaStreams());
+
+        return getStream(mediaInputConstraints).then((stream) => {
           // TODO: properly setup the recorder
           // see: https://github.com/muaz-khan/RecordRTC/tree/master/dev/MediaStreamRecorder.js
           const mediaRecorder = prepareRecorder(stream, streamArgs, readers, writers);
 
           // return Promise.all([
           set_streamObject(streamArgs, stream);
-          debugger;
           set_streamRecorderObject(streamArgs, mediaRecorder);
           set_streamStatus(streamArgs, MediaStatus.Ready);
           // ]);
@@ -184,19 +301,12 @@ export default {
     },
 
     children: {
+      mediaInputSelection,
+
       mediaStream: {
         path: '$(streamId)',
 
         readers: {
-          streamSize(
-            streamArgs,
-            { streamBlobs, mediaStreams }
-          ) {
-            const blobs = streamBlobs(streamArgs);
-            console.log('streamSize', mediaStreams.getPath(streamArgs), mediaStreams({}));
-            return reduce(blobs, (sum, b) => sum + b.size, 0);
-          },
-
           isStreamReady(
             { streamId },
             { streamStatus }
@@ -212,6 +322,14 @@ export default {
             const status = streamStatus({ streamId });
             return status === MediaStatus.Running ||
               status === MediaStatus.Paused;
+          },
+
+          isStreamOffline(
+            { streamId },
+            { streamStatus }
+          ) {
+            const status = streamStatus({ streamId });
+            return status <= MediaStatus.Preparing;
           }
         },
 
@@ -223,13 +341,13 @@ export default {
             { set_streamObject,
               set_streamRecorderObject,
               set_streamStatus,
-              set_streamBlobs }
+              set_streamData }
           ) {
             const stream = streamObject(streamArgs);
             if (stream) {
               stream.getTracks().forEach(track => track.stop());
 
-              set_streamBlobs(streamArgs, null);
+              set_streamData(streamArgs, null);
               set_streamObject(streamArgs, null);
               set_streamRecorderObject(streamArgs, null);
               set_streamStatus(streamArgs, MediaStatus.NotReady);
@@ -252,10 +370,46 @@ export default {
             path: 'streamObject'
           },
 
-          streamBlobs: {
-            path: 'blobs',
+          streamData: {
+            path: 'data',
+            writers: {
+              add_streamSize(
+                streamArgs,
+                { get_streamSize },
+                { },
+                { set_streamSize }
+              ) {
+                const { amount } = streamArgs;
+                const oldAmount = get_streamSize(streamArgs);
+                set_streamSize(streamArgs, oldAmount + amount);
+              }
+            },
+            readers: {
+              streamDuration(
+                streamArgs,
+                { get_streamBlobs }
+              ) {
+                const blobs = get_streamBlobs(streamArgs);
+                if (blobs && blobs.length) {
+                  return last(blobs).timecode - first(blobs).timecode;
+                }
+                return 0;
+              }
+            },
             children: {
-              streamBlob: '$(blobId)'
+              streamBlobs: {
+                path: 'blobs',
+                children: {
+                  streamBlob: '$(blobId)'
+                }
+              },
+
+              streamSize: {
+                path: 'streamSize',
+                reader(val) {
+                  return val || 0;
+                }
+              }
             }
           },
 

@@ -9,6 +9,13 @@ import 'react-select/dist/react-select.css';
 // import our own main CSS
 import 'src/views/styles/styles.scss';
 
+
+import moment from 'moment';
+
+// see: https://github.com/jsmreese/moment-duration-format#module
+import momentDurationFormatSetup from 'moment-duration-format';
+momentDurationFormatSetup(moment);
+
 // // import extra libraries
 // import 'moment/locale/en';
 // import 'moment/locale/zh-tw';
