@@ -1,9 +1,12 @@
 import some from 'lodash/some';
+import reduce from 'lodash/reduce';
 import first from 'lodash/first';
 import last from 'lodash/last';
 
 import { EmptyObject } from '../../util';
 import { NOT_LOADED } from '../../dbdi/react';
+
+import { getOptionalArgument } from 'src/dbdi/dataAccessUtil';
 
 
 /* globals window */
@@ -20,8 +23,6 @@ export const MediaStatus = {
   Paused: 4,
   Finished: 5
 };
-
-export const DefaultMimeType = 'video/webm';
 
 export function isElectron() {
   // NYI
@@ -145,48 +146,55 @@ function getDefaultRecorderOptions() {
  */
 
 function prepareRecorder(stream, streamArgs,
-  { get_streamBlobs },
-  { set_streamBlobs, push_streamBlob, add_streamSize }
+  { get_streamSegments, get_streamBlobs, currentSegmentId, get_mediaStream },
+  { set_streamSegments, set_streamBlobs, push_streamBlob, add_streamSize, set_streamStatus }
 ) {
   const recorder = new MediaRecorder(stream, getDefaultRecorderOptions());
 
-  const blobs = [];
-
-  set_streamBlobs(streamArgs, blobs);
+  set_streamSegments(streamArgs, [[]]);
 
   recorder.onstart = (e) => {
-    console.log('MediaRecorder start');
+    //console.log('MediaRecorder start');
   };
   recorder.onpause = (e) => {
-    console.log('MediaRecorder pause');
+    //console.log('MediaRecorder pause');
+    set_streamStatus(streamArgs, MediaStatus.Paused);
   };
   recorder.onresume = (e) => {
-    console.log('MediaRecorder resume');
+    // we are starting on a new segment
+    set_streamStatus(streamArgs, MediaStatus.Running);
+    const segments = get_streamSegments(streamArgs);
+    if (!segments) return;
+
+    // TODO: fix pushing to memory data provider!
+    segments.push([]);
+    set_streamSegments(streamArgs, segments);
+    //console.log('MediaRecorder resume');
   };
   recorder.onstop = (e) => {
     console.log('MediaRecorder finished recording');
-
-    //var blob = new window.Blob(chunks, { 'type': 'audio/ogg; codecs=opus' });
-    // var audioURL = window.URL.createObjectURL(blob);
-    // audio.src = audioURL;
+    
+    set_streamStatus(streamArgs, MediaStatus.Finished);
   };
 
-  recorder.ondataavailable = function (blobEvent) {
+  recorder.ondataavailable = function(blobEvent) {
     //console.log('blob: ' + e.data.size);
     //push_streamBlob(streamArgs, e.data);
-
-    if (get_streamBlobs(streamArgs) !== blobs) {
-      // a different show is running!
+    const segmentIndex = currentSegmentId(streamArgs);
+    if (segmentIndex === NOT_LOADED) {
+      console.error('recorder is recording, but no segmentIndex is set:', segmentIndex, '-', get_mediaStream(streamArgs));
       return;
     }
 
+    const streamSegmentArgs = { ...streamArgs, segmentIndex};
+    const blobs = get_streamBlobs(streamSegmentArgs);
+
     // add blob
-    // TODO: fix pushing to memory data provider!
-    const blob = blobEvent.data;
     blobs.push(blobEvent);
-    set_streamBlobs(streamArgs, blobs);
+    set_streamBlobs(streamSegmentArgs, blobs);
 
     // update size
+    const blob = blobEvent.data;
     add_streamSize({ ...streamArgs, amount: blob.size });
   };
 
@@ -334,7 +342,7 @@ export default {
         },
 
         writers: {
-          stopStream(
+          shutdownStream(
             streamArgs,
             { streamObject },
             { },
@@ -387,20 +395,37 @@ export default {
             readers: {
               streamDuration(
                 streamArgs,
-                { get_streamBlobs }
+                { get_streamSegments }
               ) {
-                const blobs = get_streamBlobs(streamArgs);
-                if (blobs && blobs.length) {
-                  return last(blobs).timecode - first(blobs).timecode;
-                }
-                return 0;
+                // the total duration of the stream, across all segments
+                // TODO: do we need the duration between start + first blob?
+                const segments = get_streamSegments(streamArgs);
+                return reduce(segments, (sum, blobs, segmentIndex) => 
+                  sum + (blobs && blobs.length && last(blobs).timecode - first(blobs).timecode || 0),
+                0);
+              },
+              currentSegmentId(
+                streamArgs,
+                { get_streamSegments }
+              ) {
+                const segments = get_streamSegments(streamArgs);
+                return segments ? segments.length-1 : NOT_LOADED;
               }
             },
             children: {
-              streamBlobs: {
-                path: 'blobs',
+              streamSegments: {
+                path: 'segments',
                 children: {
-                  streamBlob: '$(blobId)'
+                  streamSegment: {
+                    path: '$(segmentIndex)',
+                    children: {
+                      streamBlobs: {
+                        children: {
+                          streamBlob: '$(blobId)'
+                        }
+                      }
+                    }
+                  }
                 }
               },
 
@@ -426,7 +451,7 @@ export default {
                 { },
                 { set_streamStatus }
               ) {
-                const { timeout } = streamArgs;
+                const timeout = getOptionalArgument(streamArgs, 'timeout');
                 const recorder = streamRecorderObject(streamArgs);
                 recorder.start(timeout || 10);
 
@@ -435,45 +460,31 @@ export default {
 
               stopStreamRecorder(
                 streamArgs,
-                { streamRecorderObject },
-                { },
-                { set_streamStatus }
+                { streamRecorderObject }
               ) {
                 //const { timeout } = streamArgs;
                 const recorder = streamRecorderObject(streamArgs);
-
-                return new Promise((resolve, reject) => {
-                  recorder.stop(() => {
-                    const result = set_streamStatus(streamArgs, MediaStatus.Finished);
-                    resolve(result);
-                  });
-                });
+                recorder.stop();
               },
 
               pauseStreamRecorder(
                 streamArgs,
-                { streamRecorderObject },
-                { },
-                { set_streamStatus }
+                { streamRecorderObject }
               ) {
                 //const { timeout } = streamArgs;
                 const recorder = streamRecorderObject(streamArgs);
 
                 recorder.pause();
-                return set_streamStatus(streamArgs, MediaStatus.Paused);
               },
 
               resumeStreamRecorder(
                 streamArgs,
-                { streamRecorderObject },
-                { },
-                { set_streamStatus }
+                { streamRecorderObject }
               ) {
                 //const { timeout } = streamArgs;
                 const recorder = streamRecorderObject(streamArgs);
 
                 recorder.resume();
-                return set_streamStatus(streamArgs, MediaStatus.Running);
               }
             }
           }

@@ -148,7 +148,7 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
       }
     }
 
-    throw new Error('Tried to write to path but not all arguments were provided: ' + this.fullName);
+    throw new Error('Tried to write to path but not all arguments were provided: ' + this._name);
   }
 
   _wrapCustomWriter(writerFn) {

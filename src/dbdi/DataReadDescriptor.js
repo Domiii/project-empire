@@ -51,7 +51,7 @@ export default class DataReadDescriptor extends DataDescriptorNode {
     }
     
     if (!readData) {
-      throw new Error('Could not make sense of DataReadDescriptor config node: ' + JSON.stringify(cfg));
+      throw new Error('Could not make sense of DataReadDescriptor config node: ' + JSON.stringify(this._cfg));
     }
     this.readData = this._wrapAccessFunction(readData);
   }
