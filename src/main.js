@@ -6,6 +6,8 @@ import 'font-awesome/css/font-awesome.min.css';
 
 import 'react-select/dist/react-select.css';
 
+import 'video.js/dist/video-js.min.css';
+
 // import our own main CSS
 import 'src/views/styles/styles.scss';
 

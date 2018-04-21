@@ -24,14 +24,17 @@ import Flexbox from 'flexbox-react';
 import { MediaStatus } from '../../../core/multimedia/StreamModel';
 
 import MediaInputSelect from './MediaInputSelect';
-import { fail } from 'assert';
+import VideoPlayer from './VideoPlayer';
 
 
 function log(...args) {
   console.log(...args);
 }
 
-const renderSize = filesize.partial({ base: 10 });
+const renderSize = filesize.partial({
+  base: 10,
+  round: 0
+});
 
 /**
  * ############################################################
@@ -175,10 +178,13 @@ export default class MediaStreamPanel extends Component {
   constructor(...args) {
     super(...args);
 
+    this.state = {};
+
     this.dataBindMethods(
       //'componentDidMount',
       '_attachStreamToLiveVideo',
       'startNewStream',
+      'clickStartReplay',
       'clickFinish',
       'clickStartDownload',
       'clickShutdown',
@@ -223,7 +229,6 @@ export default class MediaStreamPanel extends Component {
         new Promise((resolve, reject) => {
           liveVideoEl.onloadedmetadata = e => {
             liveVideoEl.play();
-            liveVideoEl.currentTime = 1;
             resolve(e);
           };
           liveVideoEl.onerror = err => {
@@ -263,6 +268,18 @@ export default class MediaStreamPanel extends Component {
    * ############################################################
    */
 
+  clickStartReplay = (evt,
+    { streamArgs },
+    { streamDuration, recorderStreamBlob }
+  ) => {
+    const blob = recorderStreamBlob(streamArgs);
+    const duration = streamDuration(streamArgs);
+    this.setState({
+      replayVideoSrc: window.URL.createObjectURL(blob),
+      replayDuration: duration / 1000
+    });
+  }
+
   clickFinish = (evt,
     { streamArgs },
     { stopStreamRecorder }
@@ -272,15 +289,10 @@ export default class MediaStreamPanel extends Component {
 
   clickStartDownload = (clickEvent,
     { streamArgs },
-    { get_streamSegments, get_streamRecorderObject },
+    { recorderStreamFile },
     { }
   ) => {
-    const allSegments = get_streamSegments(streamArgs);
-    const fileName = 'stream.webm';
-    //const mimeType = get_streamRecorderObject(streamArgs).mimeType;
-    const allBlobs = map(flatten(allSegments), 'data');
-    var file = new window.File(allBlobs, fileName, { type: 'video/webm' });
-    return FileSaver.saveAs(file);
+    return FileSaver.saveAs(recorderStreamFile(streamArgs));
   }
 
   /**
@@ -354,7 +366,7 @@ export default class MediaStreamPanel extends Component {
     { streamArgs },
     { streamStatus, streamSize,
       streamDuration,
-      streamRecorderObject,
+      streamRecorderMimeType,
       isStreamActive, isStreamReady, isStreamOffline },
     { isMediaRecorderCompatible, videoDeviceId, audioDeviceId }
   ) {
@@ -380,7 +392,6 @@ export default class MediaStreamPanel extends Component {
       const duration = streamDuration(streamArgs);
       //const durationStr = 
       const size = streamSize(streamArgs);
-      const recorder = streamRecorderObject(streamArgs);
       const canUpload = status === MediaStatus.Finished;
 
       titleEl = (<span>
@@ -399,20 +410,66 @@ export default class MediaStreamPanel extends Component {
         </span>
       </span>);
 
-      const recorderState = recorder && recorder.state;
-
       videoProps = {
 
       };
+
+
+      // TODO: handle two different modes in a single player
+      //  * in both modes, always update the total duration
+      //  * in live mode:
+      //    * when entering, set srcObject, and unset src instead, set currentTime to duration
+      //    * set VideoPlayer's videoEl.srcObject to live stream
+      //    * but also keep updating the duration
+      //    * when seeking anywhere, go into preview mode
+      //  * in preview mode:
+      //    * when entering, unset srcObject, and set src (to last cached src) instead
+      //    * when seeking to a currentTime > currentDuration, before actually updating currentTime, create new src whose duration exceeds currentTime
+
+      const { replayVideoSrc, replayDuration } = this.state;
+      const replayVideoProps = replayVideoSrc && {
+        duration: replayDuration,
+        autoplay: true,
+        controls: true,
+        loop: false,
+        muted: true,
+        inactivityTimeout: 0,   // never hide controls
+        refresh: this.clickStartReplay,
+        src: {
+          src: replayVideoSrc,
+          type: streamRecorderMimeType(streamArgs)
+        }
+      };
+
 
       if (!isOffline) {
         videoProps.controls = 1;
       }
 
       contentEl = (<div>
-        {/* <div>
-          <Button bsStyle="primary">Switch playback/live stream</Button>
-        </div> */}
+        <Flexbox justifyContent="center" alignItems="center">
+          <Flexbox className="full-width">
+            <Panel className="full-height full-width">
+              <Panel.Heading>Live</Panel.Heading>
+              <Panel.Body className="no-padding">
+                <video {...videoProps} muted className="media-panel-video"
+                  ref={this.onLiveVideoDOMReady} />
+              </Panel.Body>
+            </Panel>
+          </Flexbox>
+          <Flexbox className="full-width">
+            {replayVideoSrc && <Panel className="full-height full-width">
+              <Panel.Heading>Preview</Panel.Heading>
+              <Panel.Body className="no-padding">
+                <VideoPlayer className="media-panel-video" {...replayVideoProps} />
+              </Panel.Body>
+            </Panel>}
+
+            {!replayVideoSrc && (<Button className="inline-hcentered" disabled={size < 1} onClick={this.clickStartReplay}>
+              Start Preview
+            </Button>)}
+          </Flexbox>
+        </Flexbox>
         <div>
           <input className="full-width" placeholder="TODO: title" />
         </div>
@@ -448,7 +505,8 @@ export default class MediaStreamPanel extends Component {
               </Button>
             </Flexbox>
           </Flexbox>
-        </Panel.Body></Panel>}
+        </Panel.Body></Panel>
+        }
         <br />
         <br />
         <div>
@@ -462,16 +520,9 @@ export default class MediaStreamPanel extends Component {
             <FAIcon color="yellow" name="refresh" />
           </Button>
         </div>
-      </div>);
+      </div >);
     }
 
-    //this.continueSelfUpdate();
-
-
-    if (this.liveVideoEl) {
-      //this.liveVideoEl.currentTime = parseInt(Math.round(duration / 1000));
-      this.liveVideoEl.currentTime = 0;
-    }
     return (<div className="media-stream-panel">
       <h2 className="inline-hcentered">
         {titleEl}
@@ -479,10 +530,6 @@ export default class MediaStreamPanel extends Component {
       {!isOffline && <div className="inline-hcentered">
         <RecorderCtrlButton />
       </div>}
-      <div>
-        <video {...videoProps} muted className="media-panel-video"
-          ref={this.onLiveVideoDOMReady} />
-      </div>
       {contentEl}
     </div>);
   }

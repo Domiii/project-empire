@@ -342,6 +342,21 @@ button:active { outline:none !important; }
   width: 2em;
 }
 
+
+/**
+ * #######
+ * font-size-*
+ * #######
+ */
+
+.font-size-half {
+  font-size: 0.5em;
+}
+
+.font-size-03 {
+  font-size: 0.3em;
+}
+
 /**
  * #######################################################
  * App-specific classes: Users
@@ -544,11 +559,25 @@ button:active { outline:none !important; }
  * @see https://stackoverflow.com/a/36505930
  */
 .slow-blink {
-  animation: blinker 1.5s cubic-bezier(.5, 0, 1, 1) infinite alternate;  
+  animation: blinker 1.2s cubic-bezier(.5, 0, 1, 1) infinite alternate;  
 }
 @keyframes blinker {  
   from { opacity: 1; }
   to { opacity: 0; }
+}
+
+.vjs-current-time, .vjs-time-divider, .vjs-duration {
+  display: block !important;
+}
+
+.vjs-remaining-time {
+  display: none !important;
+}
+
+.vjs-time-control {
+  //display: block !important;
+  padding: 0 !important;
+  text-align: center !important;
 }
 
 

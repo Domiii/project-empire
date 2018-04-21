@@ -1,3 +1,5 @@
+import map from 'lodash/map';
+import flatten from 'lodash/flatten';
 import some from 'lodash/some';
 import reduce from 'lodash/reduce';
 import first from 'lodash/first';
@@ -173,11 +175,11 @@ function prepareRecorder(stream, streamArgs,
   };
   recorder.onstop = (e) => {
     console.log('MediaRecorder finished recording');
-    
+
     set_streamStatus(streamArgs, MediaStatus.Finished);
   };
 
-  recorder.ondataavailable = function(blobEvent) {
+  recorder.ondataavailable = function (blobEvent) {
     //console.log('blob: ' + e.data.size);
     //push_streamBlob(streamArgs, e.data);
     const segmentIndex = currentSegmentId(streamArgs);
@@ -186,7 +188,7 @@ function prepareRecorder(stream, streamArgs,
       return;
     }
 
-    const streamSegmentArgs = { ...streamArgs, segmentIndex};
+    const streamSegmentArgs = { ...streamArgs, segmentIndex };
     const blobs = get_streamBlobs(streamSegmentArgs);
 
     // add blob
@@ -338,6 +340,30 @@ export default {
           ) {
             const status = streamStatus({ streamId });
             return status <= MediaStatus.Preparing;
+          },
+          
+          recorderStreamFile(
+            streamArgs,
+            { get_streamSegments, streamRecorderMimeType },
+            { }
+          ) {
+            const allSegments = get_streamSegments(streamArgs);
+            const mimeType = streamRecorderMimeType(streamArgs);
+            const fileName = 'stream.webm';
+            //const mimeType = get_streamRecorderObject(streamArgs).mimeType;
+            const allBlobs = map(flatten(allSegments), 'data');
+            return new window.File(allBlobs, fileName, { type: mimeType });
+          },
+          
+          recorderStreamBlob(
+            streamArgs,
+            { get_streamSegments },
+            { }
+          ) {
+            const allSegments = get_streamSegments(streamArgs);
+            //const mimeType = get_streamRecorderObject(streamArgs).mimeType;
+            const allBlobs = map(flatten(allSegments), 'data');
+            return new window.Blob(allBlobs);
           }
         },
 
@@ -400,16 +426,16 @@ export default {
                 // the total duration of the stream, across all segments
                 // TODO: do we need the duration between start + first blob?
                 const segments = get_streamSegments(streamArgs);
-                return reduce(segments, (sum, blobs, segmentIndex) => 
+                return reduce(segments, (sum, blobs, segmentIndex) =>
                   sum + (blobs && blobs.length && last(blobs).timecode - first(blobs).timecode || 0),
-                0);
+                  0);
               },
               currentSegmentId(
                 streamArgs,
                 { get_streamSegments }
               ) {
                 const segments = get_streamSegments(streamArgs);
-                return segments ? segments.length-1 : NOT_LOADED;
+                return segments ? segments.length - 1 : NOT_LOADED;
               }
             },
             children: {
@@ -442,6 +468,16 @@ export default {
             path: 'streamRecorder',
             children: {
               streamRecorderObject: 'recorderObject'
+            },
+
+            readers: {
+              streamRecorderMimeType(
+                streamArgs,
+                { streamRecorderObject }
+              ) {
+                const recorder = streamRecorderObject(streamArgs);
+                return recorder && recorder.mimeType;
+              }
             },
 
             writers: {
