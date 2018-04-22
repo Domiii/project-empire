@@ -151,6 +151,12 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
     throw new Error('Tried to write to path but not all arguments were provided: ' + this._name);
   }
 
+  
+  /**
+   * This is used only in nodes that (1) don't have a path and (2) provided an explicit `writer` function.
+   * NOTE: Method signature of custom writers are slightly different, in that they don't separate `queryArgs` and `val`
+   * (but rather any written value is contained in the `queryArgs`).
+   */
   _wrapCustomWriter(writerFn) {
     return (args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) => {
       // // TODO check if all dependencies are loaded?
@@ -185,11 +191,14 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
       } = args;
 
       const path = this._doGetPath(pathDescriptor, queryArgs, readerProxy, injectProxy, callerNode, accessTracker);
-      return this._doWriteData(path, val, queryArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
+      return this._writeDataWithDescriptor(path, val, queryArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
     };
   }
 
-  _doWriteData(path, val, queryArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) {
+  /**
+   * This is called when writing to a node built from a PathDescriptor.
+   */
+  _writeDataWithDescriptor(path, val, queryArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) {
     const {
       dataProvider
     } = callerNode;

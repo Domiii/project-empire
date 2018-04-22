@@ -1,9 +1,4 @@
-import map from 'lodash/map';
-import flatten from 'lodash/flatten';
 import some from 'lodash/some';
-import reduce from 'lodash/reduce';
-import first from 'lodash/first';
-import last from 'lodash/last';
 
 import { EmptyObject } from '../../util';
 import { NOT_LOADED } from '../../dbdi/react';
@@ -14,7 +9,8 @@ import { getOptionalArgument } from 'src/dbdi/dataAccessUtil';
 /* globals window */
 const {
   navigator,
-  MediaRecorder
+  MediaRecorder,
+  Blob
 } = window;
 
 export const MediaStatus = {
@@ -148,12 +144,12 @@ function getDefaultRecorderOptions() {
  */
 
 function prepareRecorder(stream, streamArgs,
-  { get_streamSegments, get_streamBlobs, currentSegmentId, get_mediaStream },
-  { set_streamSegments, set_streamBlobs, push_streamBlob, add_streamSize, set_streamStatus }
+  { get_streamSegments, get_streamSegmentBlobs, currentSegmentId, get_mediaStream },
+  { set_streamSegments, set_streamSegmentBlobs, push_streamSegmentBlob, add_streamSize, set_streamStatus }
 ) {
   const recorder = new MediaRecorder(stream, getDefaultRecorderOptions());
 
-  set_streamSegments(streamArgs, [[]]);
+  set_streamSegments(streamArgs, [{}]);
 
   recorder.onstart = (e) => {
     //console.log('MediaRecorder start');
@@ -169,7 +165,8 @@ function prepareRecorder(stream, streamArgs,
     if (!segments) return;
 
     // TODO: fix pushing to memory data provider!
-    segments.push([]);
+    // add new segment. all new blobs will automatically be added to this segment
+    segments.push({});
     set_streamSegments(streamArgs, segments);
     //console.log('MediaRecorder resume');
   };
@@ -179,7 +176,7 @@ function prepareRecorder(stream, streamArgs,
     set_streamStatus(streamArgs, MediaStatus.Finished);
   };
 
-  recorder.ondataavailable = function (blobEvent) {
+  recorder.ondataavailable = (blobEvent) => {
     //console.log('blob: ' + e.data.size);
     //push_streamBlob(streamArgs, e.data);
     const segmentIndex = currentSegmentId(streamArgs);
@@ -189,11 +186,11 @@ function prepareRecorder(stream, streamArgs,
     }
 
     const streamSegmentArgs = { ...streamArgs, segmentIndex };
-    const blobs = get_streamBlobs(streamSegmentArgs);
+    const blobs = get_streamSegmentBlobs(streamSegmentArgs);
 
     // add blob
     blobs.push(blobEvent);
-    set_streamBlobs(streamSegmentArgs, blobs);
+    set_streamSegmentBlobs(streamSegmentArgs, blobs);
 
     // update size
     const blob = blobEvent.data;
@@ -340,30 +337,6 @@ export default {
           ) {
             const status = streamStatus({ streamId });
             return status <= MediaStatus.Preparing;
-          },
-          
-          recorderStreamFile(
-            streamArgs,
-            { get_streamSegments, streamRecorderMimeType },
-            { }
-          ) {
-            const allSegments = get_streamSegments(streamArgs);
-            const mimeType = streamRecorderMimeType(streamArgs);
-            const fileName = 'stream.webm';
-            //const mimeType = get_streamRecorderObject(streamArgs).mimeType;
-            const allBlobs = map(flatten(allSegments), 'data');
-            return new window.File(allBlobs, fileName, { type: mimeType });
-          },
-          
-          recorderStreamBlob(
-            streamArgs,
-            { get_streamSegments },
-            { }
-          ) {
-            const allSegments = get_streamSegments(streamArgs);
-            //const mimeType = get_streamRecorderObject(streamArgs).mimeType;
-            const allBlobs = map(flatten(allSegments), 'data');
-            return new window.Blob(allBlobs);
           }
         },
 
@@ -402,66 +375,6 @@ export default {
 
           streamObject: {
             path: 'streamObject'
-          },
-
-          streamData: {
-            path: 'data',
-            writers: {
-              add_streamSize(
-                streamArgs,
-                { get_streamSize },
-                { },
-                { set_streamSize }
-              ) {
-                const { amount } = streamArgs;
-                const oldAmount = get_streamSize(streamArgs);
-                set_streamSize(streamArgs, oldAmount + amount);
-              }
-            },
-            readers: {
-              streamDuration(
-                streamArgs,
-                { get_streamSegments }
-              ) {
-                // the total duration of the stream, across all segments
-                // TODO: do we need the duration between start + first blob?
-                const segments = get_streamSegments(streamArgs);
-                return reduce(segments, (sum, blobs, segmentIndex) =>
-                  sum + (blobs && blobs.length && last(blobs).timecode - first(blobs).timecode || 0),
-                  0);
-              },
-              currentSegmentId(
-                streamArgs,
-                { get_streamSegments }
-              ) {
-                const segments = get_streamSegments(streamArgs);
-                return segments ? segments.length - 1 : NOT_LOADED;
-              }
-            },
-            children: {
-              streamSegments: {
-                path: 'segments',
-                children: {
-                  streamSegment: {
-                    path: '$(segmentIndex)',
-                    children: {
-                      streamBlobs: {
-                        children: {
-                          streamBlob: '$(blobId)'
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-
-              streamSize: {
-                path: 'streamSize',
-                reader(val) {
-                  return val || 0;
-                }
-              }
-            }
           },
 
           streamRecorder: {

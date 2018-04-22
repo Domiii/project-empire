@@ -304,4 +304,11 @@ Feature: Data middleware
 [Work in progress example](https://codepen.io/Domiii/pen/wrMGeN?editors=0010)
 
 
-#### Remaining questions
+
+
+# Troubleshooting
+
+* npm install fails on Windows: "Error: EPERM: operation not permitted...
+    * https://github.com/npm/npm/issues/10826
+    * `npm config edit`
+    * `cache-lock-retries=1000`

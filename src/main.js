@@ -31,7 +31,7 @@ import firebase from 'firebase';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { AppContainer } from 'react-hot-loader';
-import { 
+import {
   firebaseConfigs
 } from 'src/config/firebase.cfg';
 
@@ -75,7 +75,7 @@ ReactDOM.render(
 // Wait until after authentication has finished before rendering the root
 firebase.auth().onAuthStateChanged(function onAuthStateChanged(authData) {
   // done! Let's kick this thing into gear!
-  
+
   // try {
   ReactDOM.render(
     <AppContainer>
@@ -89,6 +89,5 @@ firebase.auth().onAuthStateChanged(function onAuthStateChanged(authData) {
   //   console.error(err.stack);
   // }
 });
-
 
 //reduxFirebaseConfig.onAuthStateChanged = function onAuthStateChanged(authData) {

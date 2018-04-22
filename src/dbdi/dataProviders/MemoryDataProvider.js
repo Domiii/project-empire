@@ -76,16 +76,18 @@ export default class MemoryDataProvider extends DataProviderBase {
     },
 
     push: (remotePath, val) => {
-      let node = this.getOrCreateNode(remotePath);
-      debugger;
-      node.push(val);
+      throw new Error('TODO: pushing to MemoryDataProvider is currently bugged - still need to fix it. Recommendation: Use a combination of get + set to work around this for now.');
 
-      const key = node.length - 1;
-      const result = key;
-      const promise = Promise.resolve(result);
-      promise.key = key;
-      this._onWrite('Pus', remotePath, val);
-      return promise;
+      // let node = this.getOrCreateNode(remotePath);
+      // debugger;
+      // node.push(val);
+
+      // const key = node.length - 1;
+      // const result = key;
+      // const promise = Promise.resolve(result);
+      // promise.key = key;
+      // this._onWrite('Pus', remotePath, val);
+      // return promise;
     },
 
     update: (remotePath, val) => {

@@ -270,9 +270,9 @@ export default class MediaStreamPanel extends Component {
 
   clickStartReplay = (evt,
     { streamArgs },
-    { streamDuration, recorderStreamBlob }
+    { streamDuration, buildStreamFileSuperBlob }
   ) => {
-    const blob = recorderStreamBlob(streamArgs);
+    const blob = buildStreamFileSuperBlob(streamArgs);
     const duration = streamDuration(streamArgs);
     this.setState({
       replayVideoSrc: window.URL.createObjectURL(blob),
@@ -289,10 +289,10 @@ export default class MediaStreamPanel extends Component {
 
   clickStartDownload = (clickEvent,
     { streamArgs },
-    { recorderStreamFile },
+    { buildStreamFileObjectFromBlobs },
     { }
   ) => {
-    return FileSaver.saveAs(recorderStreamFile(streamArgs));
+    return FileSaver.saveAs(buildStreamFileObjectFromBlobs(streamArgs));
   }
 
   /**
@@ -433,7 +433,7 @@ export default class MediaStreamPanel extends Component {
         controls: true,
         loop: false,
         muted: true,
-        inactivityTimeout: 0,   // never hide controls
+        inactivityTimeout: 0, // never hide controls
         refresh: this.clickStartReplay,
         src: {
           src: replayVideoSrc,
