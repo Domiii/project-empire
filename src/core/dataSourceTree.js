@@ -13,10 +13,8 @@ import CohortModel from 'src/core/cohorts/CohortModel';
 import ProjectModel from 'src/core/projects/projectModel';
 import MissionModel from 'src/core/missions/MissionModel';
 
-
 import StreamModel from 'src/core/multimedia/StreamModel';
-
-
+import StreamFileModel from 'src/core/multimedia/StreamFileModel';
 
 import dataProviders from './dataProviders.js';
 
@@ -90,7 +88,8 @@ const dataStructureConfig = {
     dataProvider: 'memory',
     path: '/localData',
     children: merge({},
-      StreamModel
+      StreamModel,
+      StreamFileModel
     )
   }
 };
