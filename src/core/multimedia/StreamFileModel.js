@@ -9,6 +9,27 @@ import { NOT_LOADED } from '../../dbdi/react';
 
 import fs from 'bro-fs';
 
+const FileDirName = '/streamFiles/';
+const MetaFileDirName = '/streamFiles.meta/';
+const DefaultFileSystemConfig = {
+  type: window.PERMANENT,
+  bytes: 1024 * 1024 * 1024
+};
+
+const StreamFsStatus = {
+  None: 0,
+  Ready: 1,
+  Failed: 2
+};
+
+function getFilePath(fileId) {
+  return FileDirName + fileId;
+}
+
+function getMetaFilePath(fileId) {
+  return MetaFileDirName + fileId;
+}
+
 // (async() => {
 //   await fs.init({ type: window.TEMPORARY, bytes: 5 * 1024 * 1024 });
 //   // await fs.mkdir('dir');
@@ -27,17 +48,56 @@ const {
 export default {
   streamFiles: {
     path: 'streamFiles',
-    readers: {
-      listAllFiles() {
-        // TODO: need to first get the list, then store it in memory
-        // TODO: update the list, every time, streamFileOpen is called
+    writers: {
+      async initStreamFiles(queryArgs,
+        { },
+        { streamFsStatus },
+        { set_streamFsStatus }
+      ) {
+        if (streamFsStatus === StreamFsStatus.Ready) { return; }
+
+        // not ready -> try to init!
+        try {
+          const res = await fs.init(DefaultFileSystemConfig);
+          set_streamFsStatus(StreamFsStatus.Ready);
+        }
+        catch (err) {
+          console.error('Could not initialize filesystem: ' + (err.stack || err));
+          set_streamFsStatus(StreamFsStatus.Failed);
+        }
       }
     },
     children: {
+      streamFsStatus: 'streamFsStatus',
+      streamFileDirectory: {
+        path: 'streamFileDirectory',
+        readers: {
+          listAllFiles() {
+            // TODO: need to first get the list, then store it in memory
+            // TODO: update the list, every time, streamFileOpen is called
+
+          }
+        },
+        children: {
+          streamFileList: {
+            path: 'streamFileList',
+            async reader(val, { }, { }, { set_streamFileList }) {
+              if (val) return val;
+              // load when not loaded yet
+              const files = await fs.readdir(FileDirName);
+              set_streamFileList(files);
+              return NOT_LOADED;
+            }
+          }
+        }
+      },
       streamFile: {
         path: '$(fileId)',
 
         readers: {
+          streamFilePath() {
+
+          },
           streamFileDuration(
             streamFileArgs,
             { get_streamSegments, streamSegmentDuration }
@@ -67,44 +127,19 @@ export default {
             const segments = get_streamSegments(streamFileArgs);
             return segments ? segments.length - 1 : NOT_LOADED;
           },
-
-          // buildStreamFileObjectFromBlobs(
-          //   streamArgs,
-          //   { get_streamSegments, streamRecorderMimeType },
-          //   { }
-          // ) {
-          //   const allSegments = get_streamSegments(streamArgs);
-          //   const mimeType = streamRecorderMimeType(streamArgs);
-          //   const fileName = 'stream.webm';
-          //   //const mimeType = get_streamRecorderObject(streamArgs).mimeType;
-          //   const allBlobs = map(flatten(map(allSegments, 'blobs')), 'data');
-          //   return new window.File(allBlobs, fileName, { type: mimeType });
-          // },
-
-          // buildStreamFileSuperBlob(
-          //   streamArgs,
-          //   { get_streamSegments },
-          //   { }
-          // ) {
-          //   const allSegments = get_streamSegments(streamArgs);
-          //   //const mimeType = get_streamRecorderObject(streamArgs).mimeType;
-          //   const allBlobs = map(flatten(map(allSegments, 'blobs')), 'data');
-          //   return new Blob(allBlobs);
-          // }
         },
 
         writers: {
           /**
            * Create and store new file
            */
-          streamFileOpen() {
-            // generate path
+          streamFileOpen(queryArgs) {
+            // TODO: add file to listAllFiles?
+
             // create + open file
-            // get url
-            // store url + path
-            // add file to listAllFiles
             // see: https://github.com/vitalets/bro-fs/tree/master/src/index.js#L237
-            return fs.getUrl(path);
+            const path = getFilePath(queryArgs.fileId);
+            return fs.get(path, { create: true });
           },
           /**
            * 
@@ -119,7 +154,27 @@ export default {
 
 
         children: {
-          streamFileUrl: 'streamFileUrl',
+          streamFileUrl: {
+            path: 'streamFileUrl',
+            async reader(val, queryArgs, { }, { set_streamFileUrl }) {
+              if (val) return val;
+
+              const path = getFilePath(queryArgs.fileId);
+              const url = await fs.getUrl(path);
+              set_streamFileUrl(url);
+              return NOT_LOADED;
+            }
+          },
+          streamFileEntry: {
+            path: 'streamFileEntry',
+            async reader(val, queryArgs, { }, { set_streamFileEntry, streamFileOpen }) {
+              if (val) return val;
+              // load when not loaded yet
+              const files = await streamFileOpen(queryArgs);
+              set_streamFileEntry(files);
+              return NOT_LOADED;
+            }
+          },
           streamSegments: {
             path: 'segments',
             children: {
@@ -195,3 +250,33 @@ export default {
     }
   }
 };
+
+
+
+
+
+
+
+          // buildStreamFileObjectFromBlobs(
+          //   streamArgs,
+          //   { get_streamSegments, streamRecorderMimeType },
+          //   { }
+          // ) {
+          //   const allSegments = get_streamSegments(streamArgs);
+          //   const mimeType = streamRecorderMimeType(streamArgs);
+          //   const fileName = 'stream.webm';
+          //   //const mimeType = get_streamRecorderObject(streamArgs).mimeType;
+          //   const allBlobs = map(flatten(map(allSegments, 'blobs')), 'data');
+          //   return new window.File(allBlobs, fileName, { type: mimeType });
+          // },
+
+          // buildStreamFileSuperBlob(
+          //   streamArgs,
+          //   { get_streamSegments },
+          //   { }
+          // ) {
+          //   const allSegments = get_streamSegments(streamArgs);
+          //   //const mimeType = get_streamRecorderObject(streamArgs).mimeType;
+          //   const allBlobs = map(flatten(map(allSegments, 'blobs')), 'data');
+          //   return new Blob(allBlobs);
+          // }
