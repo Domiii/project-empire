@@ -86,7 +86,7 @@ export class ProjectHeader extends Component {
       titleEl = (<h3 className="inline no-margin">
         <ProjectIcon projectId={projectId} src={iconUrl} />
         &nbsp;
-        { title }
+        {title}
       </h3>);
     }
 
@@ -137,9 +137,9 @@ export class ProjectPanel extends Component {
       <Panel.Heading>
         <ProjectPanelHeader projectId={projectId} isSelected={isSelected} />
       </Panel.Heading>
-      {isSelected && <Panel.Body collapsible>
-        <ProjectBody projectId={projectId} />
-      </Panel.Body>}
+      <Panel.Body collapsible>
+        {isSelected && <ProjectBody projectId={projectId} />}
+      </Panel.Body>
     </Panel>);
   }
 }

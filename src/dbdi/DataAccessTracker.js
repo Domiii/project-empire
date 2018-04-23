@@ -136,11 +136,11 @@ export default class DataAccessTracker {
 
   _wrapReadData(node) {
     const wrappedReadData = (args) => {
-      return node.readData(this._wrapArgs(args, node), this._readerProxy, this._injectProxy, this);
+      return node.readData(this._wrapArgs(args, node), this._readerProxy, this._injectProxy, this._writerProxy, this);
     };
 
     wrappedReadData.isLoaded = (args) => {
-      return node.isDataLoaded(this._wrapArgs(args, node), this._readerProxy, this._injectProxy, this);
+      return node.isDataLoaded(this._wrapArgs(args, node), this._readerProxy, this._injectProxy, this._writerProxy, this);
     };
 
     return this._decorateWrapper(wrappedReadData, node);

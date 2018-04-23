@@ -305,6 +305,19 @@ Feature: Data middleware
 
 
 
+# Neat little gists
+
+* `fetch('localhost').then(res => res.body.getReader().read().then(({ done, value }) => console.log(new TextDecoder("utf-8").decode(value))));`
+
+
+# Add professional camera as webcam
+
+* https://www.knowrick.com/blog/how-to-setup-canon-dslr-t3i-as-a-webcam-on-mac
+    * Use Cam Twist (works on Mac + Windows)
+* This guy converts HDMI to USB: https://ozar.me/2014/03/using-hd-camcorder-mac-webcam/
+    * (but apparently the converter is super expensive??)
+
+
 
 # Troubleshooting
 

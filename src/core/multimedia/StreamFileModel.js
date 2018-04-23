@@ -8,11 +8,12 @@ import { EmptyObject } from '../../util';
 import { NOT_LOADED } from '../../dbdi/react';
 
 import fs from 'bro-fs';
+import uuid from 'uuid/v1';
 
-const FileDirName = '/streamFiles/';
-const MetaFileDirName = '/streamFiles.meta/';
+const FileDirName = '/streamFiles';
+const MetaFileDirName = '/streamFiles.meta';
 const DefaultFileSystemConfig = {
-  type: window.PERMANENT,
+  type: window.PERSISTENT,
   bytes: 1024 * 1024 * 1024
 };
 
@@ -23,12 +24,13 @@ const StreamFsStatus = {
 };
 
 function getFilePath(fileId) {
-  return FileDirName + fileId;
+  return FileDirName + '/' + fileId;
 }
 
 function getMetaFilePath(fileId) {
-  return MetaFileDirName + fileId;
+  return MetaFileDirName + '/' + fileId;
 }
+
 
 // (async() => {
 //   await fs.init({ type: window.TEMPORARY, bytes: 5 * 1024 * 1024 });
@@ -49,22 +51,47 @@ export default {
   streamFiles: {
     path: 'streamFiles',
     writers: {
-      async initStreamFiles(queryArgs,
+      async initStreamFs(queryArgs,
         { },
         { streamFsStatus },
         { set_streamFsStatus }
       ) {
         if (streamFsStatus === StreamFsStatus.Ready) { return; }
 
-        // not ready -> try to init!
+        // not ready -> initialize first!
         try {
-          const res = await fs.init(DefaultFileSystemConfig);
+          // initialize
+          await fs.init(DefaultFileSystemConfig);
+
+          // make sure, the directory exists
+          await fs.mkdir(FileDirName);
+
+          // update status
           set_streamFsStatus(StreamFsStatus.Ready);
         }
         catch (err) {
           console.error('Could not initialize filesystem: ' + (err.stack || err));
           set_streamFsStatus(StreamFsStatus.Failed);
         }
+      },
+
+      /**
+       * (1) initialize filesystem
+       * (2) generate new fileId
+       * (3) open file
+       * (4) return fileId (async)
+       */
+      async newStreamFile(
+        { },
+        { },
+        { },
+        { initStreamFs, _streamFileOpen }
+      ) {
+        await initStreamFs();
+        const fileId = uuid();
+        const fileArgs = { fileId };
+        await _streamFileOpen(fileArgs);
+        return fileId;
       }
     },
     children: {
@@ -72,59 +99,61 @@ export default {
       streamFileDirectory: {
         path: 'streamFileDirectory',
         readers: {
-          listAllFiles() {
-            // TODO: need to first get the list, then store it in memory
-            // TODO: update the list, every time, streamFileOpen is called
+          streamFileList(
+            { },
+            { get__streamFileList },
+            { },
+            { initStreamFs, set__streamFileList }
+          ) {
+            const list = get__streamFileList();
+            if (list) return list;
 
+            // not loaded yet
+            initStreamFs()
+              .then(() => fs.readdir(FileDirName))
+              .then(set__streamFileList);
+            return NOT_LOADED;
           }
         },
         children: {
-          streamFileList: {
-            path: 'streamFileList',
-            async reader(val, { }, { }, { set_streamFileList }) {
-              if (val) return val;
-              // load when not loaded yet
-              const files = await fs.readdir(FileDirName);
-              set_streamFileList(files);
-              return NOT_LOADED;
-            }
-          }
+          _streamFileList: '_streamFileList'
         }
       },
       streamFile: {
         path: '$(fileId)',
 
         readers: {
-          streamFilePath() {
-
+          streamFilePath({ fileId }) {
+            return getFilePath(fileId);
           },
+
           streamFileDuration(
             streamFileArgs,
-            { get_streamSegments, streamSegmentDuration }
+            { get_streamFileSegments, streamFileSegmentDuration }
           ) {
             // the total duration of the stream, across all segments
-            const segments = get_streamSegments(streamFileArgs);
+            const segments = get_streamFileSegments(streamFileArgs);
             return reduce(segments, (sum, segment, segmentIndex) =>
-              sum + streamSegmentDuration(Object.assign({}, streamFileArgs, { segmentIndex })),
+              sum + streamFileSegmentDuration(Object.assign({}, streamFileArgs, { segmentIndex })),
               0);
           },
 
           streamFileSize(
             streamFileArgs,
-            { get_streamSegments, streamSegmentSize }
+            { get_streamFileSegments, streamFileSegmentSize }
           ) {
             // the total size of the stream, across all segments
-            const segments = get_streamSegments(streamFileArgs);
+            const segments = get_streamFileSegments(streamFileArgs);
             return reduce(segments, (sum, segment, segmentIndex) =>
-              sum + streamSegmentSize(Object.assign({}, streamFileArgs, { segmentIndex })),
+              sum + streamFileSegmentSize(Object.assign({}, streamFileArgs, { segmentIndex })),
               0);
           },
 
           currentSegmentId(
             streamFileArgs,
-            { get_streamSegments }
+            { get_streamFileSegments }
           ) {
-            const segments = get_streamSegments(streamFileArgs);
+            const segments = get_streamFileSegments(streamFileArgs);
             return segments ? segments.length - 1 : NOT_LOADED;
           },
         },
@@ -133,109 +162,156 @@ export default {
           /**
            * Create and store new file
            */
-          streamFileOpen(queryArgs) {
-            // TODO: add file to listAllFiles?
-
-            // create + open file
+          async _streamFileOpen(queryArgs,
+            { _streamFileList },
+            { },
+            { set_streamFileWriter, set__streamFileList }
+          ) {
+            // create and/or open file
             // see: https://github.com/vitalets/bro-fs/tree/master/src/index.js#L237
             const path = getFilePath(queryArgs.fileId);
-            return fs.get(path, { create: true });
+            await fs.writeFile(path, ''); // create/reset file
+            const fileEntry = await fs.getEntry(path);
+            const writer = await new Promise((resolve, reject) => fileEntry.createWriter(resolve, reject));
+            console.log(writer);
+            set_streamFileWriter(queryArgs, writer);
+
+            // add file to streamFileList
+            const files = _streamFileList();
+            if (files) {
+              files.push(fileEntry);
+              set__streamFileList(files);
+            }
+
+            return fileEntry;
           },
+
           /**
-           * 
+           * Write a new blob to file
            */
-          streamFileWrite() {
-
-          },
-          streamFileClose() {
-
+          streamFileWrite({ fileId, blobEvent },
+            { currentSegmentId },
+            { },
+            { writeStreamSegmentBlob }
+          ) {
+            const segmentIndex = currentSegmentId({ fileId });
+            const streamFileSegmentArgs = { fileId, segmentIndex, blobEvent };
+            return writeStreamSegmentBlob(streamFileSegmentArgs);
           }
         },
 
 
         children: {
+          streamFileWriter: 'streamFileWriter',
+          
+          _streamFileStat: 'streamFileStat',
+          streamFileStat: {
+            path: 'streamFileStat',
+            reader(val, queryArgs) {
+              
+            }
+          },
           streamFileUrl: {
             path: 'streamFileUrl',
-            async reader(val, queryArgs, { }, { set_streamFileUrl }) {
+            reader(val, queryArgs, { }, { }, { set_streamFileUrl }) {
               if (val) return val;
 
+              // make sure we don't write more than once
+              if (val === '') return NOT_LOADED;
+              set_streamFileUrl(queryArgs, '');
+
+              // fetch + cache url
               const path = getFilePath(queryArgs.fileId);
-              const url = await fs.getUrl(path);
-              set_streamFileUrl(url);
+              fs.getUrl(path).then(url =>
+                set_streamFileUrl(queryArgs, url)
+              );
               return NOT_LOADED;
             }
           },
-          streamFileEntry: {
-            path: 'streamFileEntry',
-            async reader(val, queryArgs, { }, { set_streamFileEntry, streamFileOpen }) {
-              if (val) return val;
-              // load when not loaded yet
-              const files = await streamFileOpen(queryArgs);
-              set_streamFileEntry(files);
-              return NOT_LOADED;
-            }
-          },
-          streamSegments: {
+          // streamFileEntry: {
+          //   path: 'streamFileEntry',
+          //   async reader(val, queryArgs, { }, { set_streamFileEntry, _streamFileOpen }) {
+          //     if (val) return val;
+          //     // load when not loaded yet
+          //     const file = await _streamFileOpen(queryArgs);
+          //     set_streamFileEntry(file);
+          //     return NOT_LOADED;
+          //   }
+          // },
+          streamFileSegments: {
             path: 'segments',
             children: {
-              streamSegment: {
+              streamFileSegment: {
                 path: '$(segmentIndex)',
                 readers: {
-                  streamSegmentDuration(
-                    streamSegmentArgs,
-                    { streamSegmentStartTime, streamSegmentEndTime }
+                  streamFileSegmentDuration(
+                    streamFileSegmentArgs,
+                    { streamFileSegmentStartTime, streamFileSegmentEndTime }
                   ) {
-                    const start = streamSegmentStartTime(streamSegmentArgs);
-                    const end = streamSegmentEndTime(streamSegmentArgs);
+                    const start = streamFileSegmentStartTime(streamFileSegmentArgs);
+                    const end = streamFileSegmentEndTime(streamFileSegmentArgs);
                     return end - start;
                   }
                 },
                 writers: {
-                  addStreamFileBlob(queryArgs, blobEvent,
-                    { get_streamSegmentBlobCount, get_streamSegmentSize },
+                  writeStreamSegmentBlob(streamFileSegmentArgs,
+                    { streamFileWriter, get_streamFileSegmentBlobCount, get_streamFileSegmentSize },
                     { },
-                    { set_streamSegmentStartTime, set_streamSegmentEndTime, set_streamSegmentBlobCount, set_streamSegmentSize }
+                    { set_streamFileSegmentStartTime, set_streamFileSegmentEndTime,
+                      set_streamFileSegmentBlobCount, set_streamFileSegmentSize,
+                      set_streamFileUrl
+                    }
                   ) {
-                    // TOOD: actually store the blob in file
+                    // store blob in file
+                    const { blobEvent, fileId } = streamFileSegmentArgs;
+                    //const path = getFilePath(fileId);
+                    //fs.appendFile(path, blobEvent.data);
+                    const writer = streamFileWriter(streamFileSegmentArgs);
+                    const writeResultPromise = writer.write(blobEvent.data);
 
                     // adding a blob (to the end), always adds one to blob count, and always updates the new "end time".
-                    const blobCount = get_streamSegmentBlobCount(queryArgs);
-                    const size = get_streamSegmentSize(queryArgs);
+                    const blobCount = get_streamFileSegmentBlobCount(streamFileSegmentArgs);
+                    const size = get_streamFileSegmentSize(streamFileSegmentArgs);
+                    const path = getFilePath(fileId);
                     const end = blobEvent.timecode || 0;
                     const promises = [
-                      set_streamSegmentEndTime(queryArgs, end),
-                      set_streamSegmentBlobCount(queryArgs, blobCount + 1),
-                      set_streamSegmentSize(queryArgs, size + blobEvent.data.size)
+                      writeResultPromise,
+                      set_streamFileSegmentEndTime(streamFileSegmentArgs, end),
+                      set_streamFileSegmentBlobCount(streamFileSegmentArgs, blobCount + 1),
+                      set_streamFileSegmentSize(streamFileSegmentArgs, size + blobEvent.data.size),
+                      fs.getUrl(path).then(url =>
+                        set_streamFileUrl(streamFileSegmentArgs, url)
+                      )
                     ];
 
                     if (blobCount === 0) {
                       // first blob
                       const start = blobEvent.timecode || 0;
-                      promises.push(set_streamSegmentStartTime(queryArgs, start));
+                      promises.push(set_streamFileSegmentStartTime(streamFileSegmentArgs, start));
                     }
                     return Promise.all(promises);
                   },
                 },
                 children: {
-                  streamSegmentStartTime: {
+                  streamFileSegmentStartTime: {
                     path: 'startTime',
                     reader(val) {
                       return val || 0;
                     }
                   },
-                  streamSegmentEndTime: {
+                  streamFileSegmentEndTime: {
                     path: 'endTime',
                     reader(val) {
                       return val || 0;
                     }
                   },
-                  streamSegmentBlobCount: {
+                  streamFileSegmentBlobCount: {
                     path: 'blobCount',
                     reader(val) {
                       return val || 0;
                     }
                   },
-                  streamSegmentSize: {
+                  streamFileSegmentSize: {
                     path: 'size',
                     reader(val) {
                       return val || 0;
@@ -259,10 +335,10 @@ export default {
 
           // buildStreamFileObjectFromBlobs(
           //   streamArgs,
-          //   { get_streamSegments, streamRecorderMimeType },
+          //   { get_streamFileSegments, streamRecorderMimeType },
           //   { }
           // ) {
-          //   const allSegments = get_streamSegments(streamArgs);
+          //   const allSegments = get_streamFileSegments(streamArgs);
           //   const mimeType = streamRecorderMimeType(streamArgs);
           //   const fileName = 'stream.webm';
           //   //const mimeType = get_streamRecorderObject(streamArgs).mimeType;
@@ -272,10 +348,10 @@ export default {
 
           // buildStreamFileSuperBlob(
           //   streamArgs,
-          //   { get_streamSegments },
+          //   { get_streamFileSegments },
           //   { }
           // ) {
-          //   const allSegments = get_streamSegments(streamArgs);
+          //   const allSegments = get_streamFileSegments(streamArgs);
           //   //const mimeType = get_streamRecorderObject(streamArgs).mimeType;
           //   const allBlobs = map(flatten(map(allSegments, 'blobs')), 'data');
           //   return new Blob(allBlobs);

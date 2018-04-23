@@ -57,13 +57,13 @@ export default class DataReadDescriptor extends DataDescriptorNode {
   }
 
   _buildReadDataFromDescriptor(pathDescriptor) {
-    return (args, readerProxy, injectProxy, callerNode, accessTracker) => {
+    return (args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) => {
       // // TODO check if all dependencies are loaded?
       // if (!callerNode.areDependenciesLoaded(this)) {
       //   return null;
       // }
 
-      const pathOrPaths = pathDescriptor.getPath(args, readerProxy, injectProxy, callerNode, accessTracker);
+      const pathOrPaths = pathDescriptor.getPath(args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
 
       if (pathOrPaths === undefined) {
         return undefined;

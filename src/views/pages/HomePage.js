@@ -15,7 +15,6 @@ import {
 import ProjectList from 'src/views/components/projects/ProjectList';
 //import LearnerStatusList from 'src/views/components/scaffolding/LearnerStatusList';
 
-import FancyPanelToggleTitle from 'src/views/components/util/FancyPanelToggleTitle';
 
 import { LoadOverlay } from 'src/views/components/overlays';
 import { routePaths } from '../routes';

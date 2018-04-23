@@ -25,6 +25,7 @@ import { MediaStatus } from '../../../core/multimedia/StreamModel';
 
 import MediaInputSelect from './MediaInputSelect';
 import VideoPlayer from './VideoPlayer';
+import StreamFileList from './StreamFileList';
 
 
 function log(...args) {
@@ -134,6 +135,32 @@ const RecorderCtrlButton = dataBind(injectedActions)(function RecorderCtrlButton
   </Button>);
 });
 
+@dataBind({})
+class DownloadStreamFileButton extends Component {
+  render(
+    { streamArgs, disabled },
+    { streamSize, streamUrl }
+  ) {
+    const size = streamSize(streamArgs);
+    const href = disabled ? '' : (streamUrl(streamArgs) + '?s=' + size);
+    return (<a href={href} download="stream.webm" target="_blank" role="button"
+      className="btn btn-info btn-block">
+      <Flexbox justifyContent="center" alignItems="center" className="inline-hcentered">
+        <Flexbox>
+          Download&nbsp;
+        </Flexbox>
+        <Flexbox>
+          <FAIcon name="download" />
+        </Flexbox>
+        <Flexbox>
+          &nbsp;(<span className="media-size-label">{renderSize(size)}</span>)
+        </Flexbox>
+      </Flexbox>
+    </a>);
+  }
+}
+
+
 /**
  * ############################################################
  * MediaSettingsPanel
@@ -186,7 +213,6 @@ export default class MediaStreamPanel extends Component {
       'startNewStream',
       'clickStartReplay',
       'clickFinish',
-      'clickStartDownload',
       'clickShutdown',
       'renderOfflineView'
     );
@@ -270,12 +296,13 @@ export default class MediaStreamPanel extends Component {
 
   clickStartReplay = (evt,
     { streamArgs },
-    { streamDuration, buildStreamFileSuperBlob }
+    { streamDuration, streamUrl }
   ) => {
-    const blob = buildStreamFileSuperBlob(streamArgs);
+    // const blob = buildStreamFileSuperBlob(streamArgs);
+    // const url = window.URL.createObjectURL(blob);
     const duration = streamDuration(streamArgs);
     this.setState({
-      replayVideoSrc: window.URL.createObjectURL(blob),
+      replayVideoSrc: streamUrl(streamArgs) + '?d=' + duration,
       replayDuration: duration / 1000
     });
   }
@@ -285,14 +312,6 @@ export default class MediaStreamPanel extends Component {
     { stopStreamRecorder }
   ) => {
     stopStreamRecorder(streamArgs);
-  }
-
-  clickStartDownload = (clickEvent,
-    { streamArgs },
-    { buildStreamFileObjectFromBlobs },
-    { }
-  ) => {
-    return FileSaver.saveAs(buildStreamFileObjectFromBlobs(streamArgs));
   }
 
   /**
@@ -364,10 +383,10 @@ export default class MediaStreamPanel extends Component {
    */
   render(
     { streamArgs },
-    { streamStatus, streamSize,
-      streamDuration,
+    { streamStatus,
       streamRecorderMimeType,
-      isStreamActive, isStreamReady, isStreamOffline },
+      isStreamActive, isStreamReady, isStreamOffline,
+      streamSize, streamDuration },
     { isMediaRecorderCompatible, videoDeviceId, audioDeviceId }
   ) {
     if (!isMediaRecorderCompatible) {
@@ -479,20 +498,7 @@ export default class MediaStreamPanel extends Component {
         {size > 1 && <Panel><Panel.Body>
           <Flexbox justifyContent="space-between" alignItems="center">
             <Flexbox className="full-width">
-              <Button onClick={this.clickStartDownload}
-                disabled={size < 1} block>
-                <Flexbox justifyContent="flex-start" alignItems="center" className="inline-hcentered">
-                  <Flexbox>
-                    Download&nbsp;
-                  </Flexbox>
-                  <Flexbox>
-                    <FAIcon name="download" />
-                  </Flexbox>
-                  <Flexbox>
-                    &nbsp;(<span className="media-size-label">{renderSize(size)}</span>)
-                  </Flexbox>
-                </Flexbox>
-              </Button>
+              <DownloadStreamFileButton disabled={size < 1} streamArgs={streamArgs} />
             </Flexbox>
             <Flexbox className="full-width">
               <Button bsStyle="success" disabled={!canUpload} block>
@@ -531,6 +537,9 @@ export default class MediaStreamPanel extends Component {
         <RecorderCtrlButton />
       </div>}
       {contentEl}
+      <br />
+      <br />
+      <StreamFileList />
     </div>);
   }
 }

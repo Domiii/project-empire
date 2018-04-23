@@ -79,7 +79,7 @@ export default class DataSourceNode {
     return this.readData(args, readerProxy, injectProxy, accessTracker) !== undefined;
   }
 
-  readData(args, readerProxy, injectProxy, accessTracker) {
+  readData(args, readerProxy, injectProxy, writerProxy, accessTracker) {
     args = args || EmptyObject;
     if (!this._readDescriptor) {
       throw new Error(`Tried to read data from "${this.fullName}", 
@@ -90,6 +90,7 @@ export default class DataSourceNode {
       args,
       readerProxy,
       injectProxy,
+      writerProxy,
       this,
       accessTracker);
   }

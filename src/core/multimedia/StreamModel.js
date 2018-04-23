@@ -143,13 +143,14 @@ function getDefaultRecorderOptions() {
  * ############################################################
  */
 
-function prepareRecorder(stream, streamArgs,
-  { get_streamSegments, get_streamSegmentBlobs, currentSegmentId, get_mediaStream },
-  { set_streamSegments, set_streamSegmentBlobs, push_streamSegmentBlob, add_streamSize, set_streamStatus }
+function prepareRecorder(stream, streamArgs, fileId,
+  { get_streamFileSegments },
+  { streamFileWrite, set_streamFileSegments, set_streamStatus }
 ) {
   const recorder = new MediaRecorder(stream, getDefaultRecorderOptions());
+  const fileArgs = { fileId };
 
-  set_streamSegments(streamArgs, [{}]);
+  set_streamFileSegments(fileArgs, [{}]);
 
   recorder.onstart = (e) => {
     //console.log('MediaRecorder start');
@@ -161,13 +162,13 @@ function prepareRecorder(stream, streamArgs,
   recorder.onresume = (e) => {
     // we are starting on a new segment
     set_streamStatus(streamArgs, MediaStatus.Running);
-    const segments = get_streamSegments(streamArgs);
+    const segments = get_streamFileSegments(fileArgs);
     if (!segments) return;
 
     // TODO: fix pushing to memory data provider!
     // add new segment. all new blobs will automatically be added to this segment
     segments.push({});
-    set_streamSegments(streamArgs, segments);
+    set_streamFileSegments(fileArgs, segments);
     //console.log('MediaRecorder resume');
   };
   recorder.onstop = (e) => {
@@ -179,22 +180,8 @@ function prepareRecorder(stream, streamArgs,
   recorder.ondataavailable = (blobEvent) => {
     //console.log('blob: ' + e.data.size);
     //push_streamBlob(streamArgs, e.data);
-    const segmentIndex = currentSegmentId(streamArgs);
-    if (segmentIndex === NOT_LOADED) {
-      console.error('recorder is recording, but no segmentIndex is set:', segmentIndex, '-', get_mediaStream(streamArgs));
-      return;
-    }
-
-    const streamSegmentArgs = { ...streamArgs, segmentIndex };
-    const blobs = get_streamSegmentBlobs(streamSegmentArgs);
-
-    // add blob
-    blobs.push(blobEvent);
-    set_streamSegmentBlobs(streamSegmentArgs, blobs);
-
-    // update size
-    const blob = blobEvent.data;
-    add_streamSize({ ...streamArgs, amount: blob.size });
+    // write blob
+    streamFileWrite({ fileId, blobEvent });
   };
 
   //recorder.start(10);
@@ -282,22 +269,28 @@ export default {
         const { set_mediaStream, set_mediaStreams,
           set_streamObject,
           set_streamRecorderObject,
-          set_streamStatus } = writers;
+          set_streamStatus,
+          newStreamFile,
+          set_streamFileId } = writers;
         set_mediaStream(streamArgs, {});
         set_streamStatus(streamArgs, MediaStatus.Preparing);
 
-        // notify any listener of `isAnyStreamOnline`
+        // hack: notify any listener of `isAnyStreamOnline`
         set_mediaStreams(get_mediaStreams());
 
-        return getStream(mediaInputConstraints).then((stream) => {
+        return Promise.all([
+          getStream(mediaInputConstraints),
+          newStreamFile()
+        ]).then(([stream, fileId]) => {
           // TODO: properly setup the recorder
           // see: https://github.com/muaz-khan/RecordRTC/tree/master/dev/MediaStreamRecorder.js
-          const mediaRecorder = prepareRecorder(stream, streamArgs, readers, writers);
+          const mediaRecorder = prepareRecorder(stream, streamArgs, fileId, readers, writers);
 
           // return Promise.all([
           set_streamObject(streamArgs, stream);
           set_streamRecorderObject(streamArgs, mediaRecorder);
           set_streamStatus(streamArgs, MediaStatus.Ready);
+          set_streamFileId(streamArgs, fileId);
           // ]);
         }).then(() => streamId);
       }
@@ -337,6 +330,24 @@ export default {
           ) {
             const status = streamStatus({ streamId });
             return status <= MediaStatus.Preparing;
+          },
+
+          streamSize(streamArgs,
+            { streamFileId, streamFileSize }
+          ) {
+            return streamFileSize({ fileId: streamFileId(streamArgs) });
+          },
+
+          streamDuration(streamArgs,
+            { streamFileId, streamFileDuration }
+          ) {
+            return streamFileDuration({ fileId: streamFileId(streamArgs) });
+          },
+
+          streamUrl(streamArgs,
+            { streamFileId, streamFileUrl }
+          ) {
+            return streamFileUrl({ fileId: streamFileId(streamArgs) });
           }
         },
 
@@ -348,21 +359,24 @@ export default {
             { set_streamObject,
               set_streamRecorderObject,
               set_streamStatus,
-              set_streamData }
+              set_streamFileId }
           ) {
             const stream = streamObject(streamArgs);
             if (stream) {
+              // shutdown all streams
               stream.getTracks().forEach(track => track.stop());
 
-              set_streamData(streamArgs, null);
               set_streamObject(streamArgs, null);
               set_streamRecorderObject(streamArgs, null);
               set_streamStatus(streamArgs, MediaStatus.NotReady);
+              set_streamFileId(streamArgs, null);
             }
           }
         },
 
         children: {
+          streamFileId: 'fileId',
+
           streamStatus: {
             path: 'streamStatus',
             reader(status) {

@@ -57,11 +57,18 @@ function queryUnknownDevices(kind) {
           deviceId
         }
       };
+
+      // open stream to request permission to show the label
       return getStream(constraints);
     });
 
     // query all devices again, after they have all been resolved
-    return Promise.all(promises).then(() => getDeviceList(kind));
+    return Promise.all(promises).then((streams) => {
+      // shutdown all streams again
+      streams.forEach(stream => stream.getTracks().forEach(track => track.stop()));
+
+      return getDeviceList(kind);
+    });
   });
 }
 
@@ -176,6 +183,7 @@ export default class MediaInputSelect extends Component {
     } = this.props;
 
     return queryUnknownDevices(kind).then(list => {
+      this.refresh();
     });
   }
 
@@ -215,8 +223,7 @@ export default class MediaInputSelect extends Component {
       </Flexbox>
       {hasUnkownDevices && (<Flexbox>
         <Button bsStyle="danger" onClick={this.clickQueryUnknownDevices}>
-          <FAIcon name="unlock" />
-          顯示所有裝置的名字
+          <FAIcon name="unlock" /> 顯示所有裝置的名字
         </Button>
       </Flexbox>) }
       {!hasUnkownDevices && !disabled && (<Flexbox>
