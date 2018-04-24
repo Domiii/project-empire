@@ -65,15 +65,15 @@ if (module.hot) {
   });
 }
 
-// show a message while logging in
-ReactDOM.render(
-  <LoadOverlay message="logging in..." className="color-lightred" />,
-  rootElement
-);
+// // show a message while logging in
+// ReactDOM.render(
+//   <LoadOverlay message="logging in..." className="color-lightred" />,
+//   rootElement
+// );
 
 
-// Wait until after authentication has finished before rendering the root
-firebase.auth().onAuthStateChanged(function onAuthStateChanged(authData) {
+// // Wait until after authentication has finished before rendering the root
+// firebase.auth().onAuthStateChanged(function onAuthStateChanged(authData) {
   // done! Let's kick this thing into gear!
 
   // try {
@@ -88,6 +88,6 @@ firebase.auth().onAuthStateChanged(function onAuthStateChanged(authData) {
   // catch (err) {
   //   console.error(err.stack);
   // }
-});
+//});
 
 //reduxFirebaseConfig.onAuthStateChanged = function onAuthStateChanged(authData) {

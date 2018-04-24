@@ -73,7 +73,7 @@ const UserIcon = dataBind({})(function UserIcon(
 });
 
 UserIcon.propTypes = {
-  user: PropTypes.object.isRequired,
+  uid: PropTypes.string.isRequired,
   size: PropTypes.string
 };
 

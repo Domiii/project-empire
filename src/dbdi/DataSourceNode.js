@@ -75,8 +75,8 @@ export default class DataSourceNode {
     return !!this._writeDescriptor;
   }
 
-  isDataLoaded(args, readerProxy, injectProxy, accessTracker) {
-    return this.readData(args, readerProxy, injectProxy, accessTracker) !== undefined;
+  isDataLoaded(...allArgs) {
+    return this.readData(...allArgs) !== undefined;
   }
 
   readData(args, readerProxy, injectProxy, writerProxy, accessTracker) {

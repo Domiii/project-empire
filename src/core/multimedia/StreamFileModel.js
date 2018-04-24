@@ -1,14 +1,20 @@
 import map from 'lodash/map';
 import flatten from 'lodash/flatten';
 import reduce from 'lodash/reduce';
-import first from 'lodash/first';
-import last from 'lodash/last';
+import some from 'lodash/some';
 
 import { EmptyObject } from '../../util';
 import { NOT_LOADED } from '../../dbdi/react';
 
 import fs from 'bro-fs';
 import uuid from 'uuid/v1';
+
+
+/* globals window */
+const {
+  Blob
+} = window;
+
 
 const FileDirName = '/streamFiles';
 const MetaFileDirName = '/streamFiles.meta';
@@ -31,6 +37,92 @@ function getMetaFilePath(fileId) {
   return MetaFileDirName + '/' + fileId;
 }
 
+async function writeBlob(fileArgs, blob, readers, writers) {
+  const { _blobQueue, get_streamFileWriter } = readers;
+  const { _streamFileOpen, set__blobQueue } = writers;
+
+  // make sure, the stream initialization process is on it's way
+  const writerPromise = _streamFileOpen(fileArgs);
+  const blobs = _blobQueue(fileArgs);
+  //console.warn('queueing:', blob.size);
+  if (!!blobs) {
+    // we are still writing -> add to queue
+    blobs.push(blob);
+    set__blobQueue(fileArgs, blobs);
+  }
+  else {
+    // queue is empty -> write to stream
+    set__blobQueue(fileArgs, []);
+
+    const writer = await writerPromise;
+    writeBlobNow(fileArgs, writer, blob, readers, writers);
+  }
+}
+
+function writeBlobNow(fileArgs, writer, blob, readers, writers) {
+  const { set__blobQueue } = writers;
+  // write to blob and activate queue
+  //console.log('writeBlobNow:', blob.size);
+  return writer.write(blob);
+}
+
+function pumpQueue(fileArgs, writer, readers, writers) {
+  const { _blobQueue } = readers;
+  const { set__blobQueue } = writers;
+  const blobs = _blobQueue(fileArgs);
+  //console.log('pumpQueue:', blobs);
+  if (blobs && blobs.length) {
+    // keep going!
+    const blob = blobs.shift();
+    set__blobQueue(fileArgs, blobs);
+
+    writeBlobNow(fileArgs, writer, blob, readers, writers);
+  }
+  else {
+    //console.warn('queue empty!', blobs);
+    // we are done! (for now)
+    set__blobQueue(fileArgs, null);
+  }
+}
+
+async function prepareWriter(fileArgs, readers, writers) {
+  const { _blobQueue } = readers;
+  const { set_streamFileWriter, set__blobQueue } = writers;
+
+  
+  const blobs = _blobQueue(fileArgs);
+  if (blobs) {
+    // already started the process
+    return;
+  }
+  
+  // start queue
+  set__blobQueue(fileArgs, []);
+
+  // prepare writer
+  const { fileId } = fileArgs;
+  const path = getFilePath(fileId);
+  await fs.writeFile(path, '');
+
+  const fileEntry = await fs.getEntry(path);
+  const writer = await new Promise((resolve, reject) =>
+    fileEntry.createWriter(resolve, reject)
+  );
+  writer.onwriteend = (evt) => {
+    pumpQueue(fileArgs, writer, readers, writers);
+  };
+  writer.onerror = (err) => {
+    console.error('write failed: ' + (err.stack || err));
+    // error => get rid of writer!
+    set_streamFileWriter(fileArgs, null);
+  };
+
+  // we are done initializing -> pump once!
+  pumpQueue(fileArgs, writer, readers, writers);
+
+  set_streamFileWriter(fileArgs, writer);
+  return writer;
+}
 
 // (async() => {
 //   await fs.init({ type: window.TEMPORARY, bytes: 5 * 1024 * 1024 });
@@ -39,12 +131,6 @@ function getMetaFilePath(fileId) {
 //   // const content = await fs.readFile('dir/file.txt');
 //   console.log(await fs.readdir('dir', { deep: true })); // => "hello world"
 // })();
-
-
-/* globals window */
-const {
-  Blob
-} = window;
 
 
 export default {
@@ -90,7 +176,7 @@ export default {
         await initStreamFs();
         const fileId = uuid();
         const fileArgs = { fileId };
-        await _streamFileOpen(fileArgs);
+        //await _streamFileOpen(fileArgs);
         return fileId;
       }
     },
@@ -163,27 +249,37 @@ export default {
            * Create and store new file
            */
           async _streamFileOpen(queryArgs,
-            { _streamFileList },
+            readers,
             { },
-            { set_streamFileWriter, set__streamFileList }
+            writers
           ) {
             // create and/or open file
             // see: https://github.com/vitalets/bro-fs/tree/master/src/index.js#L237
-            const path = getFilePath(queryArgs.fileId);
-            await fs.writeFile(path, ''); // create/reset file
-            const fileEntry = await fs.getEntry(path);
-            const writer = await new Promise((resolve, reject) => fileEntry.createWriter(resolve, reject));
-            console.log(writer);
-            set_streamFileWriter(queryArgs, writer);
+            const { _streamFileList, get_streamFileWriter } = readers;
 
-            // add file to streamFileList
-            const files = _streamFileList();
-            if (files) {
-              files.push(fileEntry);
-              set__streamFileList(files);
+            const { fileId } = queryArgs;
+            let writer = get_streamFileWriter(queryArgs);
+            if (!writer) {
+              writer = await prepareWriter(queryArgs, readers, writers);
             }
 
-            return fileEntry;
+            const files = _streamFileList();
+            if (files && !some(files, { name: fileId })) {
+              const { set__streamFileList, set_streamFileUrl } = writers;
+
+              // add file to streamFileList
+              const path = getFilePath(fileId);
+              const fileEntry = await fs.getEntry(path);
+              files.push(fileEntry);
+              set__streamFileList(files);
+
+              // set URL
+              fs.getUrl(path).then(url =>
+                set_streamFileUrl(queryArgs, url)
+              );
+            }
+
+            return writer;
           },
 
           /**
@@ -203,12 +299,13 @@ export default {
 
         children: {
           streamFileWriter: 'streamFileWriter',
-          
-          _streamFileStat: 'streamFileStat',
+          _blobQueue: '_blobQueue',
+
+          _streamFileStat: '_streamFileStat',
           streamFileStat: {
             path: 'streamFileStat',
             reader(val, queryArgs) {
-              
+
             }
           },
           streamFileUrl: {
@@ -254,34 +351,35 @@ export default {
                   }
                 },
                 writers: {
-                  writeStreamSegmentBlob(streamFileSegmentArgs,
-                    { streamFileWriter, get_streamFileSegmentBlobCount, get_streamFileSegmentSize },
+                  async writeStreamSegmentBlob(streamFileSegmentArgs,
+                    readers,
                     { },
-                    { set_streamFileSegmentStartTime, set_streamFileSegmentEndTime,
-                      set_streamFileSegmentBlobCount, set_streamFileSegmentSize,
-                      set_streamFileUrl
-                    }
+                    writers
                   ) {
                     // store blob in file
                     const { blobEvent, fileId } = streamFileSegmentArgs;
+                    const {
+                      get_streamFileSegmentBlobCount,
+                      get_streamFileSegmentSize
+                    } = readers;
+                    const { set_streamFileSegmentStartTime, set_streamFileSegmentEndTime,
+                      set_streamFileSegmentBlobCount, set_streamFileSegmentSize,
+                    } = writers;
                     //const path = getFilePath(fileId);
                     //fs.appendFile(path, blobEvent.data);
-                    const writer = streamFileWriter(streamFileSegmentArgs);
-                    const writeResultPromise = writer.write(blobEvent.data);
+                    //const writer = await streamFileWriter(streamFileSegmentArgs);
+
+                    const fileArgs = { fileId };
+                    writeBlob(fileArgs, blobEvent.data, readers, writers);
 
                     // adding a blob (to the end), always adds one to blob count, and always updates the new "end time".
                     const blobCount = get_streamFileSegmentBlobCount(streamFileSegmentArgs);
                     const size = get_streamFileSegmentSize(streamFileSegmentArgs);
-                    const path = getFilePath(fileId);
                     const end = blobEvent.timecode || 0;
                     const promises = [
-                      writeResultPromise,
                       set_streamFileSegmentEndTime(streamFileSegmentArgs, end),
                       set_streamFileSegmentBlobCount(streamFileSegmentArgs, blobCount + 1),
-                      set_streamFileSegmentSize(streamFileSegmentArgs, size + blobEvent.data.size),
-                      fs.getUrl(path).then(url =>
-                        set_streamFileUrl(streamFileSegmentArgs, url)
-                      )
+                      set_streamFileSegmentSize(streamFileSegmentArgs, size + blobEvent.data.size)
                     ];
 
                     if (blobCount === 0) {
@@ -289,7 +387,8 @@ export default {
                       const start = blobEvent.timecode || 0;
                       promises.push(set_streamFileSegmentStartTime(streamFileSegmentArgs, start));
                     }
-                    return Promise.all(promises);
+                    //return Promise.all(promises);
+                    //return writeResultPromise;
                   },
                 },
                 children: {

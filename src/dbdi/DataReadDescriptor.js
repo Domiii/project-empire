@@ -86,6 +86,8 @@ export default class DataReadDescriptor extends DataDescriptorNode {
       dataProvider
     } = callerNode;
 
+    if (!accessTracker)
+      debugger;
     accessTracker.recordDataAccess(dataProvider, path);
     return dataProvider.readData(path);
   }

@@ -5,7 +5,7 @@ import {
   applyQueryToDataSet
 } from './firebase-util';
 
-import DataProviderBase from '../dataProviders/DataProviderBase';
+import DataProviderBase, { NOT_LOADED } from '../dataProviders/DataProviderBase';
 
 import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
@@ -60,7 +60,7 @@ export default class FirebaseDataProvider extends DataProviderBase {
 
     //console.warn('DATA [', query.remotePath, '] ', val);
 
-    //if (val !== undefined && val !== null) {
+    //if (val !== NOT_LOADED && val !== null) {
       setDataIn(this.firebaseCache, query.localPath, val);
     //}
 
@@ -112,7 +112,7 @@ export default class FirebaseDataProvider extends DataProviderBase {
   isDataLoaded(queryInput) {
     const query = this.getQueryByQueryInput(queryInput);
     if (!query) {
-      return undefined;
+      return false;
     }
 
     return !!this.loadedPaths[query.localPath];
@@ -122,11 +122,11 @@ export default class FirebaseDataProvider extends DataProviderBase {
     //console.warn('R [', queryInput, '] ', query && this.loadedPaths[query.localPath]);
     const query = this.getQueryByQueryInput(queryInput);
     if (!query) {
-      return undefined;
+      return NOT_LOADED;
     }
 
     if (!this.loadedPaths[query.localPath]) {
-      return undefined;
+      return NOT_LOADED;
     }
 
     let allData = getDataIn(this.firebaseCache, query.localPath, null);
@@ -182,7 +182,7 @@ export default class FirebaseDataProvider extends DataProviderBase {
 
 export class FirebaseAuthProvider extends DataProviderBase {
   _auth;
-  firebaseAuthData = undefined;
+  firebaseAuthData = NOT_LOADED;
 
   constructor(app) {
     super();
@@ -222,16 +222,20 @@ export class FirebaseAuthProvider extends DataProviderBase {
   }
 
   isDataLoaded(queryInput) {
-    return this.firebaseAuthData !== undefined;
+    return this.firebaseAuthData !== NOT_LOADED;
   }
 
   readData(queryInput) {
     const query = this.getQueryByQueryInput(queryInput);
     if (!query) {
-      return undefined;
+      return NOT_LOADED;
     }
 
-    return getDataIn(this.firebaseAuthData, query.localPath, undefined);
+    if (this.firebaseAuthData === NOT_LOADED) {
+      return NOT_LOADED;
+    }
+
+    return getDataIn(this.firebaseAuthData, query.localPath, null);
   }
 }
 
