@@ -253,6 +253,8 @@ const mediaInputSelection = {
  * ############################################################
  */
 
+ let lastStreamVersion = 0;
+
 export default {
   mediaStreams: {
     path: '/multimedia/streams',
@@ -270,10 +272,16 @@ export default {
           set_streamObject,
           set_streamRecorderObject,
           set_streamStatus,
-          newStreamFile,
-          set_streamFileId } = writers;
+          newStreamFile, set_streamFileId,
+          shutdownStream
+        } = writers;
+
+        // make sure, previous stream (if any) is dead
+        shutdownStream(streamArgs);
+
         set_mediaStream(streamArgs, {});
         set_streamStatus(streamArgs, MediaStatus.Preparing);
+        const streamVersion = ++lastStreamVersion;
 
         // hack: notify any listener of `isAnyStreamOnline`
         set_mediaStreams(get_mediaStreams());
@@ -281,13 +289,19 @@ export default {
         return Promise.all([
           getStream(mediaInputConstraints),
           newStreamFile()
-        ]).then(([stream, fileId]) => {
+        ]).then(([streamObject, fileId]) => {
           // TODO: properly setup the recorder
           // see: https://github.com/muaz-khan/RecordRTC/tree/master/dev/MediaStreamRecorder.js
-          const mediaRecorder = prepareRecorder(stream, streamArgs, fileId, readers, writers);
+
+          if (streamVersion !== lastStreamVersion) {
+            // things changed -> don't keep doing this thing
+            return;
+          }
+
+          const mediaRecorder = prepareRecorder(streamObject, streamArgs, fileId, readers, writers);
 
           // return Promise.all([
-          set_streamObject(streamArgs, stream);
+          set_streamObject(streamArgs, streamObject);
           set_streamRecorderObject(streamArgs, mediaRecorder);
           set_streamStatus(streamArgs, MediaStatus.Ready);
           set_streamFileId(streamArgs, fileId);
@@ -362,6 +376,7 @@ export default {
               set_streamFileId }
           ) {
             const stream = streamObject(streamArgs);
+            console.warn('shutdown', stream);
             if (stream) {
               // shutdown all streams
               stream.getTracks().forEach(track => track.stop());
@@ -416,7 +431,7 @@ export default {
               ) {
                 const timeout = getOptionalArgument(streamArgs, 'timeout');
                 const recorder = streamRecorderObject(streamArgs);
-                recorder.start(timeout || 10);
+                recorder.start(timeout || 500);
 
                 return set_streamStatus(streamArgs, MediaStatus.Running);
               },

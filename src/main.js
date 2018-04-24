@@ -31,9 +31,8 @@ import firebase from 'firebase';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { AppContainer } from 'react-hot-loader';
-import {
-  firebaseConfigs
-} from 'src/config/firebase.cfg';
+import getFirebaseConfig from 'src/config/firebase.cfg';
+const firebaseConfig = getFirebaseConfig();
 
 
 import Root from './views/root';
@@ -41,15 +40,6 @@ import Root from './views/root';
 import { LoadOverlay } from 'src/views/components/overlays';
 
 
-// choose config
-let firebaseConfig;
-
-if (process.env.NODE_ENV !== 'production') {
-  firebaseConfig = firebaseConfigs.test;
-}
-else {
-  firebaseConfig = firebaseConfigs.production;
-}
 
 // GO!
 firebase.initializeApp(firebaseConfig);

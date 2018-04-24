@@ -372,6 +372,9 @@ export default {
                     const fileArgs = { fileId };
                     writeBlob(fileArgs, blobEvent.data, readers, writers);
 
+                    // TODO: segment data should be updated *AFTER* blob write has succeeded (not now)
+                    // (segmentId being determined at time of queueing seems to be the right way of doing it)
+
                     // adding a blob (to the end), always adds one to blob count, and always updates the new "end time".
                     const blobCount = get_streamFileSegmentBlobCount(streamFileSegmentArgs);
                     const size = get_streamFileSegmentSize(streamFileSegmentArgs);

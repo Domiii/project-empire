@@ -1,4 +1,4 @@
-export const firebaseConfigs = {
+const firebaseConfigs = {
   production: {
     apiKey: 'AIzaSyBJd18A_15cm6IjnRk9NgLzyi1F1gAKa48',
     authDomain: 'project-empire.firebaseapp.com',
@@ -15,5 +15,15 @@ export const firebaseConfigs = {
     projectId: 'test-project-empire',
     storageBucket: 'test-project-empire.appspot.com',
     messagingSenderId: '861084752540'
+  }
+};
+
+
+export default () => {
+  if (process.env.NODE_ENV !== 'production') {
+    return firebaseConfigs.test;
+  }
+  else {
+    return firebaseConfigs.production;
   }
 };

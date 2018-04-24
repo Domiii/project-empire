@@ -565,7 +565,8 @@ export default class DynamicForm extends Component {
     if (dbName || reader) {
       // formData is queried from DB
       const doGet = reader || getAccessor(fns, `get_${dbName}`);
-      const newFormData = idArgs && doGet(idArgs) || {};
+      //const newFormData = idArgs && doGet(idArgs) || {};
+      const newFormData = doGet(idArgs);
 
       const schema = this.getSchema();
       if (this.state.savedFormData === NOT_LOADED || !isFormDataEqual(this.state.savedFormData, newFormData, schema)) {

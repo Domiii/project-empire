@@ -34,7 +34,7 @@ function log(...args) {
 
 const renderSize = filesize.partial({
   base: 10,
-  round: 0
+  round: 2
 });
 
 /**

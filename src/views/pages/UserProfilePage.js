@@ -69,7 +69,7 @@ export default class UserProfilePage extends Component {
 
   onStateChange = ({ isSaved }) => {
     this.setState({ isSaved });
-    console.log('onStateChange', isSaved);
+    //console.log('onStateChange', isSaved);
   }
 
   render(
@@ -92,10 +92,12 @@ export default class UserProfilePage extends Component {
     } = this.state;
 
     return (<DynamicForm {...props}>
-      {/* the Form children are rendered at the bottom of the form */}
       <div>
-        <Button disabled={isSaved} type="submit" className="btn btn-info">
-          <FAIcon name="save" /> Save!
+        {/* the Form children are rendered at the bottom of the form */}
+        <Button disabled={isSaved} type="submit" bsStyle="info">
+          <span>
+            <FAIcon name="save" /> Save!
+          </span>
         </Button>
       </div>
     </DynamicForm>);
