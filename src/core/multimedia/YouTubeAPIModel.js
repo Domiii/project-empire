@@ -61,6 +61,17 @@ export default {
         path: 'signInStatus'
       },
 
+      ytMyChannels: {
+        path: 'myChannels',
+        async fetch() {
+          const response = await gapi.client.youtube.channels.list({
+            mine: true,
+            part: 'snippet,statistics,contentDetails'
+          });
+          return response.result;
+        }
+      },
+
       ytChannels: {
         path: 'channels',
         children: {
