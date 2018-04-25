@@ -75,7 +75,7 @@ export default class DataDescriptorNode {
         return fn(...allArgs);
       }
       catch (err) {
-        throw new Error(`Failed to execute "${this.nodeType}" at node "${this.name}":\n` + err.stack);
+        throw new Error(`Failed to execute "${this.nodeType}" at node "${this.name}":\n` + (err && err.stack || err));
       }
     };
   }

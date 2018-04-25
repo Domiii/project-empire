@@ -38,7 +38,14 @@ export default {
           await gapiEnsureInitialized();
 
           // see https://developers.google.com/api-client-library/javascript/reference/referencedocs#gapiauth2authresponse
-          const result = await gapiAuth();
+          let result;
+          try {
+            result = await gapiAuth(true);
+          } 
+          catch (err) {
+            // could not authorize immediately -> show user login screen
+            result = await gapiAuth(false);
+          }
           // const accessToken = result.access_token;
           // const idToken = result.id_token;
           //gapi.client.setToken({ access_token: accessToken });

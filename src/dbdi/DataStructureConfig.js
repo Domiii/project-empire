@@ -70,6 +70,19 @@ export class DataStructureConfigNode {
   reader;
 
   /**
+   * A fetch function to be called when this node is read but not loaded yet.
+   * This can be used to un API calls to fetch data on first read, which
+   * then stays cached in this node.
+   * Only useful in combination with DataProviders that do not have their own
+   * backend handling mechanism, such as MemoryDataProvider.
+   * 
+   * TODO: Allow for more configuration parameters to automatically identify stale data
+   */
+  fetch;
+
+  // TODO: writeThrough (can probably be done just fine using a combination of onWrite + fetch?)
+
+  /**
    * A custom writer configuration for this node.
    * Will simply use the pathConfig to create writer if none is given.
    */
@@ -110,6 +123,7 @@ export class DataStructureConfigNode {
       this._parsePath(cfg, cfg.path || cfg.pathTemplate);
       this._parseChildren(cfg);
       this._parseReader(cfg);
+      this._parseFetch(cfg);
       this._parseReaders(cfg);
       this._parseWriter(cfg);
       this._parseWriters(cfg);
@@ -185,6 +199,13 @@ export class DataStructureConfigNode {
     if (cfg.read || cfg.reader) {
       // a custom reader for this node
       this.reader = cfg.read || cfg.reader;
+    }
+  }
+
+  _parseFetch(cfg) {
+    if (cfg.fetch) {
+      // a custom reader for this node
+      this.fetch = cfg.fetch;
     }
   }
 

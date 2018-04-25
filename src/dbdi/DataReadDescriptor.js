@@ -12,11 +12,13 @@ import { NOT_LOADED } from './dataProviders/DataProviderBase';
 
 export default class DataReadDescriptor extends DataDescriptorNode {
   readData;
+  fetch;
 
-  constructor(pathDescriptor, reader, name) {
-    super({pathDescriptor, reader}, name);
+  constructor(pathDescriptor, reader, fetch, name) {
+    super({ pathDescriptor, reader }, name);
 
     autoBind(this);
+    this.fetch = fetch;
 
     this._buildReadData(pathDescriptor, reader);
   }
@@ -39,7 +41,7 @@ export default class DataReadDescriptor extends DataDescriptorNode {
     if (isFunction(reader)) {
       // custom reader function
       if (readData) {
-        var origReadData = this._wrapAccessFunction(readData);
+        var origReadData = readData;
         readData = (...allArgs) => {
           const result = origReadData(...allArgs);
           return reader(result, ...allArgs);
@@ -49,10 +51,11 @@ export default class DataReadDescriptor extends DataDescriptorNode {
         readData = reader;
       }
     }
-    
+
     if (!readData) {
       throw new Error('Could not make sense of DataReadDescriptor config node: ' + JSON.stringify(this._cfg));
     }
+    
     this.readData = this._wrapAccessFunction(readData);
   }
 
@@ -71,25 +74,40 @@ export default class DataReadDescriptor extends DataDescriptorNode {
 
       if (isArray(pathOrPaths)) {
         const paths = pathOrPaths;
-        return paths.map(path => this._doReadData(path, callerNode, accessTracker));
+        return paths.map(path => this._readFromDataProvider(path, args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker));
       }
       else { //if (isString(pathOrPaths)) {
         const path = pathOrPaths;
-        return this._doReadData(path, callerNode, accessTracker);
+        return this._readFromDataProvider(path, args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
       }
       //return undefined;
     };
   }
 
-  _doReadData(path, callerNode, accessTracker) {
+  _readFromDataProvider(path, args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) {
     const {
       dataProvider
     } = callerNode;
 
-    if (!accessTracker)
-      debugger;
+    const { fetch } = this;
+
     accessTracker.recordDataAccess(dataProvider, path);
-    return dataProvider.readData(path);
+    const result = dataProvider.readData(path);
+    if (fetch && result === NOT_LOADED) {
+      // TODO: identify + handle all possible...
+      //  "fetch states" - e.g.: NEVER_LOADED, FETCHING, FETCHED
+      //  and "state changing triggers" - e.g.: a) set path to value b) setting path to NOT_LOADED would reset fetch state
+      const fcall = fetch(args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
+      Promise.resolve(fcall)
+        .then(res => {
+          // let data provider update state (which should notify all listeners)
+          dataProvider.actions.set(path, res);
+        })
+        .catch(err => {
+          throw new Error(`Failed to execute "${this.nodeType}" at path "${path}":\n` + (err && err.stack || err));
+        });
+    }
+    return result;
   }
 
   // ################################################

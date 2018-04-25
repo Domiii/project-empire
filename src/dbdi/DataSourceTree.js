@@ -151,10 +151,10 @@ export default class DataSourceTree {
   }
 
   _buildDataReadDescriptor(fullName, configNode, pathDescriptor) {
-    let { reader } = configNode;
+    let { reader, fetch } = configNode;
     reader = reader && this.getPlugin('reader', reader);
     const readDescriptor = (reader || pathDescriptor) &&
-      new DataReadDescriptor(pathDescriptor, reader, fullName);
+      new DataReadDescriptor(pathDescriptor, reader, fetch, fullName);
     return readDescriptor;
   }
 
@@ -166,7 +166,8 @@ export default class DataSourceTree {
       }
       return origDescriptor.readData(...allArgs);
     };
-    return new DataReadDescriptor(null, reader, fullName);
+    const { fetch } = origDescriptor;
+    return new DataReadDescriptor(null, reader, fetch, fullName);
   }
 
   _buildDataIsLoadedReadDescriptor(fullName, configNode, pathDescriptor) {
@@ -174,7 +175,8 @@ export default class DataSourceTree {
     const reader = (...allArgs) => {
       return origDescriptor.isDataLoaded(...allArgs);
     };
-    return new DataReadDescriptor(null, reader, fullName);
+    const { fetch } = origDescriptor;
+    return new DataReadDescriptor(null, reader, fetch, fullName);
   }
 
   _buildHybridDataNodes(parent, cfgChildren) {

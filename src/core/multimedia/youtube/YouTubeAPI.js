@@ -86,12 +86,12 @@ async function _gapiInit() {
 /**
  * @see https://developers.google.com/youtube/v3/guides/auth/client-side-web-apps
  */
-export async function gapiAuth() {
+export async function gapiAuth(immediate) {
   // auth!
   return await gapi.auth.authorize({
     client_id: clientId,
     scope: OAUTH2_SCOPES,
-    immediate: true
+    immediate: immediate || true
   });
 }
 

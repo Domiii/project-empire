@@ -20,6 +20,7 @@ export default class DataProviderBase {
   _queriesByLocalPath = new Map();
   _listenerData = new Map();
 
+
   getListeners(path) {
     return this._listenersByPath[path];
   }
@@ -201,20 +202,24 @@ export default class DataProviderBase {
   }
 
   readData(queryInput) {
-    throw new Error('DataSource did not implement `readData` method');
+    throw new Error('DataProvider did not implement `readData` method');
   }
 
   actions = {
     set: (remotePath, val) => {
+      throw new Error('DataProvider did not implement `set` action');
     },
 
     push: (remotePath, val) => {
+      throw new Error('DataProvider did not implement `push` action');
     },
 
     update: (remotePath, val) => {
+      throw new Error('DataProvider did not implement `update` action');
     },
 
     delete: (remotePath) => {
+      throw new Error('DataProvider did not implement `delete` action');
     },
 
     // transaction: () => {
