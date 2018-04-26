@@ -15,6 +15,7 @@ import MissionModel from 'src/core/missions/MissionModel';
 
 import StreamModel from 'src/core/multimedia/StreamModel';
 import StreamFileModel from 'src/core/multimedia/StreamFileModel';
+import YouTubeAPIModel from 'src/core/multimedia/YouTubeAPIModel';
 
 import dataProviders from './dataProviders.js';
 
@@ -89,7 +90,8 @@ const dataStructureConfig = {
     path: '/localData',
     children: merge({},
       StreamModel,
-      StreamFileModel
+      StreamFileModel,
+      YouTubeAPIModel
     )
   }
 };

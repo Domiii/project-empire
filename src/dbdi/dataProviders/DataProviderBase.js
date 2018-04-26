@@ -7,7 +7,18 @@ import pull from 'lodash/pull';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
+import {
+  getDataIn,
+  setDataIn
+} from 'src/firebaseUtil/dataUtil';
+
 export const NOT_LOADED = undefined;
+
+export const LoadState = {
+  NotLoaded: 0,
+  Fetching: 1,
+  Loaded: 2
+};
 
 /**
  * The amount of time to wait before deleting data + metadata 
@@ -19,15 +30,38 @@ export default class DataProviderBase {
   _listenersByPath = {};
   _queriesByLocalPath = new Map();
   _listenerData = new Map();
+  _loadState = {};
+  _cache = {};
 
 
-  getListeners(path) {
-    return this._listenersByPath[path];
+  // #################################################################################################
+  // Load state
+  // #################################################################################################
+
+  getLoadState(localPath) {
+    return this._loadState[localPath] || LoadState.NotLoaded;
   }
+
+  isDataLoaded(localPath) {
+    return this._loadState[localPath] === LoadState.Loaded;
+  }
+
+  setLoadState(localPath, state) {
+    this._loadState[localPath] = state;
+  }
+
+  
+  // #################################################################################################
+  // Query & Path management
+  // #################################################################################################
 
   getQueryByQueryInput(queryInput) {
     const localPath = this.getLocalPath(queryInput);
     return this.getQueryByLocalPath(localPath);
+  }
+
+  getOrCreateQuery(queryInput) {
+    return this.getQueryByQueryInput(queryInput) || this._registerQuery(this.getLocalPath(queryInput), queryInput);
   }
 
   getQueryByLocalPath(localPath) {
@@ -66,7 +100,7 @@ export default class DataProviderBase {
     this._queriesByLocalPath.set(localPath, query);
   }
 
-  _useQueryInput(localPath, queryInput) {
+  _registerQuery(localPath, queryInput) {
     let cachedQuery = this.getQueryByLocalPath(localPath);
     if (!cachedQuery) {
       // does not exist yet
@@ -84,6 +118,15 @@ export default class DataProviderBase {
       ++cachedQuery._useCount;
     }
     return cachedQuery;
+  }
+
+  
+  // #################################################################################################
+  // Listeners
+  // #################################################################################################
+
+  getListeners(localPath) {
+    return this._listenersByPath[localPath];
   }
 
   registerListener(queryInput, listener, who) {
@@ -109,8 +152,8 @@ export default class DataProviderBase {
       // if not already listening on path, register!
       //console.warn(who, '[registerListener]', localPath);
 
-      const query = this._useQueryInput(localPath, queryInput);
-      const customData = this.onListenerAdd(query, listener);
+      const query = this._registerQuery(localPath, queryInput);
+      const customData = this.onPathListenStart(query, listener);
       this._listenerData.get(listener).byPath[localPath] = {
         query,
         customData
@@ -159,9 +202,12 @@ export default class DataProviderBase {
 
       // reduce queryInputCache useCount
       --query._useCount;
+
       if (!query._useCount) {
-        // delete it
-        this._queriesByLocalPath.delete(query.localPath);
+        // unload the whole thing
+        console.warn('UNLOAD', localPath);
+        this._queriesByLocalPath.delete(localPath);
+        this.setLoadState(localPath, LoadState.NotLoaded);
       }
 
       if (isEmpty(listenerData.byPath)) {
@@ -175,34 +221,118 @@ export default class DataProviderBase {
         }
       }
 
-      this.onListenerRemove(query, listener, customData);
+      this.onPathListenEnd(query, listener, customData);
     }, purgeCacheDelayDefault);
   }
 
-  notifyNewData(query, val) {
-    const {
-      localPath,
-      queryInput
-    } = query;
 
+  // #################################################################################################
+  // Handle data
+  // #################################################################################################
+
+  notifyNewData(query, val) {
+    if (val === NOT_LOADED) {
+      // this path is loaded -> make sure, it does not get a NOT_LOADED value
+      val = null;
+    }
+
+    const {
+      localPath
+    } = query || EmptyObject;
+    
+    if (!this.isDataLoaded(localPath)) {
+      this.setLoadState(localPath, LoadState.Loaded);
+      console.warn('LOADED ', localPath, ' -> ', val);
+    }
+
+    //console.warn('DATA [', query.remotePath, '] ', val);
+
+    // update cache
+    setDataIn(this._cache, localPath, val);
+
+    // notify all listeners
     const listeners = this.getListeners(localPath) || EmptyArray;
-    setTimeout(() => listeners.forEach(listener => listener(localPath, queryInput, val)));
+
+    // TODO: Some how prevent listeners from getting called more than once in a batch?
+    setTimeout(() => listeners.forEach(listener => listener(query, val)));
   }
 
-  // #################################################################
-  // Any DataProvider needs to implement the following methods
-  // #################################################################
 
-  onListenerAdd(query, listener) {
+  readData(queryInput) {
+    const query = this.getQueryByQueryInput(queryInput);
+    //console.warn('R [', queryInput, '] ', query, this._loadState[query.localPath]);
+    if (!query) {
+      return NOT_LOADED;
+    }
+
+    const {localPath} = query;
+    if (!this.isDataLoaded(localPath)) {
+      return NOT_LOADED;
+    }
+    return getDataIn(this._cache, localPath, null);
+  }
+
+  // #################################################################################################
+  // Fetching
+  // #################################################################################################
+
+  /**
+   * Determines whether the current state allows for/needs a fetch
+   */
+  fetchStart(queryInput) {
+    const query = this.getQueryByQueryInput(queryInput);
+    //console.warn('R [', queryInput, '] ', query, this._loadState[query.localPath]);
+    if (!query) {
+      return false;
+    }
+
+    const {localPath} = query;
+    if (this.getLoadState(localPath) !== LoadState.NotLoaded) {
+      return false;
+    }
+
+    // set load state to fetching
+    //  (which is technically still "NotLoaded", but we set state to "Fetching", to prevent double fetching)
+    this.setLoadState(localPath, LoadState.Fetching);
+    return true;
+  }
+
+  /**
+   * Update state based on fetched result
+   */
+  fetchEnd(queryInput, val) {
+    const query = this.getQueryByQueryInput(queryInput);
+    const {
+      localPath,
+      remotePath
+    } = query;
+
+    if (this.getLoadState(localPath) !== LoadState.Fetching) {
+      // something happened in the meantime -> discard fetched result
+      console.warn('discarding fetched result because path status changed @', localPath, '-', val);
+      return;
+    }
+
+    // set new state (which should notify all listeners)
+    this.actions.set(remotePath, val);
+  }
+
+  // #################################################################################################
+  // Any DataProvider needs to implement the following methods
+  // #################################################################################################
+
+  /**
+   * We have at least one listener listening to the localPath in the given query
+   */
+  onPathListenStart(query, listener) {
     //throw new Error('DataProvider did not implement `onListenerAdd` method');
   }
 
-  onListenerRemove(query, listener) {
+  /**
+   * Not a single soul cares about the localPath in the given query anymore
+   */
+  onPathListenEnd(query, listener, customData) {
     //throw new Error('DataProvider did not implement `onListenerRemove` method');
-  }
-
-  readData(queryInput) {
-    throw new Error('DataProvider did not implement `readData` method');
   }
 
   actions = {

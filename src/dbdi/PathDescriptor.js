@@ -102,9 +102,11 @@ export default class PathDescriptor extends DataDescriptorNode {
     
     //const argNames = getPathRaw.pathInfo && getPathRaw.pathInfo.varNames;
     if (!_queryParamsInput) {
-      // no custom query parameters: keep it simple!
+      // no custom query parameters
       return (args, readerProxy, injectProxy, callerNode, _accessTracker) => {
         if (this.indices && this.indices.doesQueryMatchAnyPropertyIndex(args)) {
+          // match an index -> add index query
+
           // console.log({
           //   path: getPathRaw(args),
           //   indx: this.indices.getIndexNameByKeys(args)
@@ -115,6 +117,7 @@ export default class PathDescriptor extends DataDescriptorNode {
             queryParams: this.indices.where(args)
           };
         }
+        
         return getPathRaw(args);
       };
     }

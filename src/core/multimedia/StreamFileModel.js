@@ -175,7 +175,7 @@ export default {
       ) {
         await initStreamFs();
         const fileId = uuid();
-        const fileArgs = { fileId };
+        //const fileArgs = { fileId };
         //await _streamFileOpen(fileArgs);
         return fileId;
       }

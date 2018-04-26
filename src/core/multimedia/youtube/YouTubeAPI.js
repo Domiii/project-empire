@@ -37,7 +37,8 @@ const DEBUGG = true;
 
 const ContentTypes = {
   video: 'video',
-  channel: 'channel',
+  channel: 'channelList',
+
   playlist: 'playlist'
 };
 const ContentRequestFunctions = {
@@ -47,9 +48,11 @@ const ContentRequestFunctions = {
   get channel() {
     return gapi.client.youtube.channels.list.bind(gapi.client.youtube.channels);
   },
-  get playlist() { 
-    return gapi.client.youtube.channels.list.bind(gapi.client.youtube.channels);
-  }
+  
+  // TODO: how to get playlists?
+  // get playlist() { 
+  //   return gapi.client.youtube.channels.list.bind(gapi.client.youtube.channels);
+  // }
 };
 
 // see: https://developers.google.com/api-client-library/javascript/reference/referencedocs
@@ -103,12 +106,21 @@ export async function gapiGrantScopes(newScopes) {
   user.grant({'scope': newScopes});
 }
 
+export function sendYtRequest(contentType, requestArgs, maxResourcesPerQuery) {
+  const fn = ContentRequestFunctions[contentType];
+  console.assert(fn, 'invalid request type: ' + contentType);
+
+  // TODO: make sure, we don't accidentally spam requests?
+
+  return fn(requestArgs);
+}
+
 /**
  * Autmoatically batch the request.
  * Handles any arbitrary amount of ids by batching requests so as to respect the API limits.
  * @see https://stackoverflow.com/questions/36370821/does-youtube-v3-data-api-have-a-limit-to-the-number-of-ids-you-can-send-to-vide 
  */
-export function sendYtRequest(contentType, ids, part, maxResourcesPerQuery) {
+export function sendYtRequestBatched(contentType, ids, part, maxResourcesPerQuery) {
   if (!isArray(ids)) {
     throw new Error('expected array of ids, not a string');
   }
@@ -126,7 +138,8 @@ export function sendYtRequest(contentType, ids, part, maxResourcesPerQuery) {
   }
 
   const fn = ContentRequestFunctions[contentType];
-  console.assert(fn, contentType + ' did not define a request function');
+  console.assert(fn, 'invalid request type: ' + contentType);
+
   const requests = map(allRequestArgs, fn);
 
   return Promise.all(map(requests, request =>
@@ -161,12 +174,12 @@ export function sendYtRequest(contentType, ids, part, maxResourcesPerQuery) {
  */
 
 export function ytFetchChannelData(ids) {
-  return sendYtRequest('channel', ids, 'snippet,statistics', MaxVideosPerQuery);
+  return sendYtRequestBatched('channelList', ids, 'snippet,statistics', MaxVideosPerQuery);
 }
 
 
 export function ytFetchPlaylistData(ids) {
-  return sendYtRequest('playlist', ids, 'snippet,contentDetails', MaxVideosPerQuery);
+  return sendYtRequestBatched('playlist', ids, 'snippet,contentDetails', MaxVideosPerQuery);
 }
 
 
@@ -174,7 +187,7 @@ export function ytFetchVideoData(ids) {
   // get basic video info
   // see: https://developers.google.com/youtube/v3/docs/videos
   // see: https://developers.google.com/apis-explorer/?hl=en_US#p/youtube/v3/youtube.videos.list?part=snippet&id=0QB9JP2l6tM%252C+9oGfI4o6Xfs&_h=4&
-  return sendYtRequest('videoList', ids, 'snippet,statistics', MaxVideosPerQuery);
+  return sendYtRequestBatched('videoList', ids, 'snippet,statistics', MaxVideosPerQuery);
 }
 
 // TODO: Uploading

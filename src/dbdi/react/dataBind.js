@@ -271,7 +271,7 @@ export default (propsOrPropCb) => WrappedComponent => {
           }
           return undefined;
         },
-        
+
         has: (target, name) => {
           // 1) check custom data
           if (name in this._customProps) {
@@ -292,7 +292,7 @@ export default (propsOrPropCb) => WrappedComponent => {
           if (name in this._customContext) {
             return true;
           }
-          
+
           return false;
         }
       });
@@ -459,7 +459,12 @@ export default (propsOrPropCb) => WrappedComponent => {
       this._isMounted = false;
     }
 
-    _onNewData(localPath, queryInput, val) {
+    _onNewData(query, val) {
+      // const {
+      //   localPath,
+      //   queryInput
+      // } = query;
+
       this._shouldUpdate = true;
       //console.warn(WrappedComponent.name || '<unnamed component>', 'onNewData', localPath, val);
       //this.forceUpdate();

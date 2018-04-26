@@ -25,10 +25,11 @@ import {
  *  groupBy
  */
 
+ /**
+  * The FirebaseDataProvider allows 
+  */
 export default class FirebaseDataProvider extends DataProviderBase {
   _database;
-  firebaseCache = {};
-  loadedPaths = {};
 
   constructor(app) {
     super();
@@ -53,16 +54,6 @@ export default class FirebaseDataProvider extends DataProviderBase {
 
   _onNewData(query, snap) {
     const val = snap.val();
-    if (!this.loadedPaths[query.localPath]) {
-      this.loadedPaths[query.localPath] = true;
-      console.warn('LOAD', query.localPath, ' -> ', val);
-    }
-
-    //console.warn('DATA [', query.remotePath, '] ', val);
-
-    //if (val !== NOT_LOADED && val !== null) {
-      setDataIn(this.firebaseCache, query.localPath, val);
-    //}
 
     this.notifyNewData(query, val);
   }
@@ -78,6 +69,7 @@ export default class FirebaseDataProvider extends DataProviderBase {
         queryParams
       }
     } = query;
+
     let ref = this.database().ref().child(remotePath);
     if (queryParams) {
       ref = applyParamsToQuery(queryParams, ref);
@@ -89,7 +81,10 @@ export default class FirebaseDataProvider extends DataProviderBase {
   // Public properties + methods
   // ################################################
 
-  onListenerAdd(query, listener) {
+  /**
+   * We have at least one listener listening to the localPath in the given query
+   */
+  onPathListenStart(query, listener) {
     const hook = snap => this._onNewData(query, snap);
 
     const ref = this._getRef(query);
@@ -99,46 +94,19 @@ export default class FirebaseDataProvider extends DataProviderBase {
     return hook;
   }
 
-  onListenerRemove(query, listener, hook) {
+  /**
+   * Not a single soul cares about the localPath in the given query anymore
+   */
+  onPathListenEnd(query, listener, hook) {
     const ref = this._getRef(query);
     ref.off('value', hook);
-    if (!query._useCount) {
-      // set path as unloaded
-      console.warn('UNLOAD', query.localPath);
-      this.loadedPaths[query.localPath] = false;
-    }
   }
 
-  isDataLoaded(queryInput) {
-    const query = this.getQueryByQueryInput(queryInput);
-    if (!query) {
-      return false;
-    }
-
-    return !!this.loadedPaths[query.localPath];
-  }
-
-  readData(queryInput) {
-    //console.warn('R [', queryInput, '] ', query && this.loadedPaths[query.localPath]);
-    const query = this.getQueryByQueryInput(queryInput);
-    if (!query) {
-      return NOT_LOADED;
-    }
-
-    if (!this.loadedPaths[query.localPath]) {
-      return NOT_LOADED;
-    }
-
-    let allData = getDataIn(this.firebaseCache, query.localPath, null);
-
-    // should not be necessary, since we already subscribed to only this subset of data anyway!
-
-    // if (allData) {
-    //   allData = applyQueryToDataSet(allData, queryParams);
-    // }
-    return allData;
-  }
-
+  /**
+   * The way the Firebase library (currently) works is that
+   * setting something will trigger events on any `child` listeners at the given path.
+   * That is why we don't need to explicitely trigger anything during write operations.
+   */
   _onWrite(action, remotePath, val) {
     console.log('W [', action, remotePath, '] ', val);
     return true;
@@ -182,7 +150,6 @@ export default class FirebaseDataProvider extends DataProviderBase {
 
 export class FirebaseAuthProvider extends DataProviderBase {
   _auth;
-  firebaseAuthData = NOT_LOADED;
 
   constructor(app) {
     super();
@@ -201,41 +168,16 @@ export class FirebaseAuthProvider extends DataProviderBase {
     return this._auth;
   }
 
-  onListenerAdd(query, listener) {
+  onPathListenStart(query, listener) {
     // add listener once the first request comes in
     this.auth().onAuthStateChanged((user) => {
-      if (user) {
-        // User is signed in.
-        this.firebaseAuthData = user;
-      }
-      else {
-        // No user is signed in.
-        this.firebaseAuthData = null;
-      }
-
-      this.notifyNewData(query, user);
+      this.notifyNewData(this.getOrCreateQuery(''), user || null);
+      this.notifyNewData(query, user && getDataIn(user, query.remotePath, null) || user);
     });
   }
 
   _onError(err) {
     console.error(`[${this.constructor.name}] ${err.stack}`);
-  }
-
-  isDataLoaded(queryInput) {
-    return this.firebaseAuthData !== NOT_LOADED;
-  }
-
-  readData(queryInput) {
-    const query = this.getQueryByQueryInput(queryInput);
-    if (!query) {
-      return NOT_LOADED;
-    }
-
-    if (this.firebaseAuthData === NOT_LOADED) {
-      return NOT_LOADED;
-    }
-
-    return getDataIn(this.firebaseAuthData, query.localPath, null);
   }
 }
 

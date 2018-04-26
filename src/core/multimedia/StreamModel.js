@@ -298,13 +298,13 @@ export default {
             return;
           }
 
-          const mediaRecorder = prepareRecorder(streamObject, streamArgs, fileId, readers, writers);
-
           // return Promise.all([
           set_streamObject(streamArgs, streamObject);
-          set_streamRecorderObject(streamArgs, mediaRecorder);
           set_streamStatus(streamArgs, MediaStatus.Ready);
           set_streamFileId(streamArgs, fileId);
+          
+          const mediaRecorder = prepareRecorder(streamObject, streamArgs, fileId, readers, writers);
+          set_streamRecorderObject(streamArgs, mediaRecorder);
           // ]);
         }).then(() => streamId);
       }

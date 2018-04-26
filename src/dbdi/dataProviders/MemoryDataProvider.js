@@ -2,7 +2,9 @@
  * Read/write data to/from memory
  */
 
-import DataProviderBase from '../dataProviders/DataProviderBase';
+import DataProviderBase, { NOT_LOADED } from '../dataProviders/DataProviderBase';
+
+import { pathJoin } from 'src/util/pathUtil';
 
 import isString from 'lodash/isString';
 import map from 'lodash/map';
@@ -16,8 +18,6 @@ import {
 } from 'src/firebaseUtil/dataUtil';
 
 export default class MemoryDataProvider extends DataProviderBase {
-  cache = [];
-
   constructor() {
     super();
 
@@ -38,45 +38,33 @@ export default class MemoryDataProvider extends DataProviderBase {
   // Any DataProvider can/needs to implement the following methods
   // #################################################################
 
-  onListenerAdd(query, listener) {
+  onPathListenStart(query, listener) {
 
   }
 
-  onListenerRemove(query, listener) {
+  onPathListenEnd(query, listener, customData) {
 
-  }
-
-  readData(queryInput) {
-    const query = this.getQueryByQueryInput(queryInput);
-    if (!query) {
-      return undefined;
-    }
-
-    return getDataIn(this.cache, query.localPath, null);
   }
 
   _onWrite(action, remotePath, val) {
     // console.log('W [', action, remotePath, '] ', val);
 
     // local and remote path are equal for the MemoryDataProvider (for now)
-    const localPath = remotePath;
-    const query = this.getQueryByLocalPath(localPath);
+    const query = this.getOrCreateQuery(remotePath);
 
     // if query object does not exist, it means, no listener has been registered on this path yet
-    query && this.notifyNewData(query, val);
+    this.notifyNewData(query, val);
     return true;
   }
 
   actions = {
     set: (remotePath, val) => {
-      this.getOrCreateNode(remotePath);
-      const promise = Promise.resolve(setDataIn(this.cache, remotePath, val));
       this._onWrite('Set', remotePath, val);
-      return promise;
+      return Promise.resolve(true);
     },
 
     push: (remotePath, val) => {
-      throw new Error('TODO: pushing to MemoryDataProvider is currently bugged - still need to fix it. Recommendation: Use a combination of get + set to work around this for now.');
+      throw new Error('TODO: pushing to MemoryDataProvider is currently bugged - still need to fix it. HINT: Use a combination of get + set to work around this for now.');
 
       // let node = this.getOrCreateNode(remotePath);
       // debugger;
@@ -91,23 +79,21 @@ export default class MemoryDataProvider extends DataProviderBase {
     },
 
     update: (remotePath, val) => {
-      let node = this.getOrCreateNode(remotePath);
-      const promise = Promise.all(map(val, (v, k) => setDataIn(node, k, v)));
-      this._onWrite('Upd', remotePath, val);
-      return promise;
+      map(val, (v, k) => this._onWrite('Upd', pathJoin(remotePath, k), v));
+      return Promise.resolve(true);
     },
 
     delete: (remotePath) => {
-      let node = getDataIn(this.cache, remotePath);
-      let promise;
-      if (node !== undefined) {
-        promise = Promise.resolve(setDataIn(this.cache, remotePath, undefined));
+      const data = this.readData(remotePath);
+      if (data !== null) {
+        // deleted it
+        this._onWrite('Del', remotePath, null);
+        return Promise.resolve(true);
       }
       else {
-        return Promise.resolve();
+        // nothing to do
+        return Promise.resolve(false);
       }
-      this._onWrite('Del', remotePath);
-      return promise;
     },
 
     // transaction: () => {

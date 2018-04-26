@@ -2,7 +2,9 @@ import gapi from 'resources/gapi.js';
 import {
   GapiStatus,
   gapiInit,
-  gapiAuth
+  gapiAuth,
+  
+  sendYtRequest
 } from './youtube/YouTubeAPI';
 import { NOT_LOADED } from '../../dbdi/react';
 
@@ -41,7 +43,7 @@ export default {
           let result;
           try {
             result = await gapiAuth(true);
-          } 
+          }
           catch (err) {
             // could not authorize immediately -> show user login screen
             result = await gapiAuth(false);
@@ -70,8 +72,14 @@ export default {
 
       ytMyChannels: {
         path: 'myChannels',
-        async fetch() {
-          const response = await gapi.client.youtube.channels.list({
+        async fetch(
+          { },
+          { },
+          { },
+          { gapiEnsureInitialized }
+        ) {
+          await gapiEnsureInitialized();
+          const response = await sendYtRequest('channels', {
             mine: true,
             part: 'snippet,statistics,contentDetails'
           });

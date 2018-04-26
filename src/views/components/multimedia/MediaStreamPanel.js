@@ -193,6 +193,34 @@ class MediaSettingsPanel extends Component {
 }
 
 
+/**
+ * ############################################################
+ * UploadStatusPanel
+ * ############################################################
+ */
+
+@dataBind({})
+export class UploadStatusPanel extends Component {
+  render(
+    { },
+    { },
+    { ytMyChannels, ytMyChannels_isLoaded }
+  ) {
+    let myChannelsEl;
+
+    if (!ytMyChannels_isLoaded) {
+      myChannelsEl = <LoadIndicator block />;
+    }
+    else {
+      myChannelsEl = JSON.stringify(ytMyChannels, null, 2);
+    }
+
+    return (<Panel.Body>
+      {myChannelsEl}
+    </Panel.Body>);
+  }
+}
+
 
 /**
  * ############################################################
@@ -411,7 +439,8 @@ export default class MediaStreamPanel extends Component {
       const duration = streamDuration(streamArgs);
       //const durationStr = 
       const size = streamSize(streamArgs);
-      const canUpload = status === MediaStatus.Finished;
+      //const canUpload = status === MediaStatus.Finished;
+      const canUpload = size > 1;
 
       titleEl = (<span>
         <span>
@@ -537,6 +566,8 @@ export default class MediaStreamPanel extends Component {
         <RecorderCtrlButton />
       </div>}
       {contentEl}
+      
+      <UploadStatusPanel streamArgs={streamArgs} />
       <br />
       <br />
       <StreamFileList />
