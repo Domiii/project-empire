@@ -286,6 +286,11 @@ button:active { outline:none !important; }
  * #######
  */
 
+.max-size-1 {
+  max-width: 1em;
+  max-height: 1em;
+}
+
 .max-size-1-5 {
   max-width: 1.5em;
   max-height: 1.5em;

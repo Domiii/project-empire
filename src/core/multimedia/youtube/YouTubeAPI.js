@@ -15,6 +15,7 @@ export const GapiStatus = {
   Authorized: 3
 };
 
+// see: https://developers.google.com/api-client-library/javascript/reference/referencedocs
 // see: https://github.com/youtube/api-samples/tree/master/javascript
 
 // 1) auth: https://github.com/youtube/api-samples/blob/master/javascript/auth.js
@@ -56,7 +57,6 @@ const ContentRequestFunctions = {
   // }
 };
 
-// see: https://developers.google.com/api-client-library/javascript/reference/referencedocs
 export function gapiInit() {
   return new Promise((resolve, reject) => {
     // see https://github.com/youtube/api-samples/blob/47c49fed14859957ed74fd2706259935937eb885/javascript/quickstart.html#L33
@@ -119,10 +119,9 @@ export async function gapiGrantScopes(newScopes) {
 }
 
 function prepareRequest(contentType, requestArgs) {
-  debugger;
   const fn = ContentRequestFunctions[contentType];
   console.assert(fn, 'invalid request type: ' + contentType);
-  console.log('[YT Request]', contentType, requestArgs);
+  console.info('[YT Request]', contentType, requestArgs);
   return fn;
 }
 

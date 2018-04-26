@@ -212,7 +212,7 @@ export class UploadStatusPanel extends Component {
   render(
     { },
     { clickResetGapiStatus },
-    { ytMyChannels, ytMyChannels_isLoaded, gapiStatus }
+    { ytMyChannelSnippet, ytMyChannels_isLoaded, gapiStatus }
   ) {
     let myChannelsEl;
 
@@ -226,11 +226,21 @@ export class UploadStatusPanel extends Component {
       myChannelsEl = <LoadIndicator block />;
     }
     else {
-      myChannelsEl = JSON.stringify(ytMyChannels, null, 2);
+      //myChannelsEl = JSON.stringify(ytMyChannels, null, 2);
+      if (!ytMyChannelSnippet) {
+        return (<Alert bsStyle="warning">
+          You do not have a YouTube channel. Create one, then refresh.
+        </Alert>);
+      }
+      const { title, thumbnails } = ytMyChannelSnippet;
+      const thumbUrl = thumbnails.default.url;
+      myChannelsEl = (<span>
+        Upload to <img src={thumbUrl} className="max-size-1" /> {title}
+      </span>);
     }
 
     return (<Panel.Body>
-      <pre>{myChannelsEl}</pre>
+      <div>{myChannelsEl}</div>
     </Panel.Body>);
   }
 }

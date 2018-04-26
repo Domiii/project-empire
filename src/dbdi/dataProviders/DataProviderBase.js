@@ -266,10 +266,16 @@ export default class DataProviderBase {
     }
 
     const {localPath} = query;
-    if (!this.isDataLoaded(localPath)) {
-      return NOT_LOADED;
+    const val = getDataIn(this._cache, localPath, NOT_LOADED);
+
+    if (val === NOT_LOADED) {
+      if (this.isDataLoaded(localPath)) {
+        // return null, if it is already loaded
+        return null;
+      }
     }
-    return getDataIn(this._cache, localPath, null);
+
+    return val;
   }
 
   // #################################################################################################

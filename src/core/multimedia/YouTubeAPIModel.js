@@ -54,10 +54,11 @@ export default {
       },
       async gapiEnsureAuthorized(
         { }, { },
-        { gapiStatus },
+        { gapiStatus, isGapiTokenFresh },
         { gapiEnsureInitialized, set_gapiStatus, set_gapiTokens }
       ) {
-        if (!gapiStatus || gapiStatus < GapiStatus.Authorized) {
+        // authorize if not authorized previously, or if token is (almost) expired
+        if (!gapiStatus || gapiStatus < GapiStatus.Authorized || !isGapiTokenFresh) {
           await gapiEnsureInitialized();
 
           // see https://developers.google.com/api-client-library/javascript/reference/referencedocs#gapiauth2authresponse
@@ -66,8 +67,9 @@ export default {
             result = await gapiAuth(true);
           }
           catch (err) {
-            console.info('YT immediate auth failed', err);
-            // could not authorize immediately -> show user login screen
+            console.warn('YT immediate auth failed - requesting user consent', err);
+
+            // could not authorize immediately -> show user consent screen
             try {
               result = await gapiAuth(false);
             }
@@ -95,7 +97,27 @@ export default {
 
     children: {
       gapiStatus: 'status',
-      gapiTokens: 'gapiTokens',
+      gapiTokens: {
+        path: 'gapiTokens',
+        readers: {
+          isGapiTokenFresh(
+            { },
+            { },
+            { gapiTokens }
+          ) {
+            if (!gapiTokens) return false;
+
+            // time in seconds since 1970
+            const expiresAt = gapiTokens.expires_at;
+
+            // get remaining minutes
+            const minutesLeft = (parseInt(expiresAt) - new Date().getTime()/1000)/60;
+
+            // not fresh, if less than two minutes left
+            return minutesLeft > 2;
+          }
+        }
+      },
 
       ytSignInStatus: {
         path: 'signInStatus'
@@ -115,6 +137,16 @@ export default {
             part: 'snippet,statistics,contentDetails'
           });
           return response.result;
+        },
+        children: {
+          ytMyChannel: {
+            path: 'items[0]',
+            children: {
+              ytMyChannelSnippet: {
+                path: 'snippet'
+              }
+            }
+          }
         }
       },
 

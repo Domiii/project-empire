@@ -55,7 +55,7 @@ export default class VideoPlayer extends React.Component {
 
       // ugly hack, because the default media source elements change duration only after a long period of time (at least on Chrome)
       this.player.on('durationchange', () => {
-        console.warn(player.duration());
+        //console.warn(player.duration());
         const { duration } = this.props;
         if (player.duration() === Infinity) {
           player.duration(duration);

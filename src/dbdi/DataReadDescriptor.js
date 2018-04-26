@@ -101,6 +101,9 @@ export default class DataReadDescriptor extends DataDescriptorNode {
       dataProvider
     } = callerNode;
 
+    // TODO: let callerNode manage an entire fetch hierarchy
+    // TODO: in case, this node does not have a fetch entry, but any of it's parents does, go to the closest parent and fetch that first
+
     const { fetch } = this;
     if (!fetch) return;
       
