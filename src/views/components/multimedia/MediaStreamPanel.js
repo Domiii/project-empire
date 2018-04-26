@@ -26,6 +26,7 @@ import { MediaStatus } from '../../../core/multimedia/StreamModel';
 import MediaInputSelect from './MediaInputSelect';
 import VideoPlayer from './VideoPlayer';
 import StreamFileList from './StreamFileList';
+import { GapiStatus } from '../../../core/multimedia/youtube/YouTubeAPI';
 
 
 function log(...args) {
@@ -199,16 +200,29 @@ class MediaSettingsPanel extends Component {
  * ############################################################
  */
 
-@dataBind({})
+@dataBind({
+  clickResetGapiStatus(evt,
+    { },
+    { resetGapiStatus }
+  ) {
+    return resetGapiStatus();
+  }
+})
 export class UploadStatusPanel extends Component {
   render(
     { },
-    { },
-    { ytMyChannels, ytMyChannels_isLoaded }
+    { clickResetGapiStatus },
+    { ytMyChannels, ytMyChannels_isLoaded, gapiStatus }
   ) {
     let myChannelsEl;
 
-    if (!ytMyChannels_isLoaded) {
+    if (gapiStatus === GapiStatus.PopupBlocked) {
+      myChannelsEl = (<Alert bsStyle="danger">
+        <FAIcon name="times" /> Authorization popup blocked! Unblock + click this button:&nbsp;
+        <Button onClick={clickResetGapiStatus}><FAIcon name="refresh" /></Button>
+      </Alert>);
+    }
+    else if (!ytMyChannels_isLoaded) {
       myChannelsEl = <LoadIndicator block />;
     }
     else {
@@ -216,7 +230,7 @@ export class UploadStatusPanel extends Component {
     }
 
     return (<Panel.Body>
-      {myChannelsEl}
+      <pre>{myChannelsEl}</pre>
     </Panel.Body>);
   }
 }

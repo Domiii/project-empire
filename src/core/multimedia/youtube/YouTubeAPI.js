@@ -11,7 +11,8 @@ const firebaseConfig = getFirebaseConfig();
 export const GapiStatus = {
   None: 0,
   Initialized: 1,
-  Authorized: 2
+  PopupBlocked: 2,
+  Authorized: 3
 };
 
 // see: https://github.com/youtube/api-samples/tree/master/javascript
@@ -36,8 +37,8 @@ const DEBUGG = true;
  */
 
 const ContentTypes = {
-  video: 'video',
-  channel: 'channelList',
+  videoList: 'video',
+  channelList: 'channelList',
 
   playlist: 'playlist'
 };
@@ -45,7 +46,7 @@ const ContentRequestFunctions = {
   get videoList() { 
     return gapi.client.youtube.videos.list.bind(gapi.client.youtube.videos);
     },
-  get channel() {
+  get channelList() {
     return gapi.client.youtube.channels.list.bind(gapi.client.youtube.channels);
   },
   
@@ -59,13 +60,13 @@ const ContentRequestFunctions = {
 export function gapiInit() {
   return new Promise((resolve, reject) => {
     // see https://github.com/youtube/api-samples/blob/47c49fed14859957ed74fd2706259935937eb885/javascript/quickstart.html#L33
-    gapi.load('client:auth2', {
+    return gapi.load('client:auth2', {
       callback: function () {
         // Handle gapi.client initialization.
-        return _gapiInit().then(resolve);
+        resolve(_gapiInit());
       },
       onerror: function (err) {
-        reject(new Error('gapi.client failed to load - ' + (err.stack || err)));
+        reject(new Error('gapi.client failed to load - ' + (err.stack || JSON.stringify(err))));
       },
       timeout: 5000, // 5 seconds.
       ontimeout: function () {
@@ -83,6 +84,7 @@ async function _gapiInit() {
     apiKey,
     clientId,
     discoveryDocs,
+    scope: 'https://www.googleapis.com/auth/youtube.readonly'
   });
 }
 
@@ -91,10 +93,20 @@ async function _gapiInit() {
  */
 export async function gapiAuth(immediate) {
   // auth!
-  return await gapi.auth.authorize({
-    client_id: clientId,
-    scope: OAUTH2_SCOPES,
-    immediate: immediate || true
+  return await new Promise((resolve, reject) => {
+    gapi.auth.authorize({
+      client_id: clientId,
+      scope: OAUTH2_SCOPES,
+      immediate: immediate
+    }, function(response) {
+      if (response.error) {
+        // An error happened!
+        return reject(response);
+      }
+      // The user authorized the application for the scopes requested.
+      // You can also now use gapi.client to perform authenticated requests.
+      resolve(response);
+    });
   });
 }
 
@@ -106,9 +118,16 @@ export async function gapiGrantScopes(newScopes) {
   user.grant({'scope': newScopes});
 }
 
-export function sendYtRequest(contentType, requestArgs, maxResourcesPerQuery) {
+function prepareRequest(contentType, requestArgs) {
+  debugger;
   const fn = ContentRequestFunctions[contentType];
   console.assert(fn, 'invalid request type: ' + contentType);
+  console.log('[YT Request]', contentType, requestArgs);
+  return fn;
+}
+
+export function sendYtRequest(contentType, requestArgs) {
+  const fn = prepareRequest(contentType, requestArgs);
 
   // TODO: make sure, we don't accidentally spam requests?
 
@@ -137,10 +156,7 @@ export function sendYtRequestBatched(contentType, ids, part, maxResourcesPerQuer
     allRequestArgs.push(requestArgs);
   }
 
-  const fn = ContentRequestFunctions[contentType];
-  console.assert(fn, 'invalid request type: ' + contentType);
-
-  const requests = map(allRequestArgs, fn);
+  const requests = map(allRequestArgs, req => prepareRequest(contentType, req));
 
   return Promise.all(map(requests, request =>
     new Promise((resolve, reject) => {

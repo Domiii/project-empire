@@ -3,7 +3,7 @@ import {
   GapiStatus,
   gapiInit,
   gapiAuth,
-  
+
   sendYtRequest
 } from './youtube/YouTubeAPI';
 import { NOT_LOADED } from '../../dbdi/react';
@@ -13,22 +13,43 @@ export default {
     path: 'ytApi',
 
     readers: {
-      gapiAuthObject({ }, { }, { gapiStatus }, { gapiEnsureInitialized }) {
+      gapiAuthObject(
+        { }, { },
+        { gapiStatus },
+        { gapiEnsureInitialized, set_gapiStatus }
+      ) {
         if (gapiStatus === NOT_LOADED) {
           gapiEnsureInitialized();
           return NOT_LOADED;
         }
-        return gapi.auth2.getAuthInstance();
+        const auth = gapi.auth2.getAuthInstance();
+        auth.isSignedIn.listen(isAuthorized =>
+          set_gapiStatus(isAuthorized ? GapiStatus.Authorized : GapiStatus.Initialized)
+        );
+        return auth;
       }
     },
 
     writers: {
-      async gapiEnsureInitialized({ }, { }, { gapiStatus }, { set_gapiStatus }) {
+      async resetGapiStatus(
+        { }, { },
+        { gapiStatus }, { set_gapiStatus }
+      ) {
+        if (gapiStatus > GapiStatus.Initialized) {
+          return set_gapiStatus(GapiStatus.Initialized);
+        }
+      },
+
+      async gapiEnsureInitialized(
+        { }, { },
+        { gapiStatus },
+        { set_gapiStatus }
+      ) {
         if (!gapiStatus || gapiStatus < GapiStatus.Initialized) {
           await gapiInit();
-          gapi.auth2.getAuthInstance().isSignedIn.listen(isAuthorized =>
-            set_gapiStatus(GapiStatus.Initialized)
-          );
+          if (gapiStatus < GapiStatus.Initialized) {
+            return set_gapiStatus(GapiStatus.Initialized);
+          }
         }
       },
       async gapiEnsureAuthorized(
@@ -45,8 +66,18 @@ export default {
             result = await gapiAuth(true);
           }
           catch (err) {
+            console.info('YT immediate auth failed', err);
             // could not authorize immediately -> show user login screen
-            result = await gapiAuth(false);
+            try {
+              result = await gapiAuth(false);
+            }
+            catch (err) {
+              if (err.error === 'popup_blocked_by_browser') {
+                set_gapiStatus(GapiStatus.PopupBlocked);
+                console.error(err);
+                throw new Error(err.error);
+              }
+            }
           }
           // const accessToken = result.access_token;
           // const idToken = result.id_token;
@@ -76,10 +107,10 @@ export default {
           { },
           { },
           { },
-          { gapiEnsureInitialized }
+          { gapiEnsureAuthorized }
         ) {
-          await gapiEnsureInitialized();
-          const response = await sendYtRequest('channels', {
+          await gapiEnsureAuthorized();
+          const response = await sendYtRequest('channelList', {
             mine: true,
             part: 'snippet,statistics,contentDetails'
           });

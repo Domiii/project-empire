@@ -302,6 +302,8 @@ export default class DataProviderBase {
    */
   fetchEnd(queryInput, val) {
     const query = this.getQueryByQueryInput(queryInput);
+    if (!query) return;
+    
     const {
       localPath,
       remotePath
@@ -315,6 +317,24 @@ export default class DataProviderBase {
 
     // set new state (which should notify all listeners)
     this.actions.set(remotePath, val);
+  }
+  
+  fetchFailed(queryInput, err) {
+    const query = this.getQueryByQueryInput(queryInput);
+    if (!query) return;
+    const {
+      localPath
+    } = query;
+
+    console.error(`Failed to fetch path "${queryInput}" - `, (err && err.stack || err));
+
+    if (this.getLoadState(localPath) !== LoadState.Fetching) {
+      // something happened in the meantime -> discard fetched result
+      return;
+    }
+
+    // downgrade load state at path
+    this.setLoadState(localPath, LoadState.NotLoaded);
   }
 
   // #################################################################################################
