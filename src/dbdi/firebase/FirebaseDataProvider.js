@@ -53,8 +53,11 @@ export default class FirebaseDataProvider extends DataProviderBase {
   // ################################################
 
   _onNewData(query, snap) {
-    const val = snap.val();
-
+    let val = snap.val();
+    if (val === NOT_LOADED) {
+      // this path is loaded -> make sure, it does not get a NOT_LOADED value
+      val = null;
+    }
     this.notifyNewData(query, val);
   }
 

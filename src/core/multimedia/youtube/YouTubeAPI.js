@@ -10,9 +10,12 @@ const firebaseConfig = getFirebaseConfig();
 
 export const GapiStatus = {
   None: 0,
-  Initialized: 1,
-  PopupBlocked: 2,
-  Authorized: 3
+  Initializing: 1,
+  Initialized: 2,
+  Authorizing: 3,
+  PopupBlocked: 4,
+  NeedUserConsent: 5,
+  Authorized: 6
 };
 
 // see: https://developers.google.com/api-client-library/javascript/reference/referencedocs
@@ -91,13 +94,14 @@ async function _gapiInit() {
 /**
  * @see https://developers.google.com/youtube/v3/guides/auth/client-side-web-apps
  */
-export async function gapiAuth(immediate) {
+export async function gapiAuth(immediate, prompt = 'none') {
   // auth!
   return await new Promise((resolve, reject) => {
     gapi.auth.authorize({
       client_id: clientId,
       scope: OAUTH2_SCOPES,
-      immediate: immediate
+      immediate: immediate,
+      prompt
     }, function(response) {
       if (response.error) {
         // An error happened!

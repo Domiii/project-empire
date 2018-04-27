@@ -231,16 +231,17 @@ export default class DataProviderBase {
   // #################################################################################################
 
   notifyNewData(query, val) {
-    if (val === NOT_LOADED) {
-      // this path is loaded -> make sure, it does not get a NOT_LOADED value
-      val = null;
-    }
-
     const {
       localPath
     } = query || EmptyObject;
     
-    if (!this.isDataLoaded(localPath)) {
+    if (val === NOT_LOADED) {
+      if (this.isDataLoaded(localPath)) {
+        this.setLoadState(localPath, LoadState.NotLoaded);
+        console.warn('UNLOAD ', localPath, ' -> ', val);
+      }
+    }
+    else if (!this.isDataLoaded(localPath)) {
       this.setLoadState(localPath, LoadState.Loaded);
       console.warn('LOADED ', localPath, ' -> ', val);
     }

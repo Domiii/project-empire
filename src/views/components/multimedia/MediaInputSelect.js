@@ -73,7 +73,7 @@ function queryUnknownDevices(kind) {
 }
 
 function getDeviceList(kind) {
-  return navigator.mediaDevices.enumerateDevices().then(
+  return window.navigator.mediaDevices.enumerateDevices().then(
     list => filter(list, info => 
       info.kind === kind &&
       (!info.deviceId || validDeviceIdRegex.test(info.deviceId)))

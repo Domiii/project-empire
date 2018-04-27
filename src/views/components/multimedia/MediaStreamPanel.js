@@ -27,6 +27,7 @@ import MediaInputSelect from './MediaInputSelect';
 import VideoPlayer from './VideoPlayer';
 import StreamFileList from './StreamFileList';
 import { GapiStatus } from '../../../core/multimedia/youtube/YouTubeAPI';
+import { NOT_LOADED } from '../../../dbdi/react';
 
 
 function log(...args) {
@@ -201,46 +202,92 @@ class MediaSettingsPanel extends Component {
  */
 
 @dataBind({
+  async clickSelectChannel(evt, {}, {gapiHardAuth, set_ytMyChannels}) {
+    await gapiHardAuth({prompt: 'select_account'});
+    set_ytMyChannels(NOT_LOADED);
+  }
+})
+export class YtChannelInfo extends Component {
+  render(
+    { }, 
+    { get_ytMyChannelSnippet, get_ytMyChannels, clickSelectChannel }
+  ) {
+    if (!get_ytMyChannels.isLoaded()) {
+      return <LoadIndicator block message="loading your channel..." />;
+    }
+    else {
+      //myChannelsEl = JSON.stringify(ytMyChannels, null, 2);
+      const snippet = get_ytMyChannelSnippet();
+      if (!snippet) {
+        return (<Alert bsStyle="warning">
+          You do not have a YouTube channel. Create one, then refresh.
+        </Alert>);
+      }
+      const { title, thumbnails } = snippet;
+      const thumbUrl = thumbnails.default.url;
+      return (<span>
+        Your channel: <img src={thumbUrl} className="max-size-1" /> {title} &nbsp;
+        <Button onClick={clickSelectChannel}>change channel<FAIcon name="exchange" /></Button>
+      </span>);
+    }
+  }
+}
+
+@dataBind({
   clickResetGapiStatus(evt,
     { },
     { resetGapiStatus }
   ) {
     return resetGapiStatus();
+  },
+
+  clickGapiHardAuth(evt,
+    { },
+    { gapiHardAuth }
+  ) {
+    return gapiHardAuth();
   }
 })
-export class UploadStatusPanel extends Component {
+export class YtStatusPanel extends Component {
   render(
     { },
-    { clickResetGapiStatus },
-    { ytMyChannelSnippet, ytMyChannels_isLoaded, gapiStatus }
+    { clickResetGapiStatus,
+      clickGapiHardAuth,
+      gapiSoftAuth },
+    { gapiStatus }
   ) {
-    let myChannelsEl;
+    let statusEl;
 
-    if (gapiStatus === GapiStatus.PopupBlocked) {
-      myChannelsEl = (<Alert bsStyle="danger">
-        <FAIcon name="times" /> Authorization popup blocked! Unblock + click this button:&nbsp;
-        <Button onClick={clickResetGapiStatus}><FAIcon name="refresh" /></Button>
-      </Alert>);
-    }
-    else if (!ytMyChannels_isLoaded) {
-      myChannelsEl = <LoadIndicator block />;
-    }
-    else {
-      //myChannelsEl = JSON.stringify(ytMyChannels, null, 2);
-      if (!ytMyChannelSnippet) {
-        return (<Alert bsStyle="warning">
-          You do not have a YouTube channel. Create one, then refresh.
+    switch (gapiStatus) {
+      case GapiStatus.NeedUserConsent:
+        statusEl = (<Alert bsStyle="warning">
+          Please login and choose your YouTube channel:&nbsp;
+          <Button onClick={clickGapiHardAuth}><FAIcon name="unlock" /></Button>
         </Alert>);
-      }
-      const { title, thumbnails } = ytMyChannelSnippet;
-      const thumbUrl = thumbnails.default.url;
-      myChannelsEl = (<span>
-        Upload to <img src={thumbUrl} className="max-size-1" /> {title}
-      </span>);
+        break;
+
+      case GapiStatus.PopupBlocked:
+        statusEl = (<Alert bsStyle="danger">
+          <FAIcon name="times" /> Authorization popup blocked! Unblock + click this button:&nbsp;
+          <Button onClick={clickResetGapiStatus}><FAIcon name="refresh" /></Button>
+        </Alert>);
+        break;
+
+      case GapiStatus.Authorizing:
+        statusEl = <LoadIndicator block message="authorizing..." />;
+        break;
+
+      case GapiStatus.Authorized:
+        statusEl = <YtChannelInfo />;
+        break;
+
+      default:
+        gapiSoftAuth();
+        statusEl = <LoadIndicator block message="initializing..." />;
     }
 
     return (<Panel.Body>
-      <div>{myChannelsEl}</div>
+      <div>{statusEl}</div>
     </Panel.Body>);
   }
 }
@@ -590,8 +637,8 @@ export default class MediaStreamPanel extends Component {
         <RecorderCtrlButton />
       </div>}
       {contentEl}
-      
-      <UploadStatusPanel streamArgs={streamArgs} />
+
+      <YtStatusPanel streamArgs={streamArgs} />
       <br />
       <br />
       <StreamFileList />
