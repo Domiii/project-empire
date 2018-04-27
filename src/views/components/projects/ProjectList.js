@@ -23,7 +23,7 @@ import { HashLink } from 'react-router-hash-link';
 import Flexbox from 'flexbox-react';
 
 import {
-  Button, ListGroup, Alert, Panel
+  Button, Alert, Panel
 } from 'react-bootstrap';
 
 import { LoadOverlay } from 'src/views/components/overlays';

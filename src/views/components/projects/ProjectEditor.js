@@ -35,9 +35,10 @@ export const projectSchemaTemplate = {
       isOptional: false
     },
     {
-      id: 'guardianUid',
+      title: 'Project Creator',
+      id: 'creatorUid',
       type: 'string',
-      isOptional: false
+      isOptional: true
     }
   ]
 };
@@ -80,6 +81,12 @@ export default class ProjectEditor extends Component {
           inline: true
         }
       },
+      creatorUid: {
+        'ui:widget': 'user',
+        'ui:options': {
+          inline: true
+        }
+      },
       createdAt: {
         'ui:widget': 'hidden',
       },
@@ -101,10 +108,9 @@ export default class ProjectEditor extends Component {
     // name of current goal list in model?
     const dbName = 'projectById';
 
-    // const {
-    //   isSaved,
-    //   formData
-    // } = this.state;
+    const {
+      isSaved
+    } = this.state;
     const { uiSchema } = this;
 
     //uiSchema.goalTitle.classNames = (!isSaved) ? 'background-lightyellow' : '';
@@ -129,16 +135,18 @@ export default class ProjectEditor extends Component {
 
     return (<div>
       <DynamicForm {...props}>
-        {/* <div>
-          {btn}
-        </div> */}
-        <Button block type="submit" bsStyle="info">
-          Save
-        </Button>
-        {projectId && <div>
-          <ProjectUserEditor
-            projectId={projectId} />
-        </div>}
+        <div>
+          <div>
+            <Button type="submit" bsStyle="info" disabled={isSaved}>
+              Save
+            </Button>
+          </div>
+          <div>
+            {projectId && (<ProjectUserEditor
+              projectId={projectId} />)
+            }
+          </div>
+        </div>
       </DynamicForm>
     </div>);
   }

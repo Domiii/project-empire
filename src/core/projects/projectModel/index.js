@@ -26,7 +26,13 @@ const projectById = {
   path: '$(projectId)',
   onWrite: [
     'updatedAt',
-    'createdAt'
+    'createdAt',
+    function setCreator(queryArgs, val,
+      {},
+      {currentUid}
+    ) {
+      val && !val.creatorUid && (val.creatorUid = currentUid);
+    }
   ],
   children: {
     projectTitle: 'title',
@@ -36,7 +42,7 @@ const projectById = {
     projectIconUrl: 'iconUrl',
 
     // the person guarding/watching over this project/helping the project succeed
-    projectGuardianUid: 'guardianUid',
+    projectCreatorUid: 'creatorUid',
 
     projectStatus: 'status',
     projectFinishTime: 'finishTime'

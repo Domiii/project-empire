@@ -1,3 +1,6 @@
+// import our own main CSS
+import 'src/views/styles/styles.scss';
+
 // import third-party CSS
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/dist/css/bootstrap-theme.css';
@@ -7,9 +10,6 @@ import 'font-awesome/css/font-awesome.min.css';
 import 'react-select/dist/react-select.css';
 
 import 'video.js/dist/video-js.min.css';
-
-// import our own main CSS
-import 'src/views/styles/styles.scss';
 
 
 import moment from 'moment';

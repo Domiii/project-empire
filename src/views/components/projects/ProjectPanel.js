@@ -150,11 +150,11 @@ export class ProjectBody extends Component {
 
     return (<div>
       {this.editorHeader()}
-      <p>Started by: {
+      <div>Guardian: {
         !project.guardianUid ?
           <span className="color-gray">no guardian</span> :
           <UserBadge uid={project.guardianUid} />
-      }</p>
+      }</div>
 
       <div className="margin-half" />
 

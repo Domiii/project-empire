@@ -350,7 +350,7 @@ function DefaultFormComponent({ className, ...allProps }) {
   }
   return (<Form className={clazz + (className || '')} {...allProps}>
     {/* the Form children are the control elements, rendered at the bottom of the form */}
-    {children}
+    {React.Children.only(children)}
   </Form>);
 }
 

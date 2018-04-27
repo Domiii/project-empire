@@ -131,6 +131,11 @@ const ProjectUserList = dataBind({})(function ProjectUserList(
   }
 });
 
+
+const noMarginStyle = {
+  margin: '0 !important'
+};
+
 @dataBind({
   getAllUidsWithProjectButNotInCurrent(
     { projectId },
@@ -183,7 +188,7 @@ export default class ProjectUserEditor extends Component {
     return (<Flexbox flexDirection="row" justifyContent="flex-start" alignItems="stretch"
       className="full-width">
       <Flexbox flex="20" alignItems="stretch" className="full-width">
-        <Panel className="full-width full-height">
+        <Panel className="full-width full-height no-margin" style={noMarginStyle}>
           <Panel.Heading>
             Remove user from project
           </Panel.Heading>
