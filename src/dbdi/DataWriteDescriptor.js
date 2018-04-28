@@ -198,7 +198,7 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
   /**
    * This is called when writing to a node built from a PathDescriptor.
    */
-  _writeDataWithDescriptor(path, val, queryArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) {
+  _writeDataWithDescriptor(queryInput, val, queryArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) {
     const {
       dataProvider
     } = callerNode;
@@ -211,9 +211,10 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
     }
 
     // custom write hooks
-    this.onWrite && this.onWrite(queryArgs, val, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
+    const originalVal = dataProvider.readData(queryInput);
+    this.onWrite && this.onWrite(queryArgs, val, originalVal, this.actionName, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
 
     // perform write action
-    return dataProvider.actions[this.actionName](path, val);
+    return dataProvider.actions[this.actionName](queryInput, val);
   }
 }

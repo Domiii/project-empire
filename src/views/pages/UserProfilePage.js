@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
 import dataBind from 'src/dbdi/react/dataBind';
 
-import DynamicForm from 'src/views/components/forms/DynamicForm';
+import DynamicForm from 'src/views/tools/DynamicForm';
 import {
   Alert, Button, Jumbotron, Well
 } from 'react-bootstrap';

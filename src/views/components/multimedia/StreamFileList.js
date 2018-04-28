@@ -21,9 +21,6 @@ import Flexbox from 'flexbox-react';
 
 import FancyPanelToggleTitle from 'src/views/components/util/FancyPanelToggleTitle';
 
-import MediaInputSelect from './MediaInputSelect';
-import VideoPlayer from './VideoPlayer';
-
 
 const renderSize = filesize.partial({
   base: 10,

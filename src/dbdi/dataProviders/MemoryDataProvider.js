@@ -53,6 +53,8 @@ export default class MemoryDataProvider extends DataProviderBase {
     const query = this.getOrCreateQuery(remotePath);
 
     // if query object does not exist, it means, no listener has been registered on this path yet
+
+    // TOOD: propagate to all ancestors that have listeners (Firebase does this, too)
     this.notifyNewData(query, val);
     return true;
   }

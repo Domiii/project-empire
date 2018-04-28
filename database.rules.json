@@ -108,6 +108,9 @@
         ],
         ".read": "true",
         "$uid": {
+          "cohortId": {
+            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
+          },
           "displayName": {
             ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
           },
@@ -124,6 +127,9 @@
             ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
           },
           "updatedAt": {
+            ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
+          },
+          "createdAt": {
             ".write": "auth !== null && (($uid === auth.uid) || ((root.child('users').child('public').child(auth.uid).child('role').val() >= 99)))"
           }
         }

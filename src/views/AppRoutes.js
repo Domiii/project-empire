@@ -16,6 +16,7 @@ import VideoRecordingPage from './pages/VideoRecordingPage';
 
 import GMPage from './pages/GMPage';
 import DevPage from './pages/DevPage';
+import DebugPage from './pages/DebugPage';
 
 import LearnerKBPage from './pages/LearnerKBPage';
 
@@ -35,11 +36,22 @@ const AppRoutes = dataBind()(function AppRoutes(
   if (!currentUid_isLoaded) {
     return (<LoadOverlay message="logging in..." className="color-lightred" />);
   }
+
+  const commonRoutes = [
+    {
+      path: routeTemplates.DEBUG,
+      component: DebugPage
+    }
+  ];
+
   if (!currentUid) {
     // not signed in yet
     return (
       <Switch>
         <Route exact path={routeTemplates.SIGN_IN} component={SignInPage} />
+        
+        {commonRoutes.map(({ path, component }) => <Route exact key={path} path={path} component={component} />)}
+        
         <Redirect to={routeTemplates.SIGN_IN} />
       </Switch>
     );
@@ -58,10 +70,9 @@ const AppRoutes = dataBind()(function AppRoutes(
         <Route exact path={routeTemplates.PROJECTS} component={ProjectPage} />
 
         <Route exact path={routeTemplates.VIDEO_RECORDING} component={VideoRecordingPage} />
-      
+
 
         <Route exact path={routeTemplates.GM} component={GMPage} />
-
         <Route exact path={routeTemplates.DEV} component={DevPage} />
 
         <Route exact path={routeTemplates.LEARNER_KB} component={LearnerKBPage} />
@@ -71,7 +82,9 @@ const AppRoutes = dataBind()(function AppRoutes(
         <Route exact path={routeTemplates.LEARNER_STATUS_ENTRY} component={LearnerStatusEntryPage} />
 
         <Route exact path={routeTemplates.TEST} component={TestPage} />
-        
+
+        {commonRoutes.map(({ path, component }) => <Route exact key={path} path={path} component={component} />)}
+
         <Redirect to={routeTemplates.ROOT} />
       </Switch>
     );

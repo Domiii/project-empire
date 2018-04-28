@@ -11,6 +11,7 @@ import {
 } from 'react-router-bootstrap';
 import { LoadOverlay } from 'src/views/components/overlays';
 
+import UserManager from 'src/views/components/admin/UserManager';
 import RoleManager from 'src/views/components/admin/RoleManager';
 
 @dataBind({
@@ -21,7 +22,9 @@ export default class GMPage extends Component {
     super(...args);
   }
 
-  render({ }, { }, { isCurrentUserAdmin, currentUser_isLoaded }) {
+  render({ }, { }, 
+    { isCurrentUserAdmin, currentUser_isLoaded, currentUserCohortId }
+  ) {
     if (!currentUser_isLoaded) {
       return (<LoadOverlay />);
     }
@@ -31,21 +34,11 @@ export default class GMPage extends Component {
 
     return (
       <div>
-        <Panel bsStyle="primary">
-          <Panel.Heading>
-            Roles
-          </Panel.Heading>
-          <Panel.Body>
-            <RoleManager />
-          </Panel.Body>
-        </Panel>
-
         <Well>
-          TODO:
-          <pre>{`* 學習菜單: https://pecu.gitbooks.io/-r/content/
-          `}
-          </pre>
+          Cohort: {currentUserCohortId}
         </Well>
+        <UserManager />
+        <RoleManager />
       </div>
     );
   }

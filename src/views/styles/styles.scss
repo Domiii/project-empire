@@ -74,12 +74,42 @@ button:active { outline:none !important; }
   border-left-color: #EEEEEE;
 }
 
+
+/**
+ * #######################################################
+ * Make Bootstrap a little more mobile-friendly
+ * #######################################################
+ */
+
 @media (max-width: 767px) {
   .navbar-collapse .nav > .divider-vertical {
       display: none;
    }
+
+   .navbar-inverse {
+     border-radius: 0 !important;
+   }
+
+   .container {
+     padding: 0 !important;
+   }
+
+   .container > .navbar-header, .container-fluid > .navbar-header, .container > .navbar-collapse, .container-fluid > .navbar-collapse {
+      margin-right: 0 !important;
+      margin-left: 0 !important;
+    }
+
+  .panel-body {
+    padding: 2px 0 !important;
+  }
 }
 
+
+/**
+ * #######################################################
+ * All kinds of basic classes for any occasion
+ * #######################################################
+ */
 
 /* Remove border around blocks */
 .blocklyMainBackground {
@@ -124,6 +154,12 @@ button:active { outline:none !important; }
 }
 .margin2 {
   margin: 2em;
+}
+.margin5 {
+  margin: 5em;
+}
+.margin10 {
+  margin: 10em;
 }
 
 .padding-half {
@@ -178,6 +214,11 @@ button:active { outline:none !important; }
 }
 .color-darkblue {
   color: darkblue;
+}
+
+.no-background {
+  background-color: rgba(0,0,0,0) !important;
+  background-image: none !important;
 }
 
 .background-lightyellow {

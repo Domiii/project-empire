@@ -245,6 +245,9 @@ export default class Header extends Component {
                     <FAIcon name="close" className="color-red" /> Sign Out
                   </MenuItem>)
                 }
+                <LinkContainer key="debug" to="/debug"><MenuItem>
+                  <span><FAIcon name="cogs" /> Debug</span>
+                </MenuItem></LinkContainer>
               </NavDropdown>
             </Nav>
           </Navbar.Collapse>

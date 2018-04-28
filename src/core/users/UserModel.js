@@ -50,6 +50,10 @@ export default {
         return currentUser && currentUser.displayRole;
       },
 
+      currentUserCohortId({ }, { }, { currentUser }) {
+        return currentUser && currentUser.cohortId;
+      },
+
 
 
 
@@ -184,13 +188,13 @@ export default {
       // private user information is not available to other users
       usersPrivate: {
         path: 'private',
-        onWrite: [
-          'updatedAt',
-          'createdAt'
-        ],
         children: {
           userPrivate: {
             path: '$(uid)',
+            onWrite: [
+              'updatedAt',
+              'createdAt'
+            ],
             children: {
               // personal user data (we copy this from firebase auth on first use)
               userPrivateData: 'data'

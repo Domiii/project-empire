@@ -1,8 +1,13 @@
 import firebase from 'firebase';
 
-export function signIn(provider) {
+export async function signIn(provider) {
   // TODO: support multiple apps
-  return firebase.auth().signInWithRedirect(provider);
+  try {
+    return await firebase.auth().signInWithRedirect(provider);
+  }
+  catch (err) {
+    throw new Error('Unable to login ' + (err && err.stack || err));
+  }
 }
 
 // export function signInWithGithub() {

@@ -9,6 +9,8 @@ import 'font-awesome/css/font-awesome.min.css';
 
 import 'react-select/dist/react-select.css';
 
+import 'react-bootstrap-table/dist/react-bootstrap-table.min.css';
+
 import 'video.js/dist/video-js.min.css';
 
 
@@ -39,7 +41,10 @@ import Root from './views/root';
 
 import { LoadOverlay } from 'src/views/components/overlays';
 
+import { setupDebugTools } from 'src/util/debugUtil';
 
+
+setupDebugTools();
 
 // GO!
 firebase.initializeApp(firebaseConfig);
@@ -64,15 +69,15 @@ if (module.hot) {
 
 // // Wait until after authentication has finished before rendering the root
 // firebase.auth().onAuthStateChanged(function onAuthStateChanged(authData) {
-  // done! Let's kick this thing into gear!
+// done! Let's kick this thing into gear!
 
-  // try {
-  ReactDOM.render(
-    <AppContainer>
-      <Root />
-    </AppContainer>,
-    rootElement
-  );
+// try {
+ReactDOM.render(
+  <AppContainer>
+    <Root />
+  </AppContainer>,
+  rootElement
+);
     // console.log("render success");
   // }
   // catch (err) {

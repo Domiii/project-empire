@@ -8,7 +8,7 @@ import {
 } from 'react-bootstrap';
 import Flexbox from 'flexbox-react';
 
-import DynamicForm from 'src/views/components/forms/DynamicForm';
+import DynamicForm from 'src/views/tools/DynamicForm';
 import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/loading';
 import ConfirmModal from 'src/views/components/util/ConfirmModal';

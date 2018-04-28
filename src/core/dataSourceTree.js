@@ -27,6 +27,7 @@ import times from 'lodash/times';
 import zipObject from 'lodash/zipObject';
 
 import DataSourceTree from 'src/dbdi/DataSourceTree';
+import { NOT_LOADED } from '../dbdi/react/index.js';
 
 const utility = {
   readers: {
@@ -98,10 +99,29 @@ const dataStructureConfig = {
 
 const plugins = {
   onWrite: {
-    createdAt(queryArgs, val) {
-      val && !val.createdAt && (val.createdAt = firebase.database.ServerValue.TIMESTAMP);
+    createdAt(queryArgs, val, originalVal, actionName) {
+      if (val === null || val === undefined) {
+        // deleting this entry
+        return;
+      }
+
+      switch (actionName) {
+        case 'push':
+          // new entry
+          val.createdAt = firebase.database.ServerValue.TIMESTAMP;
+        break;
+        case 'set':
+          // check old entry
+          val.createdAt = originalVal && originalVal.createdAt || firebase.database.ServerValue.TIMESTAMP;
+        break;
+        default:
+        // do nothing
+        // NOTE: updates are not properly handled at this time since they need a more global approach.
+        //     For updates, we need to identify the actual node each entry in the update object writes to.
+        break;
+      }
     },
-    updatedAt(queryArgs, val) {
+    updatedAt(queryArgs, val, originalVal, actionName) {
       val && (val.updatedAt = firebase.database.ServerValue.TIMESTAMP);
     }
   }

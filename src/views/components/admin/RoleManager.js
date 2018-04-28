@@ -27,6 +27,8 @@ import LoadIndicator from 'src/views/components/util/loading';
 import UserList from 'src/views/components/users/UserList';
 import UserIcon from 'src/views/components/users/UserIcon';
 
+import FancyPanelToggleTitle from 'src/views/components/util/FancyPanelToggleTitle';
+
 
 const RoleNames = [
   'Adventurer',
@@ -80,7 +82,7 @@ const RoleEditor = dataBind({
 
   return (<ConfirmModal
     key={newRole}
-    header={<span>Make user <RoleChangeLabel role1={newRole} role2={user.role} />?</span>}
+    header={<span>Make user <RoleChangeLabel newRole={newRole} oldRole={user.role} />?</span>}
     ButtonCreator={ChangeRoleButton}
     onConfirm={changeRole}
 
@@ -136,27 +138,11 @@ const RenderUser = dataBind({})(
     return userLists;
   }
 })
-export default class RoleManager extends Component {
-  constructor(...args) {
-    super(...args);
-
-    autoBind(this);
-  }
-
+export class RoleLists extends Component {
   render(
     { },
-    { userLists },
-    { isCurrentUserAdmin, usersPublic_isLoaded }
+    { userLists }
   ) {
-    if (!usersPublic_isLoaded) {
-      return <LoadIndicator />;
-    }
-    if (!isCurrentUserAdmin) {
-      return (
-        <Alert bsStyle="warning">GM only</Alert>
-      );
-    }
-
     return (<div>{
       map(userLists(), (userList) => {
         const {
@@ -172,5 +158,53 @@ export default class RoleManager extends Component {
         </Panel>);
       })
     }</div>);
+  }
+}
+
+@dataBind({})
+export default class RoleManager extends Component {
+  state = {
+    expanded: false
+  };
+
+  toggleExpand = () => {
+    const { expanded } = this.state;
+    this.setState({ expanded: !expanded });
+  }
+
+  onSelect = (fileId) => {
+    this.setState({ selectedId: fileId });
+  }
+
+  render(
+    { },
+    { },
+    { isCurrentUserAdmin, usersPublic_isLoaded }
+  ) {
+    if (!usersPublic_isLoaded) {
+      return <LoadIndicator />;
+    }
+    if (!isCurrentUserAdmin) {
+      return (
+        <Alert bsStyle="warning">GM only</Alert>
+      );
+    }
+
+
+    const { expanded } = this.state;
+
+    return (<Panel expanded={expanded} onToggle={this.toggleExpand}>
+      <Panel.Heading>
+        <FancyPanelToggleTitle>
+          Role Manager
+        </FancyPanelToggleTitle>
+      </Panel.Heading>
+      <Panel.Body collapsible>
+        <div>{expanded &&
+          <RoleLists />
+          || <div className="margin10" />
+        }</div>
+      </Panel.Body>
+    </Panel>);
   }
 }

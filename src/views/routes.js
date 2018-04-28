@@ -5,6 +5,7 @@ export const routeNames = {
 
   GM: 'gm',
   DEV: 'dev',
+  DEBUG: 'debug',
 
   LEARNER_STATUS: 'learnerstatus',
 
@@ -28,6 +29,7 @@ export const routePaths = {
 
   GM: `/${routeNames.GM}`,
   DEV: `/${routeNames.DEV}`,
+  DEBUG: `/${routeNames.DEBUG}`,
 
   LEARNER_STATUS: `/${routeNames.LEARNER_STATUS}`,
 
@@ -50,6 +52,7 @@ export const routeTemplates = {
 
   GM: `${routePaths.GM}`,
   DEV: `${routePaths.DEV}`,
+  DEBUG: `${routePaths.DEBUG}`,
 
   LEARNER_STATUS_LIST: `${routePaths.LEARNER_STATUS}`,
   LEARNER_STATUS_USER: `${routePaths.LEARNER_STATUS}/:uid`,

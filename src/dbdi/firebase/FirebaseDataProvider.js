@@ -58,6 +58,7 @@ export default class FirebaseDataProvider extends DataProviderBase {
       // this path is loaded -> make sure, it does not get a NOT_LOADED value
       val = null;
     }
+    //console.warn('onNewData', query, val);
     this.notifyNewData(query, val);
   }
 

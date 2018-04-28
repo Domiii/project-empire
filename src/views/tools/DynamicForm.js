@@ -32,7 +32,7 @@ import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import Markdown from 'src/views/components/markdown';
 
 import UserBadge from 'src/views/components/users/UserBadge';
-import { EmptyObject } from '../../../util';
+import { EmptyObject } from 'src/util';
 
 
 /**
