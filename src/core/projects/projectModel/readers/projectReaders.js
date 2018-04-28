@@ -1,7 +1,3 @@
-import {
-  isAscendantPath
-} from 'src/core/projects/ProjectPath';
-
 import { EmptyObject, EmptyArray } from 'src/util';
 import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 
@@ -39,36 +35,26 @@ export default {
     );
   },
 
-  isAscendantOfActiveStage(
-    { projectId, stagePath },
-    { get_activeStagePath },
-    { }
-  ) {
-    const activeStagePath = get_activeStagePath({ projectId }) || '';
-    //console.log(`${activeStagePath}.startsWith(${stagePath})`);
-    return isAscendantPath(stagePath, activeStagePath);
-  },
-
   // #########################################################################
   // Project teams
   // #########################################################################
 
-  allUidsNotInProject() {
-
-  },
-
-  activeProjectsOfUser({ uid }, { activeProjectIdsOfUser, projectById }, { }) {
+  archivedProjectsOfUser({ uid }, { archivedProjectIdsOfUser, projectById }, { }) {
     return mapValues(
-      activeProjectIdsOfUser(
+      archivedProjectIdsOfUser(
         { uid }) || EmptyObject,
       (_, projectId) => projectById({ projectId }
       )
     );
   },
 
-  archivedProjectsOfUser({ uid }, { archivedProjectIdsOfUser, projectById }, { }) {
+  allUidsNotInProject() {
+    throw new Error('NYI');
+  },
+
+  activeProjectsOfUser({ uid }, { activeProjectIdsOfUser, projectById }, { }) {
     return mapValues(
-      archivedProjectIdsOfUser(
+      activeProjectIdsOfUser(
         { uid }) || EmptyObject,
       (_, projectId) => projectById({ projectId }
       )

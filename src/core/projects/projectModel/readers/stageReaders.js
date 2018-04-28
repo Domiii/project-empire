@@ -11,6 +11,10 @@ import {
   isStageContributorStatusOver
 } from 'src/core/projects/ProjectDef';
 
+import {
+  isAscendantPath
+} from 'src/core/projects/ProjectPath';
+
 import { EmptyObject, EmptyArray } from 'src/util';
 import { getOptionalArgument, getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 
@@ -21,6 +25,17 @@ import intersection from 'lodash/intersection';
 import sumBy from 'lodash/sumBy';
 
 export default {
+
+  isAscendantOfActiveStage(
+    { projectId, stagePath },
+    { get_activeStagePath },
+    { }
+  ) {
+    const activeStagePath = get_activeStagePath({ projectId }) || '';
+    //console.log(`${activeStagePath}.startsWith(${stagePath})`);
+    return isAscendantPath(stagePath, activeStagePath);
+  },
+
   stageStatus(
     { projectId, stagePath },
     { stageStatusRaw, get_projectStatus }, { }

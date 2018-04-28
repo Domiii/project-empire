@@ -146,7 +146,7 @@ function sanitizeExplicitIndexConfig(cfg) {
     throw new Error('invalid explicitIndex: ' +
       JSON.stringify(cfg, null, 2));
   }
-};
+}
 
 
 class BaseExplicitIndex {
@@ -339,7 +339,7 @@ class M2MExplicitIndex {
     if (hasFilter) {
       if (!isEmpty(leftQueryArgs)) {
         // add queries for all left ids
-        const rightIds = this.addLeftDataQuery(queryArr, leftQueryArgs);
+        const rightIds = this.addRightDataQuery(queryArr, leftQueryArgs);
 
         // also get all related data
         this.addRightDataQuery(queryArr, rightIds);
@@ -531,7 +531,7 @@ class M2MExplicitIndex {
     }
 
 
-    // TODO: check if all indexed objects actually exist in leftEntryRef + rightEntryRef
+    // TODO: check if the objects of all indexed ids actually exist in leftEntryRef + rightEntryRef
 
     return inconsistencies;
   }

@@ -7,6 +7,25 @@ import { NOT_LOADED } from '../../../../dbdi/react';
 import { EmptyObject } from '../../../../util';
 
 export default {
+  updateProjectStatus(
+    { uid, projectId, status },
+    { projectStatus, projectFinishTime },
+    { },
+    { update_db }
+  ) {
+    // TODO: handle archiving properly
+    const updates = {
+      [projectStatus.getPath({ projectId })]: status,
+      [projectFinishTime.getPath({ projectId })]: firebase.database.ServerValue.TIMESTAMP
+    };
+
+    return update_db(updates);
+  },
+
+  // #########################################################################
+  // Project teams
+  // #########################################################################
+
   deleteProject(
     { projectId },
     { projectById, get_uidsOfProject, activeProjectIdOfUser },
@@ -59,20 +78,5 @@ export default {
       readers: [uidOfProject, activeProjectIdOfUser],
       val: null
     });
-  },
-
-  updateProjectStatus(
-    { uid, projectId, status },
-    { projectStatus, projectFinishTime },
-    { },
-    { update_db }
-  ) {
-    // TODO: handle archiving properly
-    const updates = {
-      [projectStatus.getPath({ projectId })]: status,
-      [projectFinishTime.getPath({ projectId })]: firebase.database.ServerValue.TIMESTAMP
-    };
-
-    return update_db(updates);
   }
 };
