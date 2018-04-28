@@ -205,7 +205,7 @@ export default class DataProviderBase {
 
       if (!query._useCount) {
         // unload the whole thing
-        console.warn('UNLOAD', localPath);
+        console.log('UNLOAD', localPath);
         this._queriesByLocalPath.delete(localPath);
         this.setLoadState(localPath, LoadState.NotLoaded);
       }
@@ -238,12 +238,12 @@ export default class DataProviderBase {
     if (val === NOT_LOADED) {
       if (this.isDataLoaded(localPath)) {
         this.setLoadState(localPath, LoadState.NotLoaded);
-        console.warn('UNLOAD ', localPath, ' -> ', val);
+        console.log('UNLOAD ', localPath, ' -> ', val);
       }
     }
     else if (!this.isDataLoaded(localPath)) {
       this.setLoadState(localPath, LoadState.Loaded);
-      console.warn('LOADED ', localPath, ' -> ', val);
+      console.log('LOADED ', localPath, ' -> ', val);
     }
 
     //console.warn('DATA [', query.remotePath, '] ', val);

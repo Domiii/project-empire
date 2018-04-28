@@ -1,14 +1,15 @@
 import map from 'lodash/map';
 import size from 'lodash/size';
+import isEqual from 'lodash/isEqual';
 
+import fs from 'bro-fs';
 import moment from 'moment';
+import filesize from 'filesize';
+
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import dataBind from 'src/dbdi/react/dataBind';
-
-import filesize from 'filesize';
-import FileSaver from 'file-saver';
 
 import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/loading';
@@ -34,8 +35,8 @@ export class StreamFilePanelHeader extends Component {
   }
 
   render(
-    {},
-    {  }
+    { },
+    { }
   ) {
     const { fileId, isSelected } = this.props;
 
@@ -43,7 +44,7 @@ export class StreamFilePanelHeader extends Component {
     return (<FancyPanelToggleTitle>
       <Flexbox className="full-width" justifyContent="space-between" alignItems="center">
         <span className="color-gray">(untitled recording)</span>&nbsp;
-        
+
       </Flexbox>
     </FancyPanelToggleTitle>);
     //</HashLink>);
@@ -81,7 +82,8 @@ export default class StreamFileList extends Component {
   constructor(...args) {
     super(...args);
     this.state = {
-      expanded: false
+      expanded: false,
+      quota: null
     };
   }
 
@@ -94,6 +96,20 @@ export default class StreamFileList extends Component {
     this.setState({ selectedId: fileId });
   }
 
+  refresh = () => {
+    //const quota = await fs.usage();
+    window.navigator.webkitPersistentStorage.queryUsageAndQuota((usedBytes, grantedBytes) => {
+      const quota = { usedBytes, grantedBytes };
+      if (!isEqual(quota, this.state.quota)) {
+        this.setState({ quota });
+      }
+    });
+  }
+
+  componentDidMount() {
+    this.refresh();
+  }
+
   render(
     { },
     { },
@@ -103,7 +119,16 @@ export default class StreamFileList extends Component {
       return <LoadIndicator />;
     }
 
-    const { expanded, selectedId } = this.state;
+    this.refresh();
+
+    const { expanded, selectedId, quota } = this.state;
+
+    let quotaInfo;
+    if (quota) {
+      const { usedBytes, grantedBytes } = quota;
+      const quotaPct = Math.round(usedBytes / grantedBytes * 100);
+      quotaInfo = `- ${filesize(usedBytes)} / ${filesize(grantedBytes)} used (${quotaPct}%)`;
+    }
 
     const fileEls = expanded && map(streamFileList, file =>
       <StreamFilePanel key={file.name} fileId={file.name} isSelected={selectedId === file.name} onSelect={this.onSelect} />
@@ -112,7 +137,7 @@ export default class StreamFileList extends Component {
     return (<Panel expanded={expanded} onToggle={this.toggleExpand}>
       <Panel.Heading>
         <FancyPanelToggleTitle>
-          Saved Files ({size(streamFileList)})
+          {size(streamFileList)} Saved Files {quotaInfo}
         </FancyPanelToggleTitle>
       </Panel.Heading>
       <Panel.Body collapsible>
