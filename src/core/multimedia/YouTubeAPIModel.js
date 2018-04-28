@@ -44,20 +44,26 @@ export default {
       async gapiEnsureInitialized(
         { }, { },
         { gapiStatus },
-        { set_gapiStatus }
+        { set_gapiStatus, set_gapiError }
       ) {
         if (!gapiStatus || gapiStatus < GapiStatus.Initializing) {
           set_gapiStatus(GapiStatus.Initializing);
-          await gapiInit();
-          if (gapiStatus < GapiStatus.Initialized) {
-            return set_gapiStatus(GapiStatus.Initialized);
+          try {
+            await gapiInit();
+            if (gapiStatus < GapiStatus.Initialized) {
+              return set_gapiStatus(GapiStatus.Initialized);
+            }
+          }
+          catch (err) {
+            console.error('gapi init failed -', err);
+            set_gapiError(err);
           }
         }
       },
       async _gapiDoAuth(
         args, { },
         { gapiStatus },
-        { set_gapiStatus, set_gapiTokens }
+        { set_gapiStatus, set_gapiTokens, set_gapiError }
       ) {
         // see https://developers.google.com/api-client-library/javascript/reference/referencedocs#gapiauth2authresponse
         if (gapiStatus === GapiStatus.Authorizing) {
@@ -69,18 +75,27 @@ export default {
 
         set_gapiStatus(GapiStatus.Authorizing);
         try {
-          const prompt = getOptionalArgument(args, 'prompt', 'none');
+          const prompt = getOptionalArgument(args, 'prompt', undefined);
           const result = await gapiAuth(soft, prompt);
           set_gapiTokens(result);
           set_gapiStatus(GapiStatus.Authorized);
           return true;
         }
         catch (err) {
-          if (err.error === 'popup_blocked_by_browser') {
-            set_gapiStatus(GapiStatus.PopupBlocked);
-            //console.error(err);
+          set_gapiStatus(GapiStatus.Initialized); // reset status
+          switch (err.error) {
+            case 'popup_blocked_by_browser':
+              set_gapiStatus(GapiStatus.PopupBlocked);
+              //console.error(err);
+              break;
+            case 'immediate_failed':
+              // do nothing
+              break;
+            default:
+              set_gapiError(err);
+              break;
           }
-          console.warn('gapi auth failed -', err.error, err);
+          console.error('gapi auth failed -', err.error, err);
           return false;
         }
       },
@@ -102,7 +117,6 @@ export default {
 
           const isAuthed = await _gapiDoAuth({ soft: true });
           if (!isAuthed) {
-            console.log('NeedUserConsent');
             set_gapiStatus(GapiStatus.NeedUserConsent);
             return false;
           }
@@ -125,7 +139,7 @@ export default {
           isAuthed = await _gapiDoAuth({ soft: false, prompt });
         }
         else {
-          isAuthed = await gapiSoftAuth({ notStandAlone: true });
+          isAuthed = await gapiSoftAuth();
           if (!isAuthed) {
             console.warn('YT immediate auth failed - requesting user consent');
 
@@ -152,6 +166,9 @@ export default {
           return val || GapiStatus.None;
         }
       },
+      gapiError: {
+        path: 'error'
+      },
       gapiTokens: {
         path: 'gapiTokens',
         readers: {
@@ -172,10 +189,6 @@ export default {
             return minutesLeft > 2;
           }
         }
-      },
-
-      ytSignInStatus: {
-        path: 'signInStatus'
       },
 
       ytMyChannels: {

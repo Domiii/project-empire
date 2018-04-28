@@ -81,7 +81,7 @@ export function getStream(constraints) {
       return mediaStream;
     })
     .catch(err => {
-      console.error('Could not get stream - ' + (err.stack || err), constraints);
+      throw new Error('Could not get stream - ' + (err.stack || err));
     }); // always check for errors at the end.
 }
 
@@ -253,7 +253,7 @@ const mediaInputSelection = {
  * ############################################################
  */
 
- let lastStreamVersion = 0;
+let lastStreamVersion = 0;
 
 export default {
   mediaStreams: {
@@ -278,18 +278,19 @@ export default {
 
         // make sure, previous stream (if any) is dead
         shutdownStream(streamArgs);
-
-        set_mediaStream(streamArgs, {});
+        
         set_streamStatus(streamArgs, MediaStatus.Preparing);
-        const streamVersion = ++lastStreamVersion;
-
-        // hack: notify any listener of `isAnyStreamOnline`
-        set_mediaStreams(get_mediaStreams());
 
         return Promise.all([
           getStream(mediaInputConstraints),
           newStreamFile()
         ]).then(([streamObject, fileId]) => {
+          set_mediaStream(streamArgs, {});
+          const streamVersion = ++lastStreamVersion;
+
+          // hack: notify any listener of `isAnyStreamOnline`
+          set_mediaStreams(get_mediaStreams());
+
           // TODO: properly setup the recorder
           // see: https://github.com/muaz-khan/RecordRTC/tree/master/dev/MediaStreamRecorder.js
 
@@ -302,11 +303,15 @@ export default {
           set_streamObject(streamArgs, streamObject);
           set_streamStatus(streamArgs, MediaStatus.Ready);
           set_streamFileId(streamArgs, fileId);
-          
+
           const mediaRecorder = prepareRecorder(streamObject, streamArgs, fileId, readers, writers);
           set_streamRecorderObject(streamArgs, mediaRecorder);
           // ]);
-        }).then(() => streamId);
+        }).then(() => streamId)
+        .catch(err => {
+          console.error(err.stack || err);
+          set_streamStatus(streamArgs, MediaStatus.NotReady);
+        });
       }
     },
 

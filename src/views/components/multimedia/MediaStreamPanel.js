@@ -197,7 +197,7 @@ class MediaSettingsPanel extends Component {
 
 /**
  * ############################################################
- * UploadStatusPanel
+ * YtStatusPanel
  * ############################################################
  */
 
@@ -249,12 +249,24 @@ export class YtChannelInfo extends Component {
   }
 })
 export class YtStatusPanel extends Component {
+  constructor(...args) {
+    super(...args);
+
+    this.dataBindMethods(
+      'clearError'
+    );
+  }
+
+  clearError = (evt, {}, {set_gapiError}) => {
+    set_gapiError(null);
+  }
+
   render(
     { },
     { clickResetGapiStatus,
       clickGapiHardAuth,
       gapiSoftAuth },
-    { gapiStatus }
+    { gapiStatus, gapiError }
   ) {
     let statusEl;
 
@@ -262,13 +274,13 @@ export class YtStatusPanel extends Component {
       case GapiStatus.NeedUserConsent:
         statusEl = (<Alert bsStyle="warning">
           Please login and choose your YouTube channel:&nbsp;
-          <Button onClick={clickGapiHardAuth}><FAIcon name="unlock" /></Button>
+          <Button onClick={clickGapiHardAuth}><FAIcon name="unlock" color="green" /></Button>
         </Alert>);
         break;
 
       case GapiStatus.PopupBlocked:
         statusEl = (<Alert bsStyle="danger">
-          <FAIcon name="times" /> Authorization popup blocked! Unblock + click this button:&nbsp;
+          <FAIcon name="times" /> Authorization popup blocked! → Unblock → then click this button:&nbsp;
           <Button onClick={clickResetGapiStatus}><FAIcon name="refresh" /></Button>
         </Alert>);
         break;
@@ -287,7 +299,13 @@ export class YtStatusPanel extends Component {
     }
 
     return (<Panel.Body>
-      <div>{statusEl}</div>
+      <div>
+        {statusEl}
+        {gapiError && (<Alert bsStyle="danger" className="alert-dismissable">
+          <a href="#" className="close" data-dismiss="alert" aria-label="close" onClick={this.clearError}>&times;</a>
+          {gapiError.stack || gapiError.message || gapiError.details || gapiError.error || gapiError}
+        </Alert>)}
+      </div>
     </Panel.Body>);
   }
 }

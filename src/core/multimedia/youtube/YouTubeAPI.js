@@ -94,15 +94,18 @@ async function _gapiInit() {
 /**
  * @see https://developers.google.com/youtube/v3/guides/auth/client-side-web-apps
  */
-export async function gapiAuth(immediate, prompt = 'none') {
+export async function gapiAuth(immediate, prompt) {
   // auth!
   return await new Promise((resolve, reject) => {
-    gapi.auth.authorize({
+    const cfg = {
       client_id: clientId,
       scope: OAUTH2_SCOPES,
-      immediate: immediate,
-      prompt
-    }, function(response) {
+      immediate
+    };
+    if (prompt) {
+      cfg.prompt = prompt;
+    }
+    gapi.auth.authorize(cfg, function(response) {
       if (response.error) {
         // An error happened!
         return reject(response);

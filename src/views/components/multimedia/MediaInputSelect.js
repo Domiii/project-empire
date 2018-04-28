@@ -34,14 +34,13 @@ function selectByKind(kind, videoinput, audioinput) {
 }
 
 
-
 function getStream(constraints) {
   return window.navigator.mediaDevices.getUserMedia(constraints)
     .then(mediaStream => {
       return mediaStream;
     })
     .catch(err => {
-      console.log('Could not get stream: ' + err.stack);
+      throw new Error('Could not get stream - ' + (err.stack || err));
     }); // always check for errors at the end.
 }
 
@@ -65,7 +64,7 @@ function queryUnknownDevices(kind) {
     // query all devices again, after they have all been resolved
     return Promise.all(promises).then((streams) => {
       // shutdown all streams again
-      streams.forEach(stream => stream.getTracks().forEach(track => track.stop()));
+      streams.forEach(stream => stream && stream.getTracks().forEach(track => track.stop()));
 
       return getDeviceList(kind);
     });
@@ -222,7 +221,7 @@ export default class MediaInputSelect extends Component {
         />
       </Flexbox>
       {hasUnkownDevices && (<Flexbox>
-        <Button bsStyle="danger" onClick={this.clickQueryUnknownDevices}>
+        <Button bsStyle="success" onClick={this.clickQueryUnknownDevices}>
           <FAIcon name="unlock" /> 顯示所有裝置的名字
         </Button>
       </Flexbox>) }
