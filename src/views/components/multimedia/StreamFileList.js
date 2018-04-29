@@ -22,10 +22,13 @@ import Flexbox from 'flexbox-react';
 
 import FancyPanelToggleTitle from 'src/views/components/util/FancyPanelToggleTitle';
 
+import VideoPlayer from './VideoPlayer';
+import VideoUploadPanel from './VideoUploadPanel';
+
 
 const renderSize = filesize.partial({
   base: 10,
-  round: 0
+  round: 2
 });
 
 
@@ -36,14 +39,19 @@ export class StreamFilePanelHeader extends Component {
 
   render(
     { },
-    { }
+    { streamFileSize }
   ) {
     const { fileId, isSelected } = this.props;
+    const fileArgs = { fileId };
+    const size = streamFileSize(fileArgs) || 0;
 
     //return (<HashLink smooth to={link}>
     return (<FancyPanelToggleTitle>
       <Flexbox className="full-width" justifyContent="space-between" alignItems="center">
-        <span className="color-gray">(untitled recording)</span>&nbsp;
+        <span>
+          <span className="color-gray">(untitled recording)</span>&nbsp;
+          {renderSize(size)}
+        </span>
 
       </Flexbox>
     </FancyPanelToggleTitle>);
@@ -52,20 +60,94 @@ export class StreamFilePanelHeader extends Component {
 }
 
 @dataBind({})
+export class VideoFilePreview extends Component {
+  state = {
+    isPreviewing: false
+  };
+
+  constructor(...args) {
+    super(...args);
+
+    // this.dataBindMethods(
+    //   ''
+    // );
+  }
+
+  togglePreview = () => {
+    this.setState({ isPreviewing: !this.state.isPreviewing });
+  }
+
+  render(
+    { },
+    { get_streamFileUrl }
+  ) {
+    const { fileId } = this.props;
+    const { isPreviewing } = this.state;
+    if (!isPreviewing) {
+      return (<Button bsStyle="primary" onClick={this.togglePreview} className="">
+        Preview <FAIcon name="play" />
+      </Button>);
+    }
+    else {
+      const src = get_streamFileUrl({ fileId });
+      if (!src) {
+        return <LoadIndicator message="loading file..." />;
+      }
+
+      const replayVideoProps = {
+        autoplay: true,
+        controls: true,
+        loop: false,
+        muted: false,
+        inactivityTimeout: 0, // never hide controls
+        src: {
+          src,
+          type: 'video/webm'
+        },
+        stop: this.togglePreview
+      };
+      return (
+        <VideoPlayer className="media-panel-video" {...replayVideoProps} />
+      );
+    }
+  }
+}
+
+@dataBind({})
 export class StreamFilePanel extends Component {
-  selectThis = () => {
-    const { fileId, onSelect } = this.props;
-    onSelect && onSelect(fileId);
+  toggleSelectThis = () => {
+    const { fileId, onSelect, isSelected } = this.props;
+    onSelect && onSelect(isSelected ? null : fileId);
   }
 
   render(
   ) {
     const { fileId, isSelected } = this.props;
-    const className = isSelected && 'yellow-highlight-border' || 'no-highlight-border';
-    const contentEl = isSelected && 'TODO: add ability to tag/stream/download/preview etc';
 
-    return (<Panel className={'no-margin ' + className}>
-      <Panel.Heading className="no-padding" onClick={this.selectThis} >
+    let className;
+    let contentEl;
+
+    if (isSelected) {
+      className = 'yellow-highlight-border';
+      contentEl = (<div>
+        <Flexbox justifyContent="center" alignItems="center" >
+          <Flexbox>
+            <VideoFilePreview fileId={fileId} />
+          </Flexbox>
+          <Flexbox className="full-width">
+            <VideoUploadPanel fileId={fileId} />
+          </Flexbox>
+        </Flexbox>
+      </div>);
+    }
+    else {
+      className = 'no-highlight-border';
+      contentEl = null;
+    }
+
+    return (<Panel className={'no-margin ' + className}
+      expanded={isSelected} onToggle={this.toggleSelectThis}>
+      <Panel.Heading className="no-padding">
         <StreamFilePanelHeader fileId={fileId} isSelected={isSelected} />
       </Panel.Heading>
       <Panel.Body collapsible>
@@ -131,7 +213,8 @@ export default class StreamFileList extends Component {
     }
 
     const fileEls = expanded && map(streamFileList, file =>
-      <StreamFilePanel key={file.name} fileId={file.name} isSelected={selectedId === file.name} onSelect={this.onSelect} />
+      (<StreamFilePanel key={file.name} fileId={file.name} isSelected={selectedId === file.name}
+        onSelect={this.onSelect} />)
     );
 
     return (<Panel expanded={expanded} onToggle={this.toggleExpand}>

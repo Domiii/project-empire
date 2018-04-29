@@ -436,7 +436,7 @@ export default {
               ) {
                 const timeout = getOptionalArgument(streamArgs, 'timeout');
                 const recorder = streamRecorderObject(streamArgs);
-                recorder.start(timeout || 500);
+                recorder.start(timeout || 100);
 
                 return set_streamStatus(streamArgs, MediaStatus.Running);
               },

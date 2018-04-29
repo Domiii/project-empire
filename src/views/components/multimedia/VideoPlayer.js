@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component } from 'react';
 import videojs from 'video.js';
 
 
@@ -16,6 +16,28 @@ function makeRefreshButton(refresh) {
 
     handleClick(e) {
       refresh(e);
+
+      // see: https://stackoverflow.com/a/28583639
+      this.player_.pause();
+      this.player_.currentTime(0);
+      this.player_.trigger('loadstart');
+    }
+  }
+  return RefreshButton;
+}
+
+function makeStopButton(stop) {
+  class RefreshButton extends Button {
+    constructor(...args) {
+      super(...args);
+
+      this.addClass('fa');
+      this.addClass('fa-stop');
+      this.controlText('Stop');
+    }
+
+    handleClick(e) {
+      stop(e);
 
       // see: https://stackoverflow.com/a/28583639
       this.player_.pause();
@@ -49,7 +71,7 @@ export default class VideoPlayer extends React.Component {
       console.log('onPlayerReady', this);
 
       const player = this.player;
-      
+
       this.player.on('error', () => {
       });
 
@@ -62,12 +84,18 @@ export default class VideoPlayer extends React.Component {
         }
       });
 
-      const { refresh } = this.props;
+      const { refresh, stop } = this.props;
+
+      // add custom controls
       if (refresh) {
         // Register the new component
         videojs.registerComponent('RefreshButton', makeRefreshButton(refresh));
         //player.getChild('controlBar').addChild('SharingButton', {});
         player.getChild('controlBar').addChild('RefreshButton', {});
+      }
+      if (stop) {
+        videojs.registerComponent('StopButton', makeStopButton(stop));
+        player.getChild('controlBar').addChild('StopButton', {});
       }
     });
   }

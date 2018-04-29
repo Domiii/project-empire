@@ -233,13 +233,31 @@ export default {
 
           streamFileSize(
             streamFileArgs,
-            { get_streamFileSegments, streamFileSegmentSize }
+            { get__streamFileMetadataSize,
+              get_streamFileSegments, streamFileSegmentSize },
+            { },
+            { set__streamFileMetadataSize }
           ) {
+            const { fileId } = streamFileArgs;
+            // TODO: this only works while recording and data won't be available later
             // the total size of the stream, across all segments
             const segments = get_streamFileSegments(streamFileArgs);
-            return reduce(segments, (sum, segment, segmentIndex) =>
-              sum + streamFileSegmentSize(Object.assign({}, streamFileArgs, { segmentIndex })),
-              0);
+            if (segments) {
+              return reduce(segments, (sum, segment, segmentIndex) =>
+                sum + streamFileSegmentSize(Object.assign({}, streamFileArgs, { segmentIndex })),
+                0);
+            }
+            else {
+              const path = getFilePath(fileId);
+              (async () => {
+                const metadata = await fs.stat(path);
+                const { size } = metadata;
+                if (size !== get__streamFileMetadataSize(streamFileArgs)) {
+                  set__streamFileMetadataSize(streamFileArgs, size);
+                }
+              })();
+              return get__streamFileMetadataSize(streamFileArgs);
+            }
           },
 
           currentSegmentId(
@@ -307,6 +325,7 @@ export default {
         children: {
           streamFileWriter: 'streamFileWriter',
           _blobQueue: '_blobQueue',
+          _streamFileMetadataSize: '_size',
 
           // streamFileStat: {
           //   path: 'streamFileStat',

@@ -1,3 +1,7 @@
+import {
+  sendYtRequest
+} from './YouTubeAPI';
+
 /**
  * Provide an interface to access/query any YouTube resources
  */
@@ -74,4 +78,4 @@ export default {
       }
     }
   }
-}
+};

@@ -2,9 +2,7 @@ import gapi from 'resources/gapi.js';
 import {
   GapiStatus,
   gapiInit,
-  gapiAuth,
-
-  sendYtRequest
+  gapiAuth
 } from './YouTubeAPI';
 
 import YtUploadModel from './YtUploadModel';
@@ -18,6 +16,12 @@ export default {
     path: 'ytApi',
 
     readers: {
+      gapiIsAuthenticated(
+        { }, { },
+        { gapiStatus },
+      ) {
+        return gapiStatus === GapiStatus.Authorized;
+      },
       gapiAuthObject(
         { }, { },
         { gapiStatus },
@@ -74,7 +78,7 @@ export default {
           }
         }
       },
-      
+
       async _gapiDoAuth(
         args, { },
         { gapiStatus },
@@ -119,7 +123,7 @@ export default {
        * Tries to 
        */
       async gapiSoftAuth(
-        {}, { },
+        { }, { },
         { gapiStatus, isGapiTokenFresh },
         { gapiEnsureInitialized, _gapiDoAuth, set_gapiStatus }
       ) {
@@ -146,7 +150,7 @@ export default {
       ) {
         if (gapiStatus === GapiStatus.Initializing || gapiStatus === GapiStatus.Authorizing) {
           // TODO: implement proper queueing behavior
-          return;
+          return false;
         }
 
         const prompt = getOptionalArgument(args, 'prompt', null);
@@ -208,6 +212,6 @@ export default {
       }
     }
   },
-  YtUploadModel,
-  YtResourceModel
+  ...YtUploadModel,
+  ...YtResourceModel
 };

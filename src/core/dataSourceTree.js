@@ -57,7 +57,7 @@ const utility = {
   }
 };
 
-const dataStructureConfig = {
+const dataModelConfig = {
   utility,
   auth: {
     dataProvider: 'firebaseAuth',
@@ -97,6 +97,8 @@ const dataStructureConfig = {
   }
 };
 
+console.warn(dataModelConfig);
+
 const plugins = {
   onWrite: {
     createdAt(queryArgs, val, originalVal, actionName) {
@@ -127,4 +129,4 @@ const plugins = {
   }
 };
 
-export default new DataSourceTree(dataProviders, dataStructureConfig, plugins);
+export default new DataSourceTree(dataProviders, dataModelConfig, plugins);

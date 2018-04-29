@@ -74,6 +74,11 @@ button:active { outline:none !important; }
   border-left-color: #EEEEEE;
 }
 
+/* Remove bootstrap progress bar's margin */
+.progress, .progress * {
+  margin: 0 !important;
+}
+
 
 /**
  * #######################################################
@@ -161,6 +166,9 @@ button:active { outline:none !important; }
 .margin10 {
   margin: 10em;
 }
+.margin-auto {
+  margin: auto;
+}
 
 .padding-half {
   padding: 0.5em;
@@ -185,27 +193,21 @@ button:active { outline:none !important; }
 .color-lightgray {
   color: lightgray;
 }
-
 .color-red {
   color: red;
 }
-
 .color-yellow {
   color: yellow;
 }
-
 .color-lightyellow {
   color: lightyellow;
 }
-
 .color-lightred {
   color: IndianRed;
 }
-
 .color-darkred {
   color: darkred;
 }
-
 .color-blue {
   color: blue;
 }
@@ -214,6 +216,9 @@ button:active { outline:none !important; }
 }
 .color-darkblue {
   color: darkblue;
+}
+.color-maroon {
+  color: maroon !important;
 }
 
 .no-background {
@@ -251,8 +256,12 @@ button:active { outline:none !important; }
   display: inline-block;
 }
 
-.inline-hcentered {
+.inline-hcenter {
   text-align: center;
+}
+
+.inline-hright {
+  text-align: right;
 }
 
 .inline-vcentered {
@@ -261,6 +270,10 @@ button:active { outline:none !important; }
 
 .right-bound {
   direction: rtl;
+}
+
+.no-wrap {
+  white-space: nowrap;
 }
 
 .multiline-text {
@@ -597,7 +610,6 @@ button:active { outline:none !important; }
 .media-panel-video {
   max-width: 100%;
   max-height: 50vh;
-  margin: auto;
   display: block;
 }
 

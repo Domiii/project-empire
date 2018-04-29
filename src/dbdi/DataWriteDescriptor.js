@@ -47,16 +47,20 @@ function processArgumentsDefault(node, writeArgs) {
  * Will only have queryArgs (which will be wrapped with proxy by DataAccessTracker).
  */
 function processCustomSetter(node, writeArgs) {
-  let [queryArgs, val] = writeArgs;
-  
-  if (!isEmpty(queryArgs) && !isEmpty(val)) {
+  if (writeArgs.length > 1) {
     console.error('custom writer should only provide one argument but found two:', writeArgs);
   }
 
-  if (!queryArgs) {
-    queryArgs = val;
-  }
-  return { queryArgs };
+  // let [queryArgs, val] = writeArgs;
+
+  // if (!isEmpty(queryArgs) && !isEmpty(val)) {
+  //    problem!
+  // }
+
+  // if (!queryArgs) {
+  //   queryArgs = val;
+  // }
+  return { queryArgs: writeArgs[0] };
 }
 
 function processArgumentsNoValue(node, writeArgs) {

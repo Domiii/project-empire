@@ -12,7 +12,7 @@ import gapi from 'resources/gapi.js';
 var DRIVE_UPLOAD_URL = 'https://www.googleapis.com/upload/drive/v2/files/';
 
 
-const STATUS_POLLING_INTERVAL_MILLIS = 10 * 1000;
+const STATUS_POLLING_INTERVAL_MILLIS = 5 * 1000;
 
 /* global XMLHttpRequest */
 
@@ -232,7 +232,8 @@ export default class MediaUploader {
       this.onUploadComplete(videoId);
 
       // start polling video status
-      this.pollVideoStatus_(videoId);
+      this.videoId = videoId;
+      this.pollVideoStatus_();
     }
     else if (e.target.status === 308) {
       // only finished a chunk
@@ -318,21 +319,27 @@ export default class MediaUploader {
     return url;
   }
 
-  pollVideoStatus_ = (videoId) => {
+  pollVideoStatus_ = () => {
+    console.log('pollVideoStatus_ GO');
+    const { videoId } = this;
     gapi.client.request({
       path: '/youtube/v3/videos',
       params: {
         part: 'status,player',
         id: videoId
       },
-      callback: function (response) {
+      callback: (response) => {
         if (response.error) {
           // The status polling failed.
+          // TODO: raise error with listeners
+          // TODO: instead have a more rigurous/persistent approach to showing correct video status
           console.error('polling video status failed', response.error.message);
           setTimeout(this.pollVideoStatus_, STATUS_POLLING_INTERVAL_MILLIS);
         }
         else {
           const uploadStatus = response.items[0].status.uploadStatus;
+          const res = response.items[0];
+          console.log('pollVideoStatus_ RES', res);
           switch (uploadStatus) {
             // This is a non-final status, so we need to poll again.
             case 'uploaded':
@@ -340,11 +347,15 @@ export default class MediaUploader {
               break;
             // The video was successfully transcoded and is available.
             case 'processed':
-              this.onProcessed(response.items[0]);
+              this.onProcessed(res);
               break;
-            // All other statuses indicate a permanent transcoding failure.
+
+            // All other statuses indicate some sort of failure
+            case 'rejected':
+              this.onError(res.status.rejectionReason || res);
+              break;
             default:
-              this.onError(response.items[0]);
+              this.onError(res.status.failureReason || res.status || res);
               break;
           }
         }

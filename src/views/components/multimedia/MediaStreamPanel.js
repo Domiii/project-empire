@@ -9,7 +9,6 @@ import PropTypes from 'prop-types';
 import dataBind from 'src/dbdi/react/dataBind';
 
 import filesize from 'filesize';
-import FileSaver from 'file-saver';
 
 import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/loading';
@@ -25,11 +24,9 @@ import Flexbox from 'flexbox-react';
 import MediaInputSelect from './MediaInputSelect';
 import VideoPlayer from './VideoPlayer';
 import StreamFileList from './StreamFileList';
+import { YtMyChannelInfo } from './VideoUploadPanel';
 
 import { MediaStatus } from '../../../core/multimedia/StreamModel';
-import { GapiStatus } from '../../../core/multimedia/youtube/YouTubeAPI';
-import { NOT_LOADED } from '../../../dbdi/react';
-import { YtUploadStatus } from '../../../core/multimedia/youtube/YtUploadModel';
 
 
 function log(...args) {
@@ -149,7 +146,7 @@ class DownloadStreamFileButton extends Component {
     const href = disabled ? '' : (streamUrl(streamArgs) + '?s=' + size);
     return (<a href={href} download="stream.webm" target="_blank" role="button"
       className="btn btn-info btn-block">
-      <Flexbox justifyContent="center" alignItems="center" className="inline-hcentered">
+      <Flexbox justifyContent="center" alignItems="center" className="inline-hcenter">
         <Flexbox>
           Download&nbsp;
         </Flexbox>
@@ -195,197 +192,6 @@ class MediaSettingsPanel extends Component {
     </div >);
   }
 }
-
-
-/**
- * ############################################################
- * YtStatusPanel
- * ############################################################
- */
-
-@dataBind({
-  async clickSelectChannel(evt, { }, { gapiHardAuth, set_ytMyChannels }) {
-    await gapiHardAuth({ prompt: 'select_account' });
-    set_ytMyChannels(NOT_LOADED);
-  }
-})
-export class YtChannelInfo extends Component {
-  render(
-    { },
-    { get_ytMyChannelSnippet, get_ytMyChannels, clickSelectChannel }
-  ) {
-    if (!get_ytMyChannels.isLoaded()) {
-      return <LoadIndicator block message="loading your channel..." />;
-    }
-    else {
-      //myChannelsEl = JSON.stringify(ytMyChannels, null, 2);
-      const snippet = get_ytMyChannelSnippet();
-      if (!snippet) {
-        return (<Alert bsStyle="warning">
-          You do not have a YouTube channel. Create one, then refresh.
-        </Alert>);
-      }
-      const { title, thumbnails } = snippet;
-      const thumbUrl = thumbnails.default.url;
-      return (<span>
-        Your channel: <img src={thumbUrl} className="max-size-1" /> {title} &nbsp;
-        <Button onClick={clickSelectChannel}>change channel<FAIcon name="exchange" /></Button>
-      </span>);
-    }
-  }
-}
-
-@dataBind({
-  clickResetGapiStatus(evt,
-    { },
-    { resetGapiStatus }
-  ) {
-    return resetGapiStatus();
-  },
-
-  clickGapiHardAuth(evt,
-    { },
-    { gapiHardAuth }
-  ) {
-    return gapiHardAuth();
-  }
-})
-export class YtStatusPanel extends Component {
-  constructor(...args) {
-    super(...args);
-
-    this.dataBindMethods(
-      'clearError',
-      'componentDidMount'
-    );
-  }
-
-  clearError = (evt, { }, { set_gapiError }) => {
-    set_gapiError(null);
-  }
-
-  componentDidMount({ }, { gapiSoftAuth }) {
-    gapiSoftAuth();
-  }
-
-  render(
-    { },
-    { clickResetGapiStatus,
-      clickGapiHardAuth },
-    { gapiStatus, gapiError }
-  ) {
-    let statusEl;
-
-    switch (gapiStatus) {
-      case GapiStatus.NeedUserConsent:
-        statusEl = (<Alert bsStyle="warning">
-          Please login and choose your YouTube channel:&nbsp;
-          <Button onClick={clickGapiHardAuth}><FAIcon name="unlock" color="green" /></Button>
-        </Alert>);
-        break;
-
-      case GapiStatus.PopupBlocked:
-        statusEl = (<Alert bsStyle="danger">
-          <FAIcon name="times" /> Authorization popup blocked! → Unblock → then click this button:&nbsp;
-          <Button onClick={clickResetGapiStatus}><FAIcon name="refresh" /></Button>
-        </Alert>);
-        break;
-
-      case GapiStatus.Authorizing:
-        statusEl = <LoadIndicator block message="authorizing..." />;
-        break;
-
-      case GapiStatus.Authorized:
-        statusEl = <YtChannelInfo />;
-        break;
-
-      default:
-        statusEl = <LoadIndicator block message="initializing..." />;
-    }
-
-    return (<Panel.Body>
-      <div>
-        {statusEl}
-        {gapiError && (<Alert bsStyle="danger" className="alert-dismissable">
-          <a href="#" className="close" data-dismiss="alert" aria-label="close" onClick={this.clearError}>&times;</a>
-          {gapiError.stack || gapiError.message || gapiError.details || gapiError.error || gapiError}
-        </Alert>)}
-      </div>
-    </Panel.Body>);
-  }
-}
-
-@dataBind({
-  clickStart(evt,
-    fileArgs,
-    { ytStartVideoUpload }
-  ) {
-    return ytStartVideoUpload(fileArgs);
-  }
-})
-export class UploadStatusPanel extends Component {
-  render(
-    { fileId },
-    { clickStart, ytVideoEditUrl, get_ytUploadStatus, get_ytUploadProgress }
-  ) {
-    const fileArgs = { fileId };
-    const uploadStatus = get_ytUploadStatus(fileArgs);
-    let progressEl;
-    let controlEl;
-
-    switch (uploadStatus) {
-      case YtUploadStatus.None:
-        controlEl = (<Button onClick={clickStart}>
-          Start
-        </Button>);
-        break;
-      case YtUploadStatus.Uploading: {
-        const uploadInfo = get_ytUploadProgress(fileArgs);
-        // TODO
-        progressEl = (<Flexbox className="full-width">
-          <ProgressBar active bsStyle="success" now={uploadPct} />;
-        </Flexbox>);
-        break;
-      }
-      case YtUploadStatus.Processing: {
-        break;
-      }
-      case YtUploadStatus.Finished: {
-        break;
-      }
-      default: {
-        break;
-      }
-    }
-
-    if (videoId) {
-      controlEl = (<Fragment>
-        <Flexbox className="">
-          <a className="btn btn-info link" href={ytVideoEditUrl({ videoId })} target="_blank">
-            <FAIcon name="edit" />
-          </a>
-        </Flexbox>
-      </Fragment>);
-    }
-    else {
-      controlEl = (<Fragment>
-        {/* <Flexbox className="">
-          <Button onClick={clickPause}><FAIcon name="pause" /></Button>
-        </Flexbox>
-        <Flexbox className="">
-          <Button onClick={clickCancel}><FAIcon color="red" name="times" /></Button>
-        </Flexbox> */}
-      </Fragment>);
-    }
-
-    return (
-      <Flexbox justifyContent="center" alignItems="center">
-        {progressEl}
-        {controlEl}
-      </Flexbox>);
-  }
-}
-
 
 /**
  * ############################################################
@@ -678,7 +484,7 @@ export default class MediaStreamPanel extends Component {
               </Panel.Body>
             </Panel>}
 
-            {!replayVideoSrc && (<Button className="inline-hcentered" disabled={size < 1} onClick={this.clickStartReplay}>
+            {!replayVideoSrc && (<Button className="inline-hcenter" disabled={size < 1} onClick={this.clickStartReplay}>
               Start Preview
             </Button>)}
           </Flexbox>
@@ -710,12 +516,12 @@ export default class MediaStreamPanel extends Component {
         <br />
         <br />
         <div>
-          <Button className="inline-hcentered" bsStyle="danger" disabled={isOffline} onClick={this.clickShutdown}>
+          <Button className="inline-hcenter" bsStyle="danger" disabled={isOffline} onClick={this.clickShutdown}>
             Shutdown&nbsp;
             <FAIcon color="yellow" name="exclamation-triangle" />
           </Button>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          <Button className="inline-hcentered" bsStyle="danger" disabled={isOffline} onClick={this.startNewStream}>
+          <Button className="inline-hcenter" bsStyle="danger" disabled={isOffline} onClick={this.startNewStream}>
             Start over&nbsp;
             <FAIcon color="yellow" name="refresh" />
           </Button>
@@ -724,15 +530,19 @@ export default class MediaStreamPanel extends Component {
     }
 
     return (<div className="media-stream-panel">
-      <h2 className="inline-hcentered">
-        {titleEl}
-      </h2>
-      {!isOffline && <div className="inline-hcentered">
+      <Flexbox justifyContent="center" alignItems="center" >
+        <Flexbox className="full-width margin-auto">
+          <h2>{titleEl}</h2>
+        </Flexbox>
+        <Flexbox>
+          <YtMyChannelInfo />
+        </Flexbox>
+      </Flexbox>
+      {!isOffline && <div className="inline-hcenter">
         <RecorderCtrlButton />
       </div>}
       {contentEl}
 
-      <YtStatusPanel streamArgs={streamArgs} />
       <br />
       <br />
       <StreamFileList />

@@ -1,4 +1,7 @@
+import isPlainObject from 'lodash/isPlainObject';
+
 import MediaUploader from './MediaUploader';
+import { getOptionalArguments } from '../../../dbdi/dataAccessUtil';
 
 // /**
 //  * YouTube video uploader class
@@ -57,11 +60,13 @@ export default {
         writers: {
           async ytStartVideoUpload(
             queryArgs,
-            { fetchStreamFile, get_ytUploadLastStartTime },
+            { fetchStreamFile, get_ytUploadLastStartTime, gapiTokens },
             { },
-            { set_ytUploadInfo, set_ytUploader, set_ytUploadProgress,
+            { gapiHardAuth,
+              set_ytUploadInfo, set_ytUploader, set_ytUploadProgress,
               set_ytVideoId, set_ytUploadStatus, set_ytUploadError,
               set_ytUploadLastStartTime,
+              set_ytDangerousHTMLEmbedCode,
               set_ytUploadResult
             }
           ) {
@@ -70,22 +75,47 @@ export default {
             } = queryArgs;
             const fileArgs = { fileId };
 
-            const info = queryArgs; // TODO: maybe use already existing upload info, if already existing?
+            set_ytUploadStatus(fileArgs, YtUploadStatus.Uploading);
+
+            if (!await gapiHardAuth()) {
+              set_ytUploadStatus(fileArgs, YtUploadStatus.None);
+              return false;
+            }
+            const accessToken = gapiTokens().access_token;
+
+            if (!accessToken) {
+              const err = '[INTERNAL ERROR] Could not retrieve access token';
+              set_ytUploadError(fileArgs, err);
+              console.error(err);
+              set_ytUploadStatus(fileArgs, YtUploadStatus.None);
+              return false;
+            }
+
+            set_ytUploadError(fileArgs, null);
+
+            const info = getOptionalArguments(queryArgs, {
+              title: 'untitled video',
+              description: '',
+              tags: null,
+
+              // see (categoryId): https://gist.github.com/dgp/1b24bf2961521bd75d6c
+              categoryId: 22,
+              privacyStatus: 'unlisted'
+            });
             set_ytUploadInfo(fileArgs, info);
             const file = await fetchStreamFile({ fileId });
 
             const {
               title,
               description,
-              privacyStatus = 'unlisted',
-              accessToken,
               tags,
-              categoryId
+              categoryId,
+              privacyStatus
             } = info;
 
             const metadata = {
               snippet: {
-                title,
+                title: title,
                 description,
                 tags,
                 categoryId
@@ -103,6 +133,10 @@ export default {
                 part: Object.keys(metadata).join(',')
               },
               onError: (err) => {
+                console.error('upload failed', err);
+                if (isPlainObject(err)) {
+                  err = JSON.stringify(err, null, 2);
+                }
                 set_ytUploadError(fileArgs, err);
                 //set_ytUploadStatus();
               },
@@ -116,9 +150,9 @@ export default {
                 const bytesUploaded = data.loaded;
                 const totalBytes = data.total;
 
-                const bytesPerSecond = bytesUploaded / ((currentTime - uploadStartTime) / 1000);
-                const estimatedSecondsRemaining = (totalBytes - bytesUploaded) / bytesPerSecond;
-                const uploadPct = (bytesUploaded * 100) / totalBytes;
+                const bytesPerSecond = Math.round(bytesUploaded / ((currentTime - uploadStartTime) / 1000));
+                const estimatedSecondsRemaining = Math.round((totalBytes - bytesUploaded) / bytesPerSecond);
+                const uploadPct = Math.round((bytesUploaded * 100) / totalBytes);
 
                 set_ytUploadProgress(fileArgs, {
                   bytesUploaded,
@@ -133,13 +167,19 @@ export default {
                 set_ytUploadStatus(fileArgs, YtUploadStatus.Processing);
               },
               onProcessed: (data) => {
-                set_ytUploadResult(data);
-                set_ytUploadStatus(YtUploadStatus.Finished);
+                set_ytUploadResult(fileArgs, data);
+
+                // see https://zhenyong.github.io/react/tips/dangerously-set-inner-html.html
+                set_ytDangerousHTMLEmbedCode(fileArgs, {
+                  __html: data && data.player && data.player.embedHtml
+                });
+                set_ytUploadStatus(fileArgs, YtUploadStatus.Finished);
               }
             });
             uploader.upload();
 
             set_ytUploader(fileArgs, uploader);
+            return true;
           },
 
           // ytPauseUpload() {
@@ -187,6 +227,7 @@ export default {
             // player.embedHtml
             path: 'uploadResult'
           },
+          ytDangerousHTMLEmbedCode: 'dangerousHTMLEmbedCode',
           ytUploadError: 'uploadError'
         }
       }
