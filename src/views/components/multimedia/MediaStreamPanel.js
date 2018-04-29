@@ -4,7 +4,7 @@ import flatten from 'lodash/flatten';
 
 import moment from 'moment';
 
-import React, { Component } from 'react';
+import React, { Fragment, Component } from 'react';
 import PropTypes from 'prop-types';
 import dataBind from 'src/dbdi/react/dataBind';
 
@@ -15,19 +15,21 @@ import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/loading';
 
 import {
-  Alert, Button, Jumbotron, Well, Panel
+  Alert, Button, Jumbotron, Well, Panel, ProgressBar
 } from 'react-bootstrap';
 
 import Flexbox from 'flexbox-react';
 
 //import { Z_DEFAULT_COMPRESSION } from 'zlib';
-import { MediaStatus } from '../../../core/multimedia/StreamModel';
 
 import MediaInputSelect from './MediaInputSelect';
 import VideoPlayer from './VideoPlayer';
 import StreamFileList from './StreamFileList';
+
+import { MediaStatus } from '../../../core/multimedia/StreamModel';
 import { GapiStatus } from '../../../core/multimedia/youtube/YouTubeAPI';
 import { NOT_LOADED } from '../../../dbdi/react';
+import { YtUploadStatus } from '../../../core/multimedia/youtube/YtUploadModel';
 
 
 function log(...args) {
@@ -202,14 +204,14 @@ class MediaSettingsPanel extends Component {
  */
 
 @dataBind({
-  async clickSelectChannel(evt, {}, {gapiHardAuth, set_ytMyChannels}) {
-    await gapiHardAuth({prompt: 'select_account'});
+  async clickSelectChannel(evt, { }, { gapiHardAuth, set_ytMyChannels }) {
+    await gapiHardAuth({ prompt: 'select_account' });
     set_ytMyChannels(NOT_LOADED);
   }
 })
 export class YtChannelInfo extends Component {
   render(
-    { }, 
+    { },
     { get_ytMyChannelSnippet, get_ytMyChannels, clickSelectChannel }
   ) {
     if (!get_ytMyChannels.isLoaded()) {
@@ -253,19 +255,23 @@ export class YtStatusPanel extends Component {
     super(...args);
 
     this.dataBindMethods(
-      'clearError'
+      'clearError',
+      'componentDidMount'
     );
   }
 
-  clearError = (evt, {}, {set_gapiError}) => {
+  clearError = (evt, { }, { set_gapiError }) => {
     set_gapiError(null);
+  }
+
+  componentDidMount({ }, { gapiSoftAuth }) {
+    gapiSoftAuth();
   }
 
   render(
     { },
     { clickResetGapiStatus,
-      clickGapiHardAuth,
-      gapiSoftAuth },
+      clickGapiHardAuth },
     { gapiStatus, gapiError }
   ) {
     let statusEl;
@@ -294,7 +300,6 @@ export class YtStatusPanel extends Component {
         break;
 
       default:
-        gapiSoftAuth();
         statusEl = <LoadIndicator block message="initializing..." />;
     }
 
@@ -307,6 +312,77 @@ export class YtStatusPanel extends Component {
         </Alert>)}
       </div>
     </Panel.Body>);
+  }
+}
+
+@dataBind({
+  clickStart(evt,
+    fileArgs,
+    { ytStartVideoUpload }
+  ) {
+    return ytStartVideoUpload(fileArgs);
+  }
+})
+export class UploadStatusPanel extends Component {
+  render(
+    { fileId },
+    { clickStart, ytVideoEditUrl, get_ytUploadStatus, get_ytUploadProgress }
+  ) {
+    const fileArgs = { fileId };
+    const uploadStatus = get_ytUploadStatus(fileArgs);
+    let progressEl;
+    let controlEl;
+
+    switch (uploadStatus) {
+      case YtUploadStatus.None:
+        controlEl = (<Button onClick={clickStart}>
+          Start
+        </Button>);
+        break;
+      case YtUploadStatus.Uploading: {
+        const uploadInfo = get_ytUploadProgress(fileArgs);
+        // TODO
+        progressEl = (<Flexbox className="full-width">
+          <ProgressBar active bsStyle="success" now={uploadPct} />;
+        </Flexbox>);
+        break;
+      }
+      case YtUploadStatus.Processing: {
+        break;
+      }
+      case YtUploadStatus.Finished: {
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+
+    if (videoId) {
+      controlEl = (<Fragment>
+        <Flexbox className="">
+          <a className="btn btn-info link" href={ytVideoEditUrl({ videoId })} target="_blank">
+            <FAIcon name="edit" />
+          </a>
+        </Flexbox>
+      </Fragment>);
+    }
+    else {
+      controlEl = (<Fragment>
+        {/* <Flexbox className="">
+          <Button onClick={clickPause}><FAIcon name="pause" /></Button>
+        </Flexbox>
+        <Flexbox className="">
+          <Button onClick={clickCancel}><FAIcon color="red" name="times" /></Button>
+        </Flexbox> */}
+      </Fragment>);
+    }
+
+    return (
+      <Flexbox justifyContent="center" alignItems="center">
+        {progressEl}
+        {controlEl}
+      </Flexbox>);
   }
 }
 
@@ -620,7 +696,7 @@ export default class MediaStreamPanel extends Component {
             </Flexbox>
             <Flexbox className="full-width">
               <Button bsStyle="success" disabled={!canUpload} block>
-                Upload <FAIcon color="" name="upload" />
+                Upload <FAIcon color="red" size="1.5em" name="youtube-play" />
               </Button>
             </Flexbox>
             <Flexbox className="full-width">

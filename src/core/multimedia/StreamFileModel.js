@@ -20,7 +20,7 @@ const FileDirName = '/streamFiles';
 const MetaFileDirName = '/streamFiles.meta';
 const DefaultFileSystemConfig = {
   type: window.PERSISTENT,
-  bytes: 1024 * 1024 * 1024
+  bytes: 5 * 1024 * 1024 * 1024
 };
 
 const StreamFsStatus = {
@@ -89,13 +89,13 @@ async function prepareWriter(fileArgs, readers, writers) {
   const { _blobQueue } = readers;
   const { set_streamFileWriter, set__blobQueue } = writers;
 
-  
+
   const blobs = _blobQueue(fileArgs);
   if (blobs) {
     // already started the process
     return;
   }
-  
+
   // start queue
   set__blobQueue(fileArgs, []);
 
@@ -209,6 +209,13 @@ export default {
         path: '$(fileId)',
 
         readers: {
+          async fetchStreamFile({ fileId }) {
+            // we need this separate from the streamFileEntry for now, because we don't have proper event handling
+            const path = getFilePath(fileId);
+            const entry = await fs.getEntry(path);
+            return await new Promise((resolve, reject) => entry.file(resolve, reject));
+          },
+
           streamFilePath({ fileId }) {
             return getFilePath(fileId);
           },
@@ -301,28 +308,27 @@ export default {
           streamFileWriter: 'streamFileWriter',
           _blobQueue: '_blobQueue',
 
-          _streamFileStat: '_streamFileStat',
-          streamFileStat: {
-            path: 'streamFileStat',
-            reader(val, queryArgs) {
-
+          // streamFileStat: {
+          //   path: 'streamFileStat',
+          //   async fetch(val, queryArgs) {
+          //     // TODO: want to re-fetch as often as possible to make this accurate?!
+          //     const { fileId } = queryArgs;
+          //     const path = getFilePath(fileId);
+          //     return await fs.stat(path);
+          //   }
+          // },
+          streamFileEntry: {
+            path: 'entry',
+            async fetch({ fileId }) {
+              const path = getFilePath(fileId);
+              return await fs.getEntry(path);
             }
           },
           streamFileUrl: {
-            path: 'streamFileUrl',
-            reader(val, queryArgs, { }, { }, { set_streamFileUrl }) {
-              if (val) return val;
-
-              // make sure we don't write more than once
-              if (val === '') return NOT_LOADED;
-              set_streamFileUrl(queryArgs, '');
-
-              // fetch + cache url
-              const path = getFilePath(queryArgs.fileId);
-              fs.getUrl(path).then(url =>
-                set_streamFileUrl(queryArgs, url)
-              );
-              return NOT_LOADED;
+            path: 'url',
+            async fetch({ fileId }) {
+              const path = getFilePath(fileId);
+              return await fs.getUrl(path);
             }
           },
           // streamFileEntry: {

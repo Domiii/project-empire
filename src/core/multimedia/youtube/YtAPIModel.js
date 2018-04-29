@@ -5,12 +5,16 @@ import {
   gapiAuth,
 
   sendYtRequest
-} from './youtube/YouTubeAPI';
-import { NOT_LOADED } from '../../dbdi/react';
-import { getOptionalArgument } from '../../dbdi/dataAccessUtil';
+} from './YouTubeAPI';
+
+import YtUploadModel from './YtUploadModel';
+import YtResourceModel from './YtResourceModel';
+
+import { NOT_LOADED } from 'src/dbdi/react';
+import { getOptionalArgument } from 'src/dbdi/dataAccessUtil';
 
 export default {
-  youtubeAPI: {
+  ytApi: {
     path: 'ytApi',
 
     readers: {
@@ -41,6 +45,16 @@ export default {
         }
       },
 
+      async gapiDisconnect(
+        { }, { }, { },
+        { resetGapiStatus }
+      ) {
+        if (gapi.auth2) {
+          gapi.auth2.getAuthInstance().disconnect();
+          resetGapiStatus();
+        }
+      },
+
       async gapiEnsureInitialized(
         { }, { },
         { gapiStatus },
@@ -60,6 +74,7 @@ export default {
           }
         }
       },
+      
       async _gapiDoAuth(
         args, { },
         { gapiStatus },
@@ -123,6 +138,7 @@ export default {
         }
         return true;
       },
+
       async gapiHardAuth(
         args, { },
         { gapiStatus },
@@ -189,70 +205,9 @@ export default {
             return minutesLeft > 2;
           }
         }
-      },
-
-      ytMyChannels: {
-        path: 'myChannels',
-        async fetch(
-          { },
-          { },
-          { },
-          { gapiHardAuth }
-        ) {
-          await gapiHardAuth();
-          const response = await sendYtRequest('channelList', {
-            mine: true,
-            part: 'snippet,statistics,contentDetails'
-          });
-          return response.result;
-        },
-        children: {
-          ytMyChannel: {
-            path: 'items[0]',
-            children: {
-              ytMyChannelSnippet: {
-                path: 'snippet'
-              }
-            }
-          }
-        }
-      },
-
-      ytChannels: {
-        path: 'channels',
-        children: {
-          ytChannel: {
-            path: '$(channelId)',
-            async fetch({ channelId }) {
-              // TODO
-            }
-          }
-        }
-      },
-
-      ytPlaylists: {
-        path: 'playlists',
-        children: {
-          ytPlaylist: {
-            path: '$(playlistId)',
-            async fetch({ playlistId }) {
-              // TODO
-            }
-          }
-        }
-      },
-
-      ytVideos: {
-        path: 'videos',
-        children: {
-          ytVideo: {
-            path: '$(videoId)',
-            async fetch({ videoId }) {
-              // TODO
-            }
-          }
-        }
       }
     }
-  }
+  },
+  YtUploadModel,
+  YtResourceModel
 };

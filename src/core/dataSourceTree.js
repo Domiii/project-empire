@@ -15,7 +15,7 @@ import MissionModel from 'src/core/missions/MissionModel';
 
 import StreamModel from 'src/core/multimedia/StreamModel';
 import StreamFileModel from 'src/core/multimedia/StreamFileModel';
-import YouTubeAPIModel from 'src/core/multimedia/YouTubeAPIModel';
+import YtApiModel from 'src/core/multimedia/youtube/YtApiModel';
 
 import dataProviders from './dataProviders.js';
 
@@ -92,7 +92,7 @@ const dataStructureConfig = {
     children: merge({},
       StreamModel,
       StreamFileModel,
-      YouTubeAPIModel
+      YtApiModel
     )
   }
 };
