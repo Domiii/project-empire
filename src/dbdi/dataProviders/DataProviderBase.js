@@ -50,7 +50,7 @@ export default class DataProviderBase {
     this._loadState[localPath] = state;
   }
 
-  
+
   // #################################################################################################
   // Query & Path management
   // #################################################################################################
@@ -120,7 +120,7 @@ export default class DataProviderBase {
     return cachedQuery;
   }
 
-  
+
   // #################################################################################################
   // Listeners
   // #################################################################################################
@@ -234,7 +234,7 @@ export default class DataProviderBase {
     const {
       localPath
     } = query || EmptyObject;
-    
+
     if (val === NOT_LOADED) {
       if (this.isDataLoaded(localPath)) {
         this.setLoadState(localPath, LoadState.NotLoaded);
@@ -254,8 +254,14 @@ export default class DataProviderBase {
     // notify all listeners
     const listeners = this.getListeners(localPath) || EmptyArray;
 
-    // TODO: Some how prevent listeners from getting called more than once in a batch?
+    // listeners will get called once per path
     setTimeout(() => listeners.forEach(listener => listener(query, val)));
+    // setTimeout(() => {
+    //   for (let i = listeners.length-1; i >= 0; --i) {
+    //   for (let i = 0; i < listeners.length; ++i) {
+    //     listeners[i](query, val);
+    //   }
+    // });
   }
 
 
@@ -266,7 +272,7 @@ export default class DataProviderBase {
       return NOT_LOADED;
     }
 
-    const {localPath} = query;
+    const { localPath } = query;
     const val = getDataIn(this._cache, localPath, NOT_LOADED);
 
     if (val === NOT_LOADED) {
@@ -293,7 +299,7 @@ export default class DataProviderBase {
       return false;
     }
 
-    const {localPath} = query;
+    const { localPath } = query;
     if (this.getLoadState(localPath) !== LoadState.NotLoaded) {
       return false;
     }
@@ -310,7 +316,7 @@ export default class DataProviderBase {
   fetchEnd(queryInput, val) {
     const query = this.getQueryByQueryInput(queryInput);
     if (!query) return;
-    
+
     const {
       localPath,
       remotePath
@@ -325,7 +331,7 @@ export default class DataProviderBase {
     // set new state (which should notify all listeners)
     this.actions.set(remotePath, val);
   }
-  
+
   fetchFailed(queryInput, err) {
     const query = this.getQueryByQueryInput(queryInput);
     if (!query) return;

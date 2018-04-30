@@ -97,8 +97,6 @@ const dataModelConfig = {
   }
 };
 
-console.warn(dataModelConfig);
-
 const plugins = {
   onWrite: {
     createdAt(queryArgs, val, originalVal, actionName) {

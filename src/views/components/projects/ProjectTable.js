@@ -9,7 +9,7 @@ import merge from 'lodash/merge';
 import toPairs from 'lodash/toPairs';
 import sortBy from 'lodash/sortBy';
 import isEmpty from 'lodash/isEmpty';
- 
+
 
 import React, { Component } from 'react';
 
@@ -64,7 +64,7 @@ Meetings (認真討論這個 Project 的狀態)
   * Guardian 問過的問題／要問的問題
  */
 
- // see: https://codepen.io/Domiii/pen/ZXzPxz
+// see: https://codepen.io/Domiii/pen/ZXzPxz
 
 
 function getCell(row, resource, week) {
@@ -83,7 +83,10 @@ function jobCellFactory(_data, resource) {
     if (jobName !== oldJobName) {
       if (jobName === 'Baby') {
         clazz = 'color-red';
-        icon = <span style={{ width: '24px', height: 'auto' }} src="http://icons.iconarchive.com/icons/icons8/ios7/512/Messaging-Cry-icon.png" >😭</span>
+        icon = (<span style={{ width: '24px', height: 'auto' }}
+          src="http://icons.iconarchive.com/icons/icons8/ios7/512/Messaging-Cry-icon.png" >
+          😭
+        </span>);
       }
       else if (oldJobName === 'Baby') {
         clazz = 'color-green';
@@ -196,25 +199,25 @@ class ProjectTable extends Component {
           dataAlign="center" dataSort={true}
           sortFunc={sortJobs}>
           W{thisWeek} Job
-     </TableHeaderColumn>
+        </TableHeaderColumn>
         <TableHeaderColumn
           dataField="mission_success"
           dataFormat={resourceCellFactory(data, 'mission_success', 'color-green')}
           dataAlign="center" dataSort={true}>
           W{thisWeek} M (SUCCESS)
-     </TableHeaderColumn>
+        </TableHeaderColumn>
         <TableHeaderColumn
           dataField="mission_fail"
           dataFormat={resourceCellFactory(data, 'mission_fail', 'color-red')}
           dataAlign="center" dataSort={true}>
           W{thisWeek} M (FAIL)
-     </TableHeaderColumn>
+        </TableHeaderColumn>
         <TableHeaderColumn
           dataField="cards"
           dataFormat={cardsCell}
           dataAlign="center" dataSort={false}>
           W{thisWeek} 卡片
-     </TableHeaderColumn>
+        </TableHeaderColumn>
       </BootstrapTable>
     </div>);
   }

@@ -44,6 +44,10 @@ export class App extends Component {
   //   const { router } = this.context;
   // }
 
+  componentWillMount() {
+    this.componentWillUpdate();
+  }
+
   componentWillUpdate() {
     const { ensureUserInitialized } = this.props.writers;
 
@@ -58,6 +62,7 @@ export class App extends Component {
   signOut() {
     try {
       firebase.auth().signOut();
+      // TODO: also flush DataProvider's auth cache
       setTimeout(() => window.location.reload());
     }
     catch (err) {
@@ -82,12 +87,12 @@ export class App extends Component {
     // }
 
     return (
-      <div className="app container full-height">
+      <div className="app full-height container no-padding">
         <Header
           signOut={this.signOut}
         />
 
-        <main className="app-main full-height">
+        <main className="app-main">
           { children }
         </main>
       </div>

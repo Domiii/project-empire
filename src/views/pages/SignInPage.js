@@ -41,16 +41,17 @@ class SignInPage extends Component {
   }
 
   render() {
-    const { busy, err } = this.state;
+    let { busy, err } = this.state;
+    const iconUrl = 'https://cdn4.iconfinder.com/data/icons/new-google-logo-2015/400/new-google-favicon-512.png';
+    
     return (
-      <div className="g-row sign-in">
-        <div className="g-col">
-          <center>
-            <Button bsSize="large" bsStyle="primary" onClick={this.doSignInGoogle}
-              disabled={busy}>
-              <FAIcon name="google" /> Sign in with Google <LoadIndicator className={!busy && 'invisible'} />
-            </Button>
-          </center>
+      <div className="container-fluid position-relative no-padding">
+        <div className="page-centered">
+          <Button bsSize="large" bsStyle="default" onClick={this.doSignInGoogle}
+            disabled={busy}>
+            {/* <FAIcon name="google" />&nbsp; */}
+            Sign in with <img className="max-size-2" src={iconUrl} />oogle <LoadIndicator className={!busy && 'invisible'} />
+          </Button>
         </div>
         {err && <Alert bsStyle="danger">
           {err && err.message || err}

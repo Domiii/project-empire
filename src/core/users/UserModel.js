@@ -18,6 +18,10 @@ export default {
         return !!currentUid;
       },
 
+      isCurrentUserRegistered({ }, { hasCurrentUserRole }, { }) {
+        return hasCurrentUserRole({ role: Roles.User });
+      },
+
       isCurrentUserDev({ }, { }, { currentUserDisplayRole }) {
         return currentUserDisplayRole && hasDisplayRole(currentUserDisplayRole, Roles.Dev);
       },
@@ -43,11 +47,11 @@ export default {
       },
 
       currentUserRole({ }, { }, { currentUser }) {
-        return currentUser && currentUser.role;
+        return currentUser && currentUser.role || Roles.Unregistered;
       },
 
       currentUserDisplayRole({ }, { }, { currentUser }) {
-        return currentUser && currentUser.displayRole;
+        return currentUser && currentUser.displayRole || Roles.Unregistered;
       },
 
       currentUserCohortId({ }, { }, { currentUser }) {
@@ -72,31 +76,15 @@ export default {
     // #######################################################################
 
     writers: {
-      /**
-       * Store new user data in database after first login
-       */
-      ensureUserInitialized(
+      _addNewUser(
         { },
-        { userPublic, userPrivate, userPrivateData },
-        { currentUid, currentUid_isLoaded, currentUserAuthData },
-        { setUserData, set_userPrivateData }) {
-
-        if (!currentUid_isLoaded) {
-          return NOT_LOADED;
-        }
-
+        { },
+        { currentUid, currentUserAuthData },
+        { setUserData, set_userPrivateData }
+      ) {
         const uid = currentUid;
-        const userArgs = {uid};
-
-        if (!userPublic.isLoaded(userArgs) | !userPrivate.isLoaded(userArgs)) {
-          // not loaded yet
-          return NOT_LOADED;
-        }
-
-        if (!!userPublic(userArgs) && !!userPrivate(userArgs)) {
-          // already saved this guy
-          return NOT_LOADED;
-        }
+        const userArgs = { uid };
+        const defaultCohortId = 1;
 
         //setTimeout(() => {
         const {
@@ -116,15 +104,54 @@ export default {
           };
         }
 
-        let privateUpdatePromise;
-        if (!userPrivateData(userArgs)) {
-          privateUpdatePromise = set_userPrivateData(userArgs, userData);
-        }
+        userData.cohortId = defaultCohortId;
+        
+        console.warn('Registering new user:', userData);
 
         return Promise.all([
           setUserData({ uid, userData }),
-          privateUpdatePromise
+          set_userPrivateData(userArgs, userData)
         ]);
+      },
+
+      /**
+       * Store new user data in database after first login
+       */
+      ensureUserInitialized(
+        { },
+        { userPublic, userPrivate },
+        { currentUid, currentUid_isLoaded },
+        { _addNewUser }
+      ) {
+
+        if (!currentUid_isLoaded) {
+          // still loading
+          return false;
+        }
+
+        const uid = currentUid;
+        const userArgs = { uid };
+
+        if (!userPublic.isLoaded(userArgs) | !userPrivate.isLoaded(userArgs)) {
+          // still loading
+          return false;
+        }
+
+
+        // TODO: handle all kinds of cases:
+        //  1. logged out user
+        //  2. unregistered user
+        //  3. registered user
+        // TODO: use this info to render the right page (AppRouter)
+
+        if (!!userPublic(userArgs) && !!userPrivate(userArgs)) {
+          // existing user
+          return true;
+        }
+
+        _addNewUser();
+
+        return true;
         //});
       },
 
@@ -136,7 +163,7 @@ export default {
         { uid, userData },
         { },
         { },
-        { set_userPhotoURL, set_userDisplayName }) {
+        { set_userPhotoURL, set_userDisplayName, set_userCohortId }) {
         console.log('Writing user data: ' + JSON.stringify(userData));
 
         const updates = [];
@@ -149,6 +176,10 @@ export default {
 
         if (userData.displayName) {
           updates.push(set_userDisplayName(userArgs, userData.displayName));
+        }
+
+        if (userData.cohortId) {
+          updates.push(set_userCohortId(userArgs, userData.cohortId));
         }
 
         return Promise.all(updates);
@@ -249,7 +280,8 @@ export default {
               userRole: 'role',
               userDisplayRole: 'displayRole',
               userCohortId: 'cohortId',
-              userPlaceId: 'placeId'
+              userPlaceId: 'placeId',
+              userSelfLabel: 'selfLabel'
             }
           }
         }

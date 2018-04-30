@@ -6,6 +6,7 @@ html {
 body {
   padding: 0;
   height: 100%;
+  font-family: 'notocjk' !important;
 }
 
 /*
@@ -150,34 +151,49 @@ button:active { outline:none !important; }
 .no-shadow {
   box-shadow: none !important;
 }
+.no-margin-right {
+  margin-right: 0;
+}
 
 .margin-half {
-  margin: 0.5em;
+  margin: 0.5em !important;
 }
-.margin {
-  margin: 1em;
+.margin1 {
+  margin: 1em !important;
 }
 .margin2 {
-  margin: 2em;
+  margin: 2em !important;
 }
 .margin5 {
-  margin: 5em;
+  margin: 5em !important;
 }
 .margin10 {
-  margin: 10em;
+  margin: 10em !important;
 }
 .margin-auto {
-  margin: auto;
+  margin: auto !important;
+}
+.margin-bottom-5 {
+  margin-bottom: 5em !important;
 }
 
+.padding-01 {
+  padding: 0.1em !important;
+}
 .padding-half {
-  padding: 0.5em;
+  padding: 0.5em !important;
 }
 .padding {
-  padding: 1em;
+  padding: 1em !important;
 }
 .padding2 {
-  padding: 2em;
+  padding: 2em !important;
+}
+.padding5 {
+  padding: 5em !important;
+}
+.padding10 {
+  padding: 10em !important;
 }
 
 
@@ -247,7 +263,20 @@ button:active { outline:none !important; }
 }
 
 
-
+.position-relative {
+  position: relative;
+}
+.position-absolute {
+  position: absolute;
+}
+.page-centered {
+  position: absolute;
+  top: 50vh;
+  left: 50%;
+  /* bring your own prefixes */
+  /*transform: translate(-50%, -50%);*/
+  transform: translate(-50%, calc(-50% - 8em));
+}
 .inline {
   display: inline !important;
 }
@@ -284,11 +313,11 @@ button:active { outline:none !important; }
 }
 
 .yellow-highlight-border {
-  border: 4px solid rgba(255, 208, 0, 0.774);
+  border: 4px solid rgba(255, 208, 0, 0.774) !important;
 };
 
 .red-highlight-border {
-  border: 4px solid rgba(255, 208, 0, 0.774);
+  border: 4px solid rgba(255, 208, 0, 0.774) !important;
 };
 
 .no-highlight-border {
@@ -339,30 +368,35 @@ button:active { outline:none !important; }
  * max-size-
  * #######
  */
-
 .max-size-1 {
   max-width: 1em;
   max-height: 1em;
 }
-
 .max-size-1-5 {
   max-width: 1.5em;
   max-height: 1.5em;
 }
-
 .max-size-2 {
   max-width: 2em;
   max-height: 2em;
 }
-
 .max-size-3 {
   max-width: 3em;
   max-height: 3em;
 }
-
 .max-size-4 {
   max-width: 4em;
   max-height: 4em;
+}
+.max-size-5 {
+  max-width: 5em;
+  max-height: 5em;
+}
+.max-height-5 {
+  max-height: 5em;
+}
+.height-5 {
+  height: 5em !important;
 }
 
 /**
@@ -409,11 +443,19 @@ button:active { outline:none !important; }
  */
 
 .font-size-half {
-  font-size: 0.5em;
+  font-size: 0.5em !important;
 }
 
 .font-size-03 {
-  font-size: 0.3em;
+  font-size: 0.3em !important;
+}
+
+.font-size-3 {
+  font-size: 3em !important;
+}
+
+.font-size-2 {
+  font-size: 2em !important;
 }
 
 /**
@@ -707,6 +749,13 @@ button:active { outline:none !important; }
   font-style: normal;
 }
 
-.media-size-label {
+@font-face {
+  font-family: 'notocjk';
+  src: url('../../../resources/NotoSansMonoCJKsc-Regular.otf') format("opentype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+.digital-number-font {
   font-family: 'minisystem';
 }

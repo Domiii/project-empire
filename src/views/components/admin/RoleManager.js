@@ -31,7 +31,8 @@ import FancyPanelToggleTitle from 'src/views/components/util/FancyPanelToggleTit
 
 
 const RoleNames = [
-  'Adventurer',
+  'Unregistered',
+  'User',
   'Guardian',
   'GM'
 ];

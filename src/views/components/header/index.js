@@ -207,14 +207,14 @@ export default class Header extends Component {
     return (<div>
       {/* {warningEl} */}
       <header className="header">
-        <Navbar inverse collapseOnSelect className=" no-margin">
+        <Navbar inverse collapseOnSelect className="no-margin">
           <Navbar.Header>
             <Navbar.Brand>
               <Link to="/"><span>Home</span></Link>
             </Navbar.Brand>
             <Navbar.Toggle />
           </Navbar.Header>
-          <Navbar.Collapse>
+          <Navbar.Collapse className="no-padding no-margin">
             <Nav>
               {/* { <LinkContainer to="/myprojects">
                 <NavItem eventKey={2}>My Projects</NavItem>
@@ -232,7 +232,7 @@ export default class Header extends Component {
             <Nav pullRight className="header-right-container">
               {adminToolsEL}
               {userToolsEl}
-              <NavDropdown eventKey="more-drop"
+              <NavDropdown eventKey="more-drop" className="no-margin-right"
                 id="user-dropdown" title={<FAIcon name="bars" />}>
                 {profileEl}
                 {!!currentUser && <MenuItem divider />}

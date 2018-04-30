@@ -4,6 +4,7 @@ import isObject from 'lodash/isObject';
 import isFunction from 'lodash/isFunction';
 
 const Roles = {
+  Unregistered: 0,
   User: 1,
   Adventurer: 1,
   Reviewer: 2,

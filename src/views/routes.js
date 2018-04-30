@@ -1,6 +1,8 @@
 export const routeNames = {
   ROOT: '',
   SIGN_IN: 'sign-in',
+  REGISTRATION: 'reg',
+
   USER_PROFILE: 'user',
 
   GM: 'gm',
@@ -25,6 +27,8 @@ export const routeNames = {
 export const routePaths = {
   ROOT: '/',
   SIGN_IN: `/${routeNames.SIGN_IN}`,
+  REGISTRATION: `/${routeNames.REGISTRATION}`,
+
   USER_PROFILE: `/${routeNames.USER_PROFILE}`,
 
   GM: `/${routeNames.GM}`,
@@ -48,6 +52,8 @@ export const routePaths = {
 export const routeTemplates = {
   ROOT: `${routePaths.ROOT}`,
   SIGN_IN: `${routePaths.SIGN_IN}`,
+  REGISTRATION: `${routePaths.REGISTRATION}`,
+
   USER_PROFILE: `${routePaths.USER_PROFILE}`,
 
   GM: `${routePaths.GM}`,

@@ -6,6 +6,7 @@ import { routeTemplates } from './routes';
 import dataBind from 'src/dbdi/react/dataBind';
 
 import SignInPage from './pages/SignInPage';
+import RegistrationPage from './pages/RegistrationPage';
 import UserProfilePage from './pages/UserProfilePage';
 import HomePage from './pages/HomePage';
 import PlacePage from './pages/PlacePage';
@@ -31,9 +32,9 @@ import { LoadOverlay } from 'src/views/components/overlays';
 const AppRoutes = dataBind()(function AppRoutes(
   { },
   { },
-  { currentUid, currentUid_isLoaded }
+  { currentUid, currentUser_isLoaded, isCurrentUserRegistered }
 ) {
-  if (!currentUid_isLoaded) {
+  if (!currentUser_isLoaded) {
     return (<LoadOverlay message="logging in..." className="color-lightred" />);
   }
 
@@ -45,7 +46,7 @@ const AppRoutes = dataBind()(function AppRoutes(
   ];
 
   if (!currentUid) {
-    // not signed in yet
+    // not signed in
     return (
       <Switch>
         <Route exact path={routeTemplates.SIGN_IN} component={SignInPage} />
@@ -56,7 +57,20 @@ const AppRoutes = dataBind()(function AppRoutes(
       </Switch>
     );
   }
+  else if (!isCurrentUserRegistered) {
+    // new user
+    return (
+      <Switch>
+        <Route exact path={routeTemplates.REGISTRATION} component={RegistrationPage} />
+        
+        {commonRoutes.map(({ path, component }) => <Route exact key={path} path={path} component={component} />)}
+        
+        <Redirect to={routeTemplates.REGISTRATION} />
+      </Switch>
+    );
+  }
   else {
+    // standard user
     return (
       <Switch>
         <Route exact path={routeTemplates.ROOT} component={HomePage} />

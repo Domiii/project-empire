@@ -1,3 +1,5 @@
+import size from 'lodash/size';
+
 import { EmptyObject } from 'src/util';
 import { NOT_LOADED } from '../../dbdi/react';
 
@@ -26,7 +28,19 @@ const readers = {
       return NOT_LOADED;
     }
 
-    return currentUser.cohortId || null;
+    return currentUser && currentUser.cohortId || null;
+  },
+
+  userCountOfCurrentCohort(
+    { },
+    { usersOfCurrentCohort },
+    { }
+  ) {
+    const users = usersOfCurrentCohort();
+    if (users === NOT_LOADED) {
+      return NOT_LOADED;
+    }
+    return size(users);
   },
 
   usersOfCurrentCohort(

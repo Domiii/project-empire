@@ -154,7 +154,7 @@ class DownloadStreamFileButton extends Component {
           <FAIcon name="download" />
         </Flexbox>
         <Flexbox>
-          &nbsp;(<span className="media-size-label">{renderSize(size)}</span>)
+          &nbsp;(<span className="digital-number-font">{renderSize(size)}</span>)
         </Flexbox>
       </Flexbox>
     </a>);
@@ -421,7 +421,7 @@ export default class MediaStreamPanel extends Component {
         Streaming&nbsp;
         {videoDeviceId && <FAIcon color="green" name="video-camera" />}
         {audioDeviceId && <FAIcon color="green" name="microphone" />}&nbsp;
-        <span className="media-size-label">
+        <span className="digital-number-font">
           {/* Status: {status} ({recorderState}), */}
           {moment.duration(duration, 'milliseconds').format('hh:mm:ss', {
             trim: false
