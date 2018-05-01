@@ -35,8 +35,8 @@ export default {
           return response.result;
         }
         catch (_err) {
+          // handle weird errors by the YT Api
           let err = _err;
-          //await gapiDisconnect();
           if (err && err.result) {
             err = err.result;
           }
