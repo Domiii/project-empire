@@ -35,7 +35,7 @@ export default class UserBadge extends Component {
     if (user) {
       return (<Badge style={otherProps.style} className={clazzes}>
         <UserIcon uid={uid} size={size} /> &nbsp;
-        {user.displayName}
+        {user.fullName || user.displayName}
       </Badge>);
     }
     else {

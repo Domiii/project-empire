@@ -32,7 +32,7 @@ import { LoadOverlay } from 'src/views/components/overlays';
 const AppRoutes = dataBind()(function AppRoutes(
   { },
   { },
-  { currentUid, currentUser_isLoaded, isCurrentUserRegistered }
+  { currentUid, currentUser_isLoaded, isCurrentUserComplete }
 ) {
   if (!currentUser_isLoaded) {
     return (<LoadOverlay message="logging in..." className="color-lightred" />);
@@ -57,8 +57,8 @@ const AppRoutes = dataBind()(function AppRoutes(
       </Switch>
     );
   }
-  else if (!isCurrentUserRegistered) {
-    // new user
+  else if (!isCurrentUserComplete) {
+    // new user or user still has to fill in some data details
     return (
       <Switch>
         <Route exact path={routeTemplates.REGISTRATION} component={RegistrationPage} />

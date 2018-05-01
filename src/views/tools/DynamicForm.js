@@ -563,15 +563,17 @@ export default class DynamicForm extends Component {
 
     let stateUpdate;
     if (dbName || reader) {
-      // formData is queried from DB
+      // get new formData from DB (or remote API endpoint etc...)
       let doGet;
+      let newFormData;
       if (reader) {
         doGet = reader;
+        newFormData = doGet(idArgs);
       }
       else {
         doGet = getAccessor(fns, `get_${dbName}`);
+        newFormData = doGet(idArgs);
       }
-      const newFormData = idArgs && doGet(idArgs) || {};
 
       const schema = this.getSchema();
       if (this.state.savedFormData === NOT_LOADED || !isFormDataEqual(this.state.savedFormData, newFormData, schema)) {
@@ -588,7 +590,7 @@ export default class DynamicForm extends Component {
           }
 
           if (formData) {
-            // merge formData into the mix (if not already mixed in)
+            // merge new data into the mix (if not already mixed in)
             const latest = newFormData || this.state.formData;
             if (!latest || !isSubset(latest, formData)) {
               stateUpdate = merge(
@@ -601,7 +603,7 @@ export default class DynamicForm extends Component {
       }
     }
     else {
-      // formData must be passed explicitely
+      // formData is passed explicitely
       if (!this.state.formData ||
         formData === null ||
         formData !== this.state.savedFormData) {

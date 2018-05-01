@@ -16,11 +16,17 @@ export const schemaTemplate = {
   type: 'object',
   properties: [
     {
-      id: 'displayName',
+      id: 'fullName',
+      title: '全名',
       type: 'string',
-      title: 'Name',
       isOptional: false
     },
+    // {
+    //   id: 'displayName',
+    //   title: 'Name',
+    //   type: 'string',
+    //   isOptional: false
+    // },
     {
       id: 'photoURL',
       // if(formData) {
@@ -38,12 +44,18 @@ const uiSchema = {
   'ui:options': {
     inline: false
   },
-  displayName: {
-    'ui:placeholder': '你的名字',
+  fullName: {
+    'ui:placeholder': '你的全名',
     'ui:options': {
       inline: true
     }
   },
+  // displayName: {
+  //   'ui:placeholder': '你的 display name',
+  //   'ui:options': {
+  //     inline: true
+  //   }
+  // },
   photoURL: {
     'ui:widget': 'userIcon',
     'ui:placeholder': '你的圖片',

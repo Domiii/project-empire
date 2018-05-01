@@ -22,6 +22,129 @@ import LoadIndicator from '../components/util/loading';
 import { EmptyArray } from '../../util';
 
 
+// ##########################################################################################
+// RegistrationPage
+// ##########################################################################################
+
+@dataBind({})
+export default class RegistrationPage extends Component {
+  render(
+    { },
+    { },
+    { currentUser, isCurrentUserDataComplete }
+  ) {
+    if (!currentUser) {
+      // currentUser will be set eventually, thanks to UserModel.ensureUserInitialized
+      return <LoadIndicator />;
+    }
+
+    if (!isCurrentUserDataComplete) {
+      return <RegistrationDataCompletion />;
+    }
+    else {
+      return <RegistrationFun />;
+    }
+
+  }
+}
+
+
+// ##########################################################################################
+// RegistrationDataCompletion
+// ##########################################################################################
+
+const schemaTemplate = {
+  name: 'userData',
+  type: 'object',
+  properties: [
+    {
+      id: 'fullName',
+      title: '全名',
+      type: 'string',
+      isOptional: false
+    },
+    {
+      id: 'photoURL',
+      title: '圖片的網址',
+      type: 'string',
+      isOptional: false
+    }
+  ]
+};
+
+const uiSchema = {
+  'ui:options': {
+    inline: false
+  },
+  fullName: {
+    'ui:placeholder': '你的全名',
+    'ui:options': {
+      inline: true
+    }
+  },
+  photoURL: {
+    'ui:widget': 'userIcon',
+    'ui:placeholder': '你的圖片的網址',
+    'ui:options': {
+      inline: true
+    }
+  }
+};
+
+@dataBind({})
+export class RegistrationDataCompletion extends Component {
+    state = {
+      isSaved: true
+    };
+
+  onStateChange = ({ isSaved }) => {
+    this.setState({ isSaved });
+    //console.log('onStateChange', isSaved);
+  }
+
+  render(
+    { },
+    { currentUser, setCurrentUserData },
+    { }
+  ) {
+    const props = {
+      schemaTemplate,
+      uiSchema,
+
+      reader: currentUser,
+      writer: setCurrentUserData,
+
+      onStateChange: this.onStateChange
+    };
+
+    const {
+      isSaved
+    } = this.state;
+
+    return (<div>
+      <h2>
+        <center>
+          Hi！請幫忙填一下基本資料～
+        </center>
+      </h2>
+
+      <DynamicForm {...props}>
+        <div>
+          {/* the Form children are rendered at the bottom of the form */}
+          <Button disabled={isSaved} type="submit" bsStyle="info">
+            <FAIcon name="save" /> Save!
+          </Button>
+        </div>
+      </DynamicForm>
+    </div>);
+  }
+}
+
+// ##########################################################################################
+// RegistrationFun
+// ##########################################################################################
+
+
 function randomBsStyle() {
   const items = ['info', 'default', 'primary', 'warning', 'danger', 'success'];
   return items[Math.floor(Math.random() * items.length)];
@@ -88,7 +211,7 @@ const SelfLabelButton = dataBind({
 });
 
 @dataBind({})
-export default class RegistrationPage extends Component {
+export class RegistrationFun extends Component {
   constructor(...args) {
     super(...args);
 

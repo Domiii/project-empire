@@ -96,7 +96,7 @@ export default class Header extends Component {
     { signOut },
     { },
     { currentUid, currentUser, currentUser_isLoaded,
-      isCurrentUserAdmin, isCurrentUserAdminReal,
+      isCurrentUserAdmin, isCurrentUserAdminReal, isCurrentUserComplete,
       isAnyStreamOnline }
   ) {
     //const isGuardian = hasDisplayRole(currentUserRef, Roles.Guardian);
@@ -135,7 +135,7 @@ export default class Header extends Component {
       );
     }
 
-    const profileEl = (currentUser &&
+    const profileEl = (isCurrentUserComplete &&
       <MenuItem eventKey="user-drop-profile" href={'/user/' + currentUid}>
         <span>
           {

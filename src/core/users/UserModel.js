@@ -22,6 +22,14 @@ export default {
         return hasCurrentUserRole({ role: Roles.User });
       },
 
+      isCurrentUserDataComplete({ }, { isUserDataComplete }, { currentUid }) {
+        return isUserDataComplete({ uid: currentUid });
+      },
+
+      isCurrentUserComplete({ }, { }, { isCurrentUserRegistered, isCurrentUserDataComplete }) {
+        return isCurrentUserRegistered && isCurrentUserDataComplete;
+      },
+
       isCurrentUserDev({ }, { }, { currentUserDisplayRole }) {
         return currentUserDisplayRole && hasDisplayRole(currentUserDisplayRole, Roles.Dev);
       },
@@ -39,7 +47,7 @@ export default {
       },
 
       hasCurrentUserRole({ role }, { }, { currentUserRole }) {
-        return currentUserRole && hasRole(currentUserRole, role);
+        return currentUserRole !== NOT_LOADED && hasRole(currentUserRole, role);
       },
 
       hasCurrentUserDisplayRole({ role }, { }, { currentUserDisplayRole }) {
@@ -105,7 +113,7 @@ export default {
         }
 
         userData.cohortId = defaultCohortId;
-        
+
         console.warn('Registering new user:', userData);
 
         return Promise.all([
@@ -163,19 +171,23 @@ export default {
         { uid, userData },
         { },
         { },
-        { set_userPhotoURL, set_userDisplayName, set_userCohortId }) {
+        { set_userPhotoURL, set_userDisplayName, set_userFullName, set_userCohortId }) {
         console.log('Writing user data: ' + JSON.stringify(userData));
 
         const updates = [];
 
         const userArgs = { uid };
 
-        if (userData.photoURL) {
-          updates.push(set_userPhotoURL(userArgs, userData.photoURL));
+        if (userData.photoURL && userData.photoURL.trim()) {
+          updates.push(set_userPhotoURL(userArgs, userData.photoURL.trim()));
         }
 
-        if (userData.displayName) {
-          updates.push(set_userDisplayName(userArgs, userData.displayName));
+        if (userData.displayName && userData.displayName.trim()) {
+          updates.push(set_userDisplayName(userArgs, userData.displayName.trim()));
+        }
+
+        if (userData.fullName && userData.fullName.trim()) {
+          updates.push(set_userFullName(userArgs, userData.fullName.trim()));
         }
 
         if (userData.cohortId) {
@@ -266,8 +278,22 @@ export default {
             }
           },
           userPublic: {
-            path: {
-              path: '$(uid)'
+            path: '$(uid)',
+            readers: {
+              isUserDataComplete({ uid }, { userPublic }) {
+                if (!uid) {
+                  return false;
+                }
+
+                const user = userPublic({ uid });
+                if (user === NOT_LOADED) {
+                  return NOT_LOADED;
+                }
+                if (!user) {
+                  return false;
+                }
+                return !!user.fullName;
+              }
             },
             onWrite: [
               'updatedAt',
@@ -276,12 +302,13 @@ export default {
             children: {
               userDisplayName: 'displayName',
               userPhotoURL: 'photoURL',
+              userFullName: 'fullName',
+              userCohortId: 'cohortId',
+              userSelfLabel: 'selfLabel',
               userLocale: 'locale',
               userRole: 'role',
               userDisplayRole: 'displayRole',
-              userCohortId: 'cohortId',
-              userPlaceId: 'placeId',
-              userSelfLabel: 'selfLabel'
+              userPlaceId: 'placeId'
             }
           }
         }

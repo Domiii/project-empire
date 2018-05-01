@@ -41,44 +41,7 @@ export { NOT_LOADED } from '../dataProviders/DataProviderBase';
 //   // TODO: proper pub-sub bindings
 // }
 
-let _lastWrapperId = 0;
-const _errorState = {};
-
-class ErrorBoundary extends React.Component {
-  static propTypes = {
-    wrapperId: PropTypes.number.isRequired,
-    children: PropTypes.object.isRequired
-  };
-
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  componentDidCatch(err, info) {
-    // Display fallback UI
-    this.setState({ hasError: true });
-
-    // You can also log the error to an error reporting service
-    const { wrapperId } = this.props;
-    if (!_errorState[wrapperId]) {
-      console.error('[Component render ERROR]', info, '\n ', err.stack);
-      _errorState[wrapperId] = (<pre style={{ color: 'red' }}>[Component render ERROR] {err.stack}</pre>);
-    }
-  }
-
-  render() {
-    if (this.state.hasError) {
-      // You can render any custom fallback UI
-      const { wrapperId } = this.props;
-      return _errorState[wrapperId];
-    }
-    return Children.only(this.props.children);
-  }
-}
-
 export default (propsOrPropCb) => WrappedComponent => {
-  const wrapperId = ++_lastWrapperId;
   class WrapperComponent extends Component {
     static contextTypes = dataBindContextStructure;
     static childContextTypes = dataBindChildContextStructure;
@@ -478,18 +441,19 @@ export default (propsOrPropCb) => WrappedComponent => {
       this._shouldUpdate = false;
       const { WrappedComponent } = this;
 
-      return (<ErrorBoundary wrapperId={wrapperId}>
-        <WrappedComponent
-          {...this.props}
-          {...this._customProps}
-          {...this._customFunctions}
-          readers={this._dataAccessTracker._readerProxy}
-          writers={this._dataAccessTracker._writerProxy}
-          dataInject={this._dataAccessTracker._injectProxy}
-        />
-      </ErrorBoundary>);
+      return (<WrappedComponent
+        {...this.props}
+        {...this._customProps}
+        {...this._customFunctions}
+        readers={this._dataAccessTracker._readerProxy}
+        writers={this._dataAccessTracker._writerProxy}
+        dataInject={this._dataAccessTracker._injectProxy}
+      />);
     }
   }
+
+  // see https://stackoverflow.com/questions/33605775/es6-dynamic-class-names/46132163#46132163
+  Object.defineProperty(WrapperComponent, 'name', { value: WrappedComponent.name + '_dataBind' });
 
   return WrapperComponent;
 };

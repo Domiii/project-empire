@@ -305,9 +305,11 @@ Feature: Data middleware
 
 
 
-# Neat little gists
+# Neat little insights + gists
 
-* `fetch('localhost').then(res => res.body.getReader().read().then(({ done, value }) => console.log(new TextDecoder("utf-8").decode(value))));`
+* Want correct React error lines?
+    * https://github.com/facebook/react/issues/6062#issuecomment-256641386
+* Working with `fetch` + `StreamReader`: `fetch('localhost').then(res => res.body.getReader().read().then(({ done, value }) => console.log(new TextDecoder("utf-8").decode(value))));`
 
 
 # Add professional camera as webcam

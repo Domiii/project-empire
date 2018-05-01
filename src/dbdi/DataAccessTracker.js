@@ -7,6 +7,16 @@ import autoBind from 'src/util/auto-bind';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
+const specialProxyProperties = {
+    // need to hack this, because Proxies are transparently virtualized
+    // https://stackoverflow.com/questions/36372611/how-to-test-if-an-object-is-a-proxy
+  ____isWrapperProxy(target) { return true; },
+  toJSON(target) {
+    //return JSON.parse(target);
+    return target;
+  }
+};
+
 export default class DataAccessTracker {
   _dataSourceTree;
   _listener;
@@ -42,11 +52,19 @@ export default class DataAccessTracker {
   _buildDataInjectProxyHandler() {
     return {
       get: (target, name) => {
+        if (name in specialProxyProperties) {
+          return specialProxyProperties[name](target);
+        }
+
         // resolve node and return read data
         const readData = this.resolveReadDataForce(name);
         return readData();
       },
       has: (target, name) => {
+        if (name in specialProxyProperties) {
+          return true;
+        }
+
         const fn = this.resolveReadData(name);
         return !!fn;
       }
@@ -56,11 +74,19 @@ export default class DataAccessTracker {
   _buildReaderProxyHandler() {
     return {
       get: (target, name) => {
+        if (name in specialProxyProperties) {
+          return specialProxyProperties[name](target);
+        }
+
         // resolve node and return call function to caller.
         // let caller decide when to make the actual call and which arguments to supply.
         return this.resolveReadDataForce(name);
       },
       has: (target, name) => {
+        if (name in specialProxyProperties) {
+          return true;
+        }
+
         const fn = this.resolveReadData(name);
         return !!fn;
       }
@@ -70,11 +96,19 @@ export default class DataAccessTracker {
   _buildWriterProxyHandler() {
     return {
       get: (target, name) => {
+        if (name in specialProxyProperties) {
+          return specialProxyProperties[name](target);
+        }
+
         // resolve node and return call function to caller.
         // let caller decide when to make the actual call and which arguments to supply.
         return this.resolveWriteDataForce(name);
       },
       has: (target, name) => {
+        if (name in specialProxyProperties) {
+          return true;
+        }
+
         const fn = this.resolveWriteData(name);
         return !!fn;
       }
@@ -83,10 +117,8 @@ export default class DataAccessTracker {
 
   _resolveArgumentHandler = {
     get: (target, name) => {
-      if (name === '____isWrapperProxy') {
-        // need to hack this, because Proxies are transparently virtualized
-        // https://stackoverflow.com/questions/36372611/how-to-test-if-an-object-is-a-proxy
-        return true;
+      if (name in specialProxyProperties) {
+        return specialProxyProperties[name](target);
       }
       if (!(name in target)) {
         console.warn(`Requested argument was not supplied for ${this._name}:`, name);
@@ -95,6 +127,9 @@ export default class DataAccessTracker {
     },
 
     has: (target, name) => {
+      if (name in specialProxyProperties) {
+        return true;
+      }
       return target.hasOwnProperty(name);
     }
   };
