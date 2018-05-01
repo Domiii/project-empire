@@ -24,6 +24,7 @@ import VideoPlayer from './VideoPlayer';
 import { GapiStatus } from '../../../core/multimedia/youtube/YouTubeAPI';
 import { NOT_LOADED } from '../../../dbdi/react';
 import { YtUploadStatus } from '../../../core/multimedia/youtube/YtUploadModel';
+import { isString } from 'util';
 
 
 
@@ -40,21 +41,38 @@ import { YtUploadStatus } from '../../../core/multimedia/youtube/YtUploadModel';
  * Display -if authed- the selected channel.
  */
 @dataBind({
-  async clickSelectChannel(evt, { }, { gapiHardAuth, set_ytMyChannels }) {
-    await gapiHardAuth({ prompt: 'select_account' });
+  async clickSelectChannel(evt, { },
+    {
+      gapiDisconnect,
+      //gapiHardAuth, 
+      set_ytMyChannels
+    }) {
+    await gapiDisconnect({ prompt: 'select_account' });
     set_ytMyChannels(NOT_LOADED);
   }
 })
 export class YtMyChannelInfo extends Component {
+  constructor(...args) {
+    super(...args);
+
+    this.dataBindMethods(
+      'componentDidMount'
+    );
+  }
+
+  async componentDidMount({ }, { gapiSoftAuth }) {
+    await gapiSoftAuth();
+  }
+
   render(
     { },
     { get_ytMyChannelSnippet, get_ytMyChannels, clickSelectChannel },
-    { gapiError }
+    { gapiIsAuthenticated, gapiError }
   ) {
+    // if (!gapiIsAuthenticated || !!gapiError) {
+    //   return '';
+    // }
     if (!get_ytMyChannels.isLoaded()) {
-      if (gapiError) {
-        return <Alert bsStyle="danger" className="inline no-margin no-padding">Error occured while loading YouTube Channel</Alert>;
-      }
       return <LoadIndicator message="loading your channel..." />;
     }
     else {
@@ -154,12 +172,19 @@ export class YtStatusPanel extends Component {
         statusEl = <LoadIndicator block message="initializing..." />;
     }
 
+
+    // TODO: there is something really wrong here!
+    let errInfo = gapiError && (gapiError.stack || gapiError.message || gapiError.details || gapiError.error || gapiError);
+    errInfo = errInfo && (
+      isString(errInfo) ? errInfo : JSON.stringify(errInfo)
+    );
+
     return (<Panel.Body>
       <div>
         {statusEl}
         {gapiError && (<Alert bsStyle="danger" className="alert-dismissable no-margin">
           <a href="#" className="close" data-dismiss="alert" aria-label="close" onClick={this.clearError}>&times;</a>
-          {gapiError.stack || gapiError.message || gapiError.details || gapiError.error || gapiError}
+          {errInfo}
         </Alert>)}
       </div>
     </Panel.Body>);

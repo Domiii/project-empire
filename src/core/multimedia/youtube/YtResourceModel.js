@@ -1,6 +1,7 @@
 import {
   sendYtRequest
 } from './YouTubeAPI';
+import { NOT_LOADED } from '../../../dbdi/react';
 
 /**
  * Provide an interface to access/query any YouTube resources
@@ -22,14 +23,23 @@ export default {
       { },
       { },
       { },
-      { gapiHardAuth }
+      { gapiHardAuth, set_gapiError }
     ) {
-      await gapiHardAuth();
-      const response = await sendYtRequest('channelList', {
-        mine: true,
-        part: 'snippet,statistics,contentDetails'
-      });
-      return response.result;
+      const isAuthed = await gapiHardAuth();
+      if (isAuthed) {
+        try {
+          const response = await sendYtRequest('channelList', {
+            mine: true,
+            part: 'snippet,statistics,contentDetails'
+          });
+          return response.result;
+        }
+        catch (err) {
+          set_gapiError(err);
+          throw err;
+        }
+      }
+      return NOT_LOADED;
     },
     children: {
       ytMyChannel: {

@@ -24,7 +24,7 @@ import Flexbox from 'flexbox-react';
 import MediaInputSelect from './MediaInputSelect';
 import VideoPlayer from './VideoPlayer';
 import StreamFileList from './StreamFileList';
-import { YtMyChannelInfo } from './VideoUploadPanel';
+import { YtMyChannelInfo, YtStatusPanel } from './VideoUploadPanel';
 
 import { MediaStatus } from '../../../core/multimedia/StreamModel';
 
@@ -535,7 +535,7 @@ export default class MediaStreamPanel extends Component {
           <h2>{titleEl}</h2>
         </Flexbox>
         <Flexbox>
-          <YtMyChannelInfo />
+          <YtStatusPanel />
         </Flexbox>
       </Flexbox>
       {!isOffline && <div className="inline-hcenter">

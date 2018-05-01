@@ -328,6 +328,13 @@ export default class DataProviderBase {
       return;
     }
 
+    if (val === NOT_LOADED) {
+      this.setLoadState(localPath, LoadState.NotLoaded);
+    }
+    else {
+      this.setLoadState(localPath, LoadState.Loaded);
+    }
+
     // set new state (which should notify all listeners)
     this.actions.set(remotePath, val);
   }

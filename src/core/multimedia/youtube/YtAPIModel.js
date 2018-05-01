@@ -40,23 +40,41 @@ export default {
     },
 
     writers: {
-      async resetGapiStatus(
+      resetGapiStatus(
         { }, { },
-        { gapiStatus }, { set_gapiStatus }
+        { gapiStatus },
+        { set_gapiStatus, set_gapiTokens, set_gapiError }
       ) {
         if (gapiStatus > GapiStatus.Initialized) {
-          return set_gapiStatus(GapiStatus.Initialized);
+          set_gapiTokens(null);
+          set_gapiError(null);
+          set_gapiStatus(GapiStatus.Initialized);
         }
+        return true;
       },
 
       async gapiDisconnect(
-        { }, { }, { },
+        { },
+        { },
+        { gapiTokens },
         { resetGapiStatus }
       ) {
-        if (gapi.auth2) {
-          gapi.auth2.getAuthInstance().disconnect();
-          resetGapiStatus();
+        //if (gapi.auth2) {
+        if (gapiTokens && gapiTokens.access_token) {
+          try {
+            await window.fetch('https://accounts.google.com/o/oauth2/revoke?token=' + gapiTokens.access_token);
+          }
+          catch (err) {
+            console.warn('fetch error (ignore if this is only complaining about missing `Access-Control-Allow-Origin` header)', err);
+          }
         }
+        gapi.auth.setToken(null);
+        Promise.all([
+          gapi.auth2.getAuthInstance().signOut(),
+          gapi.auth2.getAuthInstance().disconnect()
+        ]);
+        resetGapiStatus();
+        //}
       },
 
       async gapiEnsureInitialized(
@@ -96,6 +114,7 @@ export default {
         try {
           const prompt = getOptionalArgument(args, 'prompt', undefined);
           const result = await gapiAuth(soft, prompt);
+          console.info('gapi auth successful', result);
           set_gapiTokens(result);
           set_gapiStatus(GapiStatus.Authorized);
           return true;
@@ -164,18 +183,17 @@ export default {
             console.warn('YT immediate auth failed - requesting user consent');
 
             // could not authorize immediately -> show user consent screen
+            debugger;
+            try {
             isAuthed = await _gapiDoAuth({ soft: false });
+            }
+            catch (err) {
+              console.error(err);
+            }
+            console.warn('isAuthed', isAuthed);
           }
         }
         return isAuthed;
-      },
-
-      async ytUploadVideo(
-        { }, { },
-        { }, { gapiHardAuth }
-      ) {
-        await gapiHardAuth();
-        // TODO: how to upload a video file while it is still being written to?
       }
     },
 
