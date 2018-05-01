@@ -48,9 +48,13 @@ import { YtUploadStatus } from '../../../core/multimedia/youtube/YtUploadModel';
 export class YtMyChannelInfo extends Component {
   render(
     { },
-    { get_ytMyChannelSnippet, get_ytMyChannels, clickSelectChannel }
+    { get_ytMyChannelSnippet, get_ytMyChannels, clickSelectChannel },
+    { gapiError }
   ) {
     if (!get_ytMyChannels.isLoaded()) {
+      if (gapiError) {
+        return <Alert bsStyle="danger" className="inline no-margin no-padding">Error occured while loading YouTube Channel</Alert>;
+      }
       return <LoadIndicator message="loading your channel..." />;
     }
     else {
@@ -63,8 +67,8 @@ export class YtMyChannelInfo extends Component {
       }
       const { title, thumbnails } = snippet;
       const thumbUrl = thumbnails.default.url;
-      return (<div className="no-wrap">
-        <img src={thumbUrl} className="max-size-1" /> {title} &nbsp;
+      return (<div className="no-wrap inline-hcenter">
+        <img src={thumbUrl} className="max-size-2" /> {title} &nbsp;
         <a href="https://www.youtube.com/my_videos" rel="noopener noreferrer" target="_blank"><FAIcon name="sign-out" /></a>
         <Button onClick={clickSelectChannel} bsSize="small" className="no-padding"><FAIcon name="exchange" /></Button>
       </div>);

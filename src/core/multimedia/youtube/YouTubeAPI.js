@@ -4,7 +4,9 @@ import isArray from 'lodash/isArray';
 
 import gapi from 'resources/gapi.js';
 
-import getFirebaseConfig from 'src/config/firebase.cfg';
+import getFirebaseConfig, {
+  OauthClientId
+} from 'src/config/firebase.cfg';
 const firebaseConfig = getFirebaseConfig();
 
 
@@ -26,7 +28,6 @@ export const GapiStatus = {
 
 const MaxVideosPerQuery = 30;
 const apiKey = firebaseConfig.apiKey;
-const clientId = '861084752540-4o6v20knbkc8bbmdmdarjffqlsb5smdv.apps.googleusercontent.com';
 const OAUTH2_SCOPES = [
   'https://www.googleapis.com/auth/youtube.force-ssl',
   'https://www.googleapis.com/auth/youtube.upload'
@@ -85,7 +86,7 @@ async function _gapiInit() {
 
   return await gapi.client.init({
     apiKey,
-    clientId,
+    clientId: OauthClientId,
     discoveryDocs,
     scope: 'https://www.googleapis.com/auth/youtube.readonly'
   });
@@ -98,7 +99,7 @@ export async function gapiAuth(immediate, prompt) {
   // auth!
   return await new Promise((resolve, reject) => {
     const cfg = {
-      client_id: clientId,
+      client_id: OauthClientId,
       scope: OAUTH2_SCOPES,
       immediate
     };

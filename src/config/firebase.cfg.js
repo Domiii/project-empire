@@ -18,12 +18,21 @@ const firebaseConfigs = {
   }
 };
 
-
-export default () => {
-  if (process.env.NODE_ENV !== 'production') {
-    return firebaseConfigs.test;
+export const OauthClientId = ((function() {
+  if (process.env.NODE_ENV === 'production') {
+    return '67569274970-kddq09im4ioimg7qggs6f53dd9rmis4p.apps.googleusercontent.com';
   }
   else {
+    return '861084752540-4o6v20knbkc8bbmdmdarjffqlsb5smdv.apps.googleusercontent.com';
+  }
+})());
+
+
+export default () => {
+  if (process.env.NODE_ENV === 'production') {
     return firebaseConfigs.production;
+  }
+  else {
+    return firebaseConfigs.test;
   }
 };
