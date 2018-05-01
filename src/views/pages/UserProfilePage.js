@@ -107,9 +107,7 @@ export default class UserProfilePage extends Component {
       <div>
         {/* the Form children are rendered at the bottom of the form */}
         <Button disabled={isSaved} type="submit" bsStyle="info">
-          <span>
-            <FAIcon name="save" /> Save!
-          </span>
+          <FAIcon name="save" /> Save!
         </Button>
       </div>
     </DynamicForm>);

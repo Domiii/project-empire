@@ -33,33 +33,34 @@ export class App extends Component {
     super(...args);
     this.state = { wasBusy: false };
 
-    // this.dataBindMethods(
-    //   this.componentWillUpdate
-    // );
-
-    autoBind(this);
+    this.dataBindMethods(
+      '_onInit'
+    );
   }
 
   // componentWillReceiveProps(nextProps) {
   //   const { router } = this.context;
   // }
 
-  componentWillMount() {
-    this.componentWillUpdate();
-  }
-
-  componentWillUpdate() {
-    const { ensureUserInitialized } = this.props.writers;
-
+  _onInit({ }, { ensureUserInitialized }) {
     ensureUserInitialized();
-        
+
     // TODO: log all visits via browserhistory hook
     // browserHistory.listen( location =>  {
-      
+
     // });
   }
 
-  signOut() {
+  componentWillMount() {
+    this._onInit();
+  }
+
+  componentWillUpdate() {
+    this._onInit();
+  }
+  
+
+  signOut = () => {
     try {
       firebase.auth().signOut();
       // TODO: also flush DataProvider's auth cache
@@ -93,7 +94,7 @@ export class App extends Component {
         />
 
         <main className="app-main">
-          { children }
+          {children}
         </main>
       </div>
     );

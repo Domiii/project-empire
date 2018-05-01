@@ -38,9 +38,7 @@ export default class FAIcon extends PureComponent {
       classes += ' fa-spin';
     }
     return (
-      <i className={classes} style={style} aria-hidden="true" {...moreProps}>
-        {moreProps.children}
-      </i>
+      <i className={classes} style={style} aria-hidden="true" {...moreProps} />
     );
   }
 }

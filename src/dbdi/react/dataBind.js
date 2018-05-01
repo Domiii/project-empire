@@ -32,7 +32,7 @@ import {
   getCustomContextFromReactContext,
   buildReactContextForDataBind
 } from './lib/dbdi-react-internals';
-import { injectRenderArgs } from './react-util';
+//import { injectRenderArgs } from './react-util';
 
 export { NOT_LOADED } from '../dataProviders/DataProviderBase';
 
@@ -41,8 +41,50 @@ export { NOT_LOADED } from '../dataProviders/DataProviderBase';
 //   // TODO: proper pub-sub bindings
 // }
 
-export default (propsOrPropCb) => WrappedComponent => {
-  class WrapperComponent extends Component {
+
+
+/**
+ * Build + wrap render method of component class
+ */
+function buildStatefulComponentRender(Comp, injectedArgs) {
+  const origRender = Comp.prototype.render;
+  Comp.prototype.render = function render_dataBind(...origArgs) {
+    // NOTE: render does not have arguments, but some other wrapper might have injected `origArgs`, so we just add them into the circus
+    //console.log('wrapped render: ' + props.name + `(${JSON.stringify(origArgs)}) → (${JSON.stringify(newArgs)})`);
+    return origRender.call(this, ...injectedArgs, ...origArgs);
+  };
+
+  return function render() {
+    this._shouldUpdate = false;
+    const { WrappedComponent } = this;
+
+    return (<WrappedComponent
+      {...this.props}
+    />);
+  };
+}
+
+/**
+ * Build + wrap render method of functional component
+ */
+function buildFunctionalComponentRender(Comp, injectedArgs) {
+  function Wrapper(...origArgs) {
+    // NOTE: origArgs should be [props, context] in React 16
+    //console.log('wrapped render: ' + `(${JSON.stringify(origArgs)}), (${JSON.stringify(injectedArgs)})`);
+    return Comp.call(this, ...injectedArgs, ...origArgs);
+  }
+
+  Object.defineProperty(Wrapper, 'name', { value: Comp.name + '_dataBind' });
+
+  return Wrapper;
+}
+
+
+/**
+ * dataBind
+ */
+export default (propsOrPropCb) => _WrappedComponent => {
+  class DataBindComponent extends Component {
     static contextTypes = dataBindContextStructure;
     static childContextTypes = dataBindChildContextStructure;
     static propTypes = {
@@ -86,7 +128,7 @@ export default (propsOrPropCb) => WrappedComponent => {
       this._customContext = Object.assign({}, getCustomContextFromReactContext(context) || {});
       this._dataAccessTracker = new DataAccessTracker(
         this._dataSourceTree, this._onNewData,
-        WrappedComponent.name || '<unnamed component>');
+        _WrappedComponent.name || '<unnamed component>');
 
 
       // prepare all the stuff
@@ -110,14 +152,40 @@ export default (propsOrPropCb) => WrappedComponent => {
       //   return (<WrappedComponent {...props} />);
       // };
 
-      this.WrappedComponent = injectRenderArgs(
-        WrappedComponent,
-        this._injectedArguments
-      );
+      // // TODO: we can merge injection into the render() call below!?!?
+      // this.WrappedComponent = injectRenderArgs(
+      //   WrappedComponent,
+      //   this._injectedArguments
+      // );
+      // there is no good working heuristic to figure out if it's a function representing a component :(
+      const isStatefulComponent = _WrappedComponent && _WrappedComponent.prototype instanceof Component;
+      const isComponentFunction = this.isFunctionalComponent = isFunction(_WrappedComponent);
 
-      this.WrappedComponent.prototype &&
+      if (!isComponentFunction && !isStatefulComponent) {
+        throw new Error('Tried to decorate object that is neither pure function nor component: ' + _WrappedComponent);
+      }
+
+      // decorate the component
+      let render;
+      if (isStatefulComponent) {
+        // create new class for every instance of this component
+        this.WrappedComponent = class __WrappedComponent extends _WrappedComponent { };
+        Object.defineProperty(this.WrappedComponent, 'name', {
+          value: _WrappedComponent.name + '_dataBind'
+        });
+
+        // inject custom methods into stateful component
         Object.assign(this.WrappedComponent.prototype,
-          this._buildPrototypeExtensions());
+          this._buildCustomMethods()
+        );
+        render = buildStatefulComponentRender(this.WrappedComponent, this._injectedArguments);
+      }
+      else {
+        this.WrappedComponent = _WrappedComponent;
+        render = buildFunctionalComponentRender(this.WrappedComponent, this._injectedArguments);
+      }
+
+      this.render = render;
     }
 
 
@@ -128,10 +196,8 @@ export default (propsOrPropCb) => WrappedComponent => {
     /**
      * These methods are added to the prototype of the wrapped component
      */
-    _buildPrototypeExtensions() {
-      const {
-        _injectedArguments
-      } = this;
+    _buildCustomMethods() {
+      const { _injectedArguments } = this;
       return {
         dataBindMethod(methodOrName) {
           if (!methodOrName) {
@@ -353,7 +419,7 @@ export default (propsOrPropCb) => WrappedComponent => {
         }
 
         if (props && !isPlainObject(props)) {
-          throw new Error('Invalid props returned from dataBind callback: ' +
+          throw new Error('Invalid props returned from dataBind callback - return value must be plain object: ' +
             this.wrappedComponentName);
         }
 
@@ -375,7 +441,7 @@ export default (propsOrPropCb) => WrappedComponent => {
     // ################################################
 
     get wrappedComponentName() {
-      return WrappedComponent.name ||
+      return _WrappedComponent.name ||
         '<unnamed component>';
     }
 
@@ -435,25 +501,13 @@ export default (propsOrPropCb) => WrappedComponent => {
         this.setState(EmptyObject);
       }
     }
-
-    render() {
-      //console.warn(this.wrappedComponentName, 'render');
-      this._shouldUpdate = false;
-      const { WrappedComponent } = this;
-
-      return (<WrappedComponent
-        {...this.props}
-        {...this._customProps}
-        {...this._customFunctions}
-        readers={this._dataAccessTracker._readerProxy}
-        writers={this._dataAccessTracker._writerProxy}
-        dataInject={this._dataAccessTracker._injectProxy}
-      />);
-    }
   }
 
+  // override class name (miraculously, it works equally for functional and stateful components!)
   // see https://stackoverflow.com/questions/33605775/es6-dynamic-class-names/46132163#46132163
-  Object.defineProperty(WrapperComponent, 'name', { value: WrappedComponent.name + '_dataBind' });
+  Object.defineProperty(DataBindComponent, 'name', {
+    value: _WrappedComponent.name + '_dataBind'
+  });
 
-  return WrapperComponent;
+  return DataBindComponent;
 };

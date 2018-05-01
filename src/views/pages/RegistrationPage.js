@@ -93,9 +93,9 @@ const uiSchema = {
 
 @dataBind({})
 export class RegistrationDataCompletion extends Component {
-    state = {
-      isSaved: true
-    };
+  state = {
+    isSaved: true
+  };
 
   onStateChange = ({ isSaved }) => {
     this.setState({ isSaved });
@@ -129,12 +129,10 @@ export class RegistrationDataCompletion extends Component {
       </h2>
 
       <DynamicForm {...props}>
-        <div>
-          {/* the Form children are rendered at the bottom of the form */}
-          <Button disabled={isSaved} type="submit" bsStyle="info">
-            <FAIcon name="save" /> Save!
-          </Button>
-        </div>
+        {/* the Form children are rendered at the bottom of the form */}
+        <Button disabled={isSaved} type="submit" bsStyle="info">
+          <FAIcon name="save" /> Save!
+        </Button>
       </DynamicForm>
     </div>);
   }
@@ -224,13 +222,13 @@ export class RegistrationFun extends Component {
   componentDidMount(
     { }, { userSelfLabel, set_userSelfLabel }, { currentUid }
   ) {
-    // const uidArgs = { uid: currentUid };
-    // setTimeout(() => {
-    //   const label = userSelfLabel(uidArgs);
-    //   if (!label) {
-    //     set_userSelfLabel(uidArgs, '乖乖寶貝');
-    //   }
-    // }, 300);
+    setTimeout(() => {
+      const uidArgs = { uid: currentUid };
+      const label = userSelfLabel(uidArgs);
+      if (!label) {
+        set_userSelfLabel(uidArgs, '乖乖寶貝');
+      }
+    }, 300);
   }
 
   onInputReady = (inputEl) => {

@@ -18,6 +18,10 @@ const UserIconSizes = {
   huge: '4em'
 };
 
+// function OuchComp() {
+//   throw new Error('OUCH comp');
+// }
+
 const UserIcon = dataBind({})(function UserIcon(
   args,
   { userPublic, getProps }
@@ -73,8 +77,7 @@ const UserIcon = dataBind({})(function UserIcon(
 });
 
 UserIcon.propTypes = {
-  uid: PropTypes.string.isRequired,
-  size: PropTypes.string
+  uid: PropTypes.string.isRequired
 };
 
 export default UserIcon;

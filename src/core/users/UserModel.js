@@ -39,7 +39,7 @@ export default {
       },
 
       isCurrentUserAdmin({ }, { }, { currentUserDisplayRole }) {
-        return currentUserDisplayRole && hasDisplayRole(currentUserDisplayRole, Roles.Admin);
+        return !!currentUserDisplayRole && hasDisplayRole(currentUserDisplayRole, Roles.Admin);
       },
 
       isCurrentUserGuardian({ }, { hasCurrentUserDisplayRole }, { }) {

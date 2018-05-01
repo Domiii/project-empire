@@ -71,7 +71,7 @@ export default class DebugPage extends Component {
               &nbsp;
               <Alert bsStyle="danger" className="no-padding no-margin">
                 {map(err.args, (obj, j) => (<span key={j}>
-                  <pre className="no-padding no-margin no-background inline">
+                  <pre className="no-padding no-margin no-border no-background inline">
                     {errToString(obj)}
                   </pre>
                   &nbsp;

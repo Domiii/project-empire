@@ -66,11 +66,7 @@ export default class Header extends Component {
     autoBind(this);
   }
 
-  gotoSubmissions(evt) {
-    this.openInNewTab(evt, '/submissions');
-  }
-
-  gotoGit(evt) {
+  gotoGit = (evt) => {
     this.openInNewTab(evt, 'https://github.com/Domiii/project-empire');
   }
 
@@ -135,18 +131,20 @@ export default class Header extends Component {
       );
     }
 
-    const profileEl = (isCurrentUserComplete &&
-      <MenuItem eventKey="user-drop-profile" href={'/user/' + currentUid}>
-        <span>
-          {
-            currentUser.photoURL &&
-            <img src={currentUser.photoURL} style={{ width: '2em' }} /> ||
-            <FAIcon name="user" />
-          }
-          <span className="padding-half" />
-          {currentUser.displayName || '<unnamed user>'}
-        </span>
-      </MenuItem>
+    const profileEl = (isCurrentUserComplete && (
+      <LinkContainer key="user-profile" to={'/user/' + currentUid}>
+        <MenuItem>
+          <span>
+            {
+              currentUser.photoURL &&
+              <img src={currentUser.photoURL} style={{ width: '2em' }} /> ||
+              <FAIcon name="user" />
+            }
+            <span className="padding-half" />
+            {currentUser.displayName || '<unnamed user>'}
+          </span>
+        </MenuItem>
+      </LinkContainer>)
     );
 
     // let warningEl;
@@ -173,7 +171,7 @@ export default class Header extends Component {
       (
         <LinkContainer key="video" to="/video">
           <NavItem eventKey={11}>
-            Video { isAnyStreamOnline && <FAIcon name="circle" color="red" /> }
+            Video {isAnyStreamOnline && <FAIcon name="circle" color="red" />}
           </NavItem>
         </LinkContainer>
       ),
