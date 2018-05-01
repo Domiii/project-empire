@@ -57,9 +57,20 @@ export default {
         { },
         { },
         { gapiTokens },
-        { resetGapiStatus }
+        { resetGapiStatus, gapiHardAuth }
       ) {
         //if (gapi.auth2) {
+        gapi.auth.setToken(null);
+        try {
+          Promise.all([
+            gapi.auth2.getAuthInstance().signOut(),
+            gapi.auth2.getAuthInstance().disconnect()
+          ]);
+        }
+        catch (err) {
+          console.error(err);
+        }
+        debugger;
         if (gapiTokens && gapiTokens.access_token) {
           try {
             await window.fetch('https://accounts.google.com/o/oauth2/revoke?token=' + gapiTokens.access_token);
@@ -68,12 +79,8 @@ export default {
             console.warn('fetch error (ignore if this is only complaining about missing `Access-Control-Allow-Origin` header)', err);
           }
         }
-        gapi.auth.setToken(null);
-        Promise.all([
-          gapi.auth2.getAuthInstance().signOut(),
-          gapi.auth2.getAuthInstance().disconnect()
-        ]);
         resetGapiStatus();
+        gapiHardAuth();
         //}
       },
 
@@ -183,14 +190,7 @@ export default {
             console.warn('YT immediate auth failed - requesting user consent');
 
             // could not authorize immediately -> show user consent screen
-            debugger;
-            try {
             isAuthed = await _gapiDoAuth({ soft: false });
-            }
-            catch (err) {
-              console.error(err);
-            }
-            console.warn('isAuthed', isAuthed);
           }
         }
         return isAuthed;

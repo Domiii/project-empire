@@ -23,7 +23,7 @@ export default {
       { },
       { },
       { },
-      { gapiHardAuth, set_gapiError }
+      { gapiHardAuth, set_gapiError, gapiDisconnect }
     ) {
       const isAuthed = await gapiHardAuth();
       if (isAuthed) {
@@ -34,9 +34,21 @@ export default {
           });
           return response.result;
         }
-        catch (err) {
+        catch (_err) {
+          let err = _err;
+          //await gapiDisconnect();
+          if (err && err.result) {
+            err = err.result;
+          }
+          if (err && err.error) {
+            err = err.error;
+            if (err.errors) {
+              err = err.errors[0];
+            }
+          }
           set_gapiError(err);
-          throw err;
+          //throw err;
+          return NOT_LOADED;
         }
       }
       return NOT_LOADED;

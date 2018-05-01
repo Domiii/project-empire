@@ -328,12 +328,13 @@ export default class DataProviderBase {
       return;
     }
 
-    if (val === NOT_LOADED) {
-      this.setLoadState(localPath, LoadState.NotLoaded);
-    }
-    else {
-      this.setLoadState(localPath, LoadState.Loaded);
-    }
+    // TODO: we somehow need to prevent infinite loops here
+    // if (val === NOT_LOADED) {
+    //   this.setLoadState(localPath, LoadState.NotLoaded);
+    // }
+    // else {
+    //   this.setLoadState(localPath, LoadState.Loaded);
+    // }
 
     // set new state (which should notify all listeners)
     this.actions.set(remotePath, val);
@@ -354,7 +355,9 @@ export default class DataProviderBase {
     }
 
     // downgrade load state at path
-    this.setLoadState(localPath, LoadState.NotLoaded);
+
+    // TODO: we somehow need to prevent infinite loops here
+    //this.setLoadState(localPath, LoadState.NotLoaded);
   }
 
   // #################################################################################################

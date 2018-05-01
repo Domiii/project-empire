@@ -112,10 +112,11 @@ export class YtMyChannelInfo extends Component {
     return resetGapiStatus();
   },
 
-  clickGapiHardAuth(evt,
+  async clickGapiHardAuth(evt,
     { },
-    { gapiHardAuth }
+    { gapiHardAuth, gapiDisconnect }
   ) {
+    await gapiDisconnect();
     return gapiHardAuth();
   }
 })
@@ -185,6 +186,7 @@ export class YtStatusPanel extends Component {
         {gapiError && (<Alert bsStyle="danger" className="alert-dismissable no-margin">
           <a href="#" className="close" data-dismiss="alert" aria-label="close" onClick={this.clearError}>&times;</a>
           {errInfo}
+          <Button onClick={clickGapiHardAuth}><FAIcon name="unlock" color="green" /></Button>
         </Alert>)}
       </div>
     </Panel.Body>);
