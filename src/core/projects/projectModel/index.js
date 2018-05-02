@@ -27,9 +27,9 @@ const projectById = {
   onWrite: [
     'updatedAt',
     'createdAt',
-    function setCreator(queryArgs, val,
-      {},
-      {currentUid}
+    function setCreator(queryArgs, val, originalVal, actionName,
+      { },
+      { currentUid }
     ) {
       val && !val.creatorUid && (val.creatorUid = currentUid);
     }
@@ -164,10 +164,10 @@ export default {
                   itemsPerPage,
                   ascending
                 } = getOptionalArguments(args, {
-                    orderBy: 'updatedAt',
-                    itemsPerPage: 20,
-                    ascending: false
-                  });
+                  orderBy: 'updatedAt',
+                  itemsPerPage: 20,
+                  ascending: false
+                });
 
                 return [
                   ['orderByChild', orderBy],

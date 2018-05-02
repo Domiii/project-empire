@@ -572,7 +572,7 @@ export default class DynamicForm extends Component {
       }
       else {
         doGet = getAccessor(fns, `get_${dbName}`);
-        newFormData = doGet(idArgs);
+        newFormData = idArgs && doGet(idArgs) || {};
       }
 
       const schema = this.getSchema();

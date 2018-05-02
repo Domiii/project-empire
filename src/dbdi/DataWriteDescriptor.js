@@ -216,7 +216,8 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
 
     // custom write hooks
     const originalVal = dataProvider.readData(queryInput);
-    this.onWrite && this.onWrite(queryArgs, val, originalVal, this.actionName, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
+    this.onWrite && this.onWrite(queryArgs, val, originalVal, this.actionName, 
+        readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
 
     // perform write action
     return dataProvider.actions[this.actionName](queryInput, val);
