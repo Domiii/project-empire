@@ -208,10 +208,7 @@ export default {
       },
 
       setRole({ uid, role }, { }, { }, { update_userPublic }) {
-        const roleNum = getRole(role);
-        if (!roleNum) {
-          throw new Error('invalid role: ' + role);
-        }
+        const roleNum = getRole(role) || 0;
 
         // make sure to set display role first.
         // in case, you demote yourself, you still need your original role for this.

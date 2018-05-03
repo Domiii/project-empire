@@ -24,7 +24,7 @@ export default Roles;
 export function getDisplayRole(roleObj) {
   if (!roleObj) return null;
   if (isString(roleObj)) {
-    if (!Roles[roleObj]) {
+    if (!(roleObj in Roles)) {
       throw new Error('invalid role name: ' + roleObj);
     }
     return Roles[roleObj];
@@ -47,7 +47,7 @@ export function getDisplayRole(roleObj) {
 export function getRole(roleObj) {
   if (!roleObj) return null;
   if (isString(roleObj)) {
-    if (!Roles[roleObj]) {
+    if (!(roleObj in Roles)) {
       throw new Error('invalid role name: ' + roleObj);
     }
     return Roles[roleObj];
