@@ -107,7 +107,7 @@ export default class DataReadDescriptor extends DataDescriptorNode {
     const { fetch } = this;
     if (!fetch) return;
       
-    if (dataProvider.fetchStart(queryInput)) {
+    if (await dataProvider.fetchStart(queryInput)) {
       try {
         const res = await fetch(args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
         dataProvider.fetchEnd(queryInput, res);

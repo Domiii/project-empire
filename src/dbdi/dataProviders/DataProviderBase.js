@@ -5,7 +5,7 @@ import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
 import pull from 'lodash/pull';
 
-import { EmptyObject, EmptyArray } from 'src/util';
+import { EmptyObject, EmptyArray, waitAsync } from 'src/util';
 
 import {
   getDataIn,
@@ -26,11 +26,17 @@ export const LoadState = {
  */
 const purgeCacheDelayDefault = 60 * 1000;
 
+const fetchFailDelay = 5 * 10;
+
+// stop trying after a while
+const fetchMaxFailCount = 10;
+
 export default class DataProviderBase {
   _listenersByPath = {};
   _queriesByLocalPath = new Map();
   _listenerData = new Map();
   _loadState = {};
+  _fetchFails = {};
   _cache = {};
 
 
@@ -203,12 +209,9 @@ export default class DataProviderBase {
       // reduce queryInputCache useCount
       --query._useCount;
 
-      if (!query._useCount) {
-        // unload the whole thing
-        console.log('UNLOAD', localPath);
-        this._queriesByLocalPath.delete(localPath);
-        this.setLoadState(localPath, LoadState.NotLoaded);
-      }
+      // if (!query._useCount) {
+      //   // this is already handled in _onPathUnused
+      // }
 
       if (isEmpty(listenerData.byPath)) {
         // we removed the last path for listener: delete listener, as well
@@ -217,7 +220,7 @@ export default class DataProviderBase {
 
         if (isEmpty(listeners)) {
           // we removed the last listener at path
-          delete this._listenersByPath[localPath];
+          this._onPathUnused(localPath);
         }
       }
 
@@ -225,6 +228,15 @@ export default class DataProviderBase {
     }, purgeCacheDelayDefault);
   }
 
+  _onPathUnused(localPath) {
+    console.log('UNLOAD', localPath);
+    delete this._listenersByPath[localPath];
+    this._queriesByLocalPath.delete(localPath);
+    delete this._loadState[localPath];
+    if (this._fetchFails[localPath]) {
+      delete this._fetchFails[localPath];
+    }
+  }
 
   // #################################################################################################
   // Handle data
@@ -304,9 +316,23 @@ export default class DataProviderBase {
       return false;
     }
 
+    const fetchFailCount = this._fetchFails[localPath];
+    if (fetchFailCount >= fetchMaxFailCount) {
+      // past the fail limit
+      console.error(`exceeded fetch fail limit @${localPath} - stopped trying.`);
+      return false;
+    }
+
     // set load state to fetching
     //  (which is technically still "NotLoaded", but we set state to "Fetching", to prevent double fetching)
     this.setLoadState(localPath, LoadState.Fetching);
+
+    // if failed before, delay!
+    if (fetchFailCount > 0) {
+      console.warn(`previous fetch failed @${localPath} - throttling`);
+      return waitAsync(fetchFailDelay).then(() => true);
+    }
+
     return true;
   }
 
@@ -328,36 +354,42 @@ export default class DataProviderBase {
       return;
     }
 
-    // TODO: we somehow need to prevent infinite loops here
-    // if (val === NOT_LOADED) {
-    //   this.setLoadState(localPath, LoadState.NotLoaded);
-    // }
-    // else {
-    //   this.setLoadState(localPath, LoadState.Loaded);
-    // }
+    // update state
+    if (val === NOT_LOADED) {
+      this.setLoadState(localPath, LoadState.NotLoaded);
+    }
+    else {
+      this.setLoadState(localPath, LoadState.Loaded);
+    }
+
+    // reset failure
+    this._fetchFails[localPath] = null;
 
     // set new state (which should notify all listeners)
     this.actions.set(remotePath, val);
   }
 
   fetchFailed(queryInput, err) {
+    console.error(`Failed to fetch path "${queryInput}" - `, (err && err.stack || err));
+
     const query = this.getQueryByQueryInput(queryInput);
     if (!query) return;
     const {
-      localPath
+      localPath,
+      remotePath
     } = query;
-
-    console.error(`Failed to fetch path "${queryInput}" - `, (err && err.stack || err));
 
     if (this.getLoadState(localPath) !== LoadState.Fetching) {
       // something happened in the meantime -> discard fetched result
       return;
     }
 
-    // downgrade load state at path
+    // remember failure
+    this._fetchFails[localPath] = (this._fetchFails[localPath] || 0)+1;
 
-    // TODO: we somehow need to prevent infinite loops here
-    //this.setLoadState(localPath, LoadState.NotLoaded);
+    // downgrade load state at path
+    this.setLoadState(localPath, LoadState.NotLoaded);
+    this.actions.set(remotePath, NOT_LOADED);
   }
 
   // #################################################################################################

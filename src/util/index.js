@@ -1,1 +1,1 @@
-export { EmptyObject, EmptyArray } from './miscUtil';
+export { EmptyObject, EmptyArray, waitAsync } from './miscUtil';

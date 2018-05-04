@@ -108,6 +108,9 @@ export class DataStructureConfigNode {
 
   _parseConfig(cfg) {
     this.dataProviderName = cfg.dataProvider || (this.parent && this.parent.dataProviderName);
+    if (this.parent && !this.dataProviderName) {
+      throw new Error('Missing dataProvider at root level');
+    }
     //console.assert(this.dataProviderName, 'Node does not have dataProviderName: ' + this.name);
 
     if (isString(cfg)) {

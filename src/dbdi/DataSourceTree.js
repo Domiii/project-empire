@@ -137,6 +137,9 @@ export default class DataSourceTree {
 
   _buildNode(configNode, parent, name, buildDataReadDescriptor, buildDataWriteDescriptor) {
     const dataProvider = this._dataProviders[configNode.dataProviderName];
+    if (configNode.dataProviderName && !dataProvider) {
+      throw new Error(`Invalid dataProvider does not exist @${name}: "${configNode.dataProviderName}"`);
+    }
     const fullName = (parent && parent.fullName && (parent.fullName + '.') || '') + name;
     const pathDescriptor = configNode.pathConfig && 
       new PathDescriptor(parent && parent.pathDescriptor, configNode.pathConfig, fullName);

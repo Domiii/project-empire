@@ -27,3 +27,7 @@ export function interject(arr, cb) {
 
 export const EmptyObject = Object.freeze({});
 export const EmptyArray = Object.freeze([]);
+
+export async function waitAsync(ms) {
+  return new Promise((r, j) => setTimeout(r, ms));
+}
