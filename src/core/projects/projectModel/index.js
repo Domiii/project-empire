@@ -179,19 +179,19 @@ export default {
           projectById
         }
       },
-      allProjectStages: {
-        path: 'stages',
-        children: {
-          projectStages: {
-            path: '$(projectId)',
-            children: {
-              stageEntries,
-              allStageFormsData,
-              allStageContributions
-            }
-          }
-        }
-      },
+      // allProjectStages: {
+      //   path: 'stages',
+      //   children: {
+      //     projectStages: {
+      //       path: '$(projectId)',
+      //       children: {
+      //         stageEntries,
+      //         allStageFormsData,
+      //         allStageContributions
+      //       }
+      //     }
+      //   }
+      // },
     }
   }
 };

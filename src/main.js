@@ -9,7 +9,7 @@ import 'font-awesome/css/font-awesome.min.css';
 
 import 'react-select/dist/react-select.css';
 
-import 'react-bootstrap-table/dist/react-bootstrap-table.min.css';
+import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 
 import 'video.js/dist/video-js.min.css';
 

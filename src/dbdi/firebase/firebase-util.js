@@ -16,50 +16,55 @@ import { EmptyObject, EmptyArray } from 'src/util';
  * @param {*} query 
  */
 export function applyParamsToQuery(queryParams, query) {
-  queryParams.forEach(param => {
-    switch (param[0]) {
-      case 'orderByValue':
-        query = query.orderByValue();
-        break;
-      case 'orderByPriority':
-        query = query.orderByPriority();
-        break;
-      case 'orderByKey':
-        query = query.orderByKey();
-        break;
-      case 'orderByChild':
-        query = query.orderByChild(param[1]);
-        break;
-      case 'limitToFirst':
-        // TODO: Handle number not being passed as param
-        query = query.limitToFirst(parseInt(param[1], 10));
-        break;
-      case 'limitToLast':
-        // TODO: Handle number not being passed as param
-        query = query.limitToLast(parseInt(param[1], 10));
-        break;
-      case 'equalTo':
-        let equalToParam = param[1];
-        query = param.length === 3
-          ? query.equalTo(equalToParam, param[2])
-          : query.equalTo(equalToParam);
-        break;
-      case 'startAt':
-        let startAtParam = param[1];
-        query = param.length === 3
-          ? query.startAt(startAtParam, param[2])
-          : query.startAt(startAtParam);
-        break;
-      case 'endAt':
-        let endAtParam = param[1];
-        query = param.length === 3
-          ? query.endAt(endAtParam, param[2])
-          : query.endAt(endAtParam);
-        break;
-      default:
-        throw new Error('unknown query argument: ' + param[0]);
-    }
-  });
+  try {
+    queryParams.forEach(param => {
+      switch (param[0]) {
+        case 'orderByValue':
+          query = query.orderByValue();
+          break;
+        case 'orderByPriority':
+          query = query.orderByPriority();
+          break;
+        case 'orderByKey':
+          query = query.orderByKey();
+          break;
+        case 'orderByChild':
+          query = query.orderByChild(param[1]);
+          break;
+        case 'limitToFirst':
+          // TODO: Handle number not being passed as param
+          query = query.limitToFirst(parseInt(param[1], 10));
+          break;
+        case 'limitToLast':
+          // TODO: Handle number not being passed as param
+          query = query.limitToLast(parseInt(param[1], 10));
+          break;
+        case 'equalTo':
+          let equalToParam = param[1];
+          query = param.length === 3
+            ? query.equalTo(equalToParam, param[2])
+            : query.equalTo(equalToParam);
+          break;
+        case 'startAt':
+          let startAtParam = param[1];
+          query = param.length === 3
+            ? query.startAt(startAtParam, param[2])
+            : query.startAt(startAtParam);
+          break;
+        case 'endAt':
+          let endAtParam = param[1];
+          query = param.length === 3
+            ? query.endAt(endAtParam, param[2])
+            : query.endAt(endAtParam);
+          break;
+        default:
+          throw new Error('unknown query argument: ' + param[0]);
+      }
+    });
+  }
+  catch (err) {
+    throw new Error(`invalid query (${err.message}) @ "${query}" - \n${JSON.stringify(queryParams, null, 2)}`);
+  }
   return query;
 }
 
@@ -127,7 +132,7 @@ export function applyQueryToDataSet(data, queryParams) {
   if (selectorFn) {
     result = sortBy(result, selectorFn);
   }
-  
+
   // then filter
   filterFns.forEach(filterFn => result = filterFn(selectorFn, result));
 

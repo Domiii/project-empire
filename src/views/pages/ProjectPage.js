@@ -11,7 +11,7 @@ import {
   LinkContainer
 } from 'react-router-bootstrap';
 
-import ProjectList from 'src/views/components/projects/ProjectList';
+import ProjectTable from 'src/views/components/projects/ProjectTable';
 
 
 export default class ProjectPage extends Component {
@@ -29,7 +29,7 @@ export default class ProjectPage extends Component {
     //{ this.IsGuardian && this.makeGuardianEl() }
     return (
       <div>
-        <ProjectList />
+        <ProjectTable />
       </div>
     );
   }
