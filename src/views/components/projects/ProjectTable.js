@@ -28,33 +28,8 @@ import ImageLoader from 'src/views/components/util/react-imageloader';
 import LoadIndicator from '../util/loading';
 import { EmptyObject } from '../../../util';
 
+import ProjectContributorBar from './ProjectContributorBar';
 
-
-function renderTitle(cell, row, rowIndex, formatExtraData) {
-  const {
-    title,
-    iconUrl
-  } = row;
-  return (<span>
-    <ImageLoader
-      src={iconUrl}
-      className="project-icon"
-    />&nbsp;
-    {title}
-  </span>);
-}
-
-function renderDate(cell, row, rowIndex, formatExtraData) {
-  return (<span>
-    <Moment fromNow>{cell}</Moment> (
-    <Moment format="MMMM Do YYYY, HH:mm:ss">{cell}</Moment>
-    )
-  </span>);
-}
-
-function renderContributors(cell, row, rowIndex, formatExtraData) {
-
-}
 
 const __defaultProps = {
   keyField: 'id',
@@ -67,20 +42,21 @@ const __defaultProps = {
     {
       dataField: 'title',
       text: 'Title',
-      sort: true,
-      formatter: renderTitle
+      sort: true
     },
     {
       dataField: 'contributors',
       text: 'Contributors',
       sort: true,
-      formatter: renderContributors
+      sortFunc: (a, b, order, dataField) => {
+        if (order === 'asc') return a - b;
+        else return b - a;
+      }
     },
     {
       dataField: 'updatedAt',
       text: 'Last Modified',
-      sort: true,
-      formatter: renderDate
+      sort: true
     }
     // {
     //   dataField: 'contributors',
@@ -117,22 +93,69 @@ const __defaultProps = {
   // }),
 };
 
-function convertToTableData(obj) {
-  return map(obj, (o, id) => ({ id, ...o }));
+function convertToTableData(objects, customTableData) {
+  return map(objects, (o, id) => ({ 
+    id,
+    ...mapValues(customTableData, fn => fn(id, o)),
+    ...o
+  }));
 }
 
-@dataBind({})
+@dataBind({
+  contributorCount(projectId, o, { }, { uidsOfProject }) {
+    return size(uidsOfProject({ projectId }));
+  }
+})
 export default class ProjectTable extends Component {
   state = {
   };
 
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
+
     this.tableProps = Object.assign({}, __defaultProps);
 
+    // assign renderers
+    this.tableProps.columns.forEach(col => col.formatter = this['render_' + col.dataField]);
+
+    // set paginationCfg
     this.paginationCfg = Object.assign({}, __defaultProps.paginationCfg);
     this.paginationCfg.page = 1;
     this.paginationCfg.onPageChange = this.onPageChange;
+
+    // 
+    this.customTableData = {
+      contributors: props.contributorCount
+    };
+  }
+
+  render_title(cell, row, rowIndex, formatExtraData) {
+    const {
+      title,
+      iconUrl
+    } = row;
+    return (<span>
+      <ImageLoader
+        src={iconUrl}
+        className="project-icon"
+      />&nbsp;
+      {title}
+    </span>);
+  }
+
+  render_updatedAt(cell, row, rowIndex, formatExtraData) {
+    return (<span>
+      <Moment fromNow>{cell}</Moment> (
+      <Moment format="MMMM Do YYYY, HH:mm:ss">{cell}</Moment>
+      )
+    </span>);
+  }
+
+  render_contributors(cell, row, rowIndex, formatExtraData) {
+    const projectId = row.id;
+    return (<ProjectContributorBar projectId={projectId}>
+      &nbsp;
+    </ProjectContributorBar>);
   }
 
   onPageChange = (page, sizePerPage) => {
@@ -171,10 +194,10 @@ export default class ProjectTable extends Component {
     if (list === NOT_LOADED) {
       return <LoadIndicator block message="loading projects..." />;
     }
-    const data = convertToTableData(list);
+    const data = convertToTableData(list, this.customTableData);
 
     const totalSize = size(data);
-    this.paginationCfg.totalSize = Math.max(this.paginationCfg.totalSize, totalSize+1);
+    this.paginationCfg.totalSize = Math.max(this.paginationCfg.totalSize, totalSize + 1);
 
     return (<div>
       <BootstrapTable

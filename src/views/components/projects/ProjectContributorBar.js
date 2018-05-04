@@ -18,10 +18,9 @@ import LoadIndicator from 'src/views/components/util/loading';
 
 
 const ProjectContributorBar = dataBind()((
-  { thisProjectId, children },
+  { projectId, children },
   { uidsOfProject }
 ) => {
-  const projectId = thisProjectId;
   if (!uidsOfProject.isLoaded({ projectId })) {
     return <LoadIndicator />;
   }

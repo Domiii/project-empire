@@ -46,7 +46,7 @@ export { NOT_LOADED } from '../dataProviders/DataProviderBase';
 /**
  * Build + wrap render method of component class
  */
-function buildStatefulComponentRender(Comp, injectedArgs) {
+function initStatefulComponent(Comp, injectedArgs) {
   const origRender = Comp.prototype.render;
   Comp.prototype.render = function render_dataBind(...origArgs) {
     // NOTE: render does not have arguments, but some other wrapper might have injected `origArgs`, so we just add them into the circus
@@ -60,6 +60,8 @@ function buildStatefulComponentRender(Comp, injectedArgs) {
 
     return (<WrappedComponent
       {...this.props}
+      {...this._customProps}
+      {...this._customFunctions}
     />);
   };
 }
@@ -67,7 +69,7 @@ function buildStatefulComponentRender(Comp, injectedArgs) {
 /**
  * Build + wrap render method of functional component
  */
-function buildFunctionalComponentRender(Comp, injectedArgs) {
+function initFunctionalComponent(Comp, injectedArgs) {
   function Wrapper(...origArgs) {
     // NOTE: origArgs should be [props, context] in React 16
     //console.log('wrapped render: ' + `(${JSON.stringify(origArgs)}), (${JSON.stringify(injectedArgs)})`);
@@ -178,11 +180,11 @@ export default (propsOrPropCb) => _WrappedComponent => {
         Object.assign(this.WrappedComponent.prototype,
           this._buildCustomMethods()
         );
-        render = buildStatefulComponentRender(this.WrappedComponent, this._injectedArguments);
+        render = initStatefulComponent(this.WrappedComponent, this._injectedArguments);
       }
       else {
         this.WrappedComponent = _WrappedComponent;
-        render = buildFunctionalComponentRender(this.WrappedComponent, this._injectedArguments);
+        render = initFunctionalComponent(this.WrappedComponent, this._injectedArguments);
       }
 
       this.render = render;

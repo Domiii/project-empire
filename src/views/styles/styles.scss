@@ -481,6 +481,13 @@ button:active { outline:none !important; }
  * #######################################################
  */
 
+
+.project-icon {
+  @extend .max-size-2;
+  
+  border: 1px solid #333;
+}
+
  .project-team {
    font-size: 1.5em;
  }
@@ -563,13 +570,6 @@ button:active { outline:none !important; }
   border-radius: 0;
   padding: 4px;
 };
-
-
-.project-icon {
-  @extend .max-size-1-5;
-  
-  border: 1px solid #333;
-}
 
 
 /**
