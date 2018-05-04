@@ -26,7 +26,7 @@ export const LoadState = {
  */
 const purgeCacheDelayDefault = 60 * 1000;
 
-const fetchFailDelay = 5 * 10;
+const fetchFailDelay = 5 * 1000;
 
 // stop trying after a while
 const fetchMaxFailCount = 10;
