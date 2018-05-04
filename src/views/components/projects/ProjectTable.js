@@ -212,8 +212,12 @@ export default class ProjectTable extends Component {
 
 /**
  * Video Tagging:
- *  * add new "VideoRecordModel"
- *  * tag projects
+ *  * add new "SharingSessionModel + Page"
+ *  * import existing projects (with user names as notes/comments or description?)
+ *  * make it easy to show/hide/edit notes (different from comments?)
+ *  * table of projects
+ *  * (also be able to append individual users, especially those who volunteer and those who have not shared recently)
+ *  * tag projects (main speaker(s) vs. support)
  *  * tag users
  *  * add some sort of way of identifying "memorable moments" in videos
  *  * come back after a few months to automatically identify all "memorabl moments" and then spend one day on editing a compilation
