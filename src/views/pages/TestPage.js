@@ -6,6 +6,7 @@ import DataSourceProvider from 'src/dbdi/react/DataSourceProvider';
 import MemoryDataProvider from 'src/dbdi/dataProviders/MemoryDataProvider';
 
 import DBDIFormExample from 'src/dbdi/examples/DBDIFormExample';
+import { NOT_LOADED } from '../../dbdi/react';
 
 const dataProviders = {
   memory: new MemoryDataProvider()
@@ -14,20 +15,29 @@ const dataStructureConfig = {
   testCfg: {
     dataProvider: 'memory',
     children: {
-      fetchFail: {
-        path: 'fetchFail',
-        async fetch() {
-          await doWait(10);
-          throw new Error('fetch MUST FAILLLLLL');
-        }
-      },
       fetchGood: {
         path: 'fetchGood',
         async fetch() {
           await doWait(600);
           return 'good!';
         }
-      }
+      },
+      fetchFail1: {
+        path: 'fetchFail1',
+        async fetch() {
+          await doWait(10);
+          throw new Error('fetch MUST FAILLLLLL');
+        }
+      },
+      fetchFail2: {
+        path: 'fetchFail2',
+        async fetch() {
+          await doWait(50);
+
+          // returning NOT_LOADED also triggers a failure, and will throttle following calls
+          return NOT_LOADED;
+        }
+      },
     }
   }
 };
@@ -39,10 +49,11 @@ async function doWait(ms) {
 
 @dataBind({})
 class TestFetch extends Component {
-  render({ }, { }, { fetchFail, fetchGood, fetchFail_isLoaded }) {
+  render({ }, { }, { fetchGood, fetchFail1, fetchFail1_isLoaded, fetchFail2, fetchFail2_isLoaded }) {
     return (<div>
-      <p>fetchFail: {fetchFail_isLoaded && 'loaded!' || 'not there yet (is loading) ...'} {fetchFail}</p>
       <p>fetchGood: {fetchGood || 'loading...'}</p>
+      <p>fetchFail1: {fetchFail1_isLoaded && 'loaded!' || 'loading (not ready)...'} {fetchFail1}</p>
+      <p>fetchFail2: {fetchFail2_isLoaded && 'loaded!' || 'loading (not ready)...'} {fetchFail2}</p>
     </div>);
   }
 }

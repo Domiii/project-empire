@@ -48,10 +48,10 @@ export default {
           }
           set_gapiError(err);
           //throw err;
-          return NOT_LOADED;
+          return null;
         }
       }
-      return NOT_LOADED;
+      return null;
     },
     children: {
       ytMyChannel: {

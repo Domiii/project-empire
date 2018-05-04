@@ -348,25 +348,25 @@ export default class DataProviderBase {
       remotePath
     } = query;
 
-    if (this.getLoadState(localPath) !== LoadState.Fetching) {
-      // something happened in the meantime -> discard fetched result
-      console.warn('discarding fetched result because path status changed @', localPath, '-', val);
-      return;
-    }
-
-    // update state
     if (val === NOT_LOADED) {
-      this.setLoadState(localPath, LoadState.NotLoaded);
+      this.fetchFailed(queryInput, 'fetch returned NOT_LOADED');
     }
     else {
+      if (this.getLoadState(localPath) !== LoadState.Fetching) {
+        // something happened in the meantime -> discard fetched result
+        console.warn('discarding fetched result because path status changed @', localPath, '-', val);
+        return;
+      }
+
+      // update state
       this.setLoadState(localPath, LoadState.Loaded);
+
+      // reset failure
+      this._fetchFails[localPath] = null;
+
+      // set new state (which should notify all listeners)
+      this.actions.set(remotePath, val);
     }
-
-    // reset failure
-    this._fetchFails[localPath] = null;
-
-    // set new state (which should notify all listeners)
-    this.actions.set(remotePath, val);
   }
 
   fetchFailed(queryInput, err) {
@@ -385,7 +385,7 @@ export default class DataProviderBase {
     }
 
     // remember failure
-    this._fetchFails[localPath] = (this._fetchFails[localPath] || 0)+1;
+    this._fetchFails[localPath] = (this._fetchFails[localPath] || 0) + 1;
 
     // downgrade load state at path
     this.setLoadState(localPath, LoadState.NotLoaded);
