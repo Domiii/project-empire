@@ -48,10 +48,6 @@ export default {
     );
   },
 
-  allUidsNotInProject() {
-    throw new Error('NYI');
-  },
-
   activeProjectsOfUser({ uid }, { activeProjectIdsOfUser, projectById }, { }) {
     return mapValues(
       activeProjectIdsOfUser(

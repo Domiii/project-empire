@@ -75,10 +75,10 @@ export function createPathGetterFromTemplate(pathTemplate, varLookup, getPathWit
   return getPath;
 }
 
+export const varRe = /\$\(([^)]+)\)/g;
+
 // see: http://codepen.io/Domiii/pen/zNOEaO?editors=0010
 export function parseTemplateString(text, varLookup) {
-  const varRe = /\$\(([^)]+)\)/g;
-
   text = text || '';
   let nVars = 0, nTexts = 0;
   function textNode(text) {

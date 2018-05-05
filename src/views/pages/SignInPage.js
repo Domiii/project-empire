@@ -1,10 +1,9 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import {
-  //signInWithGithub,
-  signInWithGoogle
-  //signInWithTwitter
-} from 'src/firebaseUtil';
+
+
+import { signInWithGoogle } from 'src/dbdi/firebase/firebase-util';
+
 
 import { FAIcon } from 'src/views/components/util';
 

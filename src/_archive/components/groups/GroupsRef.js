@@ -6,7 +6,7 @@
 import { 
   makeRefWrapper,
   m2mIndex
-} from 'src/firebaseUtil';
+} from 'src/refwrappers';
 import { EmptyObject, EmptyArray } from 'src/util';
 
 import UserInfoRef from 'src/core/users/UserInfoRef';

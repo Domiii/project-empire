@@ -1,4 +1,4 @@
-import { makeRefWrapper } from 'src/firebaseUtil';
+import { makeRefWrapper } from 'src/refwrappers';
 
 
 // TODO: Likes + maybe some more responses toward entire concepts

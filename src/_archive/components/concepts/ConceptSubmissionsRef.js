@@ -1,4 +1,4 @@
-import { makeRefWrapper } from 'src/firebaseUtil';
+import { makeRefWrapper } from 'src/refwrappers';
 
 export const SubmissionStatus = {
   NotSubmitted: 0,

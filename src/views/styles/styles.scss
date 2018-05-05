@@ -345,6 +345,7 @@ tr {}
 td, th {
   width: auto;
   border: 1px solid #eee;
+  vertical-align: middle !important;
 }
 td.min, th.min {
   width: 1% !important;

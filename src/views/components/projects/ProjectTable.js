@@ -58,7 +58,7 @@ const __defaultProps = {
     },
     {
       dataField: 'updatedAt',
-      text: 'Last Modified',
+      text: 'Last Update',
       classes: 'min',
       headerClasses: 'min',
       sort: true
@@ -227,6 +227,18 @@ export default class ProjectTable extends Component {
  *  * add some sort of way of identifying "memorable moments" in videos
  *  * come back after a few months to automatically identify all "memorabl moments" and then spend one day on editing a compilation
  */
+
+
+/**
+ * More important concepts:
+ * user roles: owner + supporting user roles in projects
+ * seriousness of project/and participants
+ * 每週分享狀態
+ * length/output/efficiency/value of project?
+ * timeline of project / of all projects
+ * active vs. archived projects
+ */
+
 
 
 /**

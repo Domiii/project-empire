@@ -49,11 +49,6 @@ export class DataStructureConfigNode {
   dataProviderName;
 
   /**
-   * Whether this node has been explicitly configured as read-only.
-   */
-  isReadOnly;
-
-  /**
    * The path configuration of this node.
    * 
    * @type {object}
@@ -62,6 +57,11 @@ export class DataStructureConfigNode {
    * @property {function} pathFn A function to build the path at run-time and override the path template setting
    */
   pathConfig;
+
+  /**
+   * Whether this node has been explicitly configured as read-only.
+   */
+  isReadOnly;
 
   /**
    * A custom reader configuration for this node.

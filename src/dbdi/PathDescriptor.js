@@ -8,11 +8,11 @@ import autoBind from 'src/util/auto-bind';
 
 import {
   createPathGetterFromTemplateProps
-} from 'src/firebaseUtil/dataUtil';
+} from './PathUtil';
 
 import { 
   makeIndices
-} from 'src/firebaseUtil/indices';
+} from './indices';
 
 import DataDescriptorNode from './DataDescriptorNode';
 

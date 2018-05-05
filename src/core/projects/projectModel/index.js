@@ -8,21 +8,12 @@ import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 
 import readers from './readers';
 import writers from './writers';
-
-
-/**
- * user roles: owner + supporting user roles in projects
- * seriousness of project/and participants
- * 每週分享狀態
- * length/output/efficiency/value of project?
- * timeline of project / of all projects
- * active vs. archived projects
- */
+import paginationNode from '../../../dbdi/nodes/paginationNode';
 
 /**
  * Project main data
  */
-const projectById = {
+const projectById = prefix => ({
   path: '$(projectId)',
   onWrite: [
     'updatedAt',
@@ -35,17 +26,17 @@ const projectById = {
     }
   ],
   children: {
-    projectTitle: 'title',
-    projectDescription: 'description',
+    [prefix + 'projectTitle']: 'title',
+    [prefix + 'projectDescription']: 'description',
 
     // icon URL
-    projectIconUrl: 'iconUrl',
+    [prefix + 'projectIconUrl']: 'iconUrl',
 
     // the person guarding/watching over this project/helping the project succeed
-    projectCreatorUid: 'creatorUid',
+    [prefix + 'projectCreatorUid']: 'creatorUid',
 
-    projectStatus: 'status',
-    projectFinishTime: 'finishTime'
+    [prefix + 'projectStatus']: 'status',
+    [prefix + 'projectFinishTime']: 'finishTime'
 
     // activeStagePath: {
     //   path: 'activeStagePath',
@@ -56,7 +47,7 @@ const projectById = {
     //   },
     // },
   }
-};
+});
 
 const stageEntries = {
   path: 'stageEntries',
@@ -152,31 +143,29 @@ export default {
       projectList: {
         path: 'list',
         children: {
-          projectsOfPage: {
-            path: {
-              queryParams(args) {
-                const {
-                  page
-                } = args;
-
-                const {
-                  orderBy,
-                  itemsPerPage,
-                  ascending
-                } = getOptionalArguments(args, {
-                  orderBy: 'updatedAt',
-                  itemsPerPage: 20,
-                  ascending: false
-                });
-
-                return [
-                  ['orderByChild', orderBy],
-                  [ascending ? 'limitToFirst' : 'limitToLast', page * itemsPerPage]
-                ];
+          projectsOfPage: paginationNode,
+          projectById: {
+            ...projectById(''),
+            writers: {
+              archiveProject() {
+                // TODO
               }
             }
-          },
-          projectById
+          }
+        }
+      },
+      projectArchive: {
+        path: 'archive',
+        children: {
+          archivedProjectsOfPage: paginationNode,
+          archivedProjectById: {
+            ...projectById('archived_'),
+            writers: {
+              unarchiveProject() {
+                // TODO
+              }
+            }
+          }
         }
       },
       // allProjectStages: {

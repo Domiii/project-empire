@@ -1,5 +1,5 @@
 import React from 'react';
-import {span} from 'react-dom';
+import { span } from 'react-dom';
 
 import PropTypes from 'prop-types';
 
@@ -35,7 +35,7 @@ export default class ImageLoader extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = {status: Status.LOADING};
+    this.state = { status: Status.LOADING };
   }
 
   componentDidMount() {
@@ -72,8 +72,8 @@ export default class ImageLoader extends React.Component {
     this.destroyLoader(); // We can only have one loader at a time.
 
     this.img = new Image();
-    this.img.onload = ::this.handleLoad;
-    this.img.onerror = ::this.handleError;
+    this.img.onload = :: this.handleLoad;
+    this.img.onerror = :: this.handleError;
     this.img.src = this.props.src;
   }
 
@@ -87,14 +87,14 @@ export default class ImageLoader extends React.Component {
 
   handleLoad(event) {
     this.destroyLoader();
-    this.setState({status: Status.LOADED});
+    this.setState({ status: Status.LOADED });
 
     if (this.props.onLoad) this.props.onLoad(event);
   }
 
   handleError(error) {
     this.destroyLoader();
-    this.setState({status: Status.FAILED});
+    this.setState({ status: Status.FAILED });
 
     const {
       src
@@ -104,12 +104,9 @@ export default class ImageLoader extends React.Component {
     if (this.props.onError) this.props.onError(error);
   }
 
-  renderImg() {
-    let {src, style, className, preloader, children, title, ...imgProps} = this.props;
-    let props = {src};
-    if (title === undefined) {
-      title = src;
-    }
+  renderImg(otherTitle) {
+    let { src, style, className, preloader, children, title, ...imgProps } = this.props;
+    let props = { src, title: title || otherTitle };
     return <img {...props} {...imgProps} style={style} className={className} />;
   }
 
@@ -126,13 +123,13 @@ export default class ImageLoader extends React.Component {
         return this.renderImg();
 
       case Status.FAILED:
-        return this.renderImg();    // show the default broken image
-        // return (<span>{children || 
-        //   <Alert bsStyle="danger" className="inline no-margin no-padding">
-        //     <FAIcon name="exclamation-triangle" />
-        //     invalid URL
-        //   </Alert>
-        // }</span>);
+        return this.renderImg(' ?');    // show the default broken image
+      // return (<span>{children || 
+      //   <Alert bsStyle="danger" className="inline no-margin no-padding">
+      //     <FAIcon name="exclamation-triangle" />
+      //     invalid URL
+      //   </Alert>
+      // }</span>);
 
       default:
         return <Preloader />;

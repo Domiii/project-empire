@@ -10,7 +10,7 @@ import { EmptyObject, EmptyArray, waitAsync } from 'src/util';
 import {
   getDataIn,
   setDataIn
-} from 'src/firebaseUtil/dataUtil';
+} from '../PathUtil';
 
 export const NOT_LOADED = undefined;
 

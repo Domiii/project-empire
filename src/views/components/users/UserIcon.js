@@ -69,7 +69,7 @@ const UserIcon = dataBind({})(function UserIcon(
       preloader={preloader}
       className={clazz}
       style={style}
-      title={user.displayName}>
+      title={user.fullName || user.displayName}>
 
       {user.photoURL}
     </ImageLoader>
