@@ -33,6 +33,7 @@ import ProjectContributorBar from './ProjectContributorBar';
 
 const __defaultProps = {
   keyField: 'id',
+  condensed: true,
   columns: [
     {
       dataField: 'id',
@@ -47,6 +48,8 @@ const __defaultProps = {
     {
       dataField: 'contributors',
       text: 'Contributors',
+      classes: 'min',
+      headerClasses: 'min',
       sort: true,
       sortFunc: (a, b, order, dataField) => {
         if (order === 'asc') return a - b;
@@ -56,6 +59,8 @@ const __defaultProps = {
     {
       dataField: 'updatedAt',
       text: 'Last Modified',
+      classes: 'min',
+      headerClasses: 'min',
       sort: true
     }
     // {

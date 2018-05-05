@@ -18,9 +18,14 @@ import LoadIndicator from 'src/views/components/util/loading';
 
 
 const ProjectContributorBar = dataBind()((
-  { projectId, children },
+  args,
   { uidsOfProject }
 ) => {
+  const {
+    projectId,
+    ...otherProps
+  } = args;
+
   if (!uidsOfProject.isLoaded({ projectId })) {
     return <LoadIndicator />;
   }
@@ -28,25 +33,29 @@ const ProjectContributorBar = dataBind()((
   const uids = Object.keys(uidsOfProject({ projectId }));
 
   // render all groups of contributors
-  return (<Flexbox flexDirection="row" justifyContent="flex-end" alignItems="center">
-    {
-      // render icons of the actual users in group
-      (<Flexbox minWidth="2em" minHeight="2em"
-        flexDirection="row" justifyContent="flex-end" alignItems="center">
-        {
-          map(uids,
-            (uid) => (
-              <UserIcon
-                key={uid}
-                uid={uid}
-              />
-            )
+  return (
+    // <Flexbox flexDirection="row" justifyContent="flex-end" alignItems="center">
+    //   {
+    // render icons of the actual users in group
+    // (<Flexbox minWidth="2em" minHeight="2em" className={otherProps.className}
+    //   flexDirection="row" justifyContent="flex-end" alignItems="center">
+    <span>
+      {
+        map(uids,
+          (uid) => (
+            <UserIcon
+              key={uid}
+              uid={uid}
+            />
           )
-        }
-      </Flexbox>)
-    }
-    { children }
-  </Flexbox>);
+        )
+      }
+    </span>
+    //</Flexbox>)
+    // }
+    // { children }
+    // </Flexbox>
+  );
 }
 );
 ProjectContributorBar.propTypes = {

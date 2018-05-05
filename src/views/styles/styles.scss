@@ -329,6 +329,29 @@ button:active { outline:none !important; }
   overflow: hidden;
 }
 
+
+/**
+ * #######################################################
+ * Table + TD
+ * #######################################################
+ */
+
+/* see: https://stackoverflow.com/a/26983473 */
+table {
+  /* override Bootstrap's width thingydeal */
+  width: inherit !important;
+}
+tr {}
+td, th {
+  width: auto;
+  border: 1px solid #eee;
+}
+td.min, th.min {
+  width: 1% !important;
+  white-space: nowrap !important;
+}
+
+
 /**
  * #######################################################
  * App-specific classes: Header + Footer
