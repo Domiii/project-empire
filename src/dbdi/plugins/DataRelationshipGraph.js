@@ -174,10 +174,11 @@ const dataModelGenerators = {
    */
   hasMany(n) {
     // TODO: addAToB
-    // TODO: deleteAFromB
+    // TODO: removeAllAsFromB
+    // TODO: removeAFromB
+    // TODO: since we want deletes to be atomic, we need update generators for delete
 
     return {
-      // the children store ids mutually
       children: {
         [n.aIdsOfBs]: {
           path: n.aIdsOfBs,
@@ -287,10 +288,13 @@ const dataModelGenerators = {
 
 /**
  * ####################################################################################
- * Graph
+ * Graph: Relationships
  * ####################################################################################
  */
 
+ /**
+  * Relationships represent uni-directional and bi-directional edges in the Graph.
+  */
 class Relationship {
   constructor() {
   }
@@ -312,6 +316,16 @@ class Relationship {
     return _getNameProxy(aName, bName, aIdName, bIdName, bListName);
   }
 }
+
+class BHasARelationship {
+
+}
+
+/**
+ * ####################################################################################
+ * Graph: GraphNode
+ * ####################################################################################
+ */
 
 /**
  * Any graphNode represents a treeNode with at least one of two types of relationships:

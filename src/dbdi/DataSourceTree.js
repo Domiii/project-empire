@@ -35,7 +35,7 @@ function addDefaultPlugins(plugins) {
 
 export default function buildSourceTree(dataProviders, dataStructureCfgRaw, plugins) {
   plugins = plugins || {};
-  
+
   addDefaultPlugins(plugins);
 
   const tree = new DataSourceTree(dataProviders, dataStructureCfgRaw, plugins);
@@ -138,7 +138,7 @@ class DataSourceTree {
         const arr = this._pluginInstances[type] || (this._pluginInstances[type] = []);
         arr.push(res);
       }
-    } 
+    }
     catch (err) {
       throw new Error('ERROR when executing plugin - ' + err.stack);
     }
@@ -357,13 +357,12 @@ class DataSourceTree {
     });
   }
 
-  _buildMetaWriteCfg(configNode, actionName) {
-    // TODO: Generalize this for an "event" or "plugin" concept, to more easily plugin additional functionality
-    let { onWrite } = configNode;
+  _buildMetaWriteCfg(configNode, actionName, eventName) {
+    let onWrite = configNode[eventName];
 
     if (isArray(onWrite)) {
       // get final set of functions for each function
-      const fns = map(onWrite, cfg => this.getPlugin('onWrite', cfg));
+      const fns = map(onWrite, cfg => this.getPlugin(eventName, cfg));
 
       // nest function calls
       onWrite = (...args) => {
@@ -373,7 +372,7 @@ class DataSourceTree {
       };
     }
     else {
-      onWrite = onWrite && this.getPlugin('onWrite', onWrite);
+      onWrite = onWrite && this.getPlugin(eventName, onWrite);
     }
 
     return {
@@ -387,8 +386,18 @@ class DataSourceTree {
    */
   _defaultDataWriteDescriptorBuilders = zipObject(this._defaultWriteOps,
     map(this._defaultWriteOps, (actionName) =>
-      (fullName, configNode, pathDescriptor) => {
-        const metaCfg = this._buildMetaWriteCfg(configNode, actionName);
+      (fullName, _configNode, pathDescriptor) => {
+        let configNode;
+        if (actionName === 'set' && _configNode.writer) {
+          // custom settings
+          // TODO: this is not handled very well now is it...
+          configNode = _configNode.writer;
+        }
+        else {
+          configNode = _configNode;
+        }
+
+        const metaCfg = this._buildMetaWriteCfg(configNode, actionName, 'onWrite');
         const customPathDescriptorBuilder = this._customWritePathDescriptors[actionName];
         if (customPathDescriptorBuilder) {
           // push has a special path
@@ -398,19 +407,13 @@ class DataSourceTree {
             return null;
           }
         }
-        if (actionName === 'set' && configNode.writer) {
-          // set can be custmized through the "writer" config entry
-          return this._buildCustomDataSetDescriptor(fullName, configNode);
-        }
-        else {
-          return new DataWriteDescriptor(pathDescriptor, metaCfg, fullName);
-        }
+        return new DataWriteDescriptor(pathDescriptor, metaCfg, fullName);
       }
     )
   )
 
   _buildCustomDataSetDescriptor(fullName, configNode, _) {
-    const metaCfg = this._buildMetaWriteCfg(configNode, 'custom');
+    const metaCfg = this._buildMetaWriteCfg(configNode, 'custom', 'onWrite');
     return configNode.writer && new DataWriteDescriptor(configNode.writer, metaCfg, fullName);
   }
 
