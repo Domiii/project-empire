@@ -1,4 +1,4 @@
-import { parseConfig } from './DataStructureConfig';
+import { parseConfig, parseConfigChildren } from './DataStructureConfig';
 import PathDescriptor from './PathDescriptor';
 import DataReadDescriptor from './DataReadDescriptor';
 import DataWriteDescriptor from './DataWriteDescriptor';
@@ -12,10 +12,36 @@ import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
 import pickBy from 'lodash/pickBy';
 import zipObject from 'lodash/zipObject';
+import merge from 'lodash/merge';
 
 import autoBind from 'src/util/auto-bind';
 
 import { EmptyObject, EmptyArray } from 'src/util';
+
+
+/**
+ * For now, we just add the default plugins.
+ * Eventually, we can easily put them into separate NPM modules.
+ * (because there is no specialized code outside of the plugins referring to the plugins)
+ */
+import DataRelationshipPlugin from './plugins/DataRelationshipGraph';
+function addDefaultPlugins(plugins) {
+  merge(plugins, {
+    tree: [
+      DataRelationshipPlugin
+    ]
+  });
+}
+
+export default function buildSourceTree(dataProviders, dataStructureCfgRaw, plugins) {
+  plugins = plugins || {};
+  
+  addDefaultPlugins(plugins);
+
+  const tree = new DataSourceTree(dataProviders, dataStructureCfgRaw, plugins);
+  tree._buildTree();
+  return tree;
+}
 
 /**
  * A DataSource is responsible for providing data read + write operations to any part of a web app.
@@ -23,10 +49,11 @@ import { EmptyObject, EmptyArray } from 'src/util';
  * In React, a DataSource is injected into the context through the DataSourceProvider component.
  * It uses a pub-sub model to keep track of data updates.
  */
-export default class DataSourceTree {
+class DataSourceTree {
   _dataProviders;
 
   _plugins;
+  _pluginInstances;
 
   /**
    * All DataSourceNodes
@@ -39,14 +66,10 @@ export default class DataSourceTree {
     this._plugins = plugins;
 
     autoBind(this);
-
-    this._root = this._buildNodeWithChildren(this._dataStructureCfgRoot, null, '');
-
-    this._compressHierarchy(this._root);
   }
 
   // #########################################################################
-  // Public methods + properties
+  // public book keeping
   // #########################################################################
 
   get root() {
@@ -91,6 +114,36 @@ export default class DataSourceTree {
     return node;
   }
 
+  _notifyPlugins(type, ...args) {
+    // TODO: replace with event engine instead?
+    const plugins = this.getPlugins(type);
+    if (plugins) {
+      if (isFunction(plugins)) {
+        const pluginFn = plugins;
+        this._notifyPlugin(type, pluginFn, ...args);
+      }
+      else if (isArray(plugins)) {
+        forEach(plugins, pluginFn => this._notifyPlugin(type, pluginFn, ...args));
+      }
+      else {
+        throw new Error(`invalid plugin(s) of type '${type}' must be function or array of function: ${plugins}`);
+      }
+    }
+  }
+
+  _notifyPlugin(type, pluginFn, ...args) {
+    try {
+      const res = pluginFn(...args);
+      if (res !== undefined) {
+        const arr = this._pluginInstances[type] || (this._pluginInstances[type] = []);
+        arr.push(res);
+      }
+    } 
+    catch (err) {
+      throw new Error('ERROR when executing plugin - ' + err.stack);
+    }
+  }
+
   getPlugins(type) {
     return this._plugins[type];
   }
@@ -114,38 +167,86 @@ export default class DataSourceTree {
     }
   }
 
+
   // #########################################################################
-  // Private methods + properties
+  // Methods for modifying the tree
   // #########################################################################
 
-  _buildNodeWithChildren(configNode, ...moreArgs) {
-    const newDataNode = this._buildNode(configNode, ...moreArgs);
-    this._buildChildren(newDataNode, configNode);
+  /**
+   * WARNING: This does not perform a merge. Replaces any existing nodes in the hierarchy in case of name conflict.
+   */
+  addChildrenToRoot(childrenCfgRaw) {
+    const root = this._root;
+    const childrenCfg = parseConfigChildren(root.cfg, childrenCfgRaw);
+    const newChildren = this._buildChildren(root, childrenCfg); // build
+    this._addChildrenToNode(root, newChildren); // add
+
+    return newChildren;
+  }
+
+  addChildToRoot(name, childCfgRaw) {
+    this.addChildrenToRoot({ [name]: childCfgRaw });
+  }
+
+  // #########################################################################
+  // Tree construction
+  // #########################################################################
+
+  _buildTree() {
+    this._root = this._buildRoot(this._dataStructureCfgRoot);
+    this._compressHierarchy(this._root);
+
+    this._notifyTreeBuilt();
+  }
+
+  _notifyTreeBuilt() {
+    this._notifyPlugins('tree', this);
+  }
+
+  /**
+   * Build the given node, as well as all readers/writers/children
+   */
+  _buildRoot(configNode) {
+    const newDataNode = this._buildNodeOnly(configNode, null, '', null, null);
+    this._buildAllDescendants(newDataNode, configNode);
     return newDataNode;
   }
 
-  _buildChildren(newDataNode, configNode) {
-    const children = Object.assign({},
-      this._buildAdditionalDataReadNodes(newDataNode, configNode.readers),
-      this._buildAdditionalDataWriteNodes(newDataNode, configNode.writers),
-
-      this._buildHybridDataNodes(newDataNode, configNode.children)
+  /**
+   * Build readers/writers/children and add to existing node
+   */
+  _buildAllDescendants(dataNode, configNode) {
+    const newChildren = Object.assign(
+      this._buildReaders(dataNode, configNode.readers),
+      this._buildWriters(dataNode, configNode.writers),
+      this._buildChildren(dataNode, configNode.children)
     );
 
-    newDataNode._children = children;
+    // assign to _children
+    this._addChildrenToNode(dataNode, newChildren);
+
+    return newChildren;
   }
 
-  _buildNode(configNode, parent, name, buildDataReadDescriptor, buildDataWriteDescriptor) {
+  _addChildrenToNode(dataNode, dataChildNodes) {
+    dataNode._children = dataNode._children || {};
+    Object.assign(dataNode._children, dataChildNodes);
+  }
+
+  /**
+   * Create new node
+   */
+  _buildNodeOnly(configNode, parent, name, buildDataReadDescriptor, buildDataWriteDescriptor) {
     const dataProvider = this._dataProviders[configNode.dataProviderName];
     if (configNode.dataProviderName && !dataProvider) {
       throw new Error(`Invalid dataProvider does not exist @${name}: "${configNode.dataProviderName}"`);
     }
     const fullName = (parent && parent.fullName && (parent.fullName + '.') || '') + name;
-    const pathDescriptor = configNode.pathConfig && 
+    const pathDescriptor = configNode.pathConfig &&
       new PathDescriptor(parent && parent.pathDescriptor, configNode.pathConfig, fullName);
 
     return new DataSourceNode(
-      this, parent, dataProvider,
+      this, configNode, parent, dataProvider,
       name, fullName,
       pathDescriptor,
       buildDataReadDescriptor && buildDataReadDescriptor(fullName, configNode, pathDescriptor),
@@ -156,8 +257,8 @@ export default class DataSourceTree {
   _buildDataReadDescriptor(fullName, configNode, pathDescriptor) {
     let { reader, fetch } = configNode;
     reader = reader && this.getPlugin('reader', reader);
-    const readDescriptor = (reader || pathDescriptor) &&
-      new DataReadDescriptor(pathDescriptor, reader, fetch, fullName);
+    const isReader = reader || pathDescriptor;
+    const readDescriptor = isReader && new DataReadDescriptor(pathDescriptor, reader, fetch, fullName);
     return readDescriptor;
   }
 
@@ -182,65 +283,65 @@ export default class DataSourceTree {
     return new DataReadDescriptor(null, reader, fetch, fullName);
   }
 
-  _buildHybridDataNodes(parent, cfgChildren) {
+  _buildChildren(parent, cfgChildren) {
     // nodes that potentially have both readers and writers
     const newNodes = {};
     forEach(cfgChildren, (configNode, name) => {
-      // build node
-      const newDataNode = newNodes[name] = this._buildNode(configNode, parent, name,
+      // build node (actual buildNode() call)
+      const newDataNode = newNodes[name] = this._buildNodeOnly(configNode, parent, name,
         this._buildDataReadDescriptor,
         this._buildCustomDataSetDescriptor);
 
       if (configNode.pathConfig) {
-        // add default writers at path
+        // build default writers at path
         this._buildDefaultWriters(configNode, parent, name, newNodes);
       }
       else if (newDataNode.isWriter) {
-        // has no default writers, but does have a custom writer
+        // has no path, but has custom writer
         const writerName = 'set_' + name;
-        this._addDataWriteNode(configNode, parent, writerName,
+        this._buildDataWriteNode(configNode, parent, writerName,
           this._buildCustomDataSetDescriptor, newNodes);
       }
 
       if (newDataNode.isReader) {
         // also register under the "get_*" alias
         let readerName = 'get_' + name;
-        newNodes[readerName] = this._buildNode(configNode, parent, readerName,
+        newNodes[readerName] = this._buildNodeOnly(configNode, parent, readerName,
           this._buildDataReadDescriptor,
           null);
 
         // add isLoaded node
         readerName = name + '_isLoaded';
-        newNodes[readerName] = this._buildDataReadDescriptor && this._buildNode(
+        newNodes[readerName] = this._buildDataReadDescriptor && this._buildNodeOnly(
           configNode, parent, readerName,
           this._buildDataIsLoadedReadDescriptor,
           null);
 
         // add the "force_*" reader
         readerName = 'force_' + name;
-        newNodes[readerName] = this._buildNode(configNode, parent, readerName,
+        newNodes[readerName] = this._buildNodeOnly(configNode, parent, readerName,
           this._buildDataReadForceDescriptor,
           null);
       }
 
       // recurse
-      this._buildChildren(newDataNode, configNode);
+      this._buildAllDescendants(newDataNode, configNode);
     });
     return newNodes;
   }
 
-  _buildAdditionalDataReadNodes(parent, cfgChildren) {
-    return mapValues(cfgChildren, (configNode, name) => {
-      const newDataNode = this._buildNode(configNode, parent, name, this._buildDataReadDescriptor);
+  _buildReaders(parent, readers) {
+    return mapValues(readers, (configNode, name) => {
+      const newDataNode = this._buildNodeOnly(configNode, parent, name, this._buildDataReadDescriptor, null);
       return newDataNode;
     });
   }
 
-  // #########################################################################
+  // #############################################
   // Handle Writers
   //
-  // TODO: move (most of) this out of here. It is DataProvider dependent.
-  // #########################################################################
+  // TODO: Consider moving DataProvider-dependent stuff outta here
+  // ##############################################
 
   _defaultWriteOps = ['push', 'set', 'update', 'delete']
 
@@ -252,7 +353,7 @@ export default class DataSourceTree {
 
   _buildDefaultWriters(configNode, parent, name, newNodes) {
     forEach(this._defaultDataWriteDescriptorBuilders, (descriptorBuilder, writerName) => {
-      this._addDataWriteNode(configNode, parent, writerName + '_' + name, descriptorBuilder, newNodes);
+      this._buildDataWriteNode(configNode, parent, writerName + '_' + name, descriptorBuilder, newNodes);
     });
   }
 
@@ -313,18 +414,18 @@ export default class DataSourceTree {
     return configNode.writer && new DataWriteDescriptor(configNode.writer, metaCfg, fullName);
   }
 
-  _addDataWriteNode(configNode, parent, name, descriptorBuilder, newChildren) {
-    const newDataNode = this._buildNode(
+  _buildDataWriteNode(configNode, parent, name, descriptorBuilder, newChildren) {
+    const newDataNode = this._buildNodeOnly(
       configNode, parent, name,
       null, descriptorBuilder);
 
     return newChildren[name] = newDataNode;
   }
 
-  _buildAdditionalDataWriteNodes(parent, cfgChildren) {
+  _buildWriters(parent, writers) {
     const newChildren = {};
-    forEach(cfgChildren, (configNode, name) => {
-      this._addDataWriteNode(configNode, parent, name, this._buildCustomDataSetDescriptor, newChildren);
+    forEach(writers, (configNode, name) => {
+      this._buildDataWriteNode(configNode, parent, name, this._buildCustomDataSetDescriptor, newChildren);
     });
     return newChildren;
   }
@@ -362,7 +463,7 @@ export default class DataSourceTree {
   }
 
   /**
-   * Copy all non-conflicting nodes in all descendants into the node itself.
+   * Copy all non-conflicting descendant (lower-level) nodes into all ascendant (upper-level) nodes' children, all the way back into the root
    * 
    * @param {*} node 
    */

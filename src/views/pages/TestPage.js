@@ -1,4 +1,4 @@
-import DataSourceTree from 'src/dbdi/DataSourceTree';
+import buildSourceTree from 'src/dbdi/DataSourceTree';
 
 import React, { Component } from 'react';
 import dataBind from 'src/dbdi/react/dataBind';
@@ -41,7 +41,7 @@ const dataStructureConfig = {
     }
   }
 };
-const dataSourceTree = new DataSourceTree(dataProviders, dataStructureConfig);
+const dataSourceTree = buildSourceTree(dataProviders, dataStructureConfig);
 
 async function doWait(ms) {
   return new Promise((r, j) => setTimeout(r, ms));

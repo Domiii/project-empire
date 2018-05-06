@@ -3,7 +3,7 @@ import FirebaseDataProvider, {
   FirebaseAuthProvider
 } from 'src/dbdi/firebase/FirebaseDataProvider';
 
-import DataSourceTree from 'src/dbdi/DataSourceTree';
+import buildSourceTree from 'src/dbdi/DataSourceTree';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
@@ -312,8 +312,8 @@ const ItemEditor = dataBind({
 // Wrap everything in DataSourceProvider, and go!
 // ##########################################################################
 
-//const dataSourceTree = new DataSourceTree(dataProviders, dataStructureConfig, plugins);
-const dataSourceTree = new DataSourceTree(dataProviders, dataStructureConfig);
+//const dataSourceTree = buildSourceTree(dataProviders, dataStructureConfig, plugins);
+const dataSourceTree = buildSourceTree(dataProviders, dataStructureConfig);
 
 const WrappedView = ({ }) => (
   <DataSourceProvider dataSourceTree={dataSourceTree}>

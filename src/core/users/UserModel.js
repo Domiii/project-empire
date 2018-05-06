@@ -247,6 +247,15 @@ export default {
       usersPublic: {
         path: 'public',
         readers: {
+          userPublic(args, { user }) {
+            return user(args);
+          },
+          get_userPublic(args, { user }) {
+            return user(args);
+          },
+          userPublic_isLoaded(args, { user }) {
+            return user.isLoaded(args);
+          },
           currentUser(
             { },
             { userPublic },
@@ -274,15 +283,15 @@ export default {
               }
             }
           },
-          userPublic: {
+          user: {
             path: '$(uid)',
             readers: {
-              isUserDataComplete({ uid }, { userPublic }) {
+              isUserDataComplete({ uid }, { get_user }) {
                 if (!uid) {
                   return false;
                 }
 
-                const user = userPublic({ uid });
+                const user = get_user({ uid });
                 if (user === NOT_LOADED) {
                   return NOT_LOADED;
                 }

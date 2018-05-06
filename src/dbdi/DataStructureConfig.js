@@ -20,17 +20,23 @@ export function parseConfig(cfg) {
   return new DataStructureConfig(cfg);
 }
 
-function parseConfigChildren(parent, children) {
-  return mapValues(children || EmptyObject, (childCfg, name) =>
-    new DataStructureConfigNode(name, parent, childCfg)
-  );
-}
 export default class DataStructureConfig {
   children;
 
   constructor(cfg) {
     this.children = parseConfigChildren(null, cfg);
   }
+}
+
+export function parseConfigChildren(parent, children) {
+  if (parent !== null && !(parent instanceof DataStructureConfigNode)) {
+    throw new Error('invalid configuration: parent must be null or an instance of `DataStructureConfigNode`');
+  }
+  return mapValues(children || EmptyObject, (childCfg, name) =>
+    childCfg instanceof DataStructureConfigNode ?
+      childCfg :
+      new DataStructureConfigNode(name, parent, childCfg)
+  );
 }
 
 /**

@@ -1,3 +1,4 @@
+import every from 'lodash/every';
 import forEach from 'lodash/forEach';
 
 import autoBind from 'src/util/auto-bind';
@@ -14,6 +15,7 @@ import { EmptyObject, EmptyArray } from 'src/util';
  */
 export default class DataSourceNode {
   name;
+  cfg;
   fullName;
 
   _tree;
@@ -28,11 +30,12 @@ export default class DataSourceNode {
   _readDescendants = {};
   _writeDescendants = {};
 
-  constructor(tree, parent, dataProvider, name, fullName, 
+  constructor(tree, cfg, parent, dataProvider, name, fullName, 
     pathDescriptor, readDescriptor, writeDescriptor) {
     //console.log('Building DataSourceNode: ' + name);
 
     this.name = name;
+    this.cfg = cfg;
     this.fullName = fullName;
 
     this._tree = tree;
@@ -45,6 +48,7 @@ export default class DataSourceNode {
     autoBind(this);
 
     this.readData.isLoaded = this.isDataLoaded;
+    this.readData.areAllLoaded = this.areAllLoaded;
   }
 
   // ################################################
@@ -79,6 +83,10 @@ export default class DataSourceNode {
     return this.readData(...allArgs) !== undefined;
   }
 
+  areAllLoaded(idArgs, ...allArgs) {
+    return every(idArgs, idArg => this.isDataLoaded(idArg, ...allArgs));
+  }
+
   readData(args, readerProxy, injectProxy, writerProxy, accessTracker) {
     args = args || EmptyObject;
     if (!this._readDescriptor) {
@@ -110,10 +118,30 @@ export default class DataSourceNode {
       this,
       accessTracker);
   }
+
+  forEachNodeInSubTree(fn) {
+    fn(this);
+    forEach(this._children, child => child.forEachNodeInSubTree(fn));
+  }
+
+  getReadDescendantByName(name) {
+    return this._readDescendants[name];
+  }
+
+  getWriteDescendantByName(name) {
+    return this._writeDescendants[name];
+  }
 }
 
+/**
+ * Represents a source node that shares the name with at least one other node
+ */
 export class AmbiguousSourceNode {
   name;
+
+  /**
+   * fullNames of all nodes that have the same name as this node
+   */
   fullNames;
 
   constructor(name, ...fullNames) {
@@ -153,12 +181,28 @@ export class AmbiguousSourceNode {
     throw new Error('[ERROR] Tried to call isDataLoaded on ' + this);
   }
 
+  areAllLoaded() {
+    throw new Error('[ERROR] Tried to call areAllLoaded on ' + this);
+  }
+
   readData() {
     throw new Error('[ERROR] Tried to call readData on ' + this);
   }
 
   writeData() {
     throw new Error('[ERROR] Tried to call writeData on ' + this);
+  }
+
+  forEachNodeInSubTree() {
+    throw new Error('[ERROR] Tried to call forEachNodeInSubTree on ' + this);
+  }
+
+  getReadDescendantByName() {
+    throw new Error('[ERROR] Tried to call getReadDescendantByName on ' + this);
+  }
+
+  getWriteDescendantByName() {
+    throw new Error('[ERROR] Tried to call getWriteDescendantByName on ' + this);
   }
 
   toString() {

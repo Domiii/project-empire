@@ -26,8 +26,7 @@ import merge from 'lodash/merge';
 import times from 'lodash/times';
 import zipObject from 'lodash/zipObject';
 
-import DataSourceTree from 'src/dbdi/DataSourceTree';
-import { NOT_LOADED } from '../dbdi/react/index.js';
+import buildSourceTree from 'src/dbdi/DataSourceTree';
 
 const utility = {
   readers: {
@@ -127,4 +126,4 @@ const plugins = {
   }
 };
 
-export default new DataSourceTree(dataProviders, dataModelConfig, plugins);
+export default buildSourceTree(dataProviders, dataModelConfig, plugins);

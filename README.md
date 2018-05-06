@@ -11,6 +11,16 @@
   * https://docs.google.com/presentation/d/1PEDof6WXYTD4ejQWoBBlglemhnPD9OAx_4yTjyRLcBw/edit#slide=id.g1ff0478143_0_7
 
 
+## TODO: Cohorts
+
+* Split all data into two: Global data and per-cohort data
+* Have one DataSourceProvider each
+* User data will be global
+  * UserModel must provide list of per-cohort uids
+  * all (ccurent) user queries should still work but internally make use of the cohort-level of indirection to get it's data
+  * PROBLEM: Relationships cannot traverse trees
+  * PROBLEM: DataProvider cannot concurrently provide multiple trees
+
 ## Goal Setting + Checking 系統設計原則
 
 * 協助自己設定且追蹤自己的目標
