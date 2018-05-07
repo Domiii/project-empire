@@ -127,14 +127,14 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
     let writeData;
     if (writerCfg instanceof PathDescriptor) {
       // build writer from pathDescriptor
-      writeData = this._buildWriteDataFromDescriptor(writerCfg);
+      writeData = this._buildWriterFromDescriptor(writerCfg);
     }
     else if (isFunction(writerCfg)) {
       // custom writer function
-      writeData = this._wrapCustomWriter(writerCfg);
+      writeData = this._buildCustomWriter(writerCfg);
     }
     else {
-      throw new Error('Could not make sense of DataWriteDescriptor config node: ', writerCfg);
+      throw new Error('Could not make sense of writer config node (must be function or path config) - ' + JSON.stringify(writerCfg));
     }
     this.writeData = this._wrapAccessFunction(writeData);
   }
@@ -161,7 +161,7 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
    * NOTE: Method signature of custom writers are slightly different, in that they don't separate `queryArgs` and `val`
    * (but rather any written value is contained in the `queryArgs`).
    */
-  _wrapCustomWriter(writerFn) {
+  _buildCustomWriter(writerFn) {
     return (args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) => {
       // // TODO check if all dependencies are loaded?
       // if (!callerNode.areDependenciesLoaded(this)) {
@@ -181,7 +181,7 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
     };
   }
 
-  _buildWriteDataFromDescriptor(pathDescriptor) {
+  _buildWriterFromDescriptor(pathDescriptor) {
     this.pathDescriptor = pathDescriptor;
     return (args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) => {
       // // TODO check if all dependencies are loaded?
@@ -195,14 +195,14 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
       } = args;
 
       const path = this._doGetPath(pathDescriptor, queryArgs, readerProxy, injectProxy, callerNode, accessTracker);
-      return this._writeDataWithDescriptor(path, val, queryArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
+      return this._writeToPath(path, val, queryArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
     };
   }
 
   /**
    * This is called when writing to a node built from a PathDescriptor.
    */
-  _writeDataWithDescriptor(queryInput, val, queryArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) {
+  _writeToPath(queryInput, val, queryArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) {
     const {
       dataProvider
     } = callerNode;

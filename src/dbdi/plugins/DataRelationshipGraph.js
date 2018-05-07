@@ -9,6 +9,8 @@ import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
 import isString from 'lodash/isString';
+import isPlainObject from 'lodash/isPlainObject';
+import isArray from 'lodash/isArray';
 import zipObject from 'lodash/zipObject';
 import times from 'lodash/times';
 import uniq from 'lodash/uniq';
@@ -18,9 +20,10 @@ import pluralize from 'pluralize';
 import autoBind from 'src/util/auto-bind';
 
 import { EmptyObject, EmptyArray } from '../../util';
-import { NOT_LOADED } from '../react';
-import { getOptionalArgument } from '../dataAccessUtil';
-import { getFirstVariableInPathTemplate } from './PathUtil';
+
+import { NOT_LOADED } from 'src/dbdi';
+import { getOptionalArgument } from 'src/dbdi/dataAccessUtil';
+import { getFirstVariableInPathTemplate } from 'src/dbdi/PathUtil';
 
 /**
  * ####################################################################################
@@ -69,48 +72,6 @@ const _nameProxyHandler = {
     return obj[prop];
   }
 };
-
-function _validateName(name) {
-  if (!validNameRe.test(name)) {
-    throw new Error(`invalid name in data relationship: ${name} - must be alphanumerical AND start lower-case!`);
-  }
-  if (name !== pluralize(name)) {
-    throw new Error(`invalid name in data relationship: ${name} - must be singular and different from it's own plural`);
-  }
-}
-
-/**
- * Do some sanity checks on all names, to avoid naming conflicts.
- * This is because we will automatically generate all kinds of names automatically, and 
- * that can get ugly real soon real fast.
- */
-function _validateNames(allNames) {
-  // overall criteria
-  if (uniq(allNames).length < allNames.length) {
-    throw new Error(`invalid name in data relationship: "${allNames.join('_')}" - both names, and both variable names all must be unique`);
-  }
-
-  // individual criteria
-  allNames.forEach(_validateName);
-}
-
-
-function pathForVar(varName) {
-  return `$(${varName})`;
-}
-
-
-
-function getIdNameFromPathTemplate(pathTemplate) {
-  const idName = getFirstVariableInPathTemplate(pathTemplate);
-  if (!idName) {
-    throw new Error(`invalid "hasMany" relationship - can only be added to nodes with single variable in path: '${pathTemplate}'`
-      // +'- HINT: you can add "indices" to the node (possibly with isProperty set to false), to have a single variable represent multiple values'
-    );
-  }
-  return idName;
-}
-
 
 /**
  * Generate names.
@@ -161,6 +122,54 @@ function _getNameProxy(...allNames) {
   return p;
 }
 
+function getRelationshipParentName(aName, bName) {
+  return [aName, bName].sort().join('_');
+}
+
+
+function _validateName(name) {
+  if (!validNameRe.test(name)) {
+    throw new Error(`invalid name in data relationship: ${name} - must be alphanumerical AND start lower-case!`);
+  }
+  if (name !== pluralize(name)) {
+    throw new Error(`invalid name in data relationship: ${name} - must be singular and different from it's own plural`);
+  }
+}
+
+/**
+ * Do some sanity checks on all names, to avoid naming conflicts.
+ * This is because we will automatically generate all kinds of names automatically, and 
+ * that can get ugly real soon real fast.
+ */
+function _validateNames(allNames) {
+  // overall criteria
+  if (uniq(allNames).length < allNames.length) {
+    throw new Error(`invalid name in data relationship: "${allNames.join('_')}" - both names, and both variable names all must be unique`);
+  }
+
+  // individual criteria
+  allNames.forEach(_validateName);
+}
+
+
+function pathForVar(varName) {
+  return `$(${varName})`;
+}
+
+
+
+function getIdNameFromPathTemplate(pathTemplate) {
+  const idName = getFirstVariableInPathTemplate(pathTemplate);
+  if (!idName) {
+    throw new Error(`invalid "hasMany" relationship - can only be added to nodes with single variable in path: '${pathTemplate}'`
+      // +'- HINT: you can add "indices" to the node (possibly with isProperty set to false), to have a single variable represent multiple values'
+    );
+  }
+  return idName;
+}
+
+
+
 
 /**
  * ####################################################################################
@@ -176,7 +185,13 @@ const dataModelGenerators = {
     // TODO: addAToB
     // TODO: removeAllAsFromB
     // TODO: removeAFromB
-    // TODO: since we want deletes to be atomic, we need update generators for delete
+    // TODO: since we want deletion to be atomic, we need a new kind of "update generator" that merges all delete updates together
+    //    -> add write stack to DataAccessTracker
+    //    -> use the write stack to maintain a "writeUpdates" object which can be accessed through the write proxy
+    //    -> when first used -> initialize new "writeUpdates"
+    //    -> when stack empties -> flush "writeUpdates" to the DataProvider of the first (and also last) write node on the stack
+    //    -> Problem! Doesn't play well with asnychronous writes
+    //    -> We will need to somehow identify the different "asynchronous write stacks" during any write operation (or "threads" / ("sagas" (?)))
 
     return {
       children: {
@@ -280,11 +295,49 @@ const dataModelGenerators = {
         //     // return size(userProjectIdIndex[uid]) <= excludeSize;
         //   });
         // },
+      },
+
+      writers: {
+        [n.addAToB](args, readers, injected, writers) {
+          writers[n.aIdOfB](args, 1);
+        }
       }
     };
   }
 };
 
+/**
+ * ####################################################################################
+ * Parse hasMany configuration
+ * ####################################################################################
+ */
+
+function _sanitizeHasManyConfigEntry(hasMany) {
+  if (isString(hasMany)) {
+    return { name: hasMany };
+  }
+  if (isPlainObject(hasMany)) {
+    if (!hasMany.name) {
+      throw new Error(`invalid hasMany configuration entry does not have a name - ${JSON.stringify(hasMany)}`);
+    }
+    return hasMany;
+  }
+  throw new Error(`invalid hasMany configuration entry must be string or plain object - ${JSON.stringify(hasMany)}`);
+}
+
+function parseHasManyConfig(hasMany) {
+  if (isString(hasMany) || isPlainObject(hasMany)) {
+    // one single entry
+    const entry = _sanitizeHasManyConfigEntry(hasMany);
+    return { [entry.name]: entry };
+  }
+  if (isArray(hasMany)) {
+    // a bunch of entries
+    const entries = map(hasMany, _sanitizeHasManyConfigEntry);
+    return zipObject(map(entries, 'name'), entries);
+  }
+  throw new Error(`invalid hasMany configuration must be a single string or plain object, or an array thereof - ${JSON.stringify(hasMany)}`);
+}
 
 /**
  * ####################################################################################
@@ -292,32 +345,61 @@ const dataModelGenerators = {
  * ####################################################################################
  */
 
- /**
-  * Relationships represent uni-directional and bi-directional edges in the Graph.
-  */
+/**
+ * Relationships represent uni-directional and bi-directional edges in the Graph.
+ */
 class Relationship {
-  constructor() {
+  parentCfgNode;
+
+  constructor(parentCfgNode, a, b) {
+    this.parentCfgNode = parentCfgNode;
+
+    this.a = a;
+    this.b = b;
   }
 
-  _getNameProxyHas(a) {
-    const aName = '??';
-    const aIdName = '??';
+  get relationshipParentName() {
+    return getRelationshipParentName(this.a.name, this.b.name);
+  }
+}
 
-    const { configNode } = treeNode;
-    const bName = treeNode.name;
-    const {
-      pathConfig
-    } = configNode;
-    const { pathTemplate } = pathConfig;
-    const bIdName = getIdNameFromPathTemplate(pathTemplate);
+/**
+ * Unidirectional relationship
+ */
+class BHasManyARelationship extends Relationship {
+  constructor(parentCfgNode, a, b) {
+    super(parentCfgNode, a, b);
 
-    const bListName = treeNode.parent.name;
+    b.hasMany.push(this);
+  }
+
+  build() {
+    const n = _getNameProxy();
+    // parentCfgNode
+    cfgNode[b] = dataModelGenerators.hasMany(n);
+  }
+
+  _getNameProxy(a) {
 
     return _getNameProxy(aName, bName, aIdName, bIdName, bListName);
   }
 }
 
-class BHasARelationship {
+// class ABelongsToBRelationship extends Relationship {
+//   constructor(parentCfgNode, a, b) {
+//     super(parentCfgNode, a, b);
+
+//     a.belongsTo.push(this);
+//   }
+// }
+
+/**
+ * Bidirectional relationship
+ */
+class M2MRelationship extends Relationship {
+  constructor(parentCfgNode, a, b) {
+    super(parentCfgNode, a, b);
+  }
 
 }
 
@@ -336,25 +418,50 @@ class BHasARelationship {
  * (...or both)
  */
 class GraphNode {
+  // relationships
+  hasMany = [];
+  belongsTo = [];
+
+  // settings
+  hasManyCfg;
+
   constructor(graph, treeNode) {
     this.graph = graph;
     this.treeNode = treeNode;
 
-    this.has = [];
-    this.belongsTo = [];
+    const { hasMany } = treeNode.configNode;
+
+    // parse hasMany config
+    this.hasManyCfg = this.parseHasManyConfig(hasMany);
+  }
+
+  doesHaveMany(aName) {
+    return !!this.hasManyCfg[aName];
   }
 
   get name() {
     return this.treeNode.name;
   }
+
+  get idName() {
+    const {
+      pathConfig
+    } = this.treeNode.configNode;
+    const { pathTemplate } = pathConfig;
+
+    return getIdNameFromPathTemplate(pathTemplate);
+  }
+
+  get listName() {
+    return this.treeNode.parent.name;
+  }
 }
+
 
 export class DataRelationshipGraph {
   nodesByName = {};
 
-  hasManyRelationships = [];
-  belongsToRelationships = [];
-  manyToManyRelationships = [];
+  relationships = [];
 
   /**
    * ####################################################################################
@@ -386,7 +493,7 @@ export class DataRelationshipGraph {
     // // after all nodes have been added, directly fix up all related nodes
     // this._completeEdges();
   }
-  
+
   /**
    * ####################################################################################
    * Graph: build nodes
@@ -428,43 +535,63 @@ export class DataRelationshipGraph {
    */
 
   _buildAllRelationships() {
-    const relationshipDataConfig = this.relationshipDataConfig = {
-      path: '_rel'
+    this.relationshipDataConfig = {
+      path: '_rel',
+      children: {}
     };
 
-    // TODO
-
-    // 1. collect + handle all hasMany relationships
-    // 2. collect + handle all many-to-many relationships
-    // 3. clean up all relationships of any node when deleting (owning and owned!)
-    this.forEachNode(this._addHasMany);
+    this.forEachNode(this._addRelationshipsForNode);
   }
 
-  _addHasMany(graphNode) {
-    const { treeNode } = graphNode;
-    const { configNode } = treeNode;
-    let {
-      hasMany,
-      relationship
-    } = configNode;
+  _getConfigNode(relationshipName) {
+    return this.relationshipDataConfig.children[relationshipName];
+  }
 
-    hasMany = hasMany || relationship && relationship.hasMany;
-
-    const bName = graphNode.name;
-
-    const aName = isString(hasMany) ? hasMany : hasMany.name;
-    const aTreeNode = this.tree.root.getReadDescendantByName(aName);
-    if (!aTreeNode) {
-      throw new Error(`invalid "hasMany" relationship in ${bName} - ${aName} does not exist in data (sub-)tree`);
+  _getOrCreateConfigNodeForRelationship(aName, bName) {
+    const relationshipName = getRelationshipParentName(aName, bName);
+    let node = this._getConfigNode(relationshipName);
+    if (!node) {
+      node = this.relationshipDataConfig.children[relationshipName] = {};
     }
-    const aGraphNode = this._getOrCreateGraphNodeForTreeNode(treeNode);
+    return node;
+  }
+
+  _addRelationshipsForNode(bGraphNode) {
+    const { treeNode: bTreeNode } = bGraphNode;
+    const bName = bGraphNode.name;
+
+    forEach(bGraphNode.hasManyCfg, (hasManyEntry, aName) => {
+      const aTreeNode = this.tree.root.getReadDescendantByName(aName);
+      if (!aTreeNode) {
+        throw new Error(`invalid "hasMany" relationship in ${bName} - ${aName} does not exist in data (sub-)tree`);
+      }
+      if (!aTreeNode.isWriter) {
+        throw new Error(`invalid "hasMany" relationship in ${bName} - ${aName} must be (but is not) readable and writable`);
+      }
+      const aGraphNode = this._getOrCreateGraphNodeForTreeNode(aTreeNode);
+
+      const cfgNode = this._getOrCreateConfigNodeForRelationship(aName, bName);
+
+      // 1. hasMany relationship
+      this.addHasManyRelation(aGraphNode, bGraphNode, cfgNode);
+
+      // 2. many-to-many relationship
+
+
+      // 3. clean up all relationships of any node when deleting (owning and owned!)
+    });
+  }
+
+  _addRelationship(rel) {
+    this.relationships[rel.relationshipParentName] = rel;
   }
 
   /**
-   * b has many a
+   * Add relationship to cfgNode
    */
-  addHasManyRelation(aName, bName) {
-    const cfg = dataModelGenerators.hasMany(n);
+  addHasManyRelation(a, b, cfgNode) {
+    this._addRelationship(new BHasManyARelationship(cfgNode, a, b));
+    //this._addRelationship(new ABelongsToBRelationship(cfgNode, a, b));
 
     // TODO
   }
@@ -472,11 +599,11 @@ export class DataRelationshipGraph {
   /**
    * a has many b, AND b has many a
    */
-  addManyToManyRelation(aName, bName) {
+  addManyToManyRelation(a, b) {
 
     // index name combines the two names.
     // to make sure it's the same in both directions, we need to sort the two in some universal order
-    const indexName = [aName, bName].sort().join('_') + 'm2m';
+    const indexName = [aName, bName].sort().join('_');
     const path = indexName;
     // this.addHasManyRelation(aName, bName);
     // this.addHasManyRelation(bName, aName);
@@ -546,13 +673,13 @@ const readers = {
 
     const updates = getOptionalArgument(args, 'updates', {});
 
-    // delete b from all it's a
+    // disconnect b from all it's a's
     Object.assign(updates, zipObject(
       map(uids, uid => projectOfUser.getPath({ uid, projectId })),
       times(uids.length, () => null)
     ));
 
-    // delete all a of this b
+    // disconnect all a's from this b
     updates[uidsOfProject.getPath(projectArgs)] = null;
 
     return updates;

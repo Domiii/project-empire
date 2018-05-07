@@ -1,6 +1,7 @@
 import { writeParameterConfig } from 'src/dbdi/DataWriteDescriptor';
 
 import isObject from 'lodash/isObject';
+import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
 
 import autoBind from 'src/util/auto-bind';
@@ -10,9 +11,12 @@ import { EmptyObject, EmptyArray } from 'src/util';
 const specialProxyProperties = {
     // need to hack this, because Proxies are transparently virtualized
     // https://stackoverflow.com/questions/36372611/how-to-test-if-an-object-is-a-proxy
-  ____isWrapperProxy(target) { return true; },
+  ____isWrapperProxy() { return true; },
+
   toJSON(target) {
-    //return JSON.parse(target);
+    if (isString(target)) {
+      return JSON.parse(target);
+    }
     return target;
   }
 };
@@ -190,7 +194,7 @@ export default class DataAccessTracker {
 
     // get parameter config for action
     const paramConfig = writeParameterConfig[writeDescriptor.actionName];
-    console.assert(paramConfig, 'writeParameterConfig in _wrapWriteData');
+    console.assert(paramConfig, 'writeParameterConfig in _wrapWriteData not defined for action ' + writeDescriptor.actionName);
     const {
       processArguments
     } = paramConfig;
@@ -244,8 +248,7 @@ export default class DataAccessTracker {
     const readData = this.resolveReadData(name);
     if (!readData) {
       debugger;
-      throw new Error(`DI failed - reader does not exist: "${name}": 
- ${Object.keys(this._dataSourceTree._root._readDescendants).join(', ')}`);
+      throw new Error(`DI failed - reader does not exist: "${name}": ${Object.keys(this._dataSourceTree._root._readDescendants).join(', ')}`);
     }
     return readData;
   }
@@ -266,8 +269,7 @@ export default class DataAccessTracker {
   resolveWriteDataForce(name) {
     const writeData = this.resolveWriteData(name);
     if (!writeData) {
-      throw new Error(`DI failed - writer does not exist: "${name}": 
- ${Object.keys(this._dataSourceTree._root._writeDescendants).join(', ')}`);
+      throw new Error(`DI failed - writer does not exist: "${name}": ${Object.keys(this._dataSourceTree._root._writeDescendants).join(', ')}`);
     }
     return writeData;
   }
