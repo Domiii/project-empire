@@ -216,6 +216,10 @@ export default class ProjectTable extends Component {
 }
 
 /**
+ * Add new SharingSessionView
+ */
+
+/**
  * Video Tagging:
  *  * add new "SharingSessionModel + Page"
  *  * import existing projects (with user names as notes/comments or description?)
