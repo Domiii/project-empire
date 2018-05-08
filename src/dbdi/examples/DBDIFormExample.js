@@ -313,12 +313,14 @@ const ItemEditor = dataBind({
 // ##########################################################################
 
 //const dataSourceTree = buildSourceTree(dataProviders, dataStructureConfig, plugins);
-const dataSourceTree = buildSourceTree(dataProviders, dataStructureConfig);
+let dataSourceTree;
 
-const WrappedView = ({ }) => (
-  <DataSourceProvider dataSourceTree={dataSourceTree}>
+const WrappedView = ({ }) => {
+  dataSourceTree = dataSourceTree || buildSourceTree(dataProviders, dataStructureConfig);
+  
+  return (<DataSourceProvider dataSourceTree={dataSourceTree}>
     <ItemList />
-  </DataSourceProvider>
-);
+  </DataSourceProvider>);
+};
 
 export default WrappedView;

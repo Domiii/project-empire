@@ -429,7 +429,8 @@ class GraphNode {
     this.graph = graph;
     this.treeNode = treeNode;
 
-    const { hasMany } = treeNode.configNode;
+    const { cfg: configNode } = treeNode;
+    const { hasMany } = configNode;
 
     // parse hasMany config
     this.hasManyCfg = this.parseHasManyConfig(hasMany);
@@ -444,9 +445,10 @@ class GraphNode {
   }
 
   get idName() {
+    const { cfg: configNode } = this.treeNode;
     const {
       pathConfig
-    } = this.treeNode.configNode;
+    } = configNode;
     const { pathTemplate } = pathConfig;
 
     return getIdNameFromPathTemplate(pathTemplate);
@@ -504,7 +506,7 @@ export class DataRelationshipGraph {
     let graphNode = this.getNode(treeNode.name);
     if (!graphNode) {
       // not added yet
-      const { configNode } = treeNode;
+      const { cfg: configNode } = treeNode;
 
       const {
         hasMany,
@@ -536,8 +538,10 @@ export class DataRelationshipGraph {
 
   _buildAllRelationships() {
     this.relationshipDataConfig = {
-      path: '_rel',
-      children: {}
+      _relationships: {
+        path: '_rel',
+        children: {}
+      }
     };
 
     this.forEachNode(this._addRelationshipsForNode);
@@ -636,6 +640,7 @@ export function DataRelationshipPlugin(tree) {
   graph._buildGraph();
 
   // when finished building, add to tree!
+  console.warn(graph.relationshipDataConfig);
   tree.addChildToRoot(graph.relationshipDataConfig);
 
   return graph;

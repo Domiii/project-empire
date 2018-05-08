@@ -30,8 +30,10 @@ export default class DataStructureConfig {
 
 export function parseConfigChildren(parent, children) {
   if (parent !== null && !(parent instanceof DataStructureConfigNode)) {
+    debugger;
     throw new Error('invalid configuration: parent must be null or an instance of `DataStructureConfigNode`');
   }
+  console.warn(children);
   return mapValues(children || EmptyObject, (childCfg, name) =>
     childCfg instanceof DataStructureConfigNode ?
       childCfg :
