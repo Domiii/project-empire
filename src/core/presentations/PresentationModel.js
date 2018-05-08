@@ -1,3 +1,11 @@
+
+export const PresentationStatus = {
+  Pending: 1,
+  InProgress: 2,
+  Finished: 3,
+  Cancelled: 4
+};
+
 export default {
   presentationData: {
     path: 'presentations',

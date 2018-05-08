@@ -34,8 +34,28 @@ export class LiveView extends Component {
     { }
   ) {
     return (<F>
-      TODO: proper "presentation streaming view"
-      TODO: generate + show list of pending presentations
+      <pre>TODO
+0. generate, shuffle + show table of presentations
+  * at least with: title + user info
+1. split presentations into two, by status
+2. be able to add, edit + delete (pending) presentations
+4. button to shuffle pending presentations
+5. proper "presentation streaming view" + 
+  * just use the same id for: streamId + fileId + presentationId?
+  * store video + associate fileId in DB with presentation
+6. when streaming on a different machine, don't show streaming view, but show a button to forefully take over
+7. presentation timer!
+      </pre>
+      <pre>more TODOs
+0. proper project + user tagging for presentations
+  * hasMany needs to work for this
+1. batch-upload to youtube
+2. generate youtube playlists
+3. normal user view of:
+  a) presentation session + presentation
+  b) own + participating playlists
+4. let users provider supplementary material (at least presentation URL)
+      </pre>
     </F>);
   }
 }
