@@ -1,5 +1,48 @@
 import { routePaths } from './routes';
 
+
+/**
+ * ################################################################################
+ * Presentations + presentation sessions
+ * ################################################################################
+ */
+export function hrefPresentationSession(mode) {
+  return `${routePaths.PRESENTATION_SESSIONS}/${mode}`;
+}
+
+export function hrefPresentationSessionView(sessionId, presentationId) {
+  let url = `${routePaths.PRESENTATION_SESSIONS}/view/${sessionId}`;
+  if (presentationId) {
+    url += `#${presentationId}`;
+  }
+  return url;
+}
+
+/**
+ * ################################################################################
+ * Projects
+ * ################################################################################
+ */
+export function hrefProjectEntry(mode, projectId) {
+  mode = mode || 'view';
+
+  return `${routePaths.PROJECTS}/${mode}#${projectId}`;
+}
+
+export function hrefProjectList(mode) {
+  mode = mode || 'view';
+
+  return `${routePaths.PROJECTS}/${mode}`;
+}
+
+
+
+/**
+ * ################################################################################
+ * (unused)
+ * ################################################################################
+ */
+
 export function hrefProjectControl(projectId, stagePath) {
   const url = [];
 
@@ -12,18 +55,6 @@ export function hrefProjectControl(projectId, stagePath) {
   }
 
   return url.join('/');
-}
-
-export function hrefProjectEntry(mode, projectId) {
-  mode = mode || 'view';
-
-  return `${routePaths.PROJECTS}/${mode}#${projectId}`;
-}
-
-export function hrefProjectList(mode) {
-  mode = mode || 'view';
-
-  return `${routePaths.PROJECTS}/${mode}`;
 }
 
 export function hrefLearnerStatusEntry(mode, uid, scheduleId, cycleId) {

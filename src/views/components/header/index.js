@@ -169,8 +169,13 @@ export default class Header extends Component {
         </LinkContainer>
       ),
       (
+        <LinkContainer key="pres" to="/pres">
+          <NavItem eventKey={11}>Presentations</NavItem>
+        </LinkContainer>
+      ),
+      (
         <LinkContainer key="video" to="/video">
-          <NavItem eventKey={11}>
+          <NavItem eventKey={12}>
             Video {isAnyStreamOnline && <FAIcon name="circle" color="red" />}
           </NavItem>
         </LinkContainer>

@@ -1,15 +1,6 @@
 import map from 'lodash/map';
 import size from 'lodash/size';
-import forEach from 'lodash/forEach';
-import isFunction from 'lodash/isFunction';
-import groupBy from 'lodash/groupBy';
 import mapValues from 'lodash/mapValues';
-import zipObject from 'lodash/zipObject';
-import pickBy from 'lodash/pickBy';
-import merge from 'lodash/merge';
-import toPairs from 'lodash/toPairs';
-import sortBy from 'lodash/sortBy';
-import isEmpty from 'lodash/isEmpty';
 
 
 import React, { Component } from 'react';

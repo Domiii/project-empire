@@ -8,7 +8,7 @@ import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 
 import readers from './readers';
 import writers from './writers';
-import paginationNode from '../../../dbdi/nodes/paginationNode';
+import paginationNodes from 'src/dbdi/nodes/paginationNodes';
 
 /**
  * Project main data
@@ -142,9 +142,14 @@ export default {
     children: {
       projectList: {
         path: 'list',
+        readers: {
+          projectById(args, { project }) {
+            return project(args);
+          }
+        },
         children: {
-          projectsOfPage: paginationNode,
-          projectById: {
+          ...paginationNodes('projectsOfPage'),
+          project: {
             ...projectById(''),
             writers: {
               archiveProject() {
@@ -157,7 +162,7 @@ export default {
       projectArchive: {
         path: 'archive',
         children: {
-          archivedProjectsOfPage: paginationNode,
+          ...paginationNodes('archivedProjectsOfPage'),
           archivedProjectById: {
             ...projectById('archived_'),
             writers: {

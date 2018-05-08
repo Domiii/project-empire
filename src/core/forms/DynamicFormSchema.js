@@ -1,3 +1,9 @@
+/**
+ * This adds a dynamic twist on the schema from react-jsonschema-form.
+ *  -> Ordered by default, adds conditionals, custom node builder functions
+ * 
+ * Also provides utilities to extract and validate only the data from an object that matches a given standard schema.
+ */
 
 //import dataSourceTree from 'src/core/dataSourceTree';
 
@@ -136,6 +142,22 @@ export function normalizeSchema(o, uiSchema) {
 }
 
 /**
+ * Allow form schemas to be built dynamically
+ */
+export default class DynamicFormSchemaBuilder {
+  template;
+
+  constructor(template) {
+    this.template = template;
+  }
+
+  build(uiSchema, allBuilderArgs) {
+    const customSchema = buildSchemaFromTemplate(this.template, allBuilderArgs);
+    return normalizeSchema(customSchema, uiSchema);
+  }
+}
+
+/**
  * Only get the data from formData that is defined in the schema
  */
 export function extractSchemaData(formData, schema) {
@@ -165,11 +187,8 @@ export function isFormDataEqual(formData1, formData2, schema) {
       return false;
     }
     if (formData1 === null || formData1 === undefined) {
-      // both sides are not set yet
+      // both sides are not set yet (which makes them equal)
       return true;
-    }
-    if (formData1.length !== formData2.length) {
-      return false;
     }
     if (!isArray(formData1) || !isArray(formData2) || formData1.length !== formData2.length) {
       return false;
@@ -186,7 +205,7 @@ export function isFormDataEqual(formData1, formData2, schema) {
       return false;
     }
     if (formData1 === null || formData1 === undefined) {
-      // both sides are not set yet
+      // both sides are not set yet (which makes them equal)
       return true;
     }
     for (const key in schema.properties) {
@@ -199,20 +218,4 @@ export function isFormDataEqual(formData1, formData2, schema) {
     return true;
   }
   return isEqual(formData1, formData2);
-}
-
-/**
- * Allow form schemas to be built dynamically
- */
-export default class DynamicFormSchemaBuilder {
-  template;
-
-  constructor(template) {
-    this.template = template;
-  }
-
-  build(uiSchema, allBuilderArgs) {
-    const customSchema = buildSchemaFromTemplate(this.template, allBuilderArgs);
-    return normalizeSchema(customSchema, uiSchema);
-  }
 }

@@ -106,7 +106,7 @@ export default class ProjectEditor extends Component {
     { }
   ) {
     // name of current goal list in model?
-    const dbName = 'projectById';
+    const dbName = 'project';
 
     const {
       isSaved

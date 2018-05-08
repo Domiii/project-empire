@@ -1,8 +1,4 @@
-//import Roles, { hasDisplayRole, isGuardian } from 'src/core/users/Roles';
-
-import isEmpty from 'lodash/isEmpty';
 import map from 'lodash/map';
-import sortBy from 'lodash/sortBy';
 import size from 'lodash/size';
 
 //import { EmptyObject, EmptyArray } from 'src/util';
