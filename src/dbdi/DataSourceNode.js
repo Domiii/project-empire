@@ -1,4 +1,4 @@
-import every from 'lodash/every';
+import reduce from 'lodash/reduce';
 import forEach from 'lodash/forEach';
 
 import autoBind from 'src/util/auto-bind';
@@ -84,7 +84,7 @@ export default class DataSourceNode {
   }
 
   areAllLoaded(idArgs, ...allArgs) {
-    return every(idArgs, idArg => this.isDataLoaded(idArg, ...allArgs));
+    return reduce(idArgs, (idArg, res) => res | this.isDataLoaded(idArg, ...allArgs), true);
   }
 
   readData(args, readerProxy, injectProxy, writerProxy, accessTracker) {

@@ -19,19 +19,19 @@ import autoBind from 'src/util/auto-bind';
 import { EmptyObject, EmptyArray } from 'src/util';
 
 
-// /**
-//  * For now, we just add the default plugins.
-//  * Eventually, we can easily put them into separate NPM modules.
-//  * (because there is no specialized code outside of the plugins referring to the plugins)
-//  */
-// import { DataRelationshipPlugin } from './plugins/DataRelationshipGraph';
-// function addDefaultPlugins(plugins) {
-//   merge(plugins, {
-//     tree: [
-//       DataRelationshipPlugin
-//     ]
-//   });
-// }
+/**
+ * For now, we just add the default plugins.
+ * Eventually, we can easily put them into separate NPM modules.
+ * (because there is no specialized code outside of the plugins referring to the plugins)
+ */
+//import { DataRelationshipPlugin } from './plugins/DataRelationshipGraph';
+function addDefaultPlugins(plugins) {
+  // merge(plugins, {
+  //   tree: [
+  //     DataRelationshipPlugin
+  //   ]
+  // });
+}
 
 export default function buildSourceTree(dataProviders, dataStructureCfgRaw, plugins) {
   plugins = plugins || {};

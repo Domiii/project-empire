@@ -39,8 +39,6 @@ const firebaseConfig = getFirebaseConfig();
 
 import Root from './views/root';
 
-import { LoadOverlay } from 'src/views/components/overlays';
-
 import { setupDebugTools } from 'src/util/debugUtil';
 
 

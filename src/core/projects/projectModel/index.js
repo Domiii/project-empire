@@ -136,7 +136,7 @@ export default {
     }
   },
   allProjectData: {
-    path: '/projects',
+    path: 'projects',
     readers,
     writers,
     children: {

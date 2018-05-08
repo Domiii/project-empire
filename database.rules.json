@@ -10,75 +10,40 @@
       ".read": "auth !== null",
       ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
     },
-    "learnerSchedules": {
-      ".read": "auth !== null",
-      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
-    },
-    "goals": {
-      ".read": "auth !== null",
-      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)",
-      "actualGoals": {
-        "list": {
-          ".indexOn": [
-              "uidScheduleId",
-              "scheduleCycle"
-          ]
-        }
-      }
-    },
-    "learnerStatus": {
-      ".read": "auth !== null",
-      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
-    },
-    "places": {
-      ".read": "auth !== null",
-      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
-    },
-    "missions": {
-      ".read": "auth !== null",
-      "$missionId": {
-        ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
-      }
-    },
+
     "projects": {
       ".read": "auth !== null",
       "list": {
         ".indexOn": "updatedAt",
         "$projectId": {
-          ".write": "auth !== null"
+          ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
         }
       }
     },
-    "meetings": {
+    "presentations": {
       ".read": "auth !== null",
-      ".indexOn": [
-        "projectId"
-      ],
-      "$meetingId": {
-        ".write": "auth !== null",
-        "preparations": {
-          "$uid": {}
-        }
-      }
-    },
-    "learnerEntries": {
-      ".read": "auth !== null",
-      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)",
       "list": {
-        ".indexOn": [
-          "scheduleCycle"
-        ]
+        ".indexOn": "updatedAt",
+        "$projectId": {
+          ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+        }
+      }
+    },
+    "presentationSessions": {
+      ".read": "auth !== null",
+      "livePresentationSessionId": {
+        ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+      },
+      "list": {
+        ".indexOn": "updatedAt",
+        "$projectId": {
+          ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+        }
       }
     },
     "learnerKb": {
       ".read": "auth !== null",
       ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
-    },
-    "groups": {
-      ".read": "auth !== null",
-      "$groupId": {
-        ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
-      }
     },
     "notifications": {
       ".read": "auth !== null",
@@ -183,6 +148,63 @@
     "test": {
       ".read": "auth !== null",
       ".write": "auth !== null"
-    }
+    },
+    "learnerSchedules": {
+      ".read": "auth !== null",
+      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+    },
+    "goals": {
+      ".read": "auth !== null",
+      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)",
+      "actualGoals": {
+        "list": {
+          ".indexOn": [
+            "uidScheduleId",
+            "scheduleCycle"
+          ]
+        }
+      }
+    },
+    "learnerStatus": {
+      ".read": "auth !== null",
+      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+    },
+    "places": {
+      ".read": "auth !== null",
+      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+    },
+    "missions": {
+      ".read": "auth !== null",
+      "$missionId": {
+        ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+      }
+    },
+    "meetings": {
+      ".read": "auth !== null",
+      ".indexOn": [
+        "projectId"
+      ],
+      "$meetingId": {
+        ".write": "auth !== null",
+        "preparations": {
+          "$uid": {}
+        }
+      }
+    },
+    "learnerEntries": {
+      ".read": "auth !== null",
+      ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)",
+      "list": {
+        ".indexOn": [
+          "scheduleCycle"
+        ]
+      }
+    },
+    "groups": {
+      ".read": "auth !== null",
+      "$groupId": {
+        ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+      }
+    },
   }
 }

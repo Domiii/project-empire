@@ -75,7 +75,7 @@ export const routeTemplates = {
   TEST: `${routePaths.TEST}`,
 
   PROJECTS: `${routePaths.PROJECTS}/:mode?`,
-  PRESENTATION_SESSIONS: `${routePaths.PRESENTATION_SESSIONS}/:mode?/:sessionId?#:presentationId?`,
+  PRESENTATION_SESSIONS: `${routePaths.PRESENTATION_SESSIONS}/:mode?/:sessionId?`,
 
   VIDEO_RECORDING: `${routePaths.VIDEO_RECORDING}`,
   LEARNER_KB: `${routePaths.LEARNER_KB}`,

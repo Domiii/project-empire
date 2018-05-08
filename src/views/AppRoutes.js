@@ -81,7 +81,7 @@ const AppRoutes = dataBind()(function AppRoutes(
         <Route exact path={routeTemplates.TEST} component={TestPage} />
 
         <Route exact path={routeTemplates.PROJECTS} component={ProjectPage} />
-        <Route exact path={routeTemplates.PRESENTATIONS} component={PresentationsPage} />
+        <Route exact path={routeTemplates.PRESENTATION_SESSIONS} component={PresentationsPage} />
 
         <Route exact path={routeTemplates.VIDEO_RECORDING} component={VideoRecordingPage} />
         <Route exact path={routeTemplates.LEARNER_KB} component={LearnerKBPage} />

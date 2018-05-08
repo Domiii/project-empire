@@ -1,30 +1,35 @@
 import paginationNodes from 'src/dbdi/nodes/paginationNodes';
 
 export default {
-  ...paginationNodes('presentationSessionsOfPage', 'sortedPresentationSessionsIdsOfPage'),
-
-  presentationSessions: {
+  presentationSessionData: {
     path: 'presentationSessions',
-
     children: {
       // The session that is currently in progress
-      currentSessionId: 'currentSessionId',
+      livePresentationSessionId: 'livePresentationSessionId',
 
-      presentationSession: {
-        path: '$(sessionId)',
-
-        hasMany: [
-          'presentation'
-        ],
-
-        onWrite: [
-          'createdAt',
-          'updatedAt'
-        ],
+      presentationSessions: {
+        path: 'list',
 
         children: {
-          finishTime: 'finishTime',
-          playlistId: 'playlistId'
+          ...paginationNodes('presentationSessionsOfPage', 'sortedPresentationSessionsIdsOfPage'),
+
+          presentationSession: {
+            path: '$(sessionId)',
+
+            hasMany: [
+              'presentation'
+            ],
+
+            onWrite: [
+              'createdAt',
+              'updatedAt'
+            ],
+
+            children: {
+              finishTime: 'finishTime',
+              playlistId: 'playlistId'
+            }
+          }
         }
       }
     }

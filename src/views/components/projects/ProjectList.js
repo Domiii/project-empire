@@ -141,8 +141,6 @@ export class ProjectPanel extends Component {
 }
 
 
-
-
 function getSelectedProjectId() {
   return window.location.hash && window.location.hash.substring(1);
 }

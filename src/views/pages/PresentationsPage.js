@@ -20,11 +20,10 @@ import PresentationSessionLiveView from 'src/views/components/presentations/Pres
 import PresentationSessionView from 'src/views/components/presentations/PresentationSessionView';
 
 import { NOT_LOADED } from '../../dbdi';
-import LoadingOverlay from 'react-loading-overlay';
+import { LoadOverlay } from 'src/views/components/overlays';
 
 
-
-const ProjectPage = withRouter(dataBind(function ProjectPage(
+const ProjectPage = withRouter(dataBind()(function ProjectPage(
   { match },
   {},
   data
@@ -43,11 +42,11 @@ const ProjectPage = withRouter(dataBind(function ProjectPage(
 
     default:
     // by default, decide what to show based on whether there is a live session going on
-    const { currentSessionId } = data;
-    if (currentSessionId === NOT_LOADED) {
-      return <LoadingOverlay />;
+    const { livePresentationSessionId } = data;
+    if (livePresentationSessionId === NOT_LOADED) {
+      return <LoadOverlay />;
     }
-    if (currentSessionId) {
+    else if (livePresentationSessionId) {
       // current session
       return <Redirect to={hrefPresentationSession('live')} />;
     }

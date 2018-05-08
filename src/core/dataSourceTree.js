@@ -9,7 +9,7 @@ import YtApiModel from './multimedia/youtube/YtApiModel';
 
 import LearnerScheduleModel from './scaffolding/LearnerScheduleModel';
 import ProjectModel from './projects/projectModel';
-import PresentationModel from './presentations/PresentationModel';
+import PresentationSessionModel from './presentations/PresentationSessionModel';
 
 // import LearnerKBModel from './scaffolding/LearnerKBModel';
 // import LearnerEntryModel from './scaffolding/LearnerEntryModel';
@@ -77,7 +77,7 @@ const dataModelConfig = {
       
       LearnerScheduleModel,
       ProjectModel,
-      PresentationModel,
+      PresentationSessionModel,
 
       //GoalModel,
 

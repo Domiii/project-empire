@@ -167,7 +167,7 @@ export default class DataAccessTracker {
       }
       throw new Error(`Invalid arguments for data node "${node.fullName}"\n` +
         `→ expected plain object but found: ${moreInfo} ←\n` + 
-        'Did you pass a data accessor as event (use "asEventHandler" instead!)?');
+        '(Did you pass a data accessor as event (use "asEventHandler" instead!)?)');
     }
     args = args || EmptyObject;
     return new Proxy(args, this._resolveArgumentHandler);

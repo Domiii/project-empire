@@ -233,10 +233,10 @@ const mediaInputSelection = {
 
     isAnyStreamOnline(
       { },
-      { isStreamOffline },
+      { streamStatus },
       { mediaStreams }
     ) {
-      return some(mediaStreams, (stream, streamId) => !isStreamOffline({ streamId }));
+      return some(mediaStreams, (stream, streamId) => streamStatus({ streamId }) === MediaStatus.Running);
     }
   },
 

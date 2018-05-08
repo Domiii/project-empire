@@ -1,6 +1,6 @@
 import Roles, { hasDisplayRole } from 'src/core/users/Roles';
 
-import React, { Component } from 'react';
+import React, { Component, Fragment as F } from 'react';
 import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
 
@@ -41,6 +41,18 @@ class NavWrap extends Component {
   }
 }
 
+
+const PresentationsStatus = dataBind()(function PresentationsStatus(
+  { },
+  { },
+  { isAnyStreamOnline, livePresentationSessionId }
+) {
+  return (
+    livePresentationSessionId &&
+    <FAIcon className={isAnyStreamOnline && 'slow-blink'} name="microphone" color={isAnyStreamOnline && 'red' || 'gray'} /> ||
+    <span />
+  );
+});
 
 @dataBind({
 
@@ -92,8 +104,7 @@ export default class Header extends Component {
     { signOut },
     { },
     { currentUid, currentUser, currentUser_isLoaded,
-      isCurrentUserAdmin, isCurrentUserAdminReal, isCurrentUserComplete,
-      isAnyStreamOnline }
+      isCurrentUserAdmin, isCurrentUserAdminReal, isCurrentUserComplete }
   ) {
     //const isGuardian = hasDisplayRole(currentUserRef, Roles.Guardian);
     const lang = currentUser && currentUser.locale || 'en';
@@ -170,13 +181,15 @@ export default class Header extends Component {
       ),
       (
         <LinkContainer key="pres" to="/pres">
-          <NavItem eventKey={11}>Presentations</NavItem>
+          <NavItem eventKey={11}>
+            Presentations <PresentationsStatus />
+          </NavItem>
         </LinkContainer>
       ),
       (
         <LinkContainer key="video" to="/video">
           <NavItem eventKey={12}>
-            Video {isAnyStreamOnline && <FAIcon name="circle" color="red" />}
+            Video
           </NavItem>
         </LinkContainer>
       ),
