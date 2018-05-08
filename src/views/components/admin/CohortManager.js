@@ -22,7 +22,7 @@ import {
 
 import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import { FAIcon } from 'src/views/components/util';
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 import UserList from 'src/views/components/users/UserList';
 import UserIcon from 'src/views/components/users/UserIcon';

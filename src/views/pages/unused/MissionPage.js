@@ -14,7 +14,7 @@ import {
 } from 'react-bootstrap';
 
 import { LoadOverlay } from 'src/views/components/overlays';
-import Loading from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 import MissionOverview from 'src/views/components/missions/MissionOverview';
 import MissionView from 'src/views/components/missions/MissionView';
@@ -37,7 +37,7 @@ const MissionPage = withRouter(dataBind()(function MissionPage(
 
   if (missionId) {
     if (!mission.isLoaded({ missionId })) {
-      return <Loading size={2} block />;
+      return <LoadIndicator size={2} block />;
     }
 
     if (!mission({ missionId })) {

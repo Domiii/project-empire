@@ -12,7 +12,7 @@ import { EmptyObject } from 'src/util';
 
 import dataBind from 'src/dbdi/react/dataBind';
 import UserIcon from 'src/views/components/users/UserIcon';
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 // Render icon + status of all responsible contributors for given stage
 

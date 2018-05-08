@@ -6,15 +6,24 @@ import { NOT_LOADED } from 'src/dbdi';
 import React, { Component } from 'react';
 import dataBind from 'src/dbdi/react/dataBind';
 
+import styled from 'styled-components';
+
 import {
   Button, Alert, Panel, Well
 } from 'react-bootstrap';
+import { withRouter } from 'react-router-dom';
 import Flexbox from 'flexbox-react';
 
-import PresentationTable from './PresentationTable';
 import { LoadOverlay } from '../overlays';
+import { hrefPresentationSessionView } from '../../href';
 
 const itemsPerPage = 20;
+
+const BigButton = styled(Button) `
+  height: 4em;
+  max-width: 50%;
+  margin: auto;
+`;
 
 const PresentationSessionRow = dataBind()(function PresentationSessionRow(
   { presentationSessionId }
@@ -26,28 +35,36 @@ const PresentationSessionRow = dataBind()(function PresentationSessionRow(
   </Flexbox>);
 });
 
-const PresentationSessionLiveStatusElement = dataBind()(function PresentationSessionLiveStatusElement(
+const PresentationSessionLiveStatusElement = withRouter(dataBind({
+  clickNewPresentationSession(evt, { history }, { newPresentationSession }, { }) {
+    const sessionId = newPresentationSession();
+    history.push(hrefPresentationSessionView(sessionId));
+  },
+  clickGoToLivePresentationSession(evt, { history }, { }, { livePresentationSessionId }) {
+    history.push(hrefPresentationSessionView(livePresentationSessionId));
+  }
+})(function PresentationSessionLiveStatusElement(
   { },
-  { },
+  { clickNewPresentationSession, clickGoToLivePresentationSession },
   { livePresentationSessionId }
 ) {
   if (livePresentationSessionId) {
     // we are currently live in action
     return (<Well className="background-none">
-      <Button bsStyle="danger" block>
-        Start new session!
-      </Button>
+      <BigButton bsStyle="success" onClick={clickGoToLivePresentationSession} block>
+        Go to Live session
+      </BigButton>
     </Well>);
   }
   else {
     // nothing going on, yet!
-    return (<Well>
-      <Button bsStyle="danger" block>
+    return (<Well className="background-none">
+      <BigButton bsStyle="danger" onClick={clickNewPresentationSession} block>
         Start new session!
-      </Button>
+      </BigButton>
     </Well>);
   }
-});
+}));
 
 
 @dataBind()
@@ -58,11 +75,17 @@ export default class PresentationSessionList extends Component {
     this.setPage(this.state.page + 1);
   }
 
-  render({ }, { sortedPresentationSessionsIdsOfPage }) {
+  render(
+    { },
+    { sortedPresentationSessionsIdsOfPage },
+    { livePresentationSessionId }
+  ) {
     const { page } = this.state;
     const ids = sortedPresentationSessionsIdsOfPage({ page });
     const itemsTitle = 'Sessions';
-    const renderRow = id => <PresentationSessionRow presentationSessionId={id} />;
+    const renderRow = id => <PresentationSessionRow key={id} presentationSessionId={id} />;
+    const preChildren = !!livePresentationSessionId && <PresentationSessionLiveStatusElement />;
+    const postChildren = !livePresentationSessionId && <PresentationSessionLiveStatusElement />;
 
     if (ids === NOT_LOADED) {
       return <LoadOverlay />;
@@ -78,10 +101,11 @@ export default class PresentationSessionList extends Component {
           {itemsTitle} ({count0}-{count1} of {nItems})
         </Panel.Heading>
         <Panel.Body className="no-margin">
-          <PresentationSessionLiveStatusElement />
+          {preChildren}
           {
             map(ids, renderRow)
           }
+          {postChildren}
         </Panel.Body>
       </Panel>
 

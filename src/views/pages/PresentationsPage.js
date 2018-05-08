@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment as F } from 'react';
 import PropTypes from 'prop-types';
 import { Redirect, withRouter } from 'react-router-dom';
 import dataBind from 'src/dbdi/react/dataBind';
@@ -18,44 +18,58 @@ import {
 import PresentationSessionList from 'src/views/components/presentations/PresentationSessionList';
 import PresentationSessionLiveView from 'src/views/components/presentations/PresentationSessionLiveView';
 import PresentationSessionView from 'src/views/components/presentations/PresentationSessionView';
+import LiveHeader from 'src/views/components/presentations/LiveHeader';
 
 import { NOT_LOADED } from '../../dbdi';
 import { LoadOverlay } from 'src/views/components/overlays';
 
 
-const ProjectPage = withRouter(dataBind()(function ProjectPage(
+const PresentationPage = withRouter(dataBind()(function ProjectPage(
   { match },
-  {},
+  { },
   data
 ) {
-  const { mode } = match.params;
+  const { mode, sessionId } = match.params;
 
   switch (mode) {
     case 'live':
-    return (<PresentationSessionLiveView />);
-    
+      return (<PresentationSessionLiveView />);
+
     case 'list':
-    return (<PresentationSessionList />);
+      return (<PresentationSessionList />);
 
     case 'view':
-    return (<PresentationSessionView />);
+      if (sessionId) {
+        return (<PresentationSessionView sessionId={sessionId} />);
+      }
+      else {
+        return <Redirect to={hrefPresentationSession()} />;
+      }
 
     default:
-    // by default, decide what to show based on whether there is a live session going on
-    const { livePresentationSessionId } = data;
-    if (livePresentationSessionId === NOT_LOADED) {
-      return <LoadOverlay />;
-    }
-    else if (livePresentationSessionId) {
-      // current session
-      return <Redirect to={hrefPresentationSession('live')} />;
-    }
-    else {
-      // list all stuff
-      return <Redirect to={hrefPresentationSession('list')} />;
-    }
+      // by default, decide what to show based on whether there is a live session going on
+      const { livePresentationSessionId } = data;
+      if (livePresentationSessionId === NOT_LOADED) {
+        return <LoadOverlay />;
+      }
+      else if (livePresentationSessionId) {
+        // current session
+        return <Redirect to={hrefPresentationSession('live')} />;
+      }
+      else {
+        // list all stuff
+        return <Redirect to={hrefPresentationSession('list')} />;
+      }
   }
 }));
 
 
-export default ProjectPage;
+const WrappedPresentationPage = withRouter(dataBind()(function ProjectPage(
+) {
+  return (<F>
+    <LiveHeader />
+    <PresentationPage />
+  </F>);
+}));
+
+export default WrappedPresentationPage;

@@ -8,7 +8,7 @@ import {
   Alert
 } from 'react-bootstrap';
 import FAIcon from 'src/views/components/util/FAIcon';
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 const Status = {
   LOADING: 'loading',

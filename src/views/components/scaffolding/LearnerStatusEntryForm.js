@@ -15,7 +15,7 @@ import Flexbox from 'flexbox-react';
 import { Redirect } from 'react-router-dom';
 
 import UserBadge from 'src/views/components/users/UserBadge';
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 
 const LearnerStatusEntryForm = dataBind({})(function LearnerEntryList(

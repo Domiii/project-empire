@@ -14,7 +14,7 @@ import { LoadOverlay } from 'src/views/components/overlays';
 
 import DynamicForm from 'src/views/tools/DynamicForm';
 import FAIcon from 'src/views/components/util/FAIcon';
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 
 export const schemaTemplate = {

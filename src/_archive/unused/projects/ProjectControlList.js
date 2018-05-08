@@ -26,7 +26,7 @@ import { hrefProjectControl } from 'src/views/href';
 
 import dataBind from 'src/dbdi/react/dataBind';
 
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 import ProjectPanel from './ProjectPanel';
 

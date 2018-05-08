@@ -19,7 +19,7 @@ import {
 } from 'react-bootstrap';
 import Flexbox from 'flexbox-react';
 
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 import LearnerStatusEntryView from './LearnerStatusEntryView';
 import { EmptyObject } from '../../../util';

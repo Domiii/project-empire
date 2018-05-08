@@ -19,7 +19,7 @@ import {
 import { withRouter } from 'react-router-dom';
 
 import UserBadge from 'src/views/components/users/UserBadge';
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 import FAIcon from 'src/views/components/util/FAIcon';
 
 import MissionList from './MissionList';

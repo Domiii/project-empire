@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import dataBind from 'src/dbdi/react/dataBind';
 
 import ImageLoader from 'src/views/components/util/react-imageloader';
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 function preloader() {
  return <LoadIndicator />;

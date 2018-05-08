@@ -25,7 +25,7 @@ import dataBind from 'src/dbdi/react/dataBind';
 import DataSourceProvider from 'src/dbdi/react/DataSourceProvider';
 
 import FAIcon from 'src/views/components/util/FAIcon';
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import Markdown from 'src/views/components/markdown';
 

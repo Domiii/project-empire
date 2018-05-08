@@ -8,7 +8,7 @@ import Flexbox from 'flexbox-react';
 
 import dataBind from 'src/dbdi/react/dataBind';
 
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 import ProjectContributorIcon from './ProjectContributorIcon';
 

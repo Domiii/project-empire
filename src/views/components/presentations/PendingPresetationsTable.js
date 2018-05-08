@@ -13,12 +13,12 @@ import {
 import Moment from 'react-moment';
 
 import ImageLoader from 'src/views/components/util/react-imageloader';
-import LoadIndicator from '../util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 import { EmptyObject } from '../../../util';
 
 // https://github.com/atlassian/react-beautiful-dnd/blob/master/stories/src/table/with-fixed-columns.jsx
 
-export default class PresentationTable extends Component {
+export default class PresentationsTable extends Component {
   render() {
     return (<Table striped bordered condensed hover>
       <thead>

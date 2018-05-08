@@ -7,6 +7,7 @@ import { routePaths } from './routes';
  * ################################################################################
  */
 export function hrefPresentationSession(mode) {
+  mode = mode || '';
   return `${routePaths.PRESENTATION_SESSIONS}/${mode}`;
 }
 

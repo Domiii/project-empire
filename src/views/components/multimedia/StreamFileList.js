@@ -12,7 +12,7 @@ import PropTypes from 'prop-types';
 import dataBind from 'src/dbdi/react/dataBind';
 
 import FAIcon from 'src/views/components/util/FAIcon';
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 import {
   Alert, Button, Jumbotron, Well, Panel

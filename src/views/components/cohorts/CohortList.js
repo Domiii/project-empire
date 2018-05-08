@@ -17,7 +17,7 @@ import {
 
 import UserList from 'src/views/components/users/UserList';
 
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 const CohortList = dataBind({})(function CohortList(
   { },

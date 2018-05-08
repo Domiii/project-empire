@@ -16,7 +16,7 @@ import paginationFactory from 'react-bootstrap-table2-paginator';
 import overlayFactory from 'react-bootstrap-table2-overlay';
 
 import ImageLoader from 'src/views/components/util/react-imageloader';
-import LoadIndicator from '../util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 import { EmptyObject } from '../../../util';
 
 import ProjectContributorBar from './ProjectContributorBar';

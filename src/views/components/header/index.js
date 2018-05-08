@@ -16,7 +16,7 @@ import {
   LinkContainer
 } from 'react-router-bootstrap';
 
-import Loading from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 import { FAIcon } from 'src/views/components/util';
 
 class NavWrap extends Component {
@@ -49,7 +49,7 @@ const PresentationsStatus = dataBind()(function PresentationsStatus(
 ) {
   return (
     livePresentationSessionId &&
-    <FAIcon className={isAnyStreamOnline && 'slow-blink'} name="microphone" color={isAnyStreamOnline && 'red' || 'gray'} /> ||
+    <FAIcon className={isAnyStreamOnline && 'slow-blink' || ''} name="microphone" color={isAnyStreamOnline && 'red' || 'gray'} /> ||
     <span />
   );
 });
@@ -125,7 +125,7 @@ export default class Header extends Component {
 
     let userToolsEl;
     if (!currentUser_isLoaded) {
-      userToolsEl = (<NavItem className="header-right"><Loading /></NavItem>);
+      userToolsEl = (<NavItem className="header-right"><LoadIndicator /></NavItem>);
     }
     else {
       userToolsEl = !currentUser ? null : (

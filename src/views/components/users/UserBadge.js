@@ -6,7 +6,7 @@ import {
 } from 'react-bootstrap';
 
 
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 import UserIcon from './UserIcon';
 
 

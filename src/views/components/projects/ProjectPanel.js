@@ -36,7 +36,7 @@ import ProjectEditTools from './ProjectEditTools';
 import UserList from 'src/views/components/users/UserList';
 import UserBadge from 'src/views/components/users/UserBadge';
 
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 import { FAIcon } from 'src/views/components/util';
 
 

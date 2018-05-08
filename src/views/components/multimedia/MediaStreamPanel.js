@@ -11,7 +11,7 @@ import dataBind from 'src/dbdi/react/dataBind';
 import filesize from 'filesize';
 
 import FAIcon from 'src/views/components/util/FAIcon';
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 import {
   Alert, Button, Jumbotron, Well, Panel, ProgressBar

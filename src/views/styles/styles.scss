@@ -339,12 +339,12 @@ button:active { outline:none !important; }
 /* see: https://stackoverflow.com/a/26983473 */
 table {
   /* override Bootstrap's width thingydeal */
-  width: inherit !important;
+  /* width: inherit !important; */
 }
 tr {}
 td, th {
-  width: auto;
-  border: 1px solid #eee;
+  width: auto !important;
+  border: 1px solid #eee !important;
   vertical-align: middle !important;
 }
 td.min, th.min {

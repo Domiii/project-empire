@@ -12,7 +12,7 @@ import Flexbox from 'flexbox-react';
 
 import DynamicForm from 'src/views/tools/DynamicForm';
 import FAIcon from 'src/views/components/util/FAIcon';
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 
 const questionTypeKeys = Object.keys(LearnerQuestionTypes);

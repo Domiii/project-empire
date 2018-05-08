@@ -17,7 +17,7 @@ import GoalForm from 'src/views/components/goals/GoalForm';
 
 //import { NOT_LOADED } from 'src/dbdi/react/dataBind';
 
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 
 /**

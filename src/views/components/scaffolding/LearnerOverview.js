@@ -15,7 +15,7 @@ import {
 import Flexbox from 'flexbox-react';
 
 import UserIcon from 'src/views/components/users/UserIcon';
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 import LearnerEntryView from './LearnerEntryView';
 
 

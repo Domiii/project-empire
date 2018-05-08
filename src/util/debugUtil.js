@@ -1,5 +1,8 @@
 
 
+// show more error information in Error.prototype.stack
+Error.stackTraceLimit = 100;
+
 export const errorLog = [];
 
 export function setupDebugTools() {

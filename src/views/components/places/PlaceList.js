@@ -11,13 +11,13 @@ import React from 'react';
 import dataBind from 'src/dbdi/react/dataBind';
 
 import {
-  ListGroup, ListGroupItem, Panel, Well, Alert
+  Panel, Well, Alert
 } from 'react-bootstrap';
 
 
 import UserList from 'src/views/components/users/UserList';
 
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 const PlaceList = dataBind({})(function PlaceList(
   { },

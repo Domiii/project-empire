@@ -15,7 +15,7 @@ import Moment from 'react-moment';
 
 //import { NOT_LOADED } from 'src/dbdi/react/dataBind';
 
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 
 const textAlignStart = {

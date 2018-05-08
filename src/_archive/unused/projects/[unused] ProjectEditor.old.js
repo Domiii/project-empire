@@ -23,7 +23,7 @@ import Flexbox from 'flexbox-react';
 import Form from 'react-jsonschema-form';
 import Select from 'react-select';
 
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import UserList from 'src/views/components/users/UserList';
 import UserBadge from 'src/views/components/users/UserBadge';

@@ -6,7 +6,7 @@ import { EmptyObject, EmptyArray } from 'src/util';
 import React, { Component, Children } from 'react';
 import PropTypes from 'prop-types';
 
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 import { 
   dataBindContextStructure,

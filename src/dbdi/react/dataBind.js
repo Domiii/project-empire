@@ -297,8 +297,13 @@ export default (propsOrPropCb) => _WrappedComponent => {
           //   return readData();
           // }
 
-          if (this._isMounted) {
-            console.error(`DI failed - Component requested props/context "${toString(name)}" but was not provided`);
+          //if (this._isMounted) 
+          {
+            //console.error(
+              throw new Error(
+              `DI failed - Component requested props/context "${toString(name)}" but was not provided`
+            );
+            //.stack);
           }
           return undefined;
         },
@@ -354,8 +359,13 @@ export default (propsOrPropCb) => _WrappedComponent => {
             return writeData;
           }
 
-          if (this._isMounted) {
-            console.error(`DI failed - Component requested function "${toString(name)}" but was not provided.`);
+          //if (this._isMounted) 
+          {
+            //console.error(
+              throw new Error(
+              `DI failed - Component requested function "${toString(name)}" but was not provided.`
+            );
+          //.stack);
           }
           return null;
         },

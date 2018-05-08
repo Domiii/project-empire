@@ -25,7 +25,7 @@ import {
 import { LoadOverlay } from 'src/views/components/overlays';
 
 import FAIcon from 'src/views/components/util/FAIcon';
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 import ImageLoader from 'src/views/components/util/react-imageloader';
 import FancyPanelToggleTitle from 'src/views/components/util/FancyPanelToggleTitle';
 

@@ -27,7 +27,7 @@ import { getOptionalArgument, getOptionalArguments } from 'src/dbdi/dataAccessUt
 
 import FAIcon from 'src/views/components/util/FAIcon';
 import ImageLoader from 'src/views/components/util/react-imageloader';
-import LoadIndicator from 'src/views/components/util/loading';
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 import ConfirmModal from 'src/views/components/util/ConfirmModal';
 import Markdown from 'src/views/components/markdown';
 
