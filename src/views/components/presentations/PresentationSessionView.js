@@ -11,7 +11,7 @@ import {
 import LoadIndicator from '../util/LoadIndicator';
 import { Redirect } from 'react-router-dom';
 
-import PresentationsTable from './PresentationsTable';
+import PresentationsSessionDetails from './PresentationsSessionDetails';
 import { hrefPresentationSession } from '../../href';
 import styled from 'styled-components';
 import { LoadOverlay } from '../overlays';
@@ -110,38 +110,11 @@ export default class PresentationSessionView extends Component {
     }
     else {
       contentEl = (<F>
-        {/* table of presentations that are already done */}
-        <PresentationsTable sessionId={sessionId} />
+        <PresentationsSessionDetails sessionId={sessionId} />
       </F>);
     }
     return (<div>
       {contentEl}
-
-       <pre>TODO
-0. generate, shuffle + show table of presentations
-1. split presentations into two, by status
-2. be able to add, edit + delete (pending) presentations
-4. button to shuffle pending presentations
-5. proper "presentation streaming view" +
-  * just use the same id for: streamId + fileId + presentationId?
-  * store video + associate fileId in DB with presentation
-6. when streaming on a different machine, don't show streaming view, but show a button to forefully take over
-7. presentation timer!
-      </pre>
-      <pre>more TODOs
--1. proper presentations for all users + projects
-  -> account for every single user!
-  -> account for every active project, and get at least a status update!
-0. proper project + user tagging for presentations
-  * hasMany needs to work for this
-1. batch-upload to youtube
-2. generate youtube playlists
-3. normal user view of:
-  a) presentation session + presentation
-  b) own + participating playlists
-4. let users provider supplementary material (at least presentation URL)
-5. better import features?
-      </pre>
     </div>);
   }
 }

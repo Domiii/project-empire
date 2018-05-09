@@ -27,6 +27,7 @@ import StreamFileList from './StreamFileList';
 import { YtMyChannelInfo, YtStatusPanel } from './VideoUploadPanel';
 
 import { MediaStatus } from '../../../core/multimedia/StreamModel';
+import { getOptionalArgument } from '../../../dbdi/dataAccessUtil';
 
 
 function log(...args) {
@@ -154,12 +155,46 @@ class DownloadStreamFileButton extends Component {
           <FAIcon name="download" />
         </Flexbox>
         <Flexbox>
-          &nbsp;(<span className="digital-number-font">{renderSize(size)}</span>)
+          &nbsp;(<span className="digital-number-font">{renderSize(size || 0)}</span>)
         </Flexbox>
       </Flexbox>
     </a>);
   }
 }
+
+
+/**
+ * ############################################################
+ * MediaPrepView
+ * ############################################################
+ */
+
+export const MediaPrepView = dataBind({})(function MediaPrepView(
+  { streamId, startStreaming },
+  { streamStatus },
+  { hasSelectedInputMedia }
+) {
+  const status = streamStatus({ streamId });
+  const isPreparing = status === MediaStatus.Preparing;
+  const mediaReady = hasSelectedInputMedia;
+
+  if (isPreparing) {
+    return (<LoadIndicator block size={2} message="activating devices..." />);
+  }
+  else {
+    return (<div>
+      <div>
+        <MediaSettingsPanel />
+      </div>
+      <br />
+      <Button bsSize="large" bsStyle="success"
+        disabled={!mediaReady}
+        onClick={startStreaming} block>
+        <FAIcon name="play-circle" /> Start!
+      </Button>
+    </div>);
+  }
+});
 
 
 /**
@@ -201,28 +236,24 @@ class MediaSettingsPanel extends Component {
 
 @dataBind({})
 export default class MediaStreamPanel extends Component {
+  state = {};
+
   constructor(...args) {
     super(...args);
 
-    this.state = {};
-
     this.dataBindMethods(
       //'componentDidMount',
-      '_attachStreamToLiveVideo',
-      'startNewStream',
+      '_attachStreamToVideoEl',
+      'clickStartNewStream',
       'clickStartReplay',
       'clickFinish',
-      'clickShutdown',
-      'renderOfflineView'
+      'clickShutdown'
     );
   }
 
-  // componentDidMount = (
-  //   { },
-  //   { },
-  //   { }
-  // ) => {
-  // }
+  componentDidMount = () => {
+    this.props.setContext({ streamArgs: this.props.streamArgs });
+  }
 
   /**
    * ############################################################
@@ -233,10 +264,10 @@ export default class MediaStreamPanel extends Component {
   onLiveVideoDOMReady = (liveVideoEl) => {
     //getDeviceList().then(log);
     this.liveVideoEl = liveVideoEl;
-    this._attachStreamToLiveVideo();
+    this._attachStreamToVideoEl();
   }
 
-  _attachStreamToLiveVideo = (
+  _attachStreamToVideoEl = (
     { streamArgs },
     { get_streamObject }
   ) => {
@@ -266,30 +297,43 @@ export default class MediaStreamPanel extends Component {
 
   /**
    * ############################################################
-   * activateStream
+   * start + stop stream
    * ############################################################
    */
 
-  startNewStream = (
+  clickStartNewStream = (
     _ignoreFirstArg,
     { streamArgs },
     { startStreamRecording }
   ) => {
-    const {
-      streamId
-    } = streamArgs;
+    const { startStreaming } = this.props;
+    const startIt = startStreaming || startStreamRecording;
 
-    const newStreamArgs = {
-      constraints: defaultConstraints,
-      streamId
-    };
+    // start stream
+    startIt(streamArgs);
 
-    return startStreamRecording(newStreamArgs).then(() => this._attachStreamToLiveVideo());
+    // reset state
+    this.setState({
+      replayVideoSrc: null
+    });
+  }
+
+  clickFinish = async (evt,
+    { streamArgs },
+    { stopStreamRecorder }
+  ) => {
+    const { onFinished } = this.props;
+    if (await stopStreamRecorder(streamArgs)) {
+
+      if (onFinished) {
+        onFinished(streamArgs);
+      }
+    }
   }
 
   /**
    * ############################################################
-   * click*
+   * replay
    * ############################################################
    */
 
@@ -306,16 +350,9 @@ export default class MediaStreamPanel extends Component {
     });
   }
 
-  clickFinish = (evt,
-    { streamArgs },
-    { stopStreamRecorder }
-  ) => {
-    stopStreamRecorder(streamArgs);
-  }
-
   /**
    * ############################################################
-   * clickShutdown
+   * shutdown
    * ############################################################
    */
   clickShutdown = (
@@ -341,40 +378,6 @@ export default class MediaStreamPanel extends Component {
     window.requestAnimationFrame(this._selfUpdate);
   }
 
-
-  /**
-   * ############################################################
-   * renderOfflineView
-   * ############################################################
-   */
-
-  renderOfflineView(
-    { streamArgs },
-    { streamStatus },
-    { hasSelectedInputMedia }
-  ) {
-    const status = streamStatus(streamArgs);
-    const isPreparing = status === MediaStatus.Preparing;
-    const mediaReady = hasSelectedInputMedia;
-
-    if (isPreparing) {
-      return (<LoadIndicator block size={2} message="activating devices..." />);
-    }
-    else {
-      return (<div>
-        <div>
-          <MediaSettingsPanel />
-        </div>
-        <br />
-        <Button bsSize="large" bsStyle="success"
-          disabled={!mediaReady}
-          onClick={this.startNewStream} block>
-          <FAIcon name="play-circle" /> Start!
-        </Button>
-      </div>);
-    }
-  }
-
   /**
    * ############################################################
    * render
@@ -384,15 +387,17 @@ export default class MediaStreamPanel extends Component {
     { streamArgs },
     { streamStatus,
       streamRecorderMimeType,
-      isStreamActive, isStreamReady, isStreamOffline,
-      streamSize, streamDuration },
+      isStreamActive, isStreamOffline,
+      streamSize, streamDuration, streamFileId },
     { isMediaRecorderCompatible, videoDeviceId, audioDeviceId }
   ) {
     if (!isMediaRecorderCompatible) {
       return <Alert bsStyle="danger">Browser does not have media capture support</Alert>;
     }
 
+    const { streamId } = streamArgs;
     const status = streamStatus(streamArgs);
+    const { hideStatus } = this.props;
 
     let titleEl;
     let contentEl;
@@ -401,7 +406,7 @@ export default class MediaStreamPanel extends Component {
     const isRecording = status === MediaStatus.Running;
     if (isOffline) {
       titleEl = 'Setup Stream';
-      contentEl = this.renderOfflineView();
+      contentEl = <MediaPrepView streamId={streamId} startStreaming={this.clickStartNewStream} />;
     }
     else {
       //const streamObj = streamObject(streamArgs);
@@ -489,12 +494,6 @@ export default class MediaStreamPanel extends Component {
             </Button>)}
           </Flexbox>
         </Flexbox>
-        <div>
-          <input className="full-width" placeholder="TODO: title" />
-        </div>
-        <Panel><Panel.Body>
-          TODO: tags, users, privacy etc.
-        </Panel.Body></Panel>
         {size > 1 && <Panel><Panel.Body>
           <Flexbox justifyContent="space-between" alignItems="center">
             <Flexbox className="full-width">
@@ -521,7 +520,7 @@ export default class MediaStreamPanel extends Component {
             <FAIcon color="yellow" name="exclamation-triangle" />
           </Button>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          <Button className="inline-hcenter" bsStyle="danger" disabled={isOffline} onClick={this.startNewStream}>
+          <Button className="inline-hcenter" bsStyle="danger" disabled={isOffline} onClick={this.clickStartNewStream}>
             Start over&nbsp;
             <FAIcon color="yellow" name="refresh" />
           </Button>
@@ -533,19 +532,16 @@ export default class MediaStreamPanel extends Component {
       <Flexbox justifyContent="center" alignItems="center" >
         <Flexbox className="full-width margin-auto">
           <h2>{titleEl}</h2>
+          {/* {streamFileId(streamArgs)} */}
         </Flexbox>
         <Flexbox>
-          <YtStatusPanel />
+          {!hideStatus && <YtStatusPanel />}
         </Flexbox>
       </Flexbox>
       {!isOffline && <div className="inline-hcenter">
-        <RecorderCtrlButton />
+        <RecorderCtrlButton streamArgs={streamArgs} />
       </div>}
       {contentEl}
-
-      <br />
-      <br />
-      <StreamFileList />
     </div>);
   }
 }

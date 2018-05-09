@@ -38,13 +38,15 @@ function getMetaFilePath(fileId) {
 }
 
 async function writeBlob(fileArgs, blob, readers, writers) {
+  //console.log('Q', blob);
+
   const { _blobQueue, get_streamFileWriter } = readers;
   const { _streamFileOpen, set__blobQueue } = writers;
 
-  // make sure, the stream initialization process is on it's way
+  // make sure, the writer is being prepared before doing anything else!
   const writerPromise = _streamFileOpen(fileArgs);
-  const blobs = _blobQueue(fileArgs);
-  //console.warn('queueing:', blob.size);
+
+  let blobs = _blobQueue(fileArgs);
   if (!!blobs) {
     // we are still writing -> add to queue
     blobs.push(blob);
@@ -59,10 +61,10 @@ async function writeBlob(fileArgs, blob, readers, writers) {
   }
 }
 
-function writeBlobNow(fileArgs, writer, blob, readers, writers) {
-  const { set__blobQueue } = writers;
-  // write to blob and activate queue
-  //console.log('writeBlobNow:', blob.size);
+function writeBlobNow(fileArgs, writer, blob) {
+  //console.warn('W', blob);
+
+  // write to blob and refresh queue
   return writer.write(blob);
 }
 
@@ -87,17 +89,20 @@ function pumpQueue(fileArgs, writer, readers, writers) {
 
 async function prepareWriter(fileArgs, readers, writers) {
   const { _blobQueue } = readers;
-  const { set_streamFileWriter, set__blobQueue } = writers;
 
-
-  const blobs = _blobQueue(fileArgs);
-  if (blobs) {
+  if (_blobQueue(fileArgs)) {
+    // NOTE: initial preparation cannot wait, because that would lead to race conditions!
     // already started the process
     return;
   }
 
-  // start queue
+  const { set_streamFileWriter, set__blobQueue, initStreamFs } = writers;
+
+  // start new queue
   set__blobQueue(fileArgs, []);
+
+  // make sure, FS is initialized
+  await initStreamFs();
 
   // prepare writer
   const { fileId } = fileArgs;
@@ -338,14 +343,16 @@ export default {
           // },
           streamFileEntry: {
             path: 'entry',
-            async fetch({ fileId }) {
+            async fetch({ fileId }, { }, { }, { initStreamFs }) {
+              await initStreamFs();
               const path = getFilePath(fileId);
               return await fs.getEntry(path);
             }
           },
           streamFileUrl: {
             path: 'url',
-            async fetch({ fileId }) {
+            async fetch({ fileId }, { }, { }, { initStreamFs }) {
+              await initStreamFs();
               const path = getFilePath(fileId);
               return await fs.getUrl(path);
             }

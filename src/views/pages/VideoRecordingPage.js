@@ -11,6 +11,7 @@ import {
 } from 'react-router-bootstrap';
 
 import MediaStreamPanel from 'src/views/components/multimedia/MediaStreamPanel';
+import StreamFileList from 'src/views/components/multimedia/StreamFileList';
 
 
 /**
@@ -50,11 +51,11 @@ import MediaStreamPanel from 'src/views/components/multimedia/MediaStreamPanel';
  *    Screen recording (be able to record projector output as well as the speaker) - https://github.com/muaz-khan/RecordRTC/blob/master/simple-demos/video-plus-screen-recording.html
  */
 
- const streamContext = {
-   streamArgs: {
-     streamId: 1
-   }
- };
+const streamContext = {
+  streamArgs: {
+    streamId: 1
+  }
+};
 
 export default class VideoRecordingPage extends Component {
   static propTypes = {
@@ -69,7 +70,10 @@ export default class VideoRecordingPage extends Component {
     //{ this.IsGuardian && this.makeGuardianEl() }
     return (
       <div>
-        <MediaStreamPanel setContext={streamContext} />
+        <MediaStreamPanel streamArgs={streamContext.streamArgs} setContext={streamContext} />
+        <br />
+        <br />
+        <StreamFileList />
       </div>
     );
   }

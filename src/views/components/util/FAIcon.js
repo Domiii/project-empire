@@ -1,5 +1,11 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import styled from 'styled-components';
+
+const I = styled.i`
+color: ${props => props.color};
+font-size: ${props => props.size};
+`;
 
 // Online demo: https://codepen.io/Domiii/pen/mOaGWG?editors=0010
 export default class FAIcon extends PureComponent {
@@ -25,20 +31,12 @@ export default class FAIcon extends PureComponent {
 
     let classes = 'fa fa-' + name + 
       (!!className && (' ' + className) || '');
-    
-    style = Object.assign({}, style || {});
-    if (color) {
-      style.color = color;
-    }
-    if (size) {
-      style.fontSize = size;
-    }
 
     if (spinning) {
       classes += ' fa-spin';
     }
     return (
-      <i className={classes} style={style} aria-hidden="true" {...moreProps} />
+      <I className={classes} color={color} size={size} style={style} aria-hidden="true" {...moreProps} />
     );
   }
 }

@@ -135,18 +135,26 @@ export class YtStatusPanel extends Component {
   }
 
   componentDidMount({ }, { gapiSoftAuth }) {
-    gapiSoftAuth();
+    if (!this.props.dontAuthAutomatically) {
+      gapiSoftAuth();
+    }
   }
 
   render(
     { },
     { clickResetGapiStatus,
-      clickGapiHardAuth },
+      clickGapiHardAuth, getProps },
     { gapiStatus, gapiError }
   ) {
     let statusEl;
 
     switch (gapiStatus) {
+      case GapiStatus.None:
+        statusEl = (
+          <Button onClick={clickGapiHardAuth}><FAIcon name="youtube" size="1.4em" color="red" />login</Button>
+        );
+        break;
+
       case GapiStatus.NeedUserConsent:
         statusEl = (<Alert bsStyle="warning" className="no-margin">
           Please login and choose your YouTube channel:&nbsp;
@@ -162,7 +170,7 @@ export class YtStatusPanel extends Component {
         break;
 
       case GapiStatus.Authorizing:
-        statusEl = <LoadIndicator block message="authorizing..." />;
+        statusEl = <LoadIndicator block message="authorizing with YouTube..." />;
         break;
 
       case GapiStatus.Authorized:
@@ -170,7 +178,7 @@ export class YtStatusPanel extends Component {
         break;
 
       default:
-        statusEl = <LoadIndicator block message="initializing..." />;
+        statusEl = <LoadIndicator block message="initializing YouTube API..." />;
     }
 
 
@@ -180,16 +188,19 @@ export class YtStatusPanel extends Component {
       isString(errInfo) ? errInfo : JSON.stringify(errInfo)
     );
 
-    return (<Panel.Body>
-      <div>
-        {statusEl}
-        {gapiError && (<Alert bsStyle="danger" className="alert-dismissable no-margin">
-          <a href="#" className="close" data-dismiss="alert" aria-label="close" onClick={this.clearError}>&times;</a>
-          {errInfo}
-          <Button onClick={clickGapiHardAuth}><FAIcon name="unlock" color="green" /></Button>
-        </Alert>)}
-      </div>
-    </Panel.Body>);
+    const {
+      dontAuthAutomatically,
+      ...otherProps
+    } = getProps();
+
+    return (<div {...otherProps}>
+      {statusEl}
+      {gapiError && (<Alert bsStyle="danger" className="alert-dismissable no-margin">
+        <a href="#" className="close" data-dismiss="alert" aria-label="close" onClick={this.clearError}>&times;</a>
+        {errInfo}
+        <Button onClick={clickGapiHardAuth}><FAIcon name="unlock" color="green" /></Button>
+      </Alert>)}
+    </div>);
   }
 }
 

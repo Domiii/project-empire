@@ -1,25 +1,13 @@
 import { writeParameterConfig } from 'src/dbdi/DataWriteDescriptor';
 
 import isObject from 'lodash/isObject';
-import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
 
 import autoBind from 'src/util/auto-bind';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
-const specialProxyProperties = {
-    // need to hack this, because Proxies are transparently virtualized
-    // https://stackoverflow.com/questions/36372611/how-to-test-if-an-object-is-a-proxy
-  ____isWrapperProxy() { return true; },
-
-  toJSON(target) {
-    if (isString(target)) {
-      return JSON.parse(target);
-    }
-    return target;
-  }
-};
+import { sharedArgumentProxyProperties } from './ProxyUtil';
 
 export default class DataAccessTracker {
   _dataSourceTree;
@@ -56,18 +44,18 @@ export default class DataAccessTracker {
   _buildDataInjectProxyHandler() {
     return {
       get: (target, name) => {
-        if (name in specialProxyProperties) {
-          return specialProxyProperties[name](target);
-        }
+        // if (name in specialProxyProperties) {
+        //   return specialProxyProperties[name](target);
+        // }
 
         // resolve node and return read data
         const readData = this.resolveReadDataForce(name);
         return readData();
       },
       has: (target, name) => {
-        if (name in specialProxyProperties) {
-          return true;
-        }
+        // if (name in specialProxyProperties) {
+        //   return true;
+        // }
 
         const fn = this.resolveReadData(name);
         return !!fn;
@@ -78,18 +66,18 @@ export default class DataAccessTracker {
   _buildReaderProxyHandler() {
     return {
       get: (target, name) => {
-        if (name in specialProxyProperties) {
-          return specialProxyProperties[name](target);
-        }
+        // if (name in specialProxyProperties) {
+        //   return specialProxyProperties[name](target);
+        // }
 
         // resolve node and return call function to caller.
         // let caller decide when to make the actual call and which arguments to supply.
         return this.resolveReadDataForce(name);
       },
       has: (target, name) => {
-        if (name in specialProxyProperties) {
-          return true;
-        }
+        // if (name in specialProxyProperties) {
+        //   return true;
+        // }
 
         const fn = this.resolveReadData(name);
         return !!fn;
@@ -100,18 +88,18 @@ export default class DataAccessTracker {
   _buildWriterProxyHandler() {
     return {
       get: (target, name) => {
-        if (name in specialProxyProperties) {
-          return specialProxyProperties[name](target);
-        }
+        // if (name in specialProxyProperties) {
+        //   return specialProxyProperties[name](target);
+        // }
 
         // resolve node and return call function to caller.
         // let caller decide when to make the actual call and which arguments to supply.
         return this.resolveWriteDataForce(name);
       },
       has: (target, name) => {
-        if (name in specialProxyProperties) {
-          return true;
-        }
+        // if (name in specialProxyProperties) {
+        //   return true;
+        // }
 
         const fn = this.resolveWriteData(name);
         return !!fn;
@@ -121,8 +109,8 @@ export default class DataAccessTracker {
 
   _resolveArgumentHandler = {
     get: (target, name) => {
-      if (name in specialProxyProperties) {
-        return specialProxyProperties[name](target);
+      if (name in sharedArgumentProxyProperties) {
+        return sharedArgumentProxyProperties[name](target);
       }
       if (!(name in target)) {
         console.warn(`Requested argument was not supplied for ${this._name}:`, name);
@@ -131,7 +119,7 @@ export default class DataAccessTracker {
     },
 
     has: (target, name) => {
-      if (name in specialProxyProperties) {
+      if (name in sharedArgumentProxyProperties) {
         return true;
       }
       return target.hasOwnProperty(name);
@@ -152,11 +140,11 @@ export default class DataAccessTracker {
           try {
             moreInfo += ` - ${JSON.stringify(args)}`;
           }
-          catch (err) { 
+          catch (err) {
             //moreInfo += ` (could not stringify object - ${err.message})`;
             const keys = Object.keys(args);
             moreInfo += ` - with ${keys.length} keys: ${keys}`;
-           }
+          }
         }
         else {
           moreInfo = `<object of unknown type>\n → keys: ${Object.keys(args)}`;
@@ -166,7 +154,7 @@ export default class DataAccessTracker {
         moreInfo = args;
       }
       throw new Error(`Invalid arguments for data node "${node.fullName}"\n` +
-        `→ expected plain object but found: ${moreInfo} ←\n` + 
+        `→ expected plain object but found: ${moreInfo} ←\n` +
         '(Did you pass a data accessor as event (use "asEventHandler" instead!)?)');
     }
     args = args || EmptyObject;
@@ -203,7 +191,7 @@ export default class DataAccessTracker {
       // figure out the arguments for this action and wrap them
       const allArgs = processArguments(node, writeArgs);
       allArgs.queryArgs = this._wrapArgs(allArgs.queryArgs, node);
-      
+
       return node.writeData(allArgs, this._readerProxy, this._injectProxy, this._writerProxy, this);
     };
 

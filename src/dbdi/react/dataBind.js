@@ -1,4 +1,5 @@
 import DataAccessTracker from '../DataAccessTracker';
+import { sharedArgumentProxyProperties } from '../ProxyUtil';
 
 import partialRight from 'lodash/partialRight';
 import map from 'lodash/map';
@@ -289,6 +290,11 @@ export default (propsOrPropCb) => _WrappedComponent => {
             //console.warn('get from customContext: ' + name);
             return this._customContext[name];
           }
+          
+          // 5) check special properties
+          if (name in sharedArgumentProxyProperties) {
+            return sharedArgumentProxyProperties[name];
+          }
 
           // TODO: move this somewhere else or get rid of it entirely
           // // 4) check for direct data inject
@@ -300,7 +306,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
           //if (this._isMounted) 
           {
             //console.error(
-              throw new Error(
+            throw new Error(
               `DI failed - Component requested props/context "${toString(name)}" but was not provided`
             );
             //.stack);
@@ -326,6 +332,11 @@ export default (propsOrPropCb) => _WrappedComponent => {
 
           // 4) check custom context
           if (name in this._customContext) {
+            return true;
+          }
+          
+          // 5) check special properties
+          if (name in sharedArgumentProxyProperties) {
             return true;
           }
 
@@ -362,10 +373,10 @@ export default (propsOrPropCb) => _WrappedComponent => {
           //if (this._isMounted) 
           {
             //console.error(
-              throw new Error(
+            throw new Error(
               `DI failed - Component requested function "${toString(name)}" but was not provided.`
             );
-          //.stack);
+            //.stack);
           }
           return null;
         },

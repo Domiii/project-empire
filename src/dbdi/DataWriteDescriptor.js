@@ -48,7 +48,7 @@ function processArgumentsDefault(node, writeArgs) {
  */
 function processCustomSetter(node, writeArgs) {
   if (writeArgs.length > 1) {
-    console.error('custom writer should only provide one argument but found two:', writeArgs);
+    console.error('custom writer should only provide one argument but found two @', node.name, '→', writeArgs);
   }
 
   // let [queryArgs, val] = writeArgs;

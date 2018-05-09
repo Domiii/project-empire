@@ -49,7 +49,7 @@ export class StreamFilePanelHeader extends Component {
     return (<FancyPanelToggleTitle>
       <Flexbox className="full-width" justifyContent="space-between" alignItems="center">
         <span>
-          <span className="color-gray">(untitled recording)</span>&nbsp;
+          <span className="color-gray">(untitled recording) [{fileId}]</span>&nbsp;
           {renderSize(size)}
         </span>
 

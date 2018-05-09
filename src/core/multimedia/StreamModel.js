@@ -171,11 +171,6 @@ function prepareRecorder(stream, streamArgs, fileId,
     set_streamFileSegments(fileArgs, segments);
     //console.log('MediaRecorder resume');
   };
-  recorder.onstop = (e) => {
-    console.log('MediaRecorder finished recording');
-
-    set_streamStatus(streamArgs, MediaStatus.Finished);
-  };
 
   recorder.ondataavailable = (blobEvent) => {
     //console.log('blob: ' + e.data.size);
@@ -236,7 +231,10 @@ const mediaInputSelection = {
       { streamStatus },
       { mediaStreams }
     ) {
-      return some(mediaStreams, (stream, streamId) => streamStatus({ streamId }) === MediaStatus.Running);
+      return some(mediaStreams, (stream, streamId) => {
+        const s = streamStatus({ streamId });
+        return s === MediaStatus.Running || s === MediaStatus.Paused;
+      });
     }
   },
 
@@ -260,30 +258,39 @@ export default {
     path: '/multimedia/streams',
 
     writers: {
-      startStreamRecording(
+      async startStreamRecording(
         { streamId },
         readers,
         { mediaInputConstraints },
         writers
       ) {
         const streamArgs = { streamId };
-        const { get_mediaStreams } = readers;
+        const { get_mediaStreams, get_streamObject, get_streamFileId } = readers;
         const { set_mediaStream, set_mediaStreams,
           set_streamObject,
-          set_streamRecorderObject,
+          set_streamRecorderObject, stopStreamRecorder,
           set_streamStatus,
           newStreamFile, set_streamFileId,
-          shutdownStream
+          shutdownStream,
+          initStreamFs
         } = writers;
 
         // make sure, previous stream (if any) is dead
-        shutdownStream(streamArgs);
-        
+        //shutdownStream(streamArgs);
+        {
+          await stopStreamRecorder(streamArgs);
+          set_streamRecorderObject(streamArgs, null);
+        }
+
         set_streamStatus(streamArgs, MediaStatus.Preparing);
 
+        const streamPromise = get_streamObject(streamArgs) || getStream(mediaInputConstraints);
+        const fileIdPromise = get_streamFileId(streamArgs) || newStreamFile();
+
         return Promise.all([
-          getStream(mediaInputConstraints),
-          newStreamFile()
+          streamPromise,
+          fileIdPromise,
+          initStreamFs()
         ]).then(([streamObject, fileId]) => {
           set_mediaStream(streamArgs, {});
           const streamVersion = ++lastStreamVersion;
@@ -308,10 +315,10 @@ export default {
           set_streamRecorderObject(streamArgs, mediaRecorder);
           // ]);
         }).then(() => streamId)
-        .catch(err => {
-          console.error(err.stack || err);
-          set_streamStatus(streamArgs, MediaStatus.NotReady);
-        });
+          .catch(err => {
+            console.error(err.stack || err);
+            set_streamStatus(streamArgs, MediaStatus.NotReady);
+          });
       }
     },
 
@@ -373,7 +380,7 @@ export default {
         writers: {
           shutdownStream(
             streamArgs,
-            { streamObject },
+            { streamObject, streamRecorderObject },
             { },
             { set_streamObject,
               set_streamRecorderObject,
@@ -389,7 +396,7 @@ export default {
               set_streamObject(streamArgs, null);
               set_streamRecorderObject(streamArgs, null);
               set_streamStatus(streamArgs, MediaStatus.NotReady);
-              set_streamFileId(streamArgs, null);
+              //set_streamFileId(streamArgs, null);
             }
           }
         },
@@ -434,20 +441,38 @@ export default {
                 { },
                 { set_streamStatus }
               ) {
-                const timeout = getOptionalArgument(streamArgs, 'timeout');
+                const segmentLength = getOptionalArgument(streamArgs, 'timeout');
                 const recorder = streamRecorderObject(streamArgs);
-                recorder.start(timeout || 100);
+                recorder.start(segmentLength || 40);
 
                 return set_streamStatus(streamArgs, MediaStatus.Running);
               },
 
-              stopStreamRecorder(
+              async stopStreamRecorder(
                 streamArgs,
-                { streamRecorderObject }
+                { streamRecorderObject },
+                { },
+                { set_streamStatus }
               ) {
                 //const { timeout } = streamArgs;
                 const recorder = streamRecorderObject(streamArgs);
+
+                if (!recorder || !!recorder.onstop) {
+                  return false;
+                }
+
+                const result = new Promise((resolve, reject) => {
+                  recorder.onstop = (e) => {
+                    console.log('MediaRecorder finished recording');
+
+                    set_streamStatus(streamArgs, MediaStatus.Finished);
+                    resolve(true);
+                  };
+                });
+
                 recorder.stop();
+
+                return await result;
               },
 
               pauseStreamRecorder(

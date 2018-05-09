@@ -100,6 +100,7 @@ export default {
           catch (err) {
             console.error('gapi init failed -', err);
             set_gapiError(err);
+            set_gapiStatus(GapiStatus.None);
           }
         }
       },
@@ -110,7 +111,7 @@ export default {
         { set_gapiStatus, set_gapiTokens, set_gapiError }
       ) {
         // see https://developers.google.com/api-client-library/javascript/reference/referencedocs#gapiauth2authresponse
-        if (gapiStatus === GapiStatus.Authorizing) {
+        if (gapiStatus === GapiStatus.Authorizing || gapiStatus < GapiStatus.Initialized) {
           // make sure we don't try to authorize repeatedly (by accident)
           return false;
         }
