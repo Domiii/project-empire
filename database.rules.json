@@ -205,6 +205,6 @@
       "$groupId": {
         ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
       }
-    },
+    }
   }
 }
