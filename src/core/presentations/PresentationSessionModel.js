@@ -99,10 +99,10 @@ const sessionWriters = {
         finishTime: new Date().getTime()
       });
 
-      const {sessionId} = sessionArgs;
-      
+      const { sessionId } = sessionArgs;
+
       if (!goToFirstPendingPresentationInSession(sessionArgs)) {
-        setActivePresentationInSession({sessionId, presentationId});
+        setActivePresentationInSession({ sessionId, presentationId: null });
       }
       else {
         // reset stream
@@ -134,22 +134,25 @@ const sessionWriters = {
     { update_db, set_streamFileId }
   ) {
     const sessionArgs = { sessionId };
-    const presentationArgs = { presentationId };
-    const streamArgs = { streamId: sessionId };
     const updates = {
-      [presentationStatus.getPath(presentationArgs)]: PresentationStatus.InProgress,
-      [presentationFileId.getPath(presentationArgs)]: presentationId,
-
       [presentationSessionActivePresentationId.getPath(sessionArgs)]: presentationId
     };
+    if (presentationId) {
+      const presentationArgs = { presentationId };
+      Object.assign(updates, {
+        [presentationStatus.getPath(presentationArgs)]: PresentationStatus.InProgress,
+        [presentationFileId.getPath(presentationArgs)]: presentationId
+      });
+    }
 
     // must make this update separate because that goes to a different DataProvider (MemoryDataProvider),
     // and (for now) update_db only uses the single DataProvider at the root
+    const streamArgs = { streamId: sessionId };
     set_streamFileId(streamArgs, presentationId);
 
     const activePresId = presentationSessionActivePresentationId(sessionArgs);
-    if (activePresId && activePresId !== presentationId && 
-        presentationStatus({presentationId: activePresId}) === PresentationStatus.InProgress) {
+    if (activePresId && activePresId !== presentationId &&
+      presentationStatus({ presentationId: activePresId }) === PresentationStatus.InProgress) {
       // set active presentation back to "Pending"
       updates[presentationStatus.getPath({ presentationId: activePresId })] = PresentationStatus.Pending;
     }

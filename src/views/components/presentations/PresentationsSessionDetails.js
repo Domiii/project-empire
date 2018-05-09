@@ -87,9 +87,15 @@ class DownloadVideoFileButton extends Component {
   ) {
     const url = streamFileUrl({ fileId });
     const href = url;
-    // TODO: proper file name when downloading
-    return (<a href={href} download="stream.webm" target="_blank" role="button"
-      className="btn btn-info btn-sm no-padding no-line-height"><FAIcon name="download" /></a>);
+
+    if (url) {
+      // TODO: proper file name when downloading
+      return (<a href={href} download="stream.webm" target="_blank" role="button"
+        className="btn btn-info btn-sm no-padding no-line-height"><FAIcon name="download" /></a>);
+    }
+    else {
+      return '';
+    }
   }
 }
 
