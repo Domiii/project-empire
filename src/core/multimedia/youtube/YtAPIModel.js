@@ -59,18 +59,19 @@ export default {
         { gapiTokens },
         { resetGapiStatus, gapiHardAuth }
       ) {
-        //if (gapi.auth2) {
-        gapi.auth.setToken(null);
-        try {
-          Promise.all([
-            gapi.auth2.getAuthInstance().signOut(),
-            gapi.auth2.getAuthInstance().disconnect()
-          ]);
+        if (gapi.auth2) {
+          gapi.auth && gapi.auth.setToken(null);
+          try {
+            Promise.all([
+              gapi.auth2.getAuthInstance().signOut(),
+              gapi.auth2.getAuthInstance().disconnect()
+            ]);
+          }
+          catch (err) {
+            console.error(err);
+          }
         }
-        catch (err) {
-          console.error(err);
-        }
-        debugger;
+        
         if (gapiTokens && gapiTokens.access_token) {
           try {
             await window.fetch('https://accounts.google.com/o/oauth2/revoke?token=' + gapiTokens.access_token);

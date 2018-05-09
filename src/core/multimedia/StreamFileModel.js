@@ -96,7 +96,7 @@ async function prepareWriter(fileArgs, readers, writers) {
     return;
   }
 
-  const { set_streamFileWriter, set__blobQueue, initStreamFs } = writers;
+  const { set_streamFileWriter, set__blobQueue, initStreamFs, set_streamFileUrl } = writers;
 
   // start new queue
   set__blobQueue(fileArgs, []);
@@ -108,6 +108,8 @@ async function prepareWriter(fileArgs, readers, writers) {
   const { fileId } = fileArgs;
   const path = getFilePath(fileId);
   await fs.writeFile(path, '');
+
+  set_streamFileUrl(fileArgs, undefined);
 
   const fileEntry = await fs.getEntry(path);
   const writer = await new Promise((resolve, reject) =>
@@ -303,10 +305,10 @@ export default {
               files.push(fileEntry);
               set__streamFileList(files);
 
-              // set URL
-              fs.getUrl(path).then(url =>
-                set_streamFileUrl(queryArgs, url)
-              );
+              // // set URL
+              // fs.getUrl(path).then(url =>
+              //   set_streamFileUrl(queryArgs, url)
+              // );
             }
 
             return writer;
@@ -354,7 +356,13 @@ export default {
             async fetch({ fileId }, { }, { }, { initStreamFs }) {
               await initStreamFs();
               const path = getFilePath(fileId);
-              return await fs.getUrl(path);
+              const exists = await fs.exists(path);
+              if (exists) {
+                return await fs.getUrl(path);
+              }
+              else {
+                return null;
+              }
             }
           },
           // streamFileEntry: {
