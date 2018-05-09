@@ -18,6 +18,9 @@ import { EmptyObject } from '../../../util';
 
 // https://github.com/atlassian/react-beautiful-dnd/blob/master/stories/src/table/with-fixed-columns.jsx
 
+/**
+ * NOTE: Only pending presentations are re-orderable
+ */
 export default class PresentationsTable extends Component {
   render() {
     return (<Table striped bordered condensed hover>

@@ -16,6 +16,8 @@ import Flexbox from 'flexbox-react';
 
 import { LoadOverlay } from '../overlays';
 import { hrefPresentationSessionView } from '../../href';
+import { LinkContainer } from 'react-router-bootstrap';
+import FAIcon from '../util/FAIcon';
 
 const itemsPerPage = 20;
 
@@ -31,6 +33,9 @@ const PresentationSessionRow = dataBind()(function PresentationSessionRow(
   return (<Flexbox>
     <Flexbox>
       {presentationSessionId}
+      <LinkContainer to={hrefPresentationSessionView(presentationSessionId)}>
+        <Button><FAIcon name="mail-forward" /></Button>
+      </LinkContainer>
     </Flexbox>
   </Flexbox>);
 });

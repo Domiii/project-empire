@@ -11,42 +11,72 @@ import {
   Button, Alert, Panel, Table
 } from 'react-bootstrap';
 import Moment from 'react-moment';
+import styled from 'styled-components';
 
 import ImageLoader from 'src/views/components/util/react-imageloader';
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
 import { EmptyObject } from '../../../util';
 
+const StyledTable = styled(Table)`
+font-size: 1.5em;
+`;
 
+@dataBind()
+class PresentationRow extends Component {
+  render({ presentation }) {
+    const {
+      index,
+      title,
+      userNames,
+      status: health,
+      presentationStatus
+    } = presentation;
+    return (
+      <tr>
+        <td>{index}</td>
+        <td>{title}</td>
+        <td>{map(userNames, u => '@' + u).join(',  ')}</td>
+        <td>{health}</td>
+        <td>{presentationStatus}</td>
+      </tr>
+    );
+  }
+}
+
+@dataBind({
+  // getTableRowData(
+  //   { sessionId },
+  //   { orderedPresentationsOfSession }
+  // ) {
+  // }
+})
 export default class PresentationsTable extends Component {
-  render() {
-    return (<Table striped bordered condensed hover>
+  render(
+    { sessionId },
+    { orderedPresentations }
+  ) {
+    const presentations = orderedPresentations({ sessionId });
+    if (presentations === NOT_LOADED) {
+      return <LoadIndicator block />;
+    }
+
+    return (<StyledTable striped bordered condensed hover>
       <thead>
         <tr>
-          <th>#</th>
-          <th>First Name</th>
-          <th>Last Name</th>
-          <th>Username</th>
+          <th className="min">#</th>
+          <th>Title</th>
+          <th>Contributors</th>
+          <th className="min">專案狀態</th>
+          <th className="min">簡報狀態</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>1</td>
-          <td>Mark</td>
-          <td>Otto</td>
-          <td>@mdo</td>
-        </tr>
-        <tr>
-          <td>2</td>
-          <td>Jacob</td>
-          <td>Thornton</td>
-          <td>@fat</td>
-        </tr>
-        <tr>
-          <td>3</td>
-          <td colSpan="2">Larry the Bird</td>
-          <td>@twitter</td>
-        </tr>
+        {
+          map(presentations, p => (
+            <PresentationRow key={p.id} presentation={p} />
+          ))
+        }
       </tbody>
-    </Table>);
+    </StyledTable>);
   }
 }

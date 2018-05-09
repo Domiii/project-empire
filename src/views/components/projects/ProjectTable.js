@@ -91,9 +91,14 @@ const __defaultProps = {
 
 function convertToTableData(objects, customTableData) {
   return map(objects, (o, id) => ({ 
+    // a table row object must have an id
     id,
-    ...mapValues(customTableData, fn => fn(id, o)),
-    ...o
+
+    // the actual data
+    ...o,
+
+    // custom data must be looked up and merged (e.g. for contributor data we want only the count)
+    ...mapValues(customTableData, fn => fn(id, o))
   }));
 }
 

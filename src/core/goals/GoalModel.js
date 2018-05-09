@@ -136,20 +136,14 @@ const readers = {
   },
 
   goalsOfAllCycles(
-    { scheduleId, uid },
+    args,
     { get_goalList },
     { }
   ) {
-    const query = {
-      uid,
-      scheduleId
-    };
-
-    if (!get_goalList.isLoaded(query)) {
+    if (!get_goalList.isLoaded(args)) {
       return NOT_LOADED;
     }
-
-    return get_goalList(query) || EmptyObject;
+    return get_goalList(args) || EmptyObject;
   },
 
   goalsOfAllUsers(

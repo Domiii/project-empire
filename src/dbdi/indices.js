@@ -1,5 +1,7 @@
 import _ from 'lodash';
 import isArray from 'lodash/isArray';
+import isPlainObject from 'lodash/isPlainObject';
+import isString from 'lodash/isString';
 import isArrayLike from 'lodash/isArrayLike';
 import sortBy from 'lodash/sortBy';
 import zipObject from 'lodash/zipObject';
@@ -68,36 +70,51 @@ export function makeIndices(cfg, defaultSettings) {
 
 const IndexUtils = {
   sanitizeConfig(cfg, localDefaults) {
-    return _.zipObject(_.keys(cfg), 
-      _.map(cfg, (indexCfg, indexName) => {
-        let cfgEntry;
-        if (isArray(indexCfg)) {
-          // only provide array of keys
-          cfgEntry = { 
-            keys: indexCfg
-          };
-        }
-        else if (_.isString(indexCfg)) {
-          // only provide name of single key
-          cfgEntry = {
-            keys: [indexCfg]
-          };
-        }
-        else if (_.isPlainObject(indexCfg)) {
-          // provide full configuration for index
-          if (!isArray(indexCfg.keys)) {
-            //console.warn('Invalid index config missing or invalid keys property (should be array): ' + JSON.stringify(cfg));
+    // if (isString(cfg)) {
+    //   // only provide a single index that is the name of the index and the name of the property it's indexing
+    //   const cfgEntry = {
+    //     keys: [cfg]
+    //   };
+    //   return {
+    //     [cfg]: Object.assign({}, globalDefaultConfig, localDefaults, cfgEntry)
+    //   };
+    // }
+    // else 
+    if (isPlainObject(cfg)) {
+      return _.zipObject(_.keys(cfg),
+        _.map(cfg, (indexCfg) => {
+          let cfgEntry;
+          if (isArray(indexCfg)) {
+            // only provide array of keys
+            cfgEntry = {
+              keys: indexCfg
+            };
           }
-          cfgEntry = indexCfg;
-        }
-        else {
-          //console.warn('Invalid index config has invalid entry: ' + indexName);
-          cfgEntry = {};
-        }
+          else if (isString(indexCfg)) {
+            // only provide name of single key
+            cfgEntry = {
+              keys: [indexCfg]
+            };
+          }
+          else if (isPlainObject(indexCfg)) {
+            // provide full configuration for index
+            if (!isArray(indexCfg.keys)) {
+              //console.warn('Invalid index config missing or invalid keys property (should be array): ' + JSON.stringify(cfg));
+            }
+            cfgEntry = indexCfg;
+          }
+          else {
+            //console.warn('Invalid index config has invalid entry: ' + indexName);
+            cfgEntry = {};
+          }
 
-        return Object.assign({}, globalDefaultConfig, localDefaults, cfgEntry);
-      })
-    );
+          return Object.assign({}, globalDefaultConfig, localDefaults, cfgEntry);
+        })
+      );
+    }
+    else {
+      throw new Error('invalid `indices` config, must be plain object or string: ' + JSON.stringify(cfg));
+    }
   },
 
   convertToSortedValueSet(val, nDepth) {
@@ -114,7 +131,7 @@ const IndexUtils = {
       return val;
     }
     else if (_.isArrayLike(val)) {
-      return _.map(val, child => this.convertToSortedValueSet(child, nDepth+1));
+      return _.map(val, child => this.convertToSortedValueSet(child, nDepth + 1));
     }
     else if (_.isPlainObject(val)) {
       // make sure, entries in resulting string representation are sorted by key
@@ -161,6 +178,10 @@ const IndexUtils = {
   }
 };
 
+/**
+ * Represents a set of indices that can be attached to path nodes to support
+ * queries by value of child nodes.
+ */
 class IndexSet {
 
   /**
@@ -270,7 +291,7 @@ All indices: ${JSON.stringify(this.keysByIndexName, null, 2)}`);
     else {
       query = props[varName];
     }
-    
+
     const keys = Object.keys(query);
 
     if (!this.getIndexNameByKeys(keys)) {
@@ -290,7 +311,7 @@ All indices: ${JSON.stringify(this.keysByIndexName, null, 2)}`);
       this._invalidQuery(keys);
     }
     keys = this.keysByIndexName[indexName];
-    
+
     const settings = this.getCfg(indexName);
 
     if (keys.length === 1) {
@@ -307,7 +328,7 @@ All indices: ${JSON.stringify(this.keysByIndexName, null, 2)}`);
   // called before write to any object of indexed path
   updateIndices(val) {
     if (!_.isObject(val)) return;
-    
+
     for (var indexName in this.keysByIndexName) {
       const cfg = this.getCfg(indexName);
 
