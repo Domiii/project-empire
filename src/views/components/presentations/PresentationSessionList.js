@@ -126,15 +126,9 @@ export default class PresentationSessionList extends Component {
 
 
 // <pre>{`TODO
-// Still gotta fix
-
-// Hack-arounds:
-// 2. be able to add, edit + delete (pending) presentations +  3. button to shuffle PENDING presentations
-//   -> shuffle spreadsheet and re-import in front of their eyes
-//       `}</pre>
-//       <pre>{`
-// more TODOs
-
+// -> fix preview (doesn't update to latest src; explodes in size; cannot stop preview)
+// -> need to be able to delete files
+// -> be able to add, edit + delete (pending) presentations +  3. button to shuffle PENDING presentations
 // -3. Profiling of PresentationSessionView (render updates slow down real bad)
 // -2. User table
 //   -> show all info
@@ -147,12 +141,14 @@ export default class PresentationSessionList extends Component {
 // -0.5 network-enabled presentation timer!
 // -0.3 linkage between the different PresentationSession views
 // 0. proper project + user tagging for presentations
-//   * hasMany needs to work for this
+//   * finish relationships for this
 // 1. batch-upload to youtube
 // 2. generate youtube playlists
-// 3. normal user view of:
-//   a) presentation session + presentation
-//   b) own + participating playlists
+// 3. normal user functionality:
+//    a) presentation session + presentation
+//    b) own + participating playlists
+//    c) see + review feedback
+//    d) give/edit/evaluate feedback
 // 4. let users provider supplementary material (at least presentation URL)
 // 5. better import features?
 // `}</pre>

@@ -108,7 +108,7 @@ class DownloadVideoFileButton extends Component {
     const presentationId = presentation.id;
     setActivePresentationInSession({ sessionId, presentationId });
   },
-  clickInfo(evt,
+  clickEdit(evt,
     { selectRow, presentation: { id } },
     { }
   ) {
@@ -118,8 +118,8 @@ class DownloadVideoFileButton extends Component {
 class PresentationInfoRow extends Component {
   render(
     { sessionId, presentation, isSelected },
-    { clickPlay, clickInfo, isPresentationSessionOwner, presentationSessionActivePresentationId },
-    { isAnyStreamOnline }
+    { clickPlay, clickEdit, isPresentationSessionOwner, presentationSessionActivePresentationId },
+    { isCurrentUserAdmin, isAnyStreamOnline }
   ) {
     const {
       index,
@@ -133,8 +133,9 @@ class PresentationInfoRow extends Component {
     //const clazz = presentationStatus === PresentationStatus.InProgress && 'red-highlight-border' || 'no-highlight-border';
 
     let rowControls;
+    const isOwner = isPresentationSessionOwner({ sessionId });
     if (presentationStatus <= PresentationStatus.InProgress) {
-      const canPlay = isPresentationSessionOwner({ sessionId }) && activePres !== id;
+      const canPlay = isOwner && activePres !== id;
       rowControls = canPlay && (<F>
         &nbsp;
         <Button bsStyle="default" className="no-padding no-line-height" disabled={isAnyStreamOnline} onClick={clickPlay}>
@@ -142,13 +143,13 @@ class PresentationInfoRow extends Component {
         </Button>
       </F>);
     }
-    else if (presentationStatus === PresentationStatus.Finished) {
+    if (isOwner || isCurrentUserAdmin) {
       rowControls = (<F>
+        {rowControls}
         &nbsp;
-        {/* <Button bsStyle="default" className="no-padding no-line-height" active={isSelected} onClick={clickInfo}>
-          <FAIcon name="info-circle" color="darkblue" />
-        </Button> */}
-        <DownloadVideoFileButton fileId={id} />
+        <Button bsStyle="default" className="no-padding no-line-height" active={isSelected} onClick={clickEdit}>
+          <FAIcon name="edit" color="darkblue" />
+        </Button>
       </F>);
     }
 
@@ -184,9 +185,16 @@ class PresentationRow extends Component {
       </td></tr>);
     }
 
+    let editEl;
+    if (isSelected) {
+      const presentationId = presentation.id;
+      editEl = <PresentationEditor presentationId={presentationId} />;
+    }
+
     return (<F>
       <PresentationInfoRow {...{ sessionId, presentation, isSelected, selectRow }} />
       {streamControls}
+      {editEl}
     </F>);
   }
 }
