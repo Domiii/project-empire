@@ -521,7 +521,17 @@ export default (propsOrPropCb) => _WrappedComponent => {
       //console.warn(WrappedComponent.name || '<unnamed component>', 'onNewData', localPath, val);
       //this.forceUpdate();
       if (this._isMounted) {
-        this.setState(EmptyObject);
+        // TODO: this could happen during render, because render requests an object which can trigger new data to come down
+        try {
+          this.setState(EmptyObject);
+        }
+        catch (err) {
+          // TODO: use a new boolean to figure out if we are rendering instead
+          console.warn('setState failed -', err.message);
+          setTimeout(() => {
+            this.setState({});
+          });
+        }
       }
     }
   }

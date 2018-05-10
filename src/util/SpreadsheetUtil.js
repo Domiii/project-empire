@@ -45,23 +45,49 @@ export function buildUrl(publishId, gid, allowCache = false) {
  * @see https://stackoverflow.com/questions/27979002/convert-csv-data-into-json-format-using-javascript
  */
 export function csvToJSON(csv, csvOptions) {
-  const lines = csv.split('\n');
+  //const lines = csv.split('\n');
   const result = [];
+
+  const re = /((?:"(?:""|[^"])+")|(?!")[^\n,]*)([\n,])/g;
+  csv += '\n'; // this is to match the suffix from above
+
+  console.log(csv);
+  
+  let match;
+  const lines = [];
+  let line = [];
+  while ((match = re.exec(csv)) !== null) {
+    console.warn(match[1], match[2]);
+    line.push(match[1].trim());
+    if (match[2] === '\n') {
+      // end of line
+      lines.push(line);
+      line = [];
+    }
+  }
+  //console.log(lines);
+  //throw new Error('stop');
   
   // put all columns after a certain index into an array of given name
-  const columnArrIndex = csvOptions && csvOptions.columnArrIndex;
-  const columnArrName = csvOptions && csvOptions.columnArrName;
+  const columnArr = csvOptions && csvOptions.columnArr;
+  const columnArrStart = columnArr && columnArr.start;
+  const columnArrEnd = columnArr && columnArr.end;
+  const columnArrName = columnArr && columnArr.name;
 
-  let headers = lines[0].trim().split(',');
+  let headers = lines[0];
   headers = map(headers, header => header.trim().replaceAll('\\s', '_'));
   for (let i = 1; i < lines.length; i++) {
     const obj = {};
-    const currentline = lines[i].split(',');
+    const currentline = lines[i];
 
     for (let j = 0; j < headers.length; j++) {
       // this is a pretty bad implementation...
-      const val = currentline[j].replaceAll('"', '').trim();
-      if (columnArrIndex && j >= columnArrIndex) {
+      if (columnArrEnd && j > columnArrEnd) {
+        continue;
+      }
+
+      const val = (currentline[j] || '').replaceAll('"', '').trim();
+      if (columnArrStart && j >= columnArrStart) {
         if (!val) {
           continue;
         }

@@ -29,8 +29,11 @@ const sessionWriters = {
     { push_presentation }
   ) {
     const csvOptions = {
-      columnArrIndex: 4,
-      columnArrName: 'userNames'
+      columnArr: {
+        start: 4,
+        end: 8,
+        name: 'userNames'
+      }
     };
 
     let presis = await downloadSpreadsheetJSON(publishId, gid, csvOptions);
@@ -42,6 +45,7 @@ const sessionWriters = {
       pres.index = i;
       pres.presentationStatus = PresentationStatus.Pending;
       pres.creatorUid = currentUid;
+      pres.userNamesString = (pres.userNames || []).join('\t');
 
       return push_presentation(pres);
     });

@@ -311,12 +311,14 @@ export const DefaultFormChildren = dataBind({
     deleteMessage
   ] = getOptionalArguments(allArgs, 'idArgs', 'deleteMessage');
 
+  const { isSaved } = allArgs;
+
   const alreadyExists = !!idArgs;
 
   return (
     <Flexbox justifyContent="space-between" alignItems="center">
       <Flexbox>
-        <button type="submit" className="btn btn-info">
+        <button type="submit" className="btn btn-info" disabled={isSaved}>
           {alreadyExists ? 'Update' : 'Add new'}
         </button>
       </Flexbox>
@@ -661,7 +663,8 @@ export default class DynamicForm extends Component {
 
   render(...allArgs) {
     const {
-      formData
+      formData,
+      isSaved
     } = this.state;
     if (formData === NOT_LOADED) {
       return <LoadIndicator />;
@@ -704,6 +707,7 @@ export default class DynamicForm extends Component {
 
     const Component = component || DefaultFormComponent;
     return (<Component
+      isSaved={isSaved}
       {...formProps}
     />);
   }

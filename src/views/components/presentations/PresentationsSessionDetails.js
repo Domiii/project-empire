@@ -1,8 +1,9 @@
 import map from 'lodash/map';
 import size from 'lodash/size';
 import mapValues from 'lodash/mapValues';
+import last from 'lodash/last';
 
-import { EmptyObject } from '../../../util';
+import { EmptyObject, EmptyArray } from '../../../util';
 
 import React, { Component, Fragment as F } from 'react';
 import dataBind, { NOT_LOADED } from '../../../dbdi/react/dataBind';
@@ -21,6 +22,9 @@ import FAIcon from 'src/views/components/util/FAIcon';
 import MediaStreamPanel, { MediaPrepView } from 'src/views/components/multimedia/MediaStreamPanel';
 import { PresentationStatus } from '../../../core/presentations/PresentationModel';
 import { YtStatusPanel } from '../multimedia/VideoUploadPanel';
+
+import PresentationEditor from './PresentationEditor';
+
 
 const StyledTable = styled(Table) `
 font-size: 1.5em;
@@ -85,13 +89,17 @@ class DownloadVideoFileButton extends Component {
     fileArgs,
     { streamFileExists, streamFileUrl }
   ) {
+    let { title } = fileArgs;
+    title = title || 'video';
     if (streamFileExists(fileArgs)) {
       const url = streamFileUrl(fileArgs);
       const href = url;
 
       // TODO: proper file name when downloading
-      return (<a href={href} download="stream.webm" target="_blank" role="button"
-        className="btn btn-info btn-sm no-padding no-line-height"><FAIcon name="download" /></a>);
+      return (<a href={href} download={title + '.webm'} target="_blank" role="button"
+        // className="btn btn-info btn-sm no-padding no-line-height"
+        className="btn btn-info"
+      ><FAIcon name="download" /></a>);
     }
     else {
       return '';
@@ -108,7 +116,7 @@ class DownloadVideoFileButton extends Component {
     const presentationId = presentation.id;
     setActivePresentationInSession({ sessionId, presentationId });
   },
-  clickEdit(evt,
+  clickSelectRow(evt,
     { selectRow, presentation: { id } },
     { }
   ) {
@@ -118,14 +126,14 @@ class DownloadVideoFileButton extends Component {
 class PresentationInfoRow extends Component {
   render(
     { sessionId, presentation, isSelected },
-    { clickPlay, clickEdit, isPresentationSessionOwner, presentationSessionActivePresentationId },
+    { clickPlay, clickSelectRow, isPresentationSessionOwner, presentationSessionActivePresentationId },
     { isCurrentUserAdmin, isAnyStreamOnline }
   ) {
     const {
       index,
       id,
       title,
-      userNames,
+      userNamesString,
       //status: projectStatus,
       presentationStatus
     } = presentation;
@@ -133,6 +141,7 @@ class PresentationInfoRow extends Component {
     //const clazz = presentationStatus === PresentationStatus.InProgress && 'red-highlight-border' || 'no-highlight-border';
 
     let rowControls;
+    let onDblClick;
     const isOwner = isPresentationSessionOwner({ sessionId });
     if (presentationStatus <= PresentationStatus.InProgress) {
       const canPlay = isOwner && activePres !== id;
@@ -144,13 +153,14 @@ class PresentationInfoRow extends Component {
       </F>);
     }
     if (isOwner || isCurrentUserAdmin) {
-      rowControls = (<F>
-        {rowControls}
-        &nbsp;
-        <Button bsStyle="default" className="no-padding no-line-height" active={isSelected} onClick={clickEdit}>
-          <FAIcon name="edit" color="darkblue" />
-        </Button>
-      </F>);
+      // rowControls = (<F>
+      //   {rowControls}
+      //   &nbsp;
+      //   <Button bsStyle="default" className="no-padding no-line-height" active={isSelected} onClick={clickEdit}>
+      //     <FAIcon name="edit" color="darkblue" />
+      //   </Button>
+      // </F>);
+      onDblClick = clickSelectRow;
     }
 
     const activePres = presentationSessionActivePresentationId({ sessionId });
@@ -160,14 +170,39 @@ class PresentationInfoRow extends Component {
     </StatusTd>);
 
     return (
-      <Tr className="" status={presentationStatus}>
+      <Tr className="" status={presentationStatus} onDoubleClick={onDblClick}>
         <td className="min">{index + 1}</td>
         <td>{title}</td>
-        <td>{map(userNames, u => '@' + u).join('  ')}</td>
+        <td>{userNamesString}</td>
         {/* <td>{health}</td> */}
         {statusEl}
       </Tr>
     );
+  }
+}
+
+@dataBind()
+class PresentationRowDetails extends Component {
+  render(
+    { presentationId },
+    { get_presentation, isPresentationSessionOwner },
+    { isCurrentUserAdmin }
+  ) {
+    const presentation = get_presentation({ presentationId });
+    const { sessionId } = presentation;
+    const sessionArgs = { sessionId };
+    const isOwner = isPresentationSessionOwner(sessionArgs);
+
+    const editorEl = isCurrentUserAdmin && <PresentationEditor presentationId={presentationId} />;
+    let controlEls;
+    if (isOwner) {
+      const fileName = presentation.title + ' (' + presentation.userNamesString + ')';
+      controlEls = <DownloadVideoFileButton title={fileName} fileId={presentationId} />;
+    }
+    return (<div>
+      {editorEl}
+      {controlEls}
+    </div>);
   }
 }
 
@@ -177,24 +212,28 @@ class PresentationRow extends Component {
     { sessionId, presentation, isSelected, selectRow },
     { isPresentationSessionOwner, presentationSessionActivePresentationId }
   ) {
+    const nCols = 4;
+
+    let extraEl;
+    if (isSelected) {
+      const presentationId = presentation.id;
+      extraEl = (<tr><td colSpan={nCols}>
+        <PresentationRowDetails presentationId={presentationId} />
+      </td></tr>);
+    }
+
     const sessionArgs = { sessionId };
     let streamControls;
     if (isPresentationSessionOwner(sessionArgs) && presentationSessionActivePresentationId(sessionArgs) === presentation.id) {
-      streamControls = (<tr><td colSpan="4">
+      streamControls = (<tr><td colSpan={nCols}>
         <PresentationSessionStreamingPanel sessionId={sessionId} />
       </td></tr>);
     }
 
-    let editEl;
-    if (isSelected) {
-      const presentationId = presentation.id;
-      editEl = <PresentationEditor presentationId={presentationId} />;
-    }
-
     return (<F>
       <PresentationInfoRow {...{ sessionId, presentation, isSelected, selectRow }} />
+      {extraEl}
       {streamControls}
-      {editEl}
     </F>);
   }
 }
@@ -212,15 +251,16 @@ const SessionToolbar = dataBind({
     clickStop }
 ) {
   let ownerEls;
-  if (!isPresentationSessionInProgress(args)) {
-    if (isPresentationSessionOwner(args)) {
-      //introEl = 
-    }
-    else {
-      //introEl = <Alert bsStyle="success" bsSize="small"></Alert>;
-    }
-  }
-  else {
+  // if (!isPresentationSessionInProgress(args)) {
+  //   if (isPresentationSessionOwner(args)) {
+  //     //introEl = 
+  //   }
+  //   else {
+  //     //introEl = <Alert bsStyle="success" bsSize="small"></Alert>;
+  //   }
+  // }
+  // else {
+  if (isPresentationSessionOwner(args)) {
     //&nbsp;
     ownerEls = (<F>
       <YtStatusPanel dontAuthAutomatically={true} />
@@ -265,6 +305,12 @@ const SessionHeader = dataBind({
   //   { orderedPresentationsOfSession }
   // ) {
   // }
+  clickAddPresentation(evt, sessionArgs, { orderedPresentations, push_presentation }) {
+    const presentations = orderedPresentations(sessionArgs) || EmptyArray;
+    const lastPres = last(presentations);
+    const index = lastPres && lastPres.index + 1 || 0;
+    push_presentation({ index });
+  }
 })
 export default class PresentationsSessionDetails extends Component {
   state = {}
@@ -279,7 +325,7 @@ export default class PresentationsSessionDetails extends Component {
 
   render(
     { sessionId },
-    { orderedPresentations }
+    { orderedPresentations, clickAddPresentation }
   ) {
     const presentations = orderedPresentations({ sessionId });
     if (presentations === NOT_LOADED) {
@@ -310,6 +356,10 @@ export default class PresentationsSessionDetails extends Component {
           }
         </tbody>
       </StyledTable>
+
+      <Button bsStyle="success" onClick={clickAddPresentation}>
+        Add presentation <FAIcon name="plus" />
+      </Button>
     </F>);
   }
 }

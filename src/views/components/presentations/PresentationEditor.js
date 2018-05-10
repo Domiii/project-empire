@@ -22,6 +22,36 @@ import DynamicForm from 'src/views/tools/DynamicForm';
 
 import { PresentationStatus } from '../../../core/presentations/PresentationModel';
 
+export const schemaTemplate = {
+  type: 'object',
+  properties: [
+    {
+      id: 'index',
+      type: 'number',
+      isOptional: true
+    },
+    {
+      id: 'title',
+      type: 'string',
+      isOptional: true
+    },
+    {
+      id: 'userNamesString',
+      type: 'string',
+      isOptional: true
+    },
+    {
+      id: 'createdAt',
+      // if(formData) {
+      //   return !!formData && !!formData.createdAt;
+      // },
+
+      'title': 'Created',
+      'type': 'number',
+      isOptional: true
+    }
+  ]
+};
 
 @dataBind({})
 export default class PresentationEditor extends Component {
@@ -29,22 +59,28 @@ export default class PresentationEditor extends Component {
     'ui:options': {
       inline: false
     },
-    title: {
-      TODO
+    index: {
       'ui:widget': 'text',
-      'ui:placeholder': '很棒的新目標～',
+      'ui:placeholder': 'index',
       'ui:options': {
         label: false,
         inline: true
       }
     },
-    goalDescription: {
-      'ui:widget': 'textarea',
-      'ui:placeholder': '有更多細節來描述這目標嗎？',
+    title: {
+      'ui:widget': 'text',
+      'ui:placeholder': 'title',
       'ui:options': {
         label: false,
-        inline: true,
-        rows: 3
+        inline: true
+      }
+    },
+    userNamesString: {
+      'ui:widget': 'text',
+      'ui:placeholder': 'userNamesString',
+      'ui:options': {
+        label: false,
+        inline: true
       }
     },
     createdAt: {
@@ -55,16 +91,13 @@ export default class PresentationEditor extends Component {
     },
   }
 
-  render(
-    presArgs,
-    { get_presentation }
-  ) {
+  render({ presentationId }) {
     const { uiSchema } = this;
 
-    const idArgs = presArgs;
+    const idArgs = { presentationId };
     const dbName = 'presentation';
     const props = {
-      schemaTemplate: goalSchemaTemplate,
+      schemaTemplate: schemaTemplate,
       uiSchema,
 
       dbName,
@@ -72,8 +105,7 @@ export default class PresentationEditor extends Component {
 
       onStateChange: this.onStateChange
     };
-    const presentation = get_presentation(presArgs);
-    const { sessionId } = presentation;
+
     return (<div>
       <DynamicForm {...props} />
     </div>);

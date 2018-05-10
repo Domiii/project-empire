@@ -673,11 +673,11 @@ td.min, th.min {
  * #######################################################
  */
 
- .media-stream-panel {
- }
+.media-stream-panel {
+}
 
 .media-panel-video {
-  max-width: 100%;
+  max-width: 50vw;
   max-height: 50vh;
   display: block;
 }
