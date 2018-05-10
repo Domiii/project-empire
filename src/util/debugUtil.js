@@ -1,7 +1,11 @@
 
+if (process.env.NODE_ENV !== 'production') {
 
-// show more error information in Error.prototype.stack
-Error.stackTraceLimit = 100;
+  // when not in production...
+
+  // show more error information in Error.prototype.stack
+  Error.stackTraceLimit = 100;
+}
 
 export const errorLog = [];
 

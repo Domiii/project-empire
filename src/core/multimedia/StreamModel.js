@@ -388,7 +388,6 @@ export default {
               set_streamFileId }
           ) {
             const stream = streamObject(streamArgs);
-            console.warn('shutdown', stream);
             if (stream) {
               // shutdown all streams
               stream.getTracks().forEach(track => track.stop());
@@ -457,7 +456,7 @@ export default {
                 //const { timeout } = streamArgs;
                 const recorder = streamRecorderObject(streamArgs);
 
-                if (!recorder || !!recorder.onstop) {
+                if (!recorder || !!recorder.onstop || recorder.state === 'inactive') {
                   return false;
                 }
 

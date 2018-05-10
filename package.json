@@ -94,6 +94,7 @@
     "firebase-tools": "3.0.7",
     "html-webpack-plugin": "~2.22.0",
     "json-loader": "^0.5.7",
+    "longjohn": "^0.2.12",
     "node-sass": "^4.9.0",
     "nodemon": "~1.10.2",
     "npm-run-all": "~3.1.0",

@@ -96,7 +96,7 @@ async function prepareWriter(fileArgs, readers, writers) {
     return;
   }
 
-  const { set_streamFileWriter, set__blobQueue, initStreamFs, set_streamFileUrl } = writers;
+  const { set_streamFileWriter, set__blobQueue, initStreamFs, set_streamFileExists } = writers;
 
   // start new queue
   set__blobQueue(fileArgs, []);
@@ -109,7 +109,7 @@ async function prepareWriter(fileArgs, readers, writers) {
   const path = getFilePath(fileId);
   await fs.writeFile(path, '');
 
-  set_streamFileUrl(fileArgs, undefined);
+  set_streamFileExists(fileArgs, NOT_LOADED); // notify anyone depending on file existence that things changed
 
   const fileEntry = await fs.getEntry(path);
   const writer = await new Promise((resolve, reject) =>
@@ -254,16 +254,22 @@ export default {
                 sum + streamFileSegmentSize(Object.assign({}, streamFileArgs, { segmentIndex })),
                 0);
             }
+            else if (!fileId) {
+              return 0;
+            }
             else {
               const path = getFilePath(fileId);
               (async () => {
-                const metadata = await fs.stat(path);
-                const { size } = metadata;
-                if (size !== get__streamFileMetadataSize(streamFileArgs)) {
-                  set__streamFileMetadataSize(streamFileArgs, size);
+                // fugly stuff -> gotta do something differently here
+                if (await fs.exists(path)) {
+                  const metadata = await fs.stat(path);
+                  const { size } = metadata;
+                  if (size !== get__streamFileMetadataSize(streamFileArgs)) {
+                    set__streamFileMetadataSize(streamFileArgs, size);
+                  }
                 }
               })();
-              return get__streamFileMetadataSize(streamFileArgs);
+              return get__streamFileMetadataSize(streamFileArgs) || 0;
             }
           },
 
@@ -343,6 +349,14 @@ export default {
           //     return await fs.stat(path);
           //   }
           // },
+          streamFileExists: {
+            path: 'exists',
+            async fetch({ fileId }, { }, { }, { initStreamFs }) {
+              await initStreamFs();
+              const path = getFilePath(fileId);
+              return await fs.exists(path);
+            }
+          },
           streamFileEntry: {
             path: 'entry',
             async fetch({ fileId }, { }, { }, { initStreamFs }) {
@@ -356,13 +370,7 @@ export default {
             async fetch({ fileId }, { }, { }, { initStreamFs }) {
               await initStreamFs();
               const path = getFilePath(fileId);
-              const exists = await fs.exists(path);
-              if (exists) {
-                return await fs.getUrl(path);
-              }
-              else {
-                return null;
-              }
+              return await fs.getUrl(path);
             }
           },
           // streamFileEntry: {

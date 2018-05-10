@@ -267,7 +267,9 @@ export default class DataProviderBase {
     const listeners = this.getListeners(localPath) || EmptyArray;
 
     // listeners will get called once per path
-    setTimeout(() => listeners.forEach(listener => listener(query, val)));
+    //setTimeout(() => 
+    listeners.forEach(listener => listener(query, val));
+    //);
     // setTimeout(() => {
     //   for (let i = listeners.length-1; i >= 0; --i) {
     //   for (let i = 0; i < listeners.length; ++i) {
