@@ -51,13 +51,13 @@ export function csvToJSON(csv, csvOptions) {
   const re = /((?:"(?:""|[^"])+")|(?!")[^\n,]*)([\n,])/g;
   csv += '\n'; // this is to match the suffix from above
 
-  console.log(csv);
+  //console.log(csv);
   
   let match;
   const lines = [];
   let line = [];
   while ((match = re.exec(csv)) !== null) {
-    console.warn(match[1], match[2]);
+    //console.warn(match[1], match[2]);
     line.push(match[1].trim());
     if (match[2] === '\n') {
       // end of line
@@ -75,14 +75,15 @@ export function csvToJSON(csv, csvOptions) {
   const columnArrName = columnArr && columnArr.name;
 
   let headers = lines[0];
-  headers = map(headers, header => header.trim().replaceAll('\\s', '_'));
+  headers = map(headers, header => header.trim().replaceAll('[\\s ]', '_'));
+  console.warn(columnArrEnd, headers);
   for (let i = 1; i < lines.length; i++) {
     const obj = {};
     const currentline = lines[i];
 
     for (let j = 0; j < headers.length; j++) {
       // this is a pretty bad implementation...
-      if (columnArrEnd && j > columnArrEnd) {
+      if (columnArrEnd && j >= columnArrEnd) {
         continue;
       }
 
@@ -94,7 +95,7 @@ export function csvToJSON(csv, csvOptions) {
         const cols = obj[columnArrName] = obj[columnArrName] || [];
         cols.push(val);
       }
-      else {
+      else if (headers[j]) {
         obj[headers[j]] = val;
       }
     }

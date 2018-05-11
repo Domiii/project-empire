@@ -31,7 +31,7 @@ function getSelectedId() {
 
 
 const defaultPublishId = '2PACX-1vSsOx1s1Bu9p2be7Gc1HT-tor1zJSBRO3iINyieaT0TlT_p3euML1AoIXkOSz282bjIpOypTmJRlS0n';
-const defaultGid = '1483128144';
+const defaultGid = '1036040670';
 
 @dataBind()
 class NoPresentations extends Component {
@@ -45,12 +45,12 @@ class NoPresentations extends Component {
     this.dataBindMethods('clickImport');
   }
 
-  _onPublishChanged = (val) => {
-    this.setState({ publishId: val });
+  _onPublishChanged = (event) => {
+    this.setState({ publishId: event.target.value });
   }
 
-  _onGidChanged = (val) => {
-    this.setState({ gid: val });
+  _onGidChanged = (event) => {
+    this.setState({ gid: event.target.value });
   }
 
   clickImport = async(evt, { sessionId }, { importPresentationsToSession }) => {

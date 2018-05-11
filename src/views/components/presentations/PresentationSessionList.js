@@ -124,6 +124,16 @@ export default class PresentationSessionList extends Component {
 
 
 
+/*
+test run 的時候發現的問題
+  -> lag
+  -> automatic audio noise + volume adjustment?
+  -> sometimes, recording doesn't really start when pressing the button (it's probably a race condition where fileId isn't updated - probably overrode quite a few videos :'( ))
+  -> Better recording controls
+  -> 編輯的問題 
+  -> 排順序的問題
+  -> 需要skip 的功能（因為不在之類的）
+*/
 
 // <pre>{`TODO
 // -> fix preview (doesn't update to latest src; explodes in size; cannot stop preview)
