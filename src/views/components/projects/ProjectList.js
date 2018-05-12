@@ -265,7 +265,7 @@ export default class ProjectList extends Component {
                   key: projectId,
                   //readonly: false,
                   projectId,
-                  setContext: { thisProjectId: projectId },
+                  //setContext: { thisProjectId: projectId },
                   isSelected: projectId === getSelectedProjectId()
                 }} />
               );

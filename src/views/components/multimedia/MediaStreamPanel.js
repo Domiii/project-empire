@@ -252,7 +252,7 @@ export default class MediaStreamPanel extends Component {
   }
 
   componentDidMount = () => {
-    this.props.setContext({ streamArgs: this.props.streamArgs });
+    //this.props.setContext({ streamArgs: this.props.streamArgs });
   }
 
   /**

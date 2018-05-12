@@ -106,7 +106,7 @@ export default class DataProviderBase {
     this._queriesByLocalPath.set(localPath, query);
   }
 
-  _registerQuery(localPath, queryInput) {
+  _registerQuery(localPath, queryInput, customData) {
     let cachedQuery = this.getQueryByLocalPath(localPath);
     if (!cachedQuery) {
       // does not exist yet
@@ -116,12 +116,13 @@ export default class DataProviderBase {
         queryInput,
         localPath,
         remotePath,
-        _useCount: 1
+        customData,
+        //_useCount: 1
       };
       this._setQueryCache(cachedQuery);
     }
     else {
-      ++cachedQuery._useCount;
+      //++cachedQuery._useCount;
     }
     return cachedQuery;
   }
@@ -145,6 +146,12 @@ export default class DataProviderBase {
     if (!listeners) {
       // first time, anyone is showing interest in this path
       this._listenersByPath[localPath] = listeners = new Set();
+      // if not already listening on path, register!
+      //console.warn(who, '[onPathListenStart]', localPath);
+
+      const query = this._registerQuery(localPath, queryInput);
+      const customData = this.onPathListenStart(query, listener);
+      query.customData = customData;
     }
     if (!listeners.has(listener)) {
       // add listener to set (if not already listening)
@@ -155,14 +162,8 @@ export default class DataProviderBase {
     }
 
     if (!this._listenerData.get(listener).byPath[localPath]) {
-      // if not already listening on path, register!
-      //console.warn(who, '[registerListener]', localPath);
-
-      const query = this._registerQuery(localPath, queryInput);
-      const customData = this.onPathListenStart(query, listener);
       this._listenerData.get(listener).byPath[localPath] = {
-        query,
-        customData
+        //query,
       };
     }
   }
@@ -196,18 +197,18 @@ export default class DataProviderBase {
     }
 
     setTimeout(() => {
-      const byPathData = listenerData.byPath[localPath];
-      const {
-        query,
-        customData
-      } = byPathData;
+      // const byPathData = listenerData.byPath[localPath];
+      // const {
+      //   query
+      // } = byPathData;
+      const query = this.getQueryByLocalPath(localPath);
 
 
       // delete all kinds of stuff
       delete listenerData.byPath[localPath];
 
       // reduce queryInputCache useCount
-      --query._useCount;
+      //--query._useCount;
 
       // if (!query._useCount) {
       //   // this is already handled in _onPathUnused
@@ -224,7 +225,7 @@ export default class DataProviderBase {
         }
       }
 
-      this.onPathListenEnd(query, listener, customData);
+      this.onPathListenEnd(query, listener, query.customData);
     }, purgeCacheDelayDefault);
   }
 
@@ -256,6 +257,9 @@ export default class DataProviderBase {
     else if (!this.isDataLoaded(localPath)) {
       this.setLoadState(localPath, LoadState.Loaded);
       console.log('LOADED ', localPath, ' -> ', val);
+    }
+    else {
+      //console.log('NEW DATA ', localPath, ' -> ', val);
     }
 
     //console.warn('DATA [', query.remotePath, '] ', val);
@@ -399,9 +403,9 @@ export default class DataProviderBase {
   // #################################################################################################
 
   /**
-   * We have at least one listener listening to the localPath in the given query
+   * A listener started listening on a path for the fast time
    */
-  onPathListenStart(query, listener) {
+  onPathListenStart(query, firstListener) {
     //throw new Error('DataProvider did not implement `onListenerAdd` method');
   }
 

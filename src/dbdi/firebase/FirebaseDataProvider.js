@@ -86,9 +86,9 @@ export default class FirebaseDataProvider extends DataProviderBase {
   // ################################################
 
   /**
-   * We have at least one listener listening to the localPath in the given query
+   * A listener started listening on a path for the fast time
    */
-  onPathListenStart(query, listener) {
+  onPathListenStart(query, firstListener) {
     const hook = snap => this._onNewData(query, snap);
 
     const ref = this._getRef(query);

@@ -231,6 +231,7 @@ class PresentationRow extends Component {
     }
 
     return (<F>
+      {/* TODO: perf */ }
       <PresentationInfoRow {...{ sessionId, presentation, isSelected, selectRow }} />
       {extraEl}
       {streamControls}

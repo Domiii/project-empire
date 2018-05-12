@@ -42,6 +42,33 @@ export { NOT_LOADED } from '../dataProviders/DataProviderBase';
 //   // TODO: proper pub-sub bindings
 // }
 
+function shallowEqual(objA, objB) {
+  if (objA === objB) {
+    return true;
+  }
+
+  if (typeof objA !== 'object' || objA === null ||
+      typeof objB !== 'object' || objB === null) {
+    return false;
+  }
+
+  var keysA = Object.keys(objA);
+  var keysB = Object.keys(objB);
+
+  if (keysA.length !== keysB.length) {
+    return false;
+  }
+
+  // Test for A's keys different from B.
+  var bHasOwnProperty = Object.prototype.hasOwnProperty.bind(objB);
+  for (var i = 0; i < keysA.length; i++) {
+    if (!bHasOwnProperty(keysA[i]) || objA[keysA[i]] !== objB[keysA[i]]) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 
 /**
@@ -256,6 +283,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
          */
         setContext: (newContext) => {
           Object.assign(this._customContext, newContext);
+          throw new Error('This is not properly supported yet, since shouldComponentUpdate does not account for context yet');
         },
 
         getProps: () => {
@@ -476,12 +504,16 @@ export default (propsOrPropCb) => _WrappedComponent => {
       this._prepareInjectedProps();
     }
 
-    shouldComponentUpdate() {
-      // TODO: add some DataProvider solution for context management
-      // TODO: has any subscribed data in any child component changed?
+    shouldComponentUpdate(nextProps, nextState) {
+      // TODO: fix context handling (https://github.com/facebook/react/issues/2517)
 
       //return this.shouldUpdate;
-      return true;
+      const should = !shallowEqual(nextProps, this.props) || !shallowEqual(nextState, this.state) || this._shouldUpdate;
+
+      if (!should) {
+        window.updateCount = (window.updateCount || 0) + 1;
+      }
+      return should;
     }
 
     componentWillMount() {

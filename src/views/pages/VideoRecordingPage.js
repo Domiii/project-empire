@@ -70,7 +70,7 @@ export default class VideoRecordingPage extends Component {
     //{ this.IsGuardian && this.makeGuardianEl() }
     return (
       <div>
-        <MediaStreamPanel streamArgs={streamContext.streamArgs} setContext={streamContext} />
+        <MediaStreamPanel streamArgs={streamContext.streamArgs} />
         <br />
         <br />
         <StreamFileList />
