@@ -10,6 +10,14 @@ export const PresentationStatus = {
   Cancelled: 4
 };
 
+const presentationReaders = {
+  
+};
+
+const presentationWriters = {
+  
+};
+
 export default {
   presentationData: {
     path: 'presentations',
@@ -66,6 +74,14 @@ export default {
 
               title: 'title',
               commentText: 'commentText'
+            }
+          },
+
+          presentationSyncInfo: {
+            path: '$(presentationId)',
+            children: {
+              // whether the presentation video's title has changed and not yet synced
+              presentationSyncVideoTitle: 'title'
             }
           }
         }
