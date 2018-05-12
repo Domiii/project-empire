@@ -124,41 +124,69 @@ export default class PresentationSessionList extends Component {
 
 
 
-/*
-test run 的時候發現的問題
-  -> lag
-  -> automatic audio noise + volume adjustment?
-  -> sometimes, recording doesn't really start when pressing the button (it's probably a race condition where fileId isn't updated - probably overrode quite a few videos :'( ))
-  -> Better recording controls
-  -> 編輯的問題 
-  -> 排順序的問題
-  -> 需要skip 的功能（因為不在之類的）
-*/
 
-// <pre>{`TODO
-// -> fix preview (doesn't update to latest src; explodes in size; cannot stop preview)
-// -> need to be able to delete files
-// -> be able to add, edit + delete (pending) presentations +  3. button to shuffle PENDING presentations
-// -3. Profiling of PresentationSessionView (render updates slow down real bad)
-// -2. User table
-//   -> show all info
-//   -> last login time
-//   -> Easily edit all info
-//   -> Easily approve all (and/or individual) unregistered users
-// -1. proper presentations for all users + projects
-//   -> account for every single user!
-//   -> account for every active project, and get at least a status update!
-// -0.5 network-enabled presentation timer!
-// -0.3 linkage between the different PresentationSession views
-// 0. proper project + user tagging for presentations
-//   * finish relationships for this
-// 1. batch-upload to youtube
-// 2. generate youtube playlists
-// 3. normal user functionality:
-//    a) presentation session + presentation
-//    b) own + participating playlists
-//    c) see + review feedback
-//    d) give/edit/evaluate feedback
-// 4. let users provider supplementary material (at least presentation URL)
-// 5. better import features?
-// `}</pre>
+/**
+==Basics==
+  -> sometimes, recording doesn't really start when pressing the button (it's probably a race condition where fileId isn't updated - probably overrode quite a few videos :'( ))
+  -> batch-upload to youtube
+  -> [E] Edit button
+  -> [O] Better recording controls + static view of controls
+  -> [O] video file status + time of recording 
+    -> status = not-started, not-local (has fileId but no file), Uploaded (has videoId)
+  -> [P, O, E] skip\unskip presentation
+  -> view youtube status, embed player, video's youtube link
+  -> PresentationSession views: be able to go from live to list
+  -> finish PresSess
+  -> start new PresSess
+    {}-> ideally based on all currently active projects + any individual user who does not have a project
+    -> come up with manual strategy for now
+  -> proper project + user tagging for presentations
+      * finish relationships for this
+
+  -> User + project management
+    -> add user by name
+      -> match user name to actual (but unregistered) user via admin interface
+      {}-> fix all edge cases for when we merge two user objects into one, any data that references the user gets orphaned
+    -> User table
+      -> show all info
+      -> last login time
+      -> Easily edit all info
+      -> Easily approve all (and/or individual) unregistered users
+
+    -> proper presentation listing for all users + projects
+      -> account for every single user!
+      -> account for every active project, and get at least a status update!
+
+  -> Add tools to easily:
+    -> let presentation become project
+    -> generate presentations from currently active projects
+    -> archive/unarchive projects
+
+  -> generate youtube playlists
+  -> button to shuffle PENDING presentations
+ */
+
+/**
+==Advanced features==
+  -> [P, O, (E)] network-enabled presentation timer!
+  -> [P] Who is up?
+  -> [P] Who is next?
+  -> fix preview (cannot stop preview)
+  -> be able to manage + delete files (does Chrome have a built-in permanent file storage manager?)
+  -> automatic audio noise + volume adjustment?
+
+  -> [E] inline editing
+  -> [E] advanced change status
+  -> [E] reordering
+  -> [O] when clicking button -> setActivePresentation of a pending presentation, should also re-order, move it up front
+
+  
+  -> let normal users in:
+      -> presentation session + presentation
+      -> own + participating playlists
+      -> see + review feedback
+      -> give/edit/evaluate feedback
+      -> project view
+      -> let users provider supplementary material (at least presentation URL)
+
+ */

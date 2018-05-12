@@ -1,6 +1,7 @@
 import map from 'lodash/map';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
+import findLast from 'lodash/findLast';
 
 import paginationNodes from 'src/dbdi/nodes/paginationNodes';
 import { downloadSpreadsheetJSON } from '../../util/SpreadsheetUtil';
@@ -65,6 +66,22 @@ const sessionWriters = {
           commentText: 'commentText'*/
   },
 
+  addNewPresentation(
+    sessionArgs,
+    { },
+    { },
+    { orderedPresentations, push_presentation }
+  ) {
+    const presentations = orderedPresentations(sessionArgs);
+    const lastPres = findLast(presentations, { presentationStatus: PresentationStatus.Pending });
+    const index = lastPres && lastPres.index + 0.00001 || 0;
+    const newPres = {
+      index,
+      presentationStatus: PresentationStatus.Pending
+    };
+    push_presentation(newPres);
+  },
+
   startPresentationSessionStreaming(
     args,
     { },
@@ -89,33 +106,44 @@ const sessionWriters = {
     }
   },
 
-  finishPresentationSessionStreaming(
+  async finishPresentationSessionStreaming(
     sessionArgs,
     { presentationSessionActivePresentationId },
     { },
-    { setActivePresentationInSession, update_presentation, goToFirstPendingPresentationInSession, startStreamRecording }
+    { finishPresentationSession, update_presentation, goToFirstPendingPresentationInSession, startStreamRecording }
   ) {
     const presentationId = presentationSessionActivePresentationId(sessionArgs);
     if (presentationId) {
       const presentationArgs = { presentationId };
-      update_presentation(presentationArgs, {
+      await update_presentation(presentationArgs, {
         presentationStatus: PresentationStatus.Finished,
         finishTime: new Date().getTime()
       });
 
       const { sessionId } = sessionArgs;
 
-      if (!goToFirstPendingPresentationInSession(sessionArgs)) {
-        setActivePresentationInSession({ sessionId, presentationId: null });
+      if (!await goToFirstPendingPresentationInSession(sessionArgs)) {
+        // we are done!
+        finishPresentationSession(sessionArgs);
       }
       else {
         // reset stream
-        startStreamRecording({ streamId: sessionId });
+        await startStreamRecording({ streamId: sessionId });
       }
     }
   },
 
-  goToFirstPendingPresentationInSession(
+  finishPresentationSession(
+    sessionArgs,
+    { },
+    { },
+    { setActivePresentationInSession }
+  ) {
+    const { sessionId } = sessionArgs;
+    setActivePresentationInSession({ sessionId, presentationId: null });
+  },
+
+  async goToFirstPendingPresentationInSession(
     { sessionId },
     { orderedPresentations },
     { },
@@ -126,12 +154,12 @@ const sessionWriters = {
     const firstPendingPres = find(presentations, p => p.presentationStatus <= PresentationStatus.InProgress);
     if (firstPendingPres) {
       const presentationId = firstPendingPres.id;
-      return setActivePresentationInSession({ sessionId, presentationId });
+      return await setActivePresentationInSession({ sessionId, presentationId });
     }
     return null;
   },
 
-  setActivePresentationInSession(
+  async setActivePresentationInSession(
     { sessionId, presentationId },
     { presentationStatus, presentationFileId, presentationSessionActivePresentationId },
     { },
@@ -152,7 +180,7 @@ const sessionWriters = {
     // must make this update separate because that goes to a different DataProvider (MemoryDataProvider),
     // and (for now) update_db only uses the single DataProvider at the root
     const streamArgs = { streamId: sessionId };
-    set_streamFileId(streamArgs, presentationId);
+    const promises = [set_streamFileId(streamArgs, presentationId)];
 
     const activePresId = presentationSessionActivePresentationId(sessionArgs);
     if (activePresId && activePresId !== presentationId &&
@@ -161,7 +189,8 @@ const sessionWriters = {
       updates[presentationStatus.getPath({ presentationId: activePresId })] = PresentationStatus.Pending;
     }
 
-    return update_db(updates);
+    promises.push(update_db(updates));
+    return await Promise.all(promises);
   }
 };
 

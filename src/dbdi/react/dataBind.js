@@ -508,12 +508,12 @@ export default (propsOrPropCb) => _WrappedComponent => {
       // TODO: fix context handling (https://github.com/facebook/react/issues/2517)
 
       //return this.shouldUpdate;
-      const should = !shallowEqual(nextProps, this.props) || !shallowEqual(nextState, this.state) || this._shouldUpdate;
+      // const should = !shallowEqual(nextProps, this.props) || !shallowEqual(nextState, this.state) || this._shouldUpdate;
 
-      if (!should) {
-        window.updateCount = (window.updateCount || 0) + 1;
-      }
-      return should;
+      // if (!should) {
+      //   window.updateCount = (window.updateCount || 0) + 1;
+      // }
+      return true;
     }
 
     componentWillMount() {

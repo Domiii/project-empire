@@ -1,7 +1,5 @@
 import map from 'lodash/map';
 import size from 'lodash/size';
-import mapValues from 'lodash/mapValues';
-import last from 'lodash/last';
 
 import { EmptyObject, EmptyArray } from '../../../util';
 
@@ -59,11 +57,11 @@ const StatusTd = styled.td`
 `;
 
 @dataBind({
-  startStreaming(streamArgs,
+  async startStreaming(streamArgs,
     sessionArgs,
     { startPresentationSessionStreaming }
   ) {
-    startPresentationSessionStreaming(sessionArgs);
+    await startPresentationSessionStreaming(sessionArgs);
   },
 
   onFinished(streamArgs, sessionArgs, { finishPresentationSessionStreaming }) {
@@ -72,13 +70,23 @@ const StatusTd = styled.td`
 })
 class PresentationSessionStreamingPanel extends Component {
   render(
-    { sessionId },
-    { startStreaming, onFinished }
+    { sessionId, presentationId },
+    { startStreaming, onFinished, streamFileId }
   ) {
     const streamArgs = {
       streamId: sessionId
     };
-    return (<MediaStreamPanel hideStatus={true} streamArgs={streamArgs} startStreaming={startStreaming} onFinished={onFinished} />);
+
+    let moreInfo;
+    if (streamFileId(streamArgs) && presentationId !== streamFileId(streamArgs)) {
+      console.error(presentationId, streamFileId(streamArgs));
+      moreInfo = <Alert bsStyle="danger">BUG: fileId and presentationId diverged!</Alert>;
+    }
+    return (<F>
+      {moreInfo}
+      <MediaStreamPanel hideStatus={true} streamArgs={streamArgs} 
+        startStreaming={startStreaming} onFinished={onFinished} />
+    </F>);
   }
 }
 
@@ -226,7 +234,7 @@ class PresentationRow extends Component {
     let streamControls;
     if (isPresentationSessionOwner(sessionArgs) && presentationSessionActivePresentationId(sessionArgs) === presentation.id) {
       streamControls = (<tr><td colSpan={nCols}>
-        <PresentationSessionStreamingPanel sessionId={sessionId} />
+        <PresentationSessionStreamingPanel sessionId={sessionId} presentationId={presentationId} />
       </td></tr>);
     }
 
@@ -306,11 +314,8 @@ const SessionHeader = dataBind({
   //   { orderedPresentationsOfSession }
   // ) {
   // }
-  clickAddPresentation(evt, sessionArgs, { orderedPresentations, push_presentation }) {
-    const presentations = orderedPresentations(sessionArgs) || EmptyArray;
-    const lastPres = last(presentations);
-    const index = lastPres && lastPres.index + 1 || 0;
-    push_presentation({ index });
+  clickAddPresentation(evt, sessionArgs, {addNewPresentation}) {
+    return addNewPresentation();
   }
 })
 export default class PresentationsSessionDetails extends Component {
