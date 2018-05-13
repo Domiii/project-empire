@@ -84,26 +84,26 @@ const sessionWriters = {
   },
 
   startPresentationSessionStreaming(
-    args,
+    sessionArgs,
     { },
     { currentUid },
     { set_presentationSessionOperatorUid, goToFirstPendingPresentationInSession, startStreamRecording }
   ) {
-    set_presentationSessionOperatorUid(args, currentUid);
-    const res = goToFirstPendingPresentationInSession(args);
+    set_presentationSessionOperatorUid(sessionArgs, currentUid);
+    const res = goToFirstPendingPresentationInSession(sessionArgs);
     if (res) {
-      startStreamRecording({ streamId: args.sessionId });
+      startStreamRecording({ streamId: sessionArgs.sessionId });
     }
   },
 
   stopPresentationSessionStreaming(
-    args,
+    sessionArgs,
     { presentationSessionOperatorUid },
     { currentUid },
     { set_presentationSessionOperatorUid }
   ) {
-    if (currentUid && currentUid === presentationSessionOperatorUid(args)) {
-      set_presentationSessionOperatorUid(args, null);
+    if (currentUid && currentUid === presentationSessionOperatorUid(sessionArgs)) {
+      set_presentationSessionOperatorUid(sessionArgs, null);
     }
   },
 

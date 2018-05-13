@@ -7,6 +7,7 @@ import isEqual from 'lodash/isEqual';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
+import Flexbox from 'flexbox-react';
 
 import dataBind from 'src/dbdi/react/dataBind';
 
@@ -14,10 +15,15 @@ import Header from './components/header';
 import { FAIcon } from 'src/views/components/util';
 
 import { Overlay, LoadOverlay } from 'src/views/components/overlays';
+import styled from 'styled-components';
 
 
 /* global window */
 
+// we kinda need to hack this because the Bootstrap 3 navbar doesn't play nicely with flexbox
+const HeaderWrapper = styled(Flexbox)`
+margin-bottom: 7px;
+`;
 
 @dataBind()
 export class App extends Component {
@@ -58,7 +64,7 @@ export class App extends Component {
   componentWillUpdate() {
     this._onInit();
   }
-  
+
 
   signOut = () => {
     try {
@@ -88,15 +94,20 @@ export class App extends Component {
     // }
 
     return (
-      <div className="app full-height container no-padding">
-        <Header
-          signOut={this.signOut}
-        />
+      <Flexbox flexDirection="column" justifyContent="flex-start"
+        className="app full-width full-height">
+        <HeaderWrapper className="container no-padding">
+          <Header
+            signOut={this.signOut}
+          />
+        </HeaderWrapper>
 
-        <main className="app-main">
-          {children}
-        </main>
-      </div>
+        <Flexbox className="full-width full-height">
+          <main className="app-main full-width full-height">
+            {children}
+          </main>
+        </Flexbox>
+      </Flexbox>
     );
   }
 }

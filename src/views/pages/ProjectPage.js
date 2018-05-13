@@ -17,7 +17,7 @@ export default class ProjectPage extends Component {
   render() {
     //{ this.IsGuardian && this.makeGuardianEl() }
     return (
-      <div>
+      <div className="container">
         <ProjectTable />
       </div>
     );

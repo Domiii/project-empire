@@ -31,7 +31,7 @@ export default class CohortPage extends Component {
     }
 
     return (
-      <div>
+      <div className="container">
         <Panel bsStyle="primary">
           <Panel.Heading>
             Cohorts

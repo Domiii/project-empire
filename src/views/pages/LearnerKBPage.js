@@ -34,7 +34,7 @@ export default class LearnerKBPage extends Component {
     // const { mode, uid, questionId } = match.params;
     // const formProps = { mode, uid, questionId };
     return (
-      <div>
+      <div className="container">
         {/* <Panel bsStyle="primary" header="Learner KB"> */}
         <LearnerQuestionsOverview />
         {/* </Panel> */}

@@ -10,7 +10,7 @@ import {
 import {
   Alert, Button, Jumbotron, Well, Panel
 } from 'react-bootstrap';
-
+import Flexbox from 'flexbox-react';
 import {
   LinkContainer
 } from 'react-router-bootstrap';
@@ -19,6 +19,7 @@ import PresentationSessionList from 'src/views/components/presentations/Presenta
 import PresentationSessionLiveView from 'src/views/components/presentations/PresentationSessionLiveView';
 import PresentationSessionView from 'src/views/components/presentations/PresentationSessionView';
 import LiveHeader from 'src/views/components/presentations/LiveHeader';
+import PresentationSessionOperatorView from 'src/views/components/presentations/PresentationSessionOperatorView';
 
 import { NOT_LOADED } from '../../dbdi';
 import { LoadOverlay } from 'src/views/components/overlays';
@@ -64,13 +65,37 @@ const PresentationSessionDetails = withRouter(dataBind()(function ProjectPage(
 }));
 
 
-const WrappedPresentationPage = withRouter(dataBind()(function ProjectPage(
-  {}
+const WrappedPresentationPage = withRouter(dataBind()(function WrappedPresentationPage(
+  { },
+  { isPresentationSessionOperator },
+  { livePresentationSessionId }
 ) {
-  return (<F>
+  const defaultContents = (<F>
     <LiveHeader />
     <PresentationSessionDetails />
   </F>);
+
+  const sessionId = livePresentationSessionId;
+  if (sessionId &&
+    isPresentationSessionOperator({ sessionId })) {
+    // presentation operator mode
+    return (<Flexbox className="full-width full-height">
+      <Flexbox className="full-width">
+        <PresentationSessionOperatorView sessionId={sessionId} />
+      </Flexbox>
+      <Flexbox className="full-width overflow-auto">
+        <div>
+          {defaultContents}
+        </div>
+      </Flexbox>
+    </Flexbox>);
+  }
+  else {
+    // default view mode
+    return (<div className="container">
+      {defaultContents}
+    </div>);
+  }
 }));
 
 export default WrappedPresentationPage;

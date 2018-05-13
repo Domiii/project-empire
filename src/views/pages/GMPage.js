@@ -33,7 +33,7 @@ export default class GMPage extends Component {
     }
 
     return (
-      <div>
+      <div className="container">
         <Well>
           Cohort: {currentUserCohortId}
         </Well>

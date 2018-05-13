@@ -27,7 +27,6 @@ import { YtStatusPanel } from '../multimedia/VideoUploadPanel';
 
 import PresentationEditor from './PresentationEditor';
 
-
 const StyledTable = styled(Table) `
 font-size: 1.5em;
 `;
@@ -35,6 +34,10 @@ font-size: 1.5em;
 const TrOfStatus = styled.tr`
   color: ${props => props.highlight ? 'black' : 'lightgray'};
 `;
+
+function FullWidthTableCell({ children }) {
+  return <tr><td colSpan={99999}>{children}</td></tr>;
+}
 
 const CenteredTd = styled.td`
   text-align: center;
@@ -72,75 +75,6 @@ const statusIconPropsDefault = {
   color: 'grey'
 };
 
-function FullWidthTableCell({ children }) {
-  return <tr><td colSpan={99999}>{children}</td></tr>;
-}
-
-@dataBind({
-  async startStreaming(streamArgs,
-    sessionArgs,
-    { startPresentationSessionStreaming }
-  ) {
-    await startPresentationSessionStreaming(sessionArgs);
-  },
-
-  onFinished(streamArgs, sessionArgs, { finishPresentationSessionStreaming }) {
-    finishPresentationSessionStreaming(sessionArgs);
-  },
-
-  clickSetStatusFinished(evt, sessionArgs, { finishPresentationSessionStreaming }) {
-    finishPresentationSessionStreaming(sessionArgs);
-  },
-
-  clickSetStatusSkipped(evt, sessionArgs, { skipPresentationInSession }) {
-    skipPresentationInSession(sessionArgs);
-  }
-})
-class PresentationSessionStreamingPanel extends Component {
-  render(
-    { sessionId, presentationId },
-    { startStreaming, onFinished, streamFileId,
-      get_presentationStatus,
-      clickSetStatusFinished, clickSetStatusSkipped }
-  ) {
-    const streamArgs = {
-      streamId: sessionId
-    };
-
-    let errorEl;
-    const fileId = streamFileId(streamArgs);
-    if (fileId && presentationId !== fileId) {
-      console.error(presentationId, streamFileId(streamArgs));
-      errorEl = <Alert bsStyle="danger">BUG: fileId and presentationId diverged!</Alert>;
-    }
-
-    let finishBtn, skipBtn;
-    const status = get_presentationStatus({ presentationId });
-    if (status < PresentationStatus.Finished) {
-      finishBtn = (<Button block bsStyle="success" onClick={clickSetStatusFinished}>
-        Finished <FAIcon name="check" color="lightgreen" />
-      </Button>);
-      skipBtn = (<Button block bsStyle="danger" onClick={clickSetStatusSkipped}>
-        Skip <FAIcon name="times" color="darkred" />
-      </Button>);
-    }
-
-
-    return (<F>
-      {(finishBtn || skipBtn) && (<Flexbox className="full-width">
-        {finishBtn && <Flexbox className="full-width margin-right-3">
-          {finishBtn}
-        </Flexbox>}
-        {skipBtn && <Flexbox className="full-width">
-          {skipBtn}
-        </Flexbox>}
-      </Flexbox>)}
-      {errorEl}
-      <MediaStreamPanel hideStatus={true} streamArgs={streamArgs}
-        startStreaming={startStreaming} onFinished={onFinished} />
-    </F>);
-  }
-}
 
 
 @dataBind({})
@@ -372,7 +306,7 @@ class PresentationRow extends Component {
   ) {
     const nCols = 1000; // span over all cols
 
-    let detailsEl, uploadEl, streamControls;
+    let detailsEl, uploadEl;
 
     const presentationId = presentation.id;
     if (isSelected) {
@@ -386,19 +320,10 @@ class PresentationRow extends Component {
       uploadEl = <VideoUploadPanel {...fileArgs} />;
     }
 
-    const sessionArgs = { sessionId };
-    if (isPresentationSessionOperator(sessionArgs) &&
-      presentationSessionActivePresentationId(sessionArgs) === presentationId) {
-      streamControls = (<FullWidthTableCell>
-        <PresentationSessionStreamingPanel sessionId={sessionId} presentationId={presentationId} />
-      </FullWidthTableCell>);
-    }
-
     return (<F>
       <PresentationInfoRow {...{ sessionId, presentationId, isSelected, selectRow }} />
       {detailsEl}
       {uploadEl}
-      {streamControls}
     </F>);
   }
 }
@@ -407,26 +332,13 @@ class PresentationRow extends Component {
  * Shown on top of the table
  */
 const SessionToolbar = dataBind({
-  clickStop(evt,
-    args,
-    { stopPresentationSessionStreaming }
-  ) {
-    stopPresentationSessionStreaming(args);
-  },
-
   clickTogglePresentationUploadMode(evt, sessionArgs, { isPresentationUploadMode, set_isPresentationUploadMode }) {
     const isMode = isPresentationUploadMode(sessionArgs);
     set_isPresentationUploadMode(sessionArgs, !isMode);
-  },
-
-  clickFixAll(evt, sessionArgs, { fixPresentationSession }) {
-    fixPresentationSession(sessionArgs);
   }
 })(function SessionHeader(
   sessionArgs,
-  { isPresentationSessionOperator, isPresentationSessionInProgress,
-    isPresentationUploadMode, clickTogglePresentationUploadMode,
-    clickStop, clickFixAll },
+  { isPresentationUploadMode, clickTogglePresentationUploadMode },
   { isCurrentUserAdmin }
 ) {
   let controlEls;
@@ -455,15 +367,6 @@ const SessionToolbar = dataBind({
       <Button bsStyle="info" onClick={clickTogglePresentationUploadMode} active={isUploading}>
         <FAIcon name="upload" color={isUploading && 'lightgreen' || ''} /> <FAIcon name="youtube" size="1.4em" color="red" />
       </Button>
-    </F>);
-  }
-  if (isPresentationSessionOperator(sessionArgs)) {
-    controlEls = (<F>
-      {controlEls}
-      <Button bsSize="small" bsStyle="danger" onClick={clickStop}>Stop Operating</Button>
-      {isCurrentUserAdmin &&
-        <Button bsSize="small" bsStyle="danger" onClick={clickFixAll}><FAIcon name="wrench" /></Button>
-      }
     </F>);
   }
 

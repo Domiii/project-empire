@@ -52,35 +52,37 @@ export default class DebugPage extends Component {
     const { page } = this.state;
     const from = page * nItemsPerPage;
     const to = (page + 1) * nItemsPerPage - 1;
-    return (<Panel bsStyle="danger">
-      <Panel.Heading>
-        <Panel.Title>
-          {errorLog.length} Errors (page {page + 1}/{Math.ceil(this.nPages())}) &nbsp;
+    return (<div className="container">
+      <Panel bsStyle="danger">
+        <Panel.Heading>
+          <Panel.Title>
+            {errorLog.length} Errors (page {page + 1}/{Math.ceil(this.nPages())}) &nbsp;
           <Button onClick={this.previousPage}>←</Button>
-          <Button onClick={this.nextPage}>→</Button>
-        </Panel.Title>
-      </Panel.Heading>
-      <Panel.Body>
-        {map(errorLog.slice(from, to + 1), (err, i) => (
-          <Flexbox key={i} flexDirection="row" justifyContent="flex-start" alignItems="center"
-            className="full-width">
-            <Flexbox>
-              [<Moment format="HH:mm:ss">{err.time}</Moment>]
+            <Button onClick={this.nextPage}>→</Button>
+          </Panel.Title>
+        </Panel.Heading>
+        <Panel.Body>
+          {map(errorLog.slice(from, to + 1), (err, i) => (
+            <Flexbox key={i} flexDirection="row" justifyContent="flex-start" alignItems="center"
+              className="full-width">
+              <Flexbox>
+                [<Moment format="HH:mm:ss">{err.time}</Moment>]
+              </Flexbox>
+              <Flexbox className="full-width">
+                &nbsp;
+                <Alert bsStyle="danger" className="no-padding no-margin">
+                  {map(err.args, (obj, j) => (<span key={j}>
+                    <pre className="no-padding no-margin no-border no-background inline">
+                      {errToString(obj)}
+                    </pre>
+                    &nbsp;
+                  </span>))}
+                </Alert>
+              </Flexbox>
             </Flexbox>
-            <Flexbox className="full-width">
-              &nbsp;
-              <Alert bsStyle="danger" className="no-padding no-margin">
-                {map(err.args, (obj, j) => (<span key={j}>
-                  <pre className="no-padding no-margin no-border no-background inline">
-                    {errToString(obj)}
-                  </pre>
-                  &nbsp;
-                </span>))}
-              </Alert>
-            </Flexbox>
-          </Flexbox>
-        ))}
-      </Panel.Body>
-    </Panel>);
+          ))}
+        </Panel.Body>
+      </Panel>
+    </div>);
   }
 }

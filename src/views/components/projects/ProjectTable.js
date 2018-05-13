@@ -200,7 +200,7 @@ export default class ProjectTable extends Component {
     const totalSize = size(data);
     this.paginationCfg.totalSize = Math.max(this.paginationCfg.totalSize, totalSize + 1);
 
-    return (<div>
+    return (<div className="default-width">
       <BootstrapTable
         data={data}
         pagination={this.pagination}

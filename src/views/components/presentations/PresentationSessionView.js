@@ -8,6 +8,8 @@ import {
   Panel, Well, Alert, FormControl, Button
 } from 'react-bootstrap';
 
+import Flexbox from 'flexbox-react';
+
 import LoadIndicator from '../util/LoadIndicator';
 import { Redirect } from 'react-router-dom';
 
@@ -102,7 +104,7 @@ export default class PresentationSessionView extends Component {
       return <Redirect to={hrefPresentationSession()} />;
     }
 
-    const isLive = livePresentationSessionId === sessionId;
+    //const isLive = livePresentationSessionId === sessionId;
 
     let contentEl;
     if (!count) {
@@ -113,8 +115,10 @@ export default class PresentationSessionView extends Component {
         <PresentationsSessionDetails sessionId={sessionId} />
       </F>);
     }
+    // return (<Flexbox flexDirection="column">
     return (<div>
       {contentEl}
     </div>);
+    //</Flexbox>);
   }
 }

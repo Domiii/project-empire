@@ -51,7 +51,7 @@ const uiSchema = {
 @dataBind({
   writer(
     args,
-    {},
+    { },
     { learnerScheduleAdjustOffsetForCycleId }
   ) {
     return learnerScheduleAdjustOffsetForCycleId(args);
@@ -129,17 +129,15 @@ export default class DevPage extends Component {
       return (<Alert bsStyle="warning">Devs only :/</Alert>);
     }
 
-    return (
-      <div>
-        <Panel bsStyle="primary">
-          <Panel.Heading>
-            Schedule Settings
+    return (<div className="container">
+      <Panel bsStyle="primary">
+        <Panel.Heading>
+          Schedule Settings
           </Panel.Heading>
-          <Panel.Body>
-            <ScheduleManipulator />
-          </Panel.Body>
-        </Panel>
-      </div>
-    );
+        <Panel.Body>
+          <ScheduleManipulator />
+        </Panel.Body>
+      </Panel>
+    </div>);
   }
 }

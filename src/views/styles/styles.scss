@@ -29,6 +29,13 @@ button:active { outline:none !important; }
   width: 100%;
 }
 
+.default-width {
+  width: inherit !important;
+}
+.default-width .table {
+  width: inherit !important;
+}
+
 .overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -350,6 +357,10 @@ button:active { outline:none !important; }
 .nowrapper-hidden {
   white-space: nowrap;
   overflow: hidden;
+}
+
+.overflow-auto {
+  overflow: auto;
 }
 
 
