@@ -3,7 +3,7 @@ import size from 'lodash/size';
 
 import { EmptyObject, EmptyArray } from '../../../util';
 
-import React, { Component, Fragment as F, PropTypes } from 'react';
+import React, { Component, Fragment as F } from 'react';
 import dataBind, { NOT_LOADED } from '../../../dbdi/react/dataBind';
 
 import {
@@ -32,6 +32,22 @@ const StyledTable = styled(Table) `
 font-size: 1.5em;
 `;
 
+const TrOfStatus = styled.tr`
+  color: ${props => props.highlight ? 'black' : 'lightgray'};
+`;
+
+const CenteredTd = styled.td`
+  text-align: center;
+  color: black;
+`;
+
+const SingeLineTd = styled.td`
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+max-width: 40vw;
+`;
+
 const statusIconProps = {
   [PresentationStatus.Pending]: ({
     name: 'clock-o',
@@ -46,7 +62,7 @@ const statusIconProps = {
     name: 'check',
     color: 'green'
   }),
-  [PresentationStatus.Cancelled]: ({
+  [PresentationStatus.Skipped]: ({
     name: 'times',
     color: 'red'
   })
@@ -55,15 +71,6 @@ const statusIconPropsDefault = {
   name: 'question',
   color: 'grey'
 };
-
-const TrOfStatus = styled.tr`
-  color: ${props => props.highlight ? 'black' : 'lightgray'};
-`;
-
-const CenteredTd = styled.td`
-  text-align: center;
-  color: black;
-`;
 
 function FullWidthTableCell({ children }) {
   return <tr><td colSpan={99999}>{children}</td></tr>;
@@ -79,25 +86,56 @@ function FullWidthTableCell({ children }) {
 
   onFinished(streamArgs, sessionArgs, { finishPresentationSessionStreaming }) {
     finishPresentationSessionStreaming(sessionArgs);
+  },
+
+  clickSetStatusFinished(evt, sessionArgs, { finishPresentationSessionStreaming }) {
+    finishPresentationSessionStreaming(sessionArgs);
+  },
+
+  clickSetStatusSkipped(evt, sessionArgs, { skipPresentationInSession }) {
+    skipPresentationInSession(sessionArgs);
   }
 })
 class PresentationSessionStreamingPanel extends Component {
   render(
     { sessionId, presentationId },
-    { startStreaming, onFinished, streamFileId }
+    { startStreaming, onFinished, streamFileId,
+      get_presentationStatus,
+      clickSetStatusFinished, clickSetStatusSkipped }
   ) {
     const streamArgs = {
       streamId: sessionId
     };
 
-    let moreInfo;
+    let errorEl;
     const fileId = streamFileId(streamArgs);
     if (fileId && presentationId !== fileId) {
       console.error(presentationId, streamFileId(streamArgs));
-      moreInfo = <Alert bsStyle="danger">BUG: fileId and presentationId diverged!</Alert>;
+      errorEl = <Alert bsStyle="danger">BUG: fileId and presentationId diverged!</Alert>;
     }
+
+    let finishBtn, skipBtn;
+    const status = get_presentationStatus({ presentationId });
+    if (status < PresentationStatus.Finished) {
+      finishBtn = (<Button block bsStyle="success" onClick={clickSetStatusFinished}>
+        Finished <FAIcon name="check" color="lightgreen" />
+      </Button>);
+      skipBtn = (<Button block bsStyle="danger" onClick={clickSetStatusSkipped}>
+        Skip <FAIcon name="times" color="darkred" />
+      </Button>);
+    }
+
+
     return (<F>
-      {moreInfo}
+      {(finishBtn || skipBtn) && (<Flexbox className="full-width">
+        {finishBtn && <Flexbox className="full-width margin-right-3">
+          {finishBtn}
+        </Flexbox>}
+        {skipBtn && <Flexbox className="full-width">
+          {skipBtn}
+        </Flexbox>}
+      </Flexbox>)}
+      {errorEl}
       <MediaStreamPanel hideStatus={true} streamArgs={streamArgs}
         startStreaming={startStreaming} onFinished={onFinished} />
     </F>);
@@ -192,7 +230,7 @@ class PresentationOperatorDetails extends Component {
 class PresentationStatusSummary extends Component {
   render(
     { presentationId, isSelected },
-    { get_presentation },
+    { get_presentation, streamFileExists, isCurrentUserAdmin },
     { }
   ) {
     const presentation = get_presentation({ presentationId });
@@ -214,7 +252,10 @@ class PresentationStatusSummary extends Component {
     }
 
     let fileInfoEl;
-    if (fileId) {
+
+    // TODO: we don't want the file system access warning to pop up for normal visitors
+    const shouldAccessFileSystem = fileId && isCurrentUserAdmin();
+    if (shouldAccessFileSystem && streamFileExists({ fileId })) {
       // there SHOULD NEVER BE, but there always might be inconsistencies
       if (fileId !== presentationId) {
         // shit!
@@ -284,8 +325,12 @@ class PresentationInfoRow extends Component {
     return (
       <TrOfStatus className="" highlight={isHighlighted} onDoubleClick={onDblClick}>
         <td className="min">{index + 1}</td>
-        <td>{title}</td>
-        <td>{userNamesString}</td>
+        <SingeLineTd>
+          {title}
+        </SingeLineTd>
+        <SingeLineTd>
+          {userNamesString}
+        </SingeLineTd>
         {/* <td>{health}</td> */}
         {summaryCell}
         {operatorCell}
@@ -336,17 +381,17 @@ class PresentationRow extends Component {
       </FullWidthTableCell>);
     }
 
+    const fileArgs = { fileId: presentationId };
+    if (ytIsVideoUploadInProgress(fileArgs)) {
+      uploadEl = <VideoUploadPanel {...fileArgs} />;
+    }
+
     const sessionArgs = { sessionId };
     if (isPresentationSessionOperator(sessionArgs) &&
       presentationSessionActivePresentationId(sessionArgs) === presentationId) {
       streamControls = (<FullWidthTableCell>
         <PresentationSessionStreamingPanel sessionId={sessionId} presentationId={presentationId} />
       </FullWidthTableCell>);
-    }
-
-    const fileArgs = { fileId: presentationId };
-    if (ytIsVideoUploadInProgress(fileArgs)) {
-      uploadEl = <VideoUploadPanel {...fileArgs} />;
     }
 
     return (<F>
@@ -394,6 +439,7 @@ const SessionToolbar = dataBind({
   //   }
   // }
   // else {
+  //startUploadPresentationSession
   if (isCurrentUserAdmin) {
     // upload button + status
     const isUploading = isPresentationUploadMode(sessionArgs);
@@ -420,6 +466,7 @@ const SessionToolbar = dataBind({
       }
     </F>);
   }
+
   return (<Flexbox className="full-width">
     <Flexbox className="full-width" justifyContent="flex-start">
     </Flexbox>
@@ -438,13 +485,12 @@ const SessionHeader = dataBind({
   }
 })(function SessionHeader(
   sessionArgs,
-  { isPresentationSessionOperator,
-    isPresentationSessionInProgress, startStreaming },
+  { isPresentationSessionInProgress, startStreaming },
   { isCurrentUserAdmin }
 ) {
   let introEl;
   const { sessionId } = sessionArgs;
-  const canStartStreaming = isPresentationSessionOperator(sessionArgs) || (
+  const canStartStreaming = (
     isCurrentUserAdmin && !isPresentationSessionInProgress(sessionArgs)
   );
   if (canStartStreaming) {

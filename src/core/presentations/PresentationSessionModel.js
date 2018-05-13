@@ -107,6 +107,34 @@ const sessionWriters = {
     }
   },
 
+  async skipPresentationInSession(
+    sessionArgs,
+    { presentationSessionActivePresentationId },
+    { },
+    { finishPresentationSession, update_presentation, goToFirstPendingPresentationInSession, startStreamRecording }
+  ) {
+    const presentationId = presentationSessionActivePresentationId(sessionArgs);
+    if (presentationId) {
+      const presentationArgs = { presentationId };
+      //const presentation = get_presentation(presentationArgs);
+      await update_presentation(presentationArgs, {
+        presentationStatus: PresentationStatus.Skipped,
+        finishTime: new Date().getTime()
+      });
+
+      // start next presentation
+      if (!await goToFirstPendingPresentationInSession(sessionArgs)) {
+        // we are done!
+        finishPresentationSession(sessionArgs);
+      }
+      else {
+        // reset stream
+        const { sessionId } = sessionArgs;
+        await startStreamRecording({ streamId: sessionId });
+      }
+    }
+  },
+
   async finishPresentationSessionStreaming(
     sessionArgs,
     { presentationSessionActivePresentationId },
@@ -116,12 +144,11 @@ const sessionWriters = {
     const presentationId = presentationSessionActivePresentationId(sessionArgs);
     if (presentationId) {
       const presentationArgs = { presentationId };
+      //const presentation = get_presentation(presentationArgs);
       await update_presentation(presentationArgs, {
         presentationStatus: PresentationStatus.Finished,
         finishTime: new Date().getTime()
       });
-
-      const { sessionId } = sessionArgs;
 
       // start next presentation
       if (!await goToFirstPendingPresentationInSession(sessionArgs)) {
@@ -130,6 +157,7 @@ const sessionWriters = {
       }
       else {
         // reset stream
+        const { sessionId } = sessionArgs;
         await startStreamRecording({ streamId: sessionId });
       }
     }
@@ -239,7 +267,7 @@ const sessionWriters = {
 
   async fixAllPresentationStatuses(
     sessionArgs,
-    { get_presentations, get_presentationStatus },
+    { get_presentations, get_presentationStatus, streamFileExists },
     { },
     { update_db }
   ) {
@@ -253,7 +281,8 @@ const sessionWriters = {
         videoId,
         presentationStatus
       } = pres;
-      if ((fileId || videoId) && presentationStatus !== PresentationStatus.Finished) {
+      if (((fileId && streamFileExists({ fileId })) || videoId) &&
+        presentationStatus !== PresentationStatus.Finished) {
         updates[get_presentationStatus.getPath(presentationArgs)] = PresentationStatus.Finished;
       }
     });

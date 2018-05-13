@@ -24,7 +24,7 @@ import { NOT_LOADED } from '../../dbdi';
 import { LoadOverlay } from 'src/views/components/overlays';
 
 
-const PresentationPage = withRouter(dataBind()(function ProjectPage(
+const PresentationSessionDetails = withRouter(dataBind()(function ProjectPage(
   { match },
   { },
   data
@@ -65,10 +65,11 @@ const PresentationPage = withRouter(dataBind()(function ProjectPage(
 
 
 const WrappedPresentationPage = withRouter(dataBind()(function ProjectPage(
+  {}
 ) {
   return (<F>
     <LiveHeader />
-    <PresentationPage />
+    <PresentationSessionDetails />
   </F>);
 }));
 

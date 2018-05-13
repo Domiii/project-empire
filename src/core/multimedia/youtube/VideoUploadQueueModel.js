@@ -21,7 +21,7 @@ export default {
             { },
             { ytStartVideoUpload }
           ) {
-
+            
             // TODO: proper event model?
             // start....
             // uploader.onUploadComplete -> start next

@@ -15,7 +15,7 @@ export const PresentationStatus = {
   GoingOnStage: 3,
   InProgress: 4,
   Finished: 10,
-  Cancelled: 15
+  Skipped: 15
 };
 
 export const PresentationViewMode = {
@@ -169,6 +169,9 @@ export default {
     path: 'presentationUsersSettings/$(sessionId)',
 
     children: {
+      /**
+       * Whether this user is uploading videos for the session of given sessionId
+       */
       isPresentationUploadMode: {
         path: 'uploadMode'
       },
