@@ -300,11 +300,6 @@ Feature: Data middleware
 * Data model: higher level data structures within the data model?
 * Data model data structure: StagePath
 
-
-#### Motivation
-`rrf v2.0` does not use `immutable` anymore, so `reselect` won't be of any help with data caching.
-
-
 #### Solution
   1. During `render` call, use pre-compiled `getPath` helper function to access any data
   1. Wrap the `getPath` method to remember the set of all accessed data paths of **this and any child components**.

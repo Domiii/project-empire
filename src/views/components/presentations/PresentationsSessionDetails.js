@@ -60,7 +60,7 @@ const TrOfStatus = styled.tr`
   color: ${props => props.highlight ? 'black' : 'lightgray'};
 `;
 
-const StatusTd = styled.td`
+const CenteredTd = styled.td`
   text-align: center;
   color: black;
 `;
@@ -142,23 +142,29 @@ class DownloadVideoFileButton extends Component {
     setActivePresentationInSession({ sessionId, presentationId });
   }
 })
-class PresentationStatusSummary extends Component {
+class PresentationOperatorDetails extends Component {
   render(
     { presentationId, isSelected },
-    { clickPlay, get_presentation,
-      isStreamDown, isPresentationSessionOperator, presentationSessionActivePresentationId },
-    { isCurrentUserAdmin }
+    { clickPlay,
+      get_presentation,
+      isStreamDown, isPresentationSessionOperator, presentationSessionActivePresentationId,
+      get_videoUploadStatus },
+    { }
   ) {
     const presentation = get_presentation({ presentationId });
     const {
       sessionId,
-      fileId,
-      videoId,
       //status: projectStatus,
       presentationStatus
     } = presentation;
 
-    //const clazz = presentationStatus === PresentationStatus.InProgress && 'red-highlight-border' || 'no-highlight-border';
+    let uploadStatusEl;
+    const fileArgs = { fileId: presentationId };
+    const uploadStatus = get_videoUploadStatus(fileArgs);
+    if (uploadStatus) {
+      // TODO: fix this
+      uploadStatusEl = uploadStatus;
+    }
 
     let rowControls;
     const sessionArgs = { sessionId };
@@ -166,7 +172,8 @@ class PresentationStatusSummary extends Component {
     const activePresId = presentationSessionActivePresentationId(sessionArgs);
     //if (presentationStatus <= PresentationStatus.InProgress) {
     const streamArgs = { streamId: sessionId };
-    if (isStreamDown(streamArgs) && isOperator && activePresId !== presentationId) {
+    if (isOperator && isStreamDown(streamArgs) && activePresId !== presentationId) {
+      // only show button to operator, if stream is currently offline, and this is the active presentation
       rowControls = (<F>
         <Button bsStyle="default" className="no-padding" onClick={clickPlay}>
           <FAIcon name="video-camera" color="red" />
@@ -174,15 +181,27 @@ class PresentationStatusSummary extends Component {
       </F>);
     }
 
-    //if (isOperator || isCurrentUserAdmin) {
-    // rowControls = (<F>
-    //   {rowControls}
-    //   &nbsp;
-    //   <Button bsStyle="default" className="no-padding no-line-height" active={isSelected} onClick={clickEdit}>
-    //     <FAIcon name="edit" color="darkblue" />
-    //   </Button>
-    // </F>);
-    //}
+    return (<span className="spaced-inline-children">
+      {uploadStatusEl}
+      {rowControls}
+    </span>);
+  }
+}
+
+@dataBind({})
+class PresentationStatusSummary extends Component {
+  render(
+    { presentationId, isSelected },
+    { get_presentation },
+    { }
+  ) {
+    const presentation = get_presentation({ presentationId });
+    const {
+      fileId,
+      videoId,
+      //status: projectStatus,
+      presentationStatus
+    } = presentation;
 
     let statusInfoEl;
     if (videoId) {
@@ -210,7 +229,6 @@ class PresentationStatusSummary extends Component {
     return (<span className="spaced-inline-children">
       {statusInfoEl}
       {fileInfoEl}
-      {rowControls}
     </span>);
   }
 }
@@ -229,14 +247,14 @@ class PresentationStatusSummary extends Component {
 })
 class PresentationInfoRow extends Component {
   render(
-    { sessionId, presentation, isSelected },
-    { clickSelectRow,
-      isPresentationSessionOperator },
+    { sessionId, presentationId, isSelected },
+    { get_presentation, isPresentationSessionOperator,
+      clickSelectRow },
     { isCurrentUserAdmin }
   ) {
+    const presentation = get_presentation({ presentationId });
     const {
       index,
-      id: presentationId,
       title,
       userNamesString,
       //status: projectStatus,
@@ -252,6 +270,14 @@ class PresentationInfoRow extends Component {
       onDblClick = clickSelectRow;
     }
 
+    const summaryCell = (<CenteredTd className="min">
+      <PresentationStatusSummary isSelected={isSelected} presentationId={presentationId} />
+    </CenteredTd>);
+
+    const operatorCell = isOperator && (<CenteredTd className="min">
+      <PresentationOperatorDetails isSelected={isSelected} presentationId={presentationId} />
+    </CenteredTd>);
+
     //GoingOnStage
     const isHighlighted = presentationStatus === PresentationStatus.GoingOnStage ||
       presentationStatus === PresentationStatus.InProgress;
@@ -261,9 +287,8 @@ class PresentationInfoRow extends Component {
         <td>{title}</td>
         <td>{userNamesString}</td>
         {/* <td>{health}</td> */}
-        <StatusTd className="min">
-          <PresentationStatusSummary isSelected={isSelected} presentationId={presentationId} />
-        </StatusTd>
+        {summaryCell}
+        {operatorCell}
       </TrOfStatus>
     );
   }
@@ -279,11 +304,11 @@ class PresentationRowDetails extends Component {
     const presentation = get_presentation({ presentationId });
     const { sessionId } = presentation;
     const sessionArgs = { sessionId };
-    const isOwner = isPresentationSessionOperator(sessionArgs);
+    const isOperator = isPresentationSessionOperator(sessionArgs);
 
     const editorEl = isCurrentUserAdmin && <PresentationEditor presentationId={presentationId} />;
     let controlEls;
-    if (isOwner) {
+    if (isOperator) {
       const fileName = presentation.title + ' (' + presentation.userNamesString + ')';
       controlEls = <DownloadVideoFileButton title={fileName} fileId={presentationId} />;
     }
@@ -325,7 +350,7 @@ class PresentationRow extends Component {
     }
 
     return (<F>
-      <PresentationInfoRow {...{ sessionId, presentation, isSelected, selectRow }} />
+      <PresentationInfoRow {...{ sessionId, presentationId, isSelected, selectRow }} />
       {detailsEl}
       {uploadEl}
       {streamControls}
@@ -412,12 +437,17 @@ const SessionHeader = dataBind({
     startPresentationSessionStreaming(sessionArgs);
   }
 })(function SessionHeader(
-  { sessionId },
-  { //isPresentationSessionOperator, 
-    isPresentationSessionInProgress, startStreaming }
+  sessionArgs,
+  { isPresentationSessionOperator,
+    isPresentationSessionInProgress, startStreaming },
+  { isCurrentUserAdmin }
 ) {
   let introEl;
-  if (!isPresentationSessionInProgress({ sessionId })) {
+  const { sessionId } = sessionArgs;
+  const canStartStreaming = isPresentationSessionOperator(sessionArgs) || (
+    isCurrentUserAdmin && !isPresentationSessionInProgress(sessionArgs)
+  );
+  if (canStartStreaming) {
     introEl = <MediaPrepView streamId={sessionId} startStreaming={startStreaming} />;
     //introEl = (<Button bsStyle="danger" bsSize="large" onClick={clickStartStreaming} block>Start streaming!</Button>);
   }
@@ -450,14 +480,26 @@ export default class PresentationsSessionDetails extends Component {
 
   render(
     { sessionId },
-    { orderedPresentations, clickAddPresentation }
+    { orderedPresentations, isPresentationSessionOperator,
+      clickAddPresentation },
+    { isCurrentUserAdmin }
   ) {
-    const presentations = orderedPresentations({ sessionId });
+    const sessionArgs = { sessionId };
+    const presentations = orderedPresentations(sessionArgs);
     if (presentations === NOT_LOADED) {
       return <LoadIndicator block />;
     }
 
     const { selectedPresentation } = this.state;
+
+    let footerControlEl;
+    if (isCurrentUserAdmin) {
+      footerControlEl = (<Button bsStyle="success" onClick={clickAddPresentation}>
+        Add presentation <FAIcon name="plus" />
+      </Button>);
+    }
+
+    const isOperator = isPresentationSessionOperator(sessionArgs);
 
     return (<F>
       <SessionHeader sessionId={sessionId} />
@@ -470,6 +512,7 @@ export default class PresentationsSessionDetails extends Component {
             <th>Contributors</th>
             {/* <th className="min">專案狀態</th> */}
             <th className="min"></th>
+            {isOperator && <th className="min"></th>}
           </tr>
         </thead>
         <tbody>
@@ -482,9 +525,7 @@ export default class PresentationsSessionDetails extends Component {
         </tbody>
       </StyledTable>
 
-      <Button bsStyle="success" onClick={clickAddPresentation}>
-        Add presentation <FAIcon name="plus" />
-      </Button>
-    </F>);
+      {footerControlEl}
+    </F >);
   }
 }

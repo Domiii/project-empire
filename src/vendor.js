@@ -13,5 +13,4 @@ import 'react-bootstrap';
 //
 import 'classnames';
 import 'firebase';
-import 'immutable';
 import 'reselect';

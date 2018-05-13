@@ -40,7 +40,7 @@ import { getOptionalArguments } from '../../../dbdi/dataAccessUtil';
 //   uploadStartTime = 0;
 // };
 
-export const YtUploadStatus = {
+export const VideoUploadStatus = {
   None: 0,
   Uploading: 1,
   Processing: 2,
@@ -56,23 +56,23 @@ export default {
         path: '$(fileId)',
 
         readers: {
-          ytIsVideoUploadInProgress(fileArgs, { ytUploadStatus }) {
-            const status = ytUploadStatus(fileArgs);
-            return status === YtUploadStatus.Uploading || status === YtUploadStatus.Processing;
+          ytIsVideoUploadInProgress(fileArgs, { videoUploadStatus }) {
+            const status = videoUploadStatus(fileArgs);
+            return status === VideoUploadStatus.Uploading || status === VideoUploadStatus.Processing;
           }
         },
 
         writers: {
           async ytStartVideoUpload(
             queryArgs,
-            { fetchStreamFile, get_ytUploadLastStartTime, gapiTokens },
+            { fetchStreamFile, get_videoUploadLastStartTime, gapiTokens },
             { },
             { gapiHardAuth,
-              set_ytUploadInfo, set_ytUploader, set_ytUploadProgress,
-              set_ytVideoId, set_ytUploadStatus, set_ytUploadError,
-              set_ytUploadLastStartTime,
+              set_videoUploadInfo, set_videoUploaderObject, set_videoUploadProgress,
+              set_ytVideoId, set_videoUploadStatus, set_videoUploadError,
+              set_videoUploadLastStartTime,
               set_ytDangerousHTMLEmbedCode,
-              set_ytUploadResult
+              set_videoUploadResult
             }
           ) {
             const {
@@ -81,11 +81,11 @@ export default {
             const fileArgs = { fileId };
 
             // first update status
-            set_ytUploadStatus(fileArgs, YtUploadStatus.Uploading);
+            set_videoUploadStatus(fileArgs, VideoUploadStatus.Uploading);
 
             if (!await gapiHardAuth()) {
               // could not auth -> reset status
-              set_ytUploadStatus(fileArgs, YtUploadStatus.None);
+              set_videoUploadStatus(fileArgs, VideoUploadStatus.None);
               return false;
             }
             const accessToken = gapiTokens().access_token;
@@ -93,12 +93,12 @@ export default {
             if (!accessToken) {
               const err = '[INTERNAL ERROR] Could not retrieve access token';
               console.error(err);
-              set_ytUploadError(fileArgs, err);
-              set_ytUploadStatus(fileArgs, YtUploadStatus.None);
+              set_videoUploadError(fileArgs, err);
+              set_videoUploadStatus(fileArgs, VideoUploadStatus.None);
               return false;
             }
 
-            set_ytUploadError(fileArgs, null);
+            set_videoUploadError(fileArgs, null);
 
             const info = getOptionalArguments(queryArgs, {
               title: 'untitled video',
@@ -109,7 +109,7 @@ export default {
               categoryId: 22,
               privacyStatus: 'unlisted'
             });
-            set_ytUploadInfo(fileArgs, info);
+            set_videoUploadInfo(fileArgs, info);
             const file = await fetchStreamFile({ fileId });
 
             const {
@@ -144,15 +144,15 @@ export default {
                 if (isPlainObject(err)) {
                   err = JSON.stringify(err, null, 2);
                 }
-                set_ytUploadError(fileArgs, err);
-                //set_ytUploadStatus();
+                set_videoUploadError(fileArgs, err);
+                //set_videoUploadStatus();
               },
               onStart: () => {
-                set_ytUploadStatus(fileArgs, YtUploadStatus.Uploading);
-                set_ytUploadLastStartTime(fileArgs, window.performance.now());
+                set_videoUploadStatus(fileArgs, VideoUploadStatus.Uploading);
+                set_videoUploadLastStartTime(fileArgs, window.performance.now());
               },
               onProgress: (data) => {
-                const uploadStartTime = get_ytUploadLastStartTime(fileArgs);
+                const uploadStartTime = get_videoUploadLastStartTime(fileArgs);
                 const currentTime = window.performance.now();
                 const bytesUploaded = data.loaded;
                 const totalBytes = data.total;
@@ -161,7 +161,7 @@ export default {
                 const estimatedSecondsRemaining = Math.round((totalBytes - bytesUploaded) / bytesPerSecond);
                 const uploadPct = Math.round((bytesUploaded * 100) / totalBytes);
 
-                set_ytUploadProgress(fileArgs, {
+                set_videoUploadProgress(fileArgs, {
                   bytesUploaded,
                   totalBytes,
                   uploadPct,
@@ -171,71 +171,71 @@ export default {
               },
               onUploadComplete: (videoId) => {
                 set_ytVideoId(fileArgs, videoId);
-                set_ytUploadStatus(fileArgs, YtUploadStatus.Processing);
+                set_videoUploadStatus(fileArgs, VideoUploadStatus.Processing);
               },
               onProcessed: (data) => {
-                set_ytUploadResult(fileArgs, data);
+                set_videoUploadResult(fileArgs, data);
 
                 // see https://zhenyong.github.io/react/tips/dangerously-set-inner-html.html
                 set_ytDangerousHTMLEmbedCode(fileArgs, {
                   __html: data && data.player && data.player.embedHtml
                 });
-                set_ytUploadStatus(fileArgs, YtUploadStatus.Finished);
+                set_videoUploadStatus(fileArgs, VideoUploadStatus.Finished);
               }
             });
             uploader.upload();
 
-            set_ytUploader(fileArgs, uploader);
+            set_videoUploaderObject(fileArgs, uploader);
             return true;
           },
 
           // ytPauseUpload() {
           //   // TODO: pause
-          //   set_ytUploadStatus
+          //   set_videoUploadStatus
           // },
 
           // ytResumeUpload() {
           //   // TODO: resume
-          //   set_ytUploadStatus
+          //   set_videoUploadStatus
           // },
 
           // ytCancelUpload() {
           //   // TODO: cancel
-          //   set_ytUploadStatus
+          //   set_videoUploadStatus
           // }
         },
 
         children: {
-          ytUploadStatus: {
+          videoUploadStatus: {
             path: 'status',
             reader(val) {
               // TODO: also get retry + resume events from MediaUploader
-              return val || YtUploadStatus.None;
+              return val || VideoUploadStatus.None;
             }
           },
-          ytUploadInfo: {
+          videoUploadInfo: {
             path: 'info',
           },
-          ytUploader: {
-            // use this to pause/resume/cancel upload
+          videoUploaderObject: {
+            // the MediaUploader object that controls/manages the upload events
             path: 'uploader'
           },
-          ytUploadLastStartTime: {
+          videoUploadLastStartTime: {
             // the time at which the last chunk upload started
             path: 'lastStartTime'
           },
-          ytUploadProgress: {
+          videoUploadProgress: {
             path: 'progress'
           },
           ytVideoId: {
             path: 'videoId'
           },
-          ytUploadResult: {
+          videoUploadResult: {
             // player.embedHtml
             path: 'uploadResult'
           },
           ytDangerousHTMLEmbedCode: 'dangerousHTMLEmbedCode',
-          ytUploadError: 'uploadError'
+          videoUploadError: 'uploadError'
         }
       }
     }

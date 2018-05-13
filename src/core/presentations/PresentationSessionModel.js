@@ -11,12 +11,12 @@ import { Promise } from 'firebase';
 
 
 const sessionReaders = {
-  isPresentationSessionInProgress(args, { presentationSessionStreamerUid }, { }) {
-    return !!presentationSessionStreamerUid(args);
+  isPresentationSessionInProgress(args, { presentationSessionOperatorUid }, { }) {
+    return !!presentationSessionOperatorUid(args);
   },
 
-  isPresentationSessionOperator(args, { presentationSessionStreamerUid }, { currentUid }) {
-    return currentUid && presentationSessionStreamerUid(args) === currentUid;
+  isPresentationSessionOperator(args, { presentationSessionOperatorUid }, { currentUid }) {
+    return currentUid && presentationSessionOperatorUid(args) === currentUid;
   }
 };
 
@@ -87,9 +87,9 @@ const sessionWriters = {
     args,
     { },
     { currentUid },
-    { set_presentationSessionStreamerUid, goToFirstPendingPresentationInSession, startStreamRecording }
+    { set_presentationSessionOperatorUid, goToFirstPendingPresentationInSession, startStreamRecording }
   ) {
-    set_presentationSessionStreamerUid(args, currentUid);
+    set_presentationSessionOperatorUid(args, currentUid);
     const res = goToFirstPendingPresentationInSession(args);
     if (res) {
       startStreamRecording({ streamId: args.sessionId });
@@ -98,12 +98,12 @@ const sessionWriters = {
 
   stopPresentationSessionStreaming(
     args,
-    { presentationSessionStreamerUid },
+    { presentationSessionOperatorUid },
     { currentUid },
-    { set_presentationSessionStreamerUid }
+    { set_presentationSessionOperatorUid }
   ) {
-    if (currentUid && currentUid === presentationSessionStreamerUid(args)) {
-      set_presentationSessionStreamerUid(args, null);
+    if (currentUid && currentUid === presentationSessionOperatorUid(args)) {
+      set_presentationSessionOperatorUid(args, null);
     }
   },
 
@@ -123,6 +123,7 @@ const sessionWriters = {
 
       const { sessionId } = sessionArgs;
 
+      // start next presentation
       if (!await goToFirstPendingPresentationInSession(sessionArgs)) {
         // we are done!
         finishPresentationSession(sessionArgs);
@@ -175,11 +176,15 @@ const sessionWriters = {
       Object.assign(updates, {
         [presentationStatus.getPath(presentationArgs)]: PresentationStatus.InProgress,
         [presentationFileId.getPath(presentationArgs)]: presentationId
+        //[presentationFileId.getPath(presentationArgs)]: null
       });
     }
 
+    // TODO: don't set fileId before startStreamRecorder!!!
+    // [presentationFileId.getPath(presentationArgs)]: presentationId
+
     // must make this update separate because that goes to a different DataProvider (MemoryDataProvider),
-    // and (for now) update_db only uses the single DataProvider at the root
+    // and (for now) update_db is set to the firebase DataProvider
     const streamArgs = { streamId: sessionId };
     const promises = [set_streamFileId(streamArgs, presentationId)];
 
@@ -192,6 +197,32 @@ const sessionWriters = {
 
     promises.push(update_db(updates));
     return await Promise.all(promises);
+  },
+
+  startUploadPresentationSession(
+    sessionArgs,
+    { orderedPresentations, getPresentationVideoTitle },
+    { },
+    { videoUploadQueueStart }
+  ) {
+    const { sessionId } = sessionArgs;
+    let presentations = orderedPresentations(sessionArgs);
+    presentations = filter(presentations, pres =>
+      //!pres.videoId &&
+      pres.fileId &&
+      pres.presentationStatus === PresentationStatus.Finished
+    );
+
+    const fileInfos = map(presentations, ({ fileId, id }) => ({
+      fileId,
+      title: getPresentationVideoTitle({ presentationId: id })
+    }));
+
+    return videoUploadQueueStart({
+      queueId: sessionId,
+      fileInfos
+    });
+    //const videoTitle = getPresentationVideoTitle({ presentationId });
   },
 
   /**
@@ -283,7 +314,7 @@ export default {
             writers: sessionWriters,
 
             children: {
-              presentationSessionStreamerUid: 'presentationSessionStreamerUid',
+              presentationSessionOperatorUid: 'presentationSessionOperatorUid',
               presentationSessionActivePresentationId: 'presentationSessionActivePresentationId',
               finishTime: 'finishTime',
               ytPlaylistId: 'ytPlaylistId',

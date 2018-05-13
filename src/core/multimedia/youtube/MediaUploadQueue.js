@@ -4,20 +4,19 @@ export default class MediaUploadQueue {
   /**
    * 
    */
-  videos;
+  fileInfos;
 
   /**
    * Index of the video that is currently being uploaded
    */
   uploadingIndex;
-  constructor(videos, cfg) {
-    this.videos = videos;
+  constructor(fileInfos, cfg) {
+    this.fileInfos = fileInfos;
     this.cfg = cfg;
 
     //this.
   }
-
-
+  
   
 
 }

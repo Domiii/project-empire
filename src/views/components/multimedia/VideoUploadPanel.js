@@ -23,7 +23,7 @@ import VideoPlayer from './VideoPlayer';
 
 import { GapiStatus } from '../../../core/multimedia/youtube/YouTubeAPI';
 import { NOT_LOADED } from '../../../dbdi/react';
-import { YtUploadStatus } from '../../../core/multimedia/youtube/YtUploadModel';
+import { VideoUploadStatus } from '../../../core/multimedia/youtube/VideoUploadModel';
 import { isString } from 'util';
 
 
@@ -227,20 +227,20 @@ export class YtStatusPanel extends Component {
 export default class VideoUploadPanel extends Component {
   render(
     { fileId },
-    { clickStart, ytVideoId, ytVideoEditUrl, get_ytUploadStatus,
-      get_ytUploadProgress, streamFileSize, ytUploadError, ytDangerousHTMLEmbedCode },
+    { clickStart, ytVideoId, ytVideoEditUrl, get_videoUploadStatus,
+      get_videoUploadProgress, streamFileSize, videoUploadError, ytDangerousHTMLEmbedCode },
     { gapiIsAuthenticated }
   ) {
     const fileArgs = { fileId };
-    const uploadStatus = get_ytUploadStatus(fileArgs);
+    const uploadStatus = get_videoUploadStatus(fileArgs);
     const size = streamFileSize(fileArgs);
     let progressEl;
     let controlEl;
     const canUpload = gapiIsAuthenticated && size > 1;
-    let err = ytUploadError(fileArgs);
+    let err = videoUploadError(fileArgs);
 
     switch (uploadStatus) {
-      case YtUploadStatus.None:
+      case VideoUploadStatus.None:
         progressEl = (
           !gapiIsAuthenticated && <YtMyChannelInfo />
         );
@@ -248,8 +248,8 @@ export default class VideoUploadPanel extends Component {
           Upload <FAIcon color="red" size="1.5em" name="youtube-play" />
         </Button>);
         break;
-      case YtUploadStatus.Uploading: {
-        const uploadInfo = get_ytUploadProgress(fileArgs);
+      case VideoUploadStatus.Uploading: {
+        const uploadInfo = get_videoUploadProgress(fileArgs);
         if (!uploadInfo) {
           progressEl = (<Fragment>
             &nbsp;preparing&nbsp;<ProgressBar active bsStyle="info" className="full-width color-maroon"
@@ -273,9 +273,9 @@ export default class VideoUploadPanel extends Component {
         }
         break;
       }
-      case YtUploadStatus.Processing:
-      case YtUploadStatus.Finished: {
-        if (uploadStatus === YtUploadStatus.Processing) {
+      case VideoUploadStatus.Processing:
+      case VideoUploadStatus.Finished: {
+        if (uploadStatus === VideoUploadStatus.Processing) {
           if (err) {
             progressEl = (<Alert bsStyle="danger" className="full-width no-margin">
               Upload failed :(&nbsp;

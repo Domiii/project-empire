@@ -5,8 +5,8 @@ import {
   gapiAuth
 } from './YouTubeAPI';
 
-import YtUploadModel from './YtUploadModel';
-import YtUploadQueueModel from './YtUploadQueueModel';
+import VideoUploadModel from './VideoUploadModel';
+import VideoUploadQueueModel from './VideoUploadQueueModel';
 import YtResourceModel from './YtResourceModel';
 
 import { NOT_LOADED } from 'src/dbdi/react';
@@ -233,7 +233,7 @@ export default {
       }
     }
   },
-  ...YtUploadModel,
-  ...YtUploadQueueModel,
+  ...VideoUploadModel,
+  ...VideoUploadQueueModel,
   ...YtResourceModel
 };

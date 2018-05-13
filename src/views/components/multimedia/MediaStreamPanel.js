@@ -312,7 +312,7 @@ export default class MediaStreamPanel extends Component {
     // start stream
     startIt(streamArgs);
 
-    // reset state
+    // reset GUI state
     this.setState({
       replayVideoSrc: null
     });

@@ -1,6 +1,12 @@
 import sortBy from 'lodash/sortBy';
+import map from 'lodash/map';
+import filter from 'lodash/filter';
 import size from 'lodash/size';
 import forEach from 'lodash/forEach';
+import first from 'lodash/first';
+import last from 'lodash/last';
+import times from 'lodash/times';
+import constant from 'lodash/constant';
 import { NOT_LOADED } from '../../dbdi/react/dataBind';
 
 export const PresentationStatus = {
@@ -19,12 +25,31 @@ export const PresentationViewMode = {
 };
 
 const presentationReaders = {
-  
+
 };
 
 const presentationWriters = {
-  
+
 };
+
+
+function censorUserName(name) {
+  // TODO: handle non-chinese names properly
+
+  if (name.length > 5) {
+    // strange?
+    //console.warn('cannot properly censor user name with more than 5 character currently:', name);
+  }
+  const start = first(name);
+  const end = name.length > 2 ? last(name) : '';
+  const middle = times(size(name)-size(start)-size(end), constant('*')).join('');
+
+  return `${start}${middle}${end}`;
+}
+
+function censorUserNames(userNames) {
+  return map(filter(userNames, name => !!name && name.trim && name.trim()), censorUserName);
+}
 
 export default {
   presentationData: {
@@ -70,6 +95,27 @@ export default {
               'updatedAt'
             ],
 
+            readers: {
+              getPresentationVideoTitle(
+                presentationArgs,
+                { get_presentation }
+              ) {
+                const pres = get_presentation(presentationArgs);
+                if (!pres) return pres; // null or NOT_LOADED
+
+                const {
+                  title,
+                  userNamesString
+                } = pres;
+
+                // TODO: handle non-chinese names properly (cannot just split by whitespace)
+                const userNames = userNamesString.split(/\s+/);
+                const censoredUsersString = censorUserNames(userNames);
+
+                return `${title} (${censoredUsersString.join(',  ')})`;
+              }
+            },
+
             children: {
               sessionId: 'sessionId', // the session this presentation belongs to
               index: 'index', // the order during the session
@@ -78,20 +124,38 @@ export default {
               creatorUid: 'creatorUid', // the user who started this presentation
               presentationFileId: 'fileId', // local filesystem fileId (file only available to creator on the device + browser they used to record it with)
               videoId: 'videoId', // youtube videoId (once uploaded)
-              presnetationFinishTime: 'finishTime',
+              presentationFinishTime: 'finishTime',
 
               title: 'title',
+              userNamesString: 'userNamesString',
               commentText: 'commentText'
             }
           },
 
-          presentationSyncInfo: {
-            path: '$(presentationId)',
-            children: {
-              // whether the presentation video's title has changed and not yet synced
-              presentationSyncVideoTitle: 'title'
-            }
-          }
+          // /**
+          //  * Since the editing user might not have access to the content provider backend (e.g. youtube channel),
+          //  * we have to collect all possible issues of out-of-sync data, and let someone with corresponding
+          //  * access privilege fix it through a single button press later.
+          //  */
+          // allPresentationSyncInfo: {
+          //   path: 'syncInfo/$(sessionId)',
+
+          //   writers: {
+          //     async syncAllVideos() { },
+          //     async fetchAllOutOfSyncPresentationInfo() {
+          //       // TODO: get video info from content provider, and update sync status in DB
+          //     },
+          //   },
+          //   children: {
+          //     presentationSyncInfo:{
+          //       path: '$(presentationId)',
+          //       children: {
+          //         // whether the presentation video's title has changed and not yet synced
+          //         presentationSyncVideoTitle: 'title'
+          //       }
+          //     }
+          //   }
+          // }
         }
       }
     }
