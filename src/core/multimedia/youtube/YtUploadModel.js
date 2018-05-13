@@ -50,12 +50,17 @@ export const YtUploadStatus = {
 export default {
   ytVideoUploads: {
     path: 'videoUploads',
-    writers: {
-    },
 
     children: {
       ytVideoUpload: {
         path: '$(fileId)',
+
+        readers: {
+          ytIsVideoUploadInProgress(fileArgs, { ytUploadStatus }) {
+            const status = ytUploadStatus(fileArgs);
+            return status === YtUploadStatus.Uploading || status === YtUploadStatus.Processing;
+          }
+        },
 
         writers: {
           async ytStartVideoUpload(
@@ -75,9 +80,11 @@ export default {
             } = queryArgs;
             const fileArgs = { fileId };
 
+            // first update status
             set_ytUploadStatus(fileArgs, YtUploadStatus.Uploading);
 
             if (!await gapiHardAuth()) {
+              // could not auth -> reset status
               set_ytUploadStatus(fileArgs, YtUploadStatus.None);
               return false;
             }
@@ -85,8 +92,8 @@ export default {
 
             if (!accessToken) {
               const err = '[INTERNAL ERROR] Could not retrieve access token';
-              set_ytUploadError(fileArgs, err);
               console.error(err);
+              set_ytUploadError(fileArgs, err);
               set_ytUploadStatus(fileArgs, YtUploadStatus.None);
               return false;
             }

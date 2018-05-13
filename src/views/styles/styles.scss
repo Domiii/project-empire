@@ -158,6 +158,22 @@ button:active { outline:none !important; }
   line-height: 0 !important;
 }
 
+/**
+ * Insert space between inline elements
+ */
+.inline-space {
+  margin-right: 10px;
+}
+.inline-space:last-child {
+  margin-right: 0;
+}
+.spaced-inline-children > * {
+  margin-right: 8px;
+}
+.spaced-inline-children > *:last-child {
+  margin-right: 0;
+}
+
 .margin-half {
   margin: 0.5em !important;
 }

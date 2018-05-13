@@ -66,28 +66,30 @@ export class YtMyChannelInfo extends Component {
 
   render(
     { },
-    { get_ytMyChannelSnippet, get_ytMyChannels, clickSelectChannel },
+    { ytMyChannelSnippet, ytMyChannelId, ytMyChannels, clickSelectChannel },
     { gapiIsAuthenticated, gapiError }
   ) {
     // if (!gapiIsAuthenticated || !!gapiError) {
     //   return '';
     // }
-    if (!get_ytMyChannels.isLoaded()) {
+    if (!ytMyChannels.isLoaded()) {
       return <LoadIndicator message="loading your channel..." />;
     }
     else {
       //myChannelsEl = JSON.stringify(ytMyChannels, null, 2);
-      const snippet = get_ytMyChannelSnippet();
+      const snippet = ytMyChannelSnippet();
       if (!snippet) {
-        return (<Alert bsStyle="warning" className="inline no-margin">
-          You do not have a YouTube channel. Create one, then refresh.
+        return (<Alert bsStyle="warning" className="no-margin no-padding">
+          Could not get channel info :(
         </Alert>);
       }
       const { title, thumbnails } = snippet;
+      const channelId = ytMyChannelId();
       const thumbUrl = thumbnails.default.url;
+      const editUrl = 'https://www.youtube.com/channel/' + channelId;
       return (<div className="no-wrap inline-hcenter">
         <img src={thumbUrl} className="max-size-2" /> {title} &nbsp;
-        <a href="https://www.youtube.com/my_videos" rel="noopener noreferrer" target="_blank"><FAIcon name="sign-out" /></a>
+        <a href={editUrl} rel="noopener noreferrer" target="_blank"><FAIcon name="edit" /></a> &nbsp;
         <Button onClick={clickSelectChannel} bsSize="small" className="no-padding"><FAIcon name="exchange" /></Button>
       </div>);
     }
@@ -211,6 +213,9 @@ export class YtStatusPanel extends Component {
  * ############################################################
  */
 
+ /**
+  * Displays progress and control elements of a file that is being uploaded.
+  */
 @dataBind({
   clickStart(evt,
     { fileId },

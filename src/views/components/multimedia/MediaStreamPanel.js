@@ -126,7 +126,7 @@ const RecorderCtrlButton = dataBind(injectedActions)(function RecorderCtrlButton
       icon = 'stop';
       break;
     case MediaStatus.Preparing:
-    case MediaStatus.NotReady:
+    case MediaStatus.Shutdown:
     default:
       text = 'not ready';
       icon = '';

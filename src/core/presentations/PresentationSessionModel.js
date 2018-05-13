@@ -1,4 +1,5 @@
 import map from 'lodash/map';
+import forEach from 'lodash/forEach';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
 import findLast from 'lodash/findLast';
@@ -14,7 +15,7 @@ const sessionReaders = {
     return !!presentationSessionStreamerUid(args);
   },
 
-  isPresentationSessionOwner(args, { presentationSessionStreamerUid }, { currentUid }) {
+  isPresentationSessionOperator(args, { presentationSessionStreamerUid }, { currentUid }) {
     return currentUid && presentationSessionStreamerUid(args) === currentUid;
   }
 };
@@ -191,6 +192,41 @@ const sessionWriters = {
 
     promises.push(update_db(updates));
     return await Promise.all(promises);
+  },
+
+  /**
+   * Sloppy approach to data validation + migrations for presentations.
+   */
+  fixPresentationSession(
+    sessionArgs,
+    { },
+    { },
+    { fixAllPresentationStatuses }
+  ) {
+    fixAllPresentationStatuses(sessionArgs);
+  },
+
+  async fixAllPresentationStatuses(
+    sessionArgs,
+    { get_presentations, get_presentationStatus },
+    { },
+    { update_db }
+  ) {
+    const presentations = get_presentations(sessionArgs);
+
+    const updates = {};
+    forEach(presentations, (pres, presentationId) => {
+      const presentationArgs = { presentationId };
+      const {
+        fileId,
+        videoId,
+        presentationStatus
+      } = pres;
+      if ((fileId || videoId) && presentationStatus !== PresentationStatus.Finished) {
+        updates[get_presentationStatus.getPath(presentationArgs)] = PresentationStatus.Finished;
+      }
+    });
+    return await update_db(updates);
   }
 };
 

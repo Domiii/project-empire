@@ -14,7 +14,7 @@ const {
 } = window;
 
 export const MediaStatus = {
-  NotReady: 0,
+  Down: 0,
   Preparing: 1,
   Ready: 2,
   Running: 3,
@@ -317,7 +317,7 @@ export default {
         }).then(() => streamId)
           .catch(err => {
             console.error(err.stack || err);
-            set_streamStatus(streamArgs, MediaStatus.NotReady);
+            set_streamStatus(streamArgs, MediaStatus.Down);
           });
       }
     },
@@ -333,29 +333,43 @@ export default {
         path: '$(streamId)',
 
         readers: {
-          isStreamReady(
-            { streamId },
+          /**
+           * Whether there is nothing happening at all
+           */
+          isStreamDown(
+            streamArgs,
             { streamStatus }
           ) {
-            const status = streamStatus({ streamId });
+            const status = streamStatus(streamArgs);
+            return status === MediaStatus.Down;
+          },
+
+          /**
+           * Whether stream down or trying to get it up
+           */
+          isStreamOffline(
+            streamArgs,
+            { streamStatus }
+          ) {
+            const status = streamStatus(streamArgs);
+            return status <= MediaStatus.Preparing;
+          },
+
+          isStreamReady(
+            streamArgs,
+            { streamStatus }
+          ) {
+            const status = streamStatus(streamArgs);
             return status === MediaStatus.Ready;
           },
 
           isStreamActive(
-            { streamId },
+            streamArgs,
             { streamStatus }
           ) {
-            const status = streamStatus({ streamId });
+            const status = streamStatus(streamArgs);
             return status === MediaStatus.Running ||
               status === MediaStatus.Paused;
-          },
-
-          isStreamOffline(
-            { streamId },
-            { streamStatus }
-          ) {
-            const status = streamStatus({ streamId });
-            return status <= MediaStatus.Preparing;
           },
 
           streamSize(streamArgs,
@@ -394,7 +408,7 @@ export default {
 
               set_streamObject(streamArgs, null);
               set_streamRecorderObject(streamArgs, null);
-              set_streamStatus(streamArgs, MediaStatus.NotReady);
+              set_streamStatus(streamArgs, MediaStatus.Down);
               //set_streamFileId(streamArgs, null);
             }
           }
@@ -407,7 +421,7 @@ export default {
             path: 'streamStatus',
             reader(status) {
               if (!status) {
-                return MediaStatus.NotReady;
+                return MediaStatus.Down;
               }
               return status;
             }

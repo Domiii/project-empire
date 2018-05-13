@@ -5,9 +5,17 @@ import { NOT_LOADED } from '../../dbdi/react/dataBind';
 
 export const PresentationStatus = {
   Pending: 1,
-  InProgress: 2,
-  Finished: 3,
-  Cancelled: 4
+  //Preparing: 2,
+  GoingOnStage: 3,
+  InProgress: 4,
+  Finished: 10,
+  Cancelled: 15
+};
+
+export const PresentationViewMode = {
+  Normal: 0,
+  Edit: 1,
+  Operator: 2
 };
 
 export default {
@@ -25,7 +33,7 @@ export default {
             if (presentations === NOT_LOADED) {
               return NOT_LOADED;
             }
-            
+
             return size(presentations);
           },
           orderedPresentations(args, { get_presentations }) {
@@ -36,7 +44,7 @@ export default {
 
             // since we lose the id when converting to array, we do an ugly hack-around here
             forEach(presentations, (p, id) => p.id = id);
-            
+
             return sortBy(presentations, 'index');
           }
         },
@@ -70,6 +78,31 @@ export default {
           }
         }
       }
+    }
+  },
+
+  /**
+   * The current user's presentation settings for specific sessionIds
+   */
+  presentationUserSettings: {
+    dataProvider: 'memory',
+    path: 'presentationUsersSettings/$(sessionId)',
+
+    children: {
+      isPresentationUploadMode: {
+        path: 'uploadMode'
+      },
+
+      // presentationUserMode: {
+      //   path: 'mode',
+      //   reader(val, sessionArgs, { isPresentationSessionOperator }) {
+      //     const isOp = isPresentationSessionOperator(sessionArgs);
+      //     if (!isOp) {
+      //       return val || PresentationViewMode.Normal;
+      //     }
+      //     return PresentationViewMode.Operator;
+      //   }
+      // }
     }
   }
 };

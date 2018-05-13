@@ -174,7 +174,9 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
         //val
       } = args;
 
-      this.onWrite && this.onWrite(queryArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
+      // WARNING: custom writer has a different onWrite signature from the path-based writer
+      this.onWrite && this.onWrite(queryArgs, this.actionName, 
+        readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
       return writerFn(queryArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
       // this.onWrite && this.onWrite(...varArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
       // return writerFn(...varArgs, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);

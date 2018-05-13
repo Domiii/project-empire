@@ -129,11 +129,11 @@ export default class PresentationSessionList extends Component {
 ==Basics==
   -> sometimes, recording doesn't really start when pressing the button (it's probably a race condition where fileId isn't updated - probably overrode quite a few videos :'( ))
   -> batch-upload to youtube
-  -> [E] Edit button
   -> [O] Better recording controls + static view of controls
+    -> stabilize view/scroll position - http://jsfiddle.net/kirbysayshi/57HbV/ + https://bit.ly/1S2siEo
   -> [O] video file status + time of recording 
     -> status = not-started, not-local (has fileId but no file), Uploaded (has videoId)
-  -> [P, O, E] skip\unskip presentation
+  -> [N, O, E] skip\unskip presentation
   -> view youtube status, embed player, video's youtube link
   -> PresentationSession views: be able to go from live to list
   -> finish PresSess
@@ -168,9 +168,11 @@ export default class PresentationSessionList extends Component {
 
 /**
 ==Advanced features==
-  -> [P, O, (E)] network-enabled presentation timer!
-  -> [P] Who is up?
-  -> [P] Who is next?
+  -> three modes: [N]ormal, [E]dit, [O]perator
+  -> buttons to switch between modes (only one operator at a time for now)
+  -> [N, O, (E)] network-enabled presentation timer!
+  -> [N] Who is up?
+  -> [N] Who is next?
   -> fix preview (cannot stop preview)
   -> be able to manage + delete files (does Chrome have a built-in permanent file storage manager?)
   -> automatic audio noise + volume adjustment?

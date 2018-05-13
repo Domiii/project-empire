@@ -7,6 +7,12 @@ color: ${props => props.color};
 font-size: ${props => props.size};
 `;
 
+// export class LayeredFAIcons extends PureComponent {
+//   render() {
+
+//   }
+// }
+
 // Online demo: https://codepen.io/Domiii/pen/mOaGWG?editors=0010
 export default class FAIcon extends PureComponent {
   static propTypes = {

@@ -30,7 +30,7 @@ export default {
         try {
           const response = await sendYtRequest('channelList', {
             mine: true,
-            part: 'snippet,statistics,contentDetails'
+            part: 'id,snippet,contentDetails' // ,statistics
           });
           return response.result;
         }
@@ -57,6 +57,9 @@ export default {
       ytMyChannel: {
         path: 'items[0]',
         children: {
+          ytMyChannelId: {
+            path: 'id'
+          },
           ytMyChannelSnippet: {
             path: 'snippet'
           }

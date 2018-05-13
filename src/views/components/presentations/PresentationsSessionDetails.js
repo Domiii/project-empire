@@ -3,7 +3,7 @@ import size from 'lodash/size';
 
 import { EmptyObject, EmptyArray } from '../../../util';
 
-import React, { Component, Fragment as F } from 'react';
+import React, { Component, Fragment as F, PropTypes } from 'react';
 import dataBind, { NOT_LOADED } from '../../../dbdi/react/dataBind';
 
 import {
@@ -18,7 +18,11 @@ import LoadIndicator from 'src/views/components/util/LoadIndicator';
 import FAIcon from 'src/views/components/util/FAIcon';
 
 import MediaStreamPanel, { MediaPrepView } from 'src/views/components/multimedia/MediaStreamPanel';
-import { PresentationStatus } from '../../../core/presentations/PresentationModel';
+import VideoUploadPanel from 'src/views/components/multimedia/VideoUploadPanel';
+import {
+  PresentationStatus,
+  PresentationViewMode
+} from '../../../core/presentations/PresentationModel';
 import { YtStatusPanel } from '../multimedia/VideoUploadPanel';
 
 import PresentationEditor from './PresentationEditor';
@@ -47,14 +51,23 @@ const statusIconProps = {
     color: 'red'
   })
 };
+const statusIconPropsDefault = {
+  name: 'question',
+  color: 'grey'
+};
 
-const Tr = styled.tr`
-  color: ${props => props.status === PresentationStatus.InProgress ? 'black' : 'lightgray'};
+const TrOfStatus = styled.tr`
+  color: ${props => props.highlight ? 'black' : 'lightgray'};
 `;
 
 const StatusTd = styled.td`
   text-align: center;
+  color: black;
 `;
+
+function FullWidthTableCell({ children }) {
+  return <tr><td colSpan={99999}>{children}</td></tr>;
+}
 
 @dataBind({
   async startStreaming(streamArgs,
@@ -78,13 +91,14 @@ class PresentationSessionStreamingPanel extends Component {
     };
 
     let moreInfo;
-    if (streamFileId(streamArgs) && presentationId !== streamFileId(streamArgs)) {
+    const fileId = streamFileId(streamArgs);
+    if (fileId && presentationId !== fileId) {
       console.error(presentationId, streamFileId(streamArgs));
       moreInfo = <Alert bsStyle="danger">BUG: fileId and presentationId diverged!</Alert>;
     }
     return (<F>
       {moreInfo}
-      <MediaStreamPanel hideStatus={true} streamArgs={streamArgs} 
+      <MediaStreamPanel hideStatus={true} streamArgs={streamArgs}
         startStreaming={startStreaming} onFinished={onFinished} />
     </F>);
   }
@@ -118,28 +132,111 @@ class DownloadVideoFileButton extends Component {
 
 @dataBind({
   clickPlay(evt,
-    { sessionId, presentation },
-    { setActivePresentationInSession }
+    { presentationId },
+    { get_presentation, setActivePresentationInSession }
   ) {
-    const presentationId = presentation.id;
+    const presentation = get_presentation({ presentationId });
+    const {
+      sessionId
+    } = presentation;
     setActivePresentationInSession({ sessionId, presentationId });
-  },
+  }
+})
+class PresentationStatusSummary extends Component {
+  render(
+    { presentationId, isSelected },
+    { clickPlay, get_presentation,
+      isStreamDown, isPresentationSessionOperator, presentationSessionActivePresentationId },
+    { isCurrentUserAdmin }
+  ) {
+    const presentation = get_presentation({ presentationId });
+    const {
+      sessionId,
+      fileId,
+      videoId,
+      //status: projectStatus,
+      presentationStatus
+    } = presentation;
+
+    //const clazz = presentationStatus === PresentationStatus.InProgress && 'red-highlight-border' || 'no-highlight-border';
+
+    let rowControls;
+    const sessionArgs = { sessionId };
+    const isOperator = isPresentationSessionOperator(sessionArgs);
+    const activePresId = presentationSessionActivePresentationId(sessionArgs);
+    //if (presentationStatus <= PresentationStatus.InProgress) {
+    const streamArgs = { streamId: sessionId };
+    if (isStreamDown(streamArgs) && isOperator && activePresId !== presentationId) {
+      rowControls = (<F>
+        <Button bsStyle="default" className="no-padding" onClick={clickPlay}>
+          <FAIcon name="video-camera" color="red" />
+        </Button>
+      </F>);
+    }
+
+    //if (isOperator || isCurrentUserAdmin) {
+    // rowControls = (<F>
+    //   {rowControls}
+    //   &nbsp;
+    //   <Button bsStyle="default" className="no-padding no-line-height" active={isSelected} onClick={clickEdit}>
+    //     <FAIcon name="edit" color="darkblue" />
+    //   </Button>
+    // </F>);
+    //}
+
+    let statusInfoEl;
+    if (videoId) {
+      // show button to show video directly
+      // TODO: inline preview youtube video
+      statusInfoEl = (<FAIcon name="youtube-play" />);
+    }
+    else {
+      statusInfoEl = (<FAIcon {...(statusIconProps[presentationStatus] || statusIconPropsDefault)} />);
+    }
+
+    let fileInfoEl;
+    if (fileId) {
+      // there SHOULD NEVER BE, but there always might be inconsistencies
+      if (fileId !== presentationId) {
+        // shit!
+        fileInfoEl = <FAIcon name="download" size=".8em" color="red" />;
+      }
+      else {
+        // should all be great
+        fileInfoEl = <FAIcon name="download" size=".8em" />;
+      }
+    }
+
+    return (<span className="spaced-inline-children">
+      {statusInfoEl}
+      {fileInfoEl}
+      {rowControls}
+    </span>);
+  }
+}
+
+
+/**
+ * 
+ */
+@dataBind({
   clickSelectRow(evt,
-    { selectRow, presentation: { id } },
+    { selectRow, presentationId },
     { }
   ) {
-    selectRow(id);
+    selectRow(presentationId);
   }
 })
 class PresentationInfoRow extends Component {
   render(
     { sessionId, presentation, isSelected },
-    { clickPlay, clickSelectRow, isPresentationSessionOwner, presentationSessionActivePresentationId },
-    { isCurrentUserAdmin, isAnyStreamOnline }
+    { clickSelectRow,
+      isPresentationSessionOperator },
+    { isCurrentUserAdmin }
   ) {
     const {
       index,
-      id,
+      id: presentationId,
       title,
       userNamesString,
       //status: projectStatus,
@@ -148,43 +245,26 @@ class PresentationInfoRow extends Component {
 
     //const clazz = presentationStatus === PresentationStatus.InProgress && 'red-highlight-border' || 'no-highlight-border';
 
-    let rowControls;
     let onDblClick;
-    const isOwner = isPresentationSessionOwner({ sessionId });
-    if (presentationStatus <= PresentationStatus.InProgress) {
-      const canPlay = isOwner && activePres !== id;
-      rowControls = canPlay && (<F>
-        &nbsp;
-        <Button bsStyle="default" className="no-padding no-line-height" disabled={isAnyStreamOnline} onClick={clickPlay}>
-          <FAIcon name="youtube-play" color="red" />
-        </Button>
-      </F>);
-    }
-    if (isOwner || isCurrentUserAdmin) {
-      // rowControls = (<F>
-      //   {rowControls}
-      //   &nbsp;
-      //   <Button bsStyle="default" className="no-padding no-line-height" active={isSelected} onClick={clickEdit}>
-      //     <FAIcon name="edit" color="darkblue" />
-      //   </Button>
-      // </F>);
+    const sessionArgs = { sessionId };
+    const isOperator = isPresentationSessionOperator(sessionArgs);
+    if (isOperator || isCurrentUserAdmin) {
       onDblClick = clickSelectRow;
     }
 
-    const activePres = presentationSessionActivePresentationId({ sessionId });
-    const statusEl = (<StatusTd className="min">
-      <FAIcon {...statusIconProps[presentationStatus]} />
-      {rowControls}
-    </StatusTd>);
-
+    //GoingOnStage
+    const isHighlighted = presentationStatus === PresentationStatus.GoingOnStage ||
+      presentationStatus === PresentationStatus.InProgress;
     return (
-      <Tr className="" status={presentationStatus} onDoubleClick={onDblClick}>
+      <TrOfStatus className="" highlight={isHighlighted} onDoubleClick={onDblClick}>
         <td className="min">{index + 1}</td>
         <td>{title}</td>
         <td>{userNamesString}</td>
         {/* <td>{health}</td> */}
-        {statusEl}
-      </Tr>
+        <StatusTd className="min">
+          <PresentationStatusSummary isSelected={isSelected} presentationId={presentationId} />
+        </StatusTd>
+      </TrOfStatus>
     );
   }
 }
@@ -193,13 +273,13 @@ class PresentationInfoRow extends Component {
 class PresentationRowDetails extends Component {
   render(
     { presentationId },
-    { get_presentation, isPresentationSessionOwner },
+    { get_presentation, isPresentationSessionOperator },
     { isCurrentUserAdmin }
   ) {
     const presentation = get_presentation({ presentationId });
     const { sessionId } = presentation;
     const sessionArgs = { sessionId };
-    const isOwner = isPresentationSessionOwner(sessionArgs);
+    const isOwner = isPresentationSessionOperator(sessionArgs);
 
     const editorEl = isCurrentUserAdmin && <PresentationEditor presentationId={presentationId} />;
     let controlEls;
@@ -218,50 +298,70 @@ class PresentationRowDetails extends Component {
 class PresentationRow extends Component {
   render(
     { sessionId, presentation, isSelected, selectRow },
-    { isPresentationSessionOwner, presentationSessionActivePresentationId }
+    { isPresentationSessionOperator, presentationSessionActivePresentationId, ytIsVideoUploadInProgress }
   ) {
-    const nCols = 4;
+    const nCols = 1000; // span over all cols
 
-    let extraEl;
+    let detailsEl, uploadEl, streamControls;
+
+    const presentationId = presentation.id;
     if (isSelected) {
-      const presentationId = presentation.id;
-      extraEl = (<tr><td colSpan={nCols}>
+      detailsEl = (<FullWidthTableCell>
         <PresentationRowDetails presentationId={presentationId} />
-      </td></tr>);
+      </FullWidthTableCell>);
     }
 
     const sessionArgs = { sessionId };
-    let streamControls;
-    if (isPresentationSessionOwner(sessionArgs) && presentationSessionActivePresentationId(sessionArgs) === presentation.id) {
-      streamControls = (<tr><td colSpan={nCols}>
+    if (isPresentationSessionOperator(sessionArgs) &&
+      presentationSessionActivePresentationId(sessionArgs) === presentationId) {
+      streamControls = (<FullWidthTableCell>
         <PresentationSessionStreamingPanel sessionId={sessionId} presentationId={presentationId} />
-      </td></tr>);
+      </FullWidthTableCell>);
+    }
+
+    const fileArgs = { fileId: presentationId };
+    if (ytIsVideoUploadInProgress(fileArgs)) {
+      uploadEl = <VideoUploadPanel {...fileArgs} />;
     }
 
     return (<F>
-      {/* TODO: perf */ }
       <PresentationInfoRow {...{ sessionId, presentation, isSelected, selectRow }} />
-      {extraEl}
+      {detailsEl}
+      {uploadEl}
       {streamControls}
     </F>);
   }
 }
 
+/**
+ * Shown on top of the table
+ */
 const SessionToolbar = dataBind({
   clickStop(evt,
     args,
     { stopPresentationSessionStreaming }
   ) {
     stopPresentationSessionStreaming(args);
+  },
+
+  clickTogglePresentationUploadMode(evt, sessionArgs, { isPresentationUploadMode, set_isPresentationUploadMode }) {
+    const isMode = isPresentationUploadMode(sessionArgs);
+    set_isPresentationUploadMode(sessionArgs, !isMode);
+  },
+
+  clickFixAll(evt, sessionArgs, { fixPresentationSession }) {
+    fixPresentationSession(sessionArgs);
   }
 })(function SessionHeader(
-  args,
-  { isPresentationSessionOwner, isPresentationSessionInProgress,
-    clickStop }
+  sessionArgs,
+  { isPresentationSessionOperator, isPresentationSessionInProgress,
+    isPresentationUploadMode, clickTogglePresentationUploadMode,
+    clickStop, clickFixAll },
+  { isCurrentUserAdmin }
 ) {
-  let ownerEls;
+  let controlEls;
   // if (!isPresentationSessionInProgress(args)) {
-  //   if (isPresentationSessionOwner(args)) {
+  //   if (isPresentationSessionOperator(args)) {
   //     //introEl = 
   //   }
   //   else {
@@ -269,18 +369,37 @@ const SessionToolbar = dataBind({
   //   }
   // }
   // else {
-  if (isPresentationSessionOwner(args)) {
-    //&nbsp;
-    ownerEls = (<F>
-      <YtStatusPanel dontAuthAutomatically={true} />
-      <Button bsSize="small" bsStyle="danger" onClick={clickStop}>Force Stop</Button>
+  if (isCurrentUserAdmin) {
+    // upload button + status
+    const isUploading = isPresentationUploadMode(sessionArgs);
+    if (isUploading) {
+      controlEls = (<F>
+        {controlEls}
+        <YtStatusPanel />
+      </F>);
+    }
+
+    controlEls = (<F>
+      {controlEls}
+      <Button bsStyle="info" onClick={clickTogglePresentationUploadMode} active={isUploading}>
+        <FAIcon name="upload" color={isUploading && 'lightgreen' || ''} /> <FAIcon name="youtube" size="1.4em" color="red" />
+      </Button>
+    </F>);
+  }
+  if (isPresentationSessionOperator(sessionArgs)) {
+    controlEls = (<F>
+      {controlEls}
+      <Button bsSize="small" bsStyle="danger" onClick={clickStop}>Stop Operating</Button>
+      {isCurrentUserAdmin &&
+        <Button bsSize="small" bsStyle="danger" onClick={clickFixAll}><FAIcon name="wrench" /></Button>
+      }
     </F>);
   }
   return (<Flexbox className="full-width">
     <Flexbox className="full-width" justifyContent="flex-start">
     </Flexbox>
-    <Flexbox justifyContent="flex-end">
-      {ownerEls}
+    <Flexbox justifyContent="flex-end" className="spaced-inline-children">
+      {controlEls}
     </Flexbox>
   </Flexbox>);
 });
@@ -294,7 +413,7 @@ const SessionHeader = dataBind({
   }
 })(function SessionHeader(
   { sessionId },
-  { //isPresentationSessionOwner, 
+  { //isPresentationSessionOperator, 
     isPresentationSessionInProgress, startStreaming }
 ) {
   let introEl;
@@ -314,7 +433,7 @@ const SessionHeader = dataBind({
   //   { orderedPresentationsOfSession }
   // ) {
   // }
-  clickAddPresentation(evt, sessionArgs, {addNewPresentation}) {
+  clickAddPresentation(evt, sessionArgs, { addNewPresentation }) {
     return addNewPresentation();
   }
 })
@@ -350,7 +469,7 @@ export default class PresentationsSessionDetails extends Component {
             <th>Title</th>
             <th>Contributors</th>
             {/* <th className="min">專案狀態</th> */}
-            <th className="min">狀態</th>
+            <th className="min"></th>
           </tr>
         </thead>
         <tbody>
