@@ -219,9 +219,9 @@ export class YtStatusPanel extends Component {
 @dataBind({
   clickStart(evt,
     { fileId },
-    { ytStartVideoUpload }
+    { startVideoUpload }
   ) {
-    return ytStartVideoUpload({ fileId });
+    return startVideoUpload({ fileId });
   }
 })
 export default class VideoUploadPanel extends Component {

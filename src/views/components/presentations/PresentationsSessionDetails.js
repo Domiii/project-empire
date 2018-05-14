@@ -328,6 +328,35 @@ class PresentationRow extends Component {
   }
 }
 
+const UploadQueueControlPanel = dataBind({
+  clickStartUploadPresentationSession(evt, sessionArgs, { startUploadPresentationSession }) {
+    startUploadPresentationSession(sessionArgs);
+  }
+})(function UploadQueueControlPanel(
+  sessionArgs,
+  { isVideoUploadQueueRunning,
+    videoUploadQueueRemainingCount, videoUploadQueueTotalCount,
+    clickStartUploadPresentationSession }
+) {
+  //isVideoUploadQueueRunning
+  const { sessionId } = sessionArgs;
+  const queueArgs = { queueId: sessionId };
+  const isUploading = isVideoUploadQueueRunning(queueArgs);
+  let statusEl;
+  if (isUploading) {
+    statusEl = (
+      <span>{videoUploadQueueRemainingCount}/{videoUploadQueueTotalCount}</span>
+    );
+  }
+  return (<F>
+    {statusEl}
+    <Button bsStyle="info" disabled={isUploading} onClick={clickStartUploadPresentationSession} >
+      Upload <FAIcon name="upload" />
+    </Button>
+    <YtStatusPanel />
+  </F>);
+});
+
 /**
  * Shown on top of the table
  */
@@ -338,28 +367,17 @@ const SessionToolbar = dataBind({
   }
 })(function SessionHeader(
   sessionArgs,
-  { isPresentationUploadMode, clickTogglePresentationUploadMode },
+  { isPresentationUploadMode,
+    clickTogglePresentationUploadMode },
   { isCurrentUserAdmin }
 ) {
   let controlEls;
-  // if (!isPresentationSessionInProgress(args)) {
-  //   if (isPresentationSessionOperator(args)) {
-  //     //introEl = 
-  //   }
-  //   else {
-  //     //introEl = <Alert bsStyle="success" bsSize="small"></Alert>;
-  //   }
-  // }
-  // else {
-  //startUploadPresentationSession
   if (isCurrentUserAdmin) {
     // upload button + status
     const isUploading = isPresentationUploadMode(sessionArgs);
     if (isUploading) {
-      controlEls = (<F>
-        {controlEls}
-        <YtStatusPanel />
-      </F>);
+      const { sessionId } = sessionArgs;
+      controlEls = <UploadQueueControlPanel sessionId={sessionId} />;
     }
 
     controlEls = (<F>

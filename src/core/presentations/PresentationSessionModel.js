@@ -227,19 +227,25 @@ const sessionWriters = {
     return await Promise.all(promises);
   },
 
-  startUploadPresentationSession(
+  async startUploadPresentationSession(
     sessionArgs,
-    { orderedPresentations, getPresentationVideoTitle },
+    { orderedPresentations, getPresentationVideoTitle, streamFileExists },
     { },
     { videoUploadQueueStart }
   ) {
     const { sessionId } = sessionArgs;
     let presentations = orderedPresentations(sessionArgs);
-    presentations = filter(presentations, pres =>
-      //!pres.videoId &&
+
+    const presentationsReady = map(presentations, pres =>
       pres.fileId &&
-      pres.presentationStatus === PresentationStatus.Finished
+      pres.presentationStatus === PresentationStatus.Finished &&
+      streamFileExists({ fileId: pres.fileId }) || false
     );
+
+    // presentationsReady contains a bunch of promises which have yet to resolve
+    await Promise.all(presentationsReady);
+
+    presentations = filter(presentations, (pres, i) => presentationsReady[i]);
 
     const fileInfos = map(presentations, ({ fileId, id }) => ({
       fileId,

@@ -1,7 +1,7 @@
 import isPlainObject from 'lodash/isPlainObject';
 
 import MediaUploader from './MediaUploader';
-import { getOptionalArguments } from '../../../dbdi/dataAccessUtil';
+import { getOptionalArguments, getOptionalArgument } from '../../../dbdi/dataAccessUtil';
 
 // /**
 //  * YouTube video uploader class
@@ -63,7 +63,7 @@ export default {
         },
 
         writers: {
-          async ytStartVideoUpload(
+          async startVideoUpload(
             queryArgs,
             { fetchStreamFile, get_videoUploadLastStartTime, gapiTokens },
             { },
@@ -111,6 +111,8 @@ export default {
             });
             set_videoUploadInfo(fileArgs, info);
             const file = await fetchStreamFile({ fileId });
+
+            const onUploadComplete = getOptionalArgument(queryArgs, 'onUploadComplete');
 
             const {
               title,
@@ -172,6 +174,7 @@ export default {
               onUploadComplete: (videoId) => {
                 set_ytVideoId(fileArgs, videoId);
                 set_videoUploadStatus(fileArgs, VideoUploadStatus.Processing);
+                onUploadComplete && onUploadComplete(videoId);
               },
               onProcessed: (data) => {
                 set_videoUploadResult(fileArgs, data);

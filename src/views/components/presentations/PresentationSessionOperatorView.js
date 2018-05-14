@@ -18,7 +18,7 @@ import LoadIndicator from 'src/views/components/util/LoadIndicator';
 import FAIcon from 'src/views/components/util/FAIcon';
 
 import MediaStreamPanel, { MediaPrepView } from 'src/views/components/multimedia/MediaStreamPanel';
-import VideoUploadPanel from 'src/views/components/multimedia/VideoUploadPanel';
+
 import {
   PresentationStatus,
   PresentationViewMode
@@ -88,8 +88,8 @@ class PresentationSessionStreamingPanel extends Component {
         </Flexbox>}
       </Flexbox>)}
       {errorEl}
-      <MediaStreamPanel hideStatus={true} streamArgs={streamArgs}
-        startStreaming={startStreaming} onFinished={onFinished} />
+      {!errorEl && <MediaStreamPanel hideStatus={true} streamArgs={streamArgs}
+        startStreaming={startStreaming} onFinished={onFinished} />}
     </F>);
   }
 }
@@ -132,7 +132,7 @@ export default class PresentationSessionOperatorView extends Component {
   ) {
     const sessionArgs = { sessionId };
     const presentationId = presentationSessionActivePresentationId(sessionArgs);
-    const streamControls = (presentationId && <PresentationSessionStreamingPanel 
+    const streamControls = (presentationId && <PresentationSessionStreamingPanel
       sessionId={sessionId} presentationId={presentationId} />);
 
     return (<div className="full-width">
