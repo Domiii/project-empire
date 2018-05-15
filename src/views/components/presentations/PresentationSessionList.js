@@ -127,6 +127,7 @@ export default class PresentationSessionList extends Component {
 
 /**
 ==Basics==
+  -> let presenter also change order of presentations
   -> button to shuffle PENDING presentations
   -> finish PresSess
   -> start new PresSess
