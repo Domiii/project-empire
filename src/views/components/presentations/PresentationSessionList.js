@@ -127,17 +127,21 @@ export default class PresentationSessionList extends Component {
 
 /**
 ==Basics==
-  -> let presenter also change order of presentations
+  -> let [P]resenter (not only [O]) also be able to change order of presentations (→ edit mode button?)
   -> button to shuffle PENDING presentations
   -> finish PresSess
-  -> start new PresSess
+  -> import + ready up this week's presentation list!
+      -> account for every single user!
+
   -> PresentationSession views: be able to go from live to list
-    {}-> ideally based on all currently active projects + any individual user who does not have a project
-    -> come up with manual strategy for now
+  -> [N, O, (E)] network-enabled presentation timer!
+  -> improve [O]perator view
+    -> fix preview (cannot stop preview)
+
   -> finish many-2-many relationships
   -> proper project + user tagging for presentations
 
-  -> User + project management
+  -> User management
     -> add user by name
       -> match user name to actual (but unregistered) user via admin interface
       {}-> fix all edge cases for when we merge two user objects into one, any data that references the user gets orphaned
@@ -147,36 +151,30 @@ export default class PresentationSessionList extends Component {
       -> Easily edit all info
       -> Easily approve all (and/or individual) unregistered users
 
-    -> proper presentation listing for all users + projects
-      -> account for every single user!
-      -> account for every active project, and get at least a status update!
+  -> project management
+    -> account for every active project
+      -> possibly get a status update for each presentation that has a project in its focus
 
-  -> Add tools to easily:
-    -> start new project based on presentation
-    -> generate presentation list from currently active projects
-    -> archive/unarchive projects
+  -> generate presentation list for new session
+    -> ideally based on all currently active projects + any individual user who does not have a project
+    -> probably cycle based?
+  -> start new project based on presentation
+  -> archive/unarchive projects
 
   -> generate youtube playlists
  */
 
 /**
 ==Advanced features==
-  -> three modes: [N]ormal, [E]dit, [O]perator
-  -> buttons to switch between modes (only one operator at a time for now)
-  -> [N, O, (E)] network-enabled presentation timer!
-  -> [N] Who is up?
-  -> [N] Who is next?
-  -> fix preview (cannot stop preview)
+  -> Improved presentation mode
+    -> [N] Who is up?
+    -> [N] Who is next?
   -> be able to manage + delete files (does Chrome have a built-in permanent file storage manager?)
   -> automatic audio noise + volume adjustment?
 
   -> [E] inline editing
-  -> [E] advanced change status
-  -> [E] reordering
-  -> [O] when clicking button -> setActivePresentation of a pending presentation, should also re-order, move it up front
-
   
-  -> let normal users in:
+  -> let normal users use this:
       -> presentation session + presentation
       -> own + participating playlists
       -> see + review feedback
