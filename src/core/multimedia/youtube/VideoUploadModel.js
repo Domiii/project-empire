@@ -174,7 +174,7 @@ export default {
               onUploadComplete: (videoId) => {
                 set_ytVideoId(fileArgs, videoId);
                 set_videoUploadStatus(fileArgs, VideoUploadStatus.Processing);
-                onUploadComplete && onUploadComplete(videoId);
+                onUploadComplete && onUploadComplete(fileId, videoId);
               },
               onProcessed: (data) => {
                 set_videoUploadResult(fileArgs, data);

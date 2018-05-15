@@ -73,12 +73,12 @@ class PresentationSessionStreamingPanel extends Component {
         Finished <FAIcon name="check" color="lightgreen" />
       </Button>);
       skipBtn = (<Button block bsStyle="danger" onClick={clickSetStatusSkipped}>
-        Skip <FAIcon name="times" color="darkred" />
+        Skip <FAIcon name="times" color="lightred" />
       </Button>);
     }
 
 
-    return (<F>
+    return (<div className="full-width">
       {(finishBtn || skipBtn) && (<Flexbox className="full-width">
         {finishBtn && <Flexbox className="full-width margin-right-3">
           {finishBtn}
@@ -90,7 +90,7 @@ class PresentationSessionStreamingPanel extends Component {
       {errorEl}
       {!errorEl && <MediaStreamPanel hideStatus={true} streamArgs={streamArgs}
         startStreaming={startStreaming} onFinished={onFinished} />}
-    </F>);
+    </div>);
   }
 }
 
@@ -105,7 +105,7 @@ class PresentationSessionStreamingPanel extends Component {
     fixPresentationSession(sessionArgs);
   }
 })
-class Header extends Component {
+class Footer extends Component {
   render(
     { },
     { clickStop, clickFixAll },
@@ -135,9 +135,13 @@ export default class PresentationSessionOperatorView extends Component {
     const streamControls = (presentationId && <PresentationSessionStreamingPanel
       sessionId={sessionId} presentationId={presentationId} />);
 
-    return (<div className="full-width">
-      <Header {...sessionArgs} />
-      {streamControls}
-    </div >);
+    return (<Flexbox flexDirection="column" className="full-width full-height">
+      <Flexbox className="full-width full-height">
+        {streamControls}
+      </Flexbox>
+      <Flexbox className="">
+        <Footer {...sessionArgs} />
+      </Flexbox>
+    </Flexbox>);
   }
 }

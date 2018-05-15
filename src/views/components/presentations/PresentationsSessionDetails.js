@@ -164,7 +164,7 @@ class PresentationOperatorDetails extends Component {
 class PresentationStatusSummary extends Component {
   render(
     { presentationId, isSelected },
-    { get_presentation, streamFileExists, isCurrentUserAdmin },
+    { get_presentation, streamFileExists, isCurrentUserAdmin, ytVideoUrl },
     { }
   ) {
     const presentation = get_presentation({ presentationId });
@@ -175,29 +175,30 @@ class PresentationStatusSummary extends Component {
       presentationStatus
     } = presentation;
 
-    let statusInfoEl;
+    let statusInfoEl, fileInfoEl;
     if (videoId) {
       // show button to show video directly
       // TODO: inline preview youtube video
-      statusInfoEl = (<FAIcon name="youtube-play" />);
+      const url = ytVideoUrl({ videoId });
+      statusInfoEl = (<a href={url} target="_blank">
+        <FAIcon name="youtube-play" color="red" />
+      </a>);
     }
     else {
       statusInfoEl = (<FAIcon {...(statusIconProps[presentationStatus] || statusIconPropsDefault)} />);
-    }
 
-    let fileInfoEl;
-
-    // TODO: we don't want the file system access warning to pop up for normal visitors
-    const shouldAccessFileSystem = fileId && isCurrentUserAdmin();
-    if (shouldAccessFileSystem && streamFileExists({ fileId })) {
-      // there SHOULD NEVER BE, but there always might be inconsistencies
-      if (fileId !== presentationId) {
-        // shit!
-        fileInfoEl = <FAIcon name="download" size=".8em" color="red" />;
-      }
-      else {
-        // should all be great
-        fileInfoEl = <FAIcon name="download" size=".8em" />;
+      // we don't want the file system access warning to pop up for normal visitors
+      const shouldAccessFileSystem = fileId && isCurrentUserAdmin();
+      if (shouldAccessFileSystem && streamFileExists({ fileId })) {
+        // there SHOULD NEVER BE, but there always might be inconsistencies
+        if (fileId !== presentationId) {
+          // shit!
+          fileInfoEl = <FAIcon name="download" size=".8em" color="red" />;
+        }
+        else {
+          // should all be great
+          fileInfoEl = <FAIcon name="download" size=".8em" />;
+        }
       }
     }
 
@@ -302,10 +303,8 @@ class PresentationRowDetails extends Component {
 class PresentationRow extends Component {
   render(
     { sessionId, presentation, isSelected, selectRow },
-    { isPresentationSessionOperator, presentationSessionActivePresentationId, ytIsVideoUploadInProgress }
+    { ytIsVideoUploadInProgress }
   ) {
-    const nCols = 1000; // span over all cols
-
     let detailsEl, uploadEl;
 
     const presentationId = presentation.id;
@@ -317,7 +316,9 @@ class PresentationRow extends Component {
 
     const fileArgs = { fileId: presentationId };
     if (ytIsVideoUploadInProgress(fileArgs)) {
-      uploadEl = <VideoUploadPanel {...fileArgs} />;
+      uploadEl = (<FullWidthTableCell>
+        <VideoUploadPanel {...fileArgs} />
+      </FullWidthTableCell>);
     }
 
     return (<F>
@@ -328,64 +329,71 @@ class PresentationRow extends Component {
   }
 }
 
+
 const UploadQueueControlPanel = dataBind({
   clickStartUploadPresentationSession(evt, sessionArgs, { startUploadPresentationSession }) {
     startUploadPresentationSession(sessionArgs);
+  },
+  clickTogglePresentationUploadMode(evt, sessionArgs, { isPresentationUploadMode, set_isPresentationUploadMode }) {
+    const isMode = isPresentationUploadMode(sessionArgs);
+    set_isPresentationUploadMode(sessionArgs, !isMode);
   }
 })(function UploadQueueControlPanel(
   sessionArgs,
-  { isVideoUploadQueueRunning,
+  { isPresentationUploadMode, clickTogglePresentationUploadMode,
+    isVideoUploadQueueRunning,
     videoUploadQueueRemainingCount, videoUploadQueueTotalCount,
     clickStartUploadPresentationSession }
 ) {
-  //isVideoUploadQueueRunning
-  const { sessionId } = sessionArgs;
-  const queueArgs = { queueId: sessionId };
-  const isUploading = isVideoUploadQueueRunning(queueArgs);
-  let statusEl;
-  if (isUploading) {
-    statusEl = (
-      <span>{videoUploadQueueRemainingCount}/{videoUploadQueueTotalCount}</span>
-    );
+  // upload buttons + queue status
+  let queueStatusEl, queueControls, toggleModeButton;
+
+  const isUploadMode = isPresentationUploadMode(sessionArgs);
+  if (isUploadMode) {
+    const { sessionId } = sessionArgs;
+    const queueArgs = { queueId: sessionId };
+    const isUploading = isVideoUploadQueueRunning(queueArgs);
+    if (isUploading) {
+      const remainCount = videoUploadQueueRemainingCount(queueArgs);
+      const totalCount = videoUploadQueueTotalCount(queueArgs);
+      const doneCount = totalCount - remainCount;
+      queueStatusEl = (<F>
+        <span>{doneCount}/{totalCount}</span>
+      </F>);
+    }
+
+    queueControls = (<F>
+      <Button bsStyle="info" disabled={isUploading} onClick={clickStartUploadPresentationSession} >
+        Upload <FAIcon name="upload" />
+      </Button>
+      <YtStatusPanel />
+    </F>);
   }
-  return (<F>
-    {statusEl}
-    <Button bsStyle="info" disabled={isUploading} onClick={clickStartUploadPresentationSession} >
-      Upload <FAIcon name="upload" />
+
+  toggleModeButton = (<F>
+    <Button bsStyle="info" onClick={clickTogglePresentationUploadMode} active={isUploadMode}>
+      <FAIcon name="upload" color={isUploadMode && 'lightgreen' || ''} /> <FAIcon name="youtube" size="1.4em" color="red" />
     </Button>
-    <YtStatusPanel />
+  </F>);
+  return (<F>
+    {queueStatusEl}
+    {queueControls}
+    {toggleModeButton}
   </F>);
 });
 
 /**
  * Shown on top of the table
  */
-const SessionToolbar = dataBind({
-  clickTogglePresentationUploadMode(evt, sessionArgs, { isPresentationUploadMode, set_isPresentationUploadMode }) {
-    const isMode = isPresentationUploadMode(sessionArgs);
-    set_isPresentationUploadMode(sessionArgs, !isMode);
-  }
-})(function SessionHeader(
+const SessionToolbar = dataBind({})(function SessionHeader(
   sessionArgs,
-  { isPresentationUploadMode,
-    clickTogglePresentationUploadMode },
+  { },
   { isCurrentUserAdmin }
 ) {
   let controlEls;
   if (isCurrentUserAdmin) {
-    // upload button + status
-    const isUploading = isPresentationUploadMode(sessionArgs);
-    if (isUploading) {
-      const { sessionId } = sessionArgs;
-      controlEls = <UploadQueueControlPanel sessionId={sessionId} />;
-    }
-
-    controlEls = (<F>
-      {controlEls}
-      <Button bsStyle="info" onClick={clickTogglePresentationUploadMode} active={isUploading}>
-        <FAIcon name="upload" color={isUploading && 'lightgreen' || ''} /> <FAIcon name="youtube" size="1.4em" color="red" />
-      </Button>
-    </F>);
+    const { sessionId } = sessionArgs;
+    controlEls = <UploadQueueControlPanel sessionId={sessionId} />;
   }
 
   return (<Flexbox className="full-width">

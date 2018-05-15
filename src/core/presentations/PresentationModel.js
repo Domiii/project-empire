@@ -123,7 +123,7 @@ export default {
               presentationStatus: 'presentationStatus',
               creatorUid: 'creatorUid', // the user who started this presentation
               presentationFileId: 'fileId', // local filesystem fileId (file only available to creator on the device + browser they used to record it with)
-              videoId: 'videoId', // youtube videoId (once uploaded)
+              presentationVideoId: 'videoId', // youtube videoId (once uploaded)
               presentationFinishTime: 'finishTime',
 
               title: 'title',

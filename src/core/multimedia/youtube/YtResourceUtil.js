@@ -165,23 +165,3 @@ export function ytGetResourcesFromQuery(resourceList) {
       });
   });
 }
-
-
-/**
- * ######################################################
- * YouTube URL building
- * ######################################################
- */
-
-export function ytGetVideoUrlFromId(id) {
-  return 'https://www.youtube.com/watch?v=' + id;
-}
-
-export function ytGetChannelUrlFromId(id) {
-  return 'https://www.youtube.com/channel/' + id;
-}
-
-
-export function ytGetSearchUrl(searchString) {
-  return 'https://www.youtube.com/results?search_query=' + searchString;
-}

@@ -22,7 +22,7 @@ import styled from 'styled-components';
 
 // we kinda need to hack this because the Bootstrap 3 navbar doesn't play nicely with flexbox
 const HeaderWrapper = styled(Flexbox)`
-margin-bottom: 7px;
+margin-bottom: 5px;
 `;
 
 @dataBind()

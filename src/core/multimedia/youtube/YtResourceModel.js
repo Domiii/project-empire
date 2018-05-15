@@ -13,6 +13,18 @@ export default {
     readers: {
       ytVideoEditUrl({ videoId }) {
         return `https://www.youtube.com/edit?video_id=${videoId}`;
+      },
+
+      ytVideoUrl({ videoId }) {
+        return 'https://www.youtube.com/watch?v=' + videoId;
+      },
+
+      ytChannelUrl({ videoId }) {
+        return 'https://www.youtube.com/channel/' + videoId;
+      },
+
+      ytSearchUrl({ searchString }) {
+        return 'https://www.youtube.com/results?search_query=' + searchString;
       }
     }
   },

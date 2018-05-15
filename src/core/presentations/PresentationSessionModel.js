@@ -3,6 +3,7 @@ import forEach from 'lodash/forEach';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
 import findLast from 'lodash/findLast';
+import size from 'lodash/size';
 
 import paginationNodes from 'src/dbdi/nodes/paginationNodes';
 import { downloadSpreadsheetJSON } from '../../util/SpreadsheetUtil';
@@ -17,7 +18,39 @@ const sessionReaders = {
 
   isPresentationSessionOperator(args, { presentationSessionOperatorUid }, { currentUid }) {
     return currentUid && presentationSessionOperatorUid(args) === currentUid;
-  }
+  },
+
+  async getUploadReadyPresentationList(
+    sessionArgs,
+    { orderedPresentations, streamFileExists }
+  ) {
+    let presentations = orderedPresentations(sessionArgs);
+
+    const presentationsReady = map(presentations, pres =>
+      pres.fileId &&
+      pres.presentationStatus === PresentationStatus.Finished &&
+      streamFileExists({ fileId: pres.fileId }) || false
+    );
+
+    // presentationsReady contains a bunch of promises which have yet to resolve
+    await Promise.all(presentationsReady);
+
+    return filter(presentations, (pres, i) => presentationsReady[i]);
+  },
+
+  async canUploadPresentationSession(
+    sessionArgs,
+    { isVideoUploadQueueRunning, getUploadReadyPresentationList }
+  ) {
+    const { sessionId } = sessionArgs;
+    const queueArgs = { queueId: sessionId };
+
+    return (
+      // must not already be uploading
+      !isVideoUploadQueueRunning(queueArgs) &&
+      size(await getUploadReadyPresentationList(sessionArgs)) > 0
+    );
+  },
 };
 
 const sessionWriters = {
@@ -227,40 +260,48 @@ const sessionWriters = {
     return await Promise.all(promises);
   },
 
+  /**
+   * start upload all presentations in session via VideoUploadQueue
+   */
   async startUploadPresentationSession(
     sessionArgs,
-    { orderedPresentations, getPresentationVideoTitle, streamFileExists },
+    { getUploadReadyPresentationList, getPresentationVideoTitle },
     { },
-    { videoUploadQueueStart }
+    { videoUploadQueueStart, set_presentationVideoId }
   ) {
-    const { sessionId } = sessionArgs;
-    let presentations = orderedPresentations(sessionArgs);
+    // get presentations
+    const presentations = await getUploadReadyPresentationList(sessionArgs);
 
-    const presentationsReady = map(presentations, pres =>
-      pres.fileId &&
-      pres.presentationStatus === PresentationStatus.Finished &&
-      streamFileExists({ fileId: pres.fileId }) || false
-    );
-
-    // presentationsReady contains a bunch of promises which have yet to resolve
-    await Promise.all(presentationsReady);
-
-    presentations = filter(presentations, (pres, i) => presentationsReady[i]);
-
+    // prepare array of data representing what should be sent to the remote (e.g. YouTube) API
     const fileInfos = map(presentations, ({ fileId, id }) => ({
       fileId,
       title: getPresentationVideoTitle({ presentationId: id })
     }));
 
+    // once video is uploaded set videoId
+    // (todo: consider also setting channelId, providerId etc...)
+    function onVideoUploaded(fileId, videoId) {
+      const presOfFile = find(presentations, pres => pres.fileId === fileId);
+      if (!presOfFile) {
+        console.warn(`Could not find presentation with fileId '${fileId}' after upload → could not set videoId`);
+      }
+      else {
+        const presentationArgs = { presentationId: presOfFile.id };
+        set_presentationVideoId(presentationArgs, videoId);
+      }
+    }
+
+    const { sessionId } = sessionArgs;
     return videoUploadQueueStart({
       queueId: sessionId,
-      fileInfos
+      fileInfos,
+      onVideoUploaded
     });
     //const videoTitle = getPresentationVideoTitle({ presentationId });
   },
 
   /**
-   * Sloppy approach to data validation + migrations for presentations.
+   * (sloppy approach to) data validation + migrations for presentations.
    */
   fixPresentationSession(
     sessionArgs,

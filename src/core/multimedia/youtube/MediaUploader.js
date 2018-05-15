@@ -320,7 +320,7 @@ export default class MediaUploader {
   }
 
   pollVideoStatus_ = () => {
-    console.log('pollVideoStatus_ GO');
+    //console.log('pollVideoStatus_ GO');
     const { videoId } = this;
     gapi.client.request({
       path: '/youtube/v3/videos',
@@ -339,7 +339,7 @@ export default class MediaUploader {
         else {
           const uploadStatus = response.items[0].status.uploadStatus;
           const res = response.items[0];
-          console.log('pollVideoStatus_ RES', res);
+          //console.log('pollVideoStatus_ RES', res);
           switch (uploadStatus) {
             // This is a non-final status, so we need to poll again.
             case 'uploaded':

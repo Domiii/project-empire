@@ -1,3 +1,5 @@
+import { getOptionalArgument } from "../../../dbdi/dataAccessUtil";
+import { EmptyObject } from "../../../util";
 
 
 export const YoutubeUploadQueueStatus = {
@@ -21,7 +23,9 @@ export default {
           ) {
             const fileInfos = videoUploadQueueFileInfos(queueArgs);
             const lastIndex = videoUploadQueueLastIndex(queueArgs);
-console.warn(lastIndex, fileInfos);
+            
+            //console.warn(lastIndex, fileInfos);
+
             return fileInfos && !isNaN(lastIndex) && lastIndex < fileInfos.length;
           },
 
@@ -32,7 +36,7 @@ console.warn(lastIndex, fileInfos);
             const fileInfos = videoUploadQueueFileInfos(queueArgs);
             const lastIndex = videoUploadQueueLastIndex(queueArgs);
 
-            return fileInfos && !isNaN(lastIndex) && fileInfos.length - lastIndex + 1 || 0;
+            return fileInfos && !isNaN(lastIndex) && fileInfos.length - lastIndex || 0;
           },
 
           videoUploadQueueTotalCount(
@@ -48,16 +52,20 @@ console.warn(lastIndex, fileInfos);
 
         writers: {
           videoUploadQueueStart(
-            { queueId, fileInfos },
+            uploadArgs,
             { },
             { },
             { videoUploadQueuePump, set_videoUploadQueue }
           ) {
+            const { queueId, fileInfos } = uploadArgs;
+            const onVideoUploaded = getOptionalArgument(uploadArgs, 'onVideoUploaded');
+
             const lastIndex = -1;
             const queueArgs = { queueId };
             set_videoUploadQueue(queueArgs, {
               fileInfos,
-              lastIndex
+              lastIndex,
+              onVideoUploaded
             });
 
             videoUploadQueuePump(queueArgs);
@@ -65,16 +73,21 @@ console.warn(lastIndex, fileInfos);
 
           async videoUploadQueuePump(
             queueArgs,
-            { videoUploadQueueFileInfos, videoUploadQueueLastIndex },
+            { videoUploadQueue },
             { },
             { startVideoUpload,
               videoUploadQueuePump,
               set_videoUploadQueueLastIndex }
           ) {
-            const fileInfos = videoUploadQueueFileInfos(queueArgs);
-            const lastIndex = videoUploadQueueLastIndex(queueArgs);
+            const queueInfo = videoUploadQueue(queueArgs);
 
-            if (!fileInfos || isNaN(lastIndex)) {
+            const {
+              fileInfos,
+              lastIndex,
+              onVideoUploaded
+            } = queueInfo || EmptyObject;
+
+            if (!queueInfo || !fileInfos || isNaN(lastIndex)) {
               // something must have gone wrong
               return;
             }
@@ -88,8 +101,9 @@ console.warn(lastIndex, fileInfos);
 
             const fileInfo = fileInfos[index];
 
-            const onUploadComplete = () => {
+            const onUploadComplete = (fileId, videoId) => {
               videoUploadQueuePump(queueArgs);
+              onVideoUploaded && onVideoUploaded(fileId, videoId);
             };
             const uploadArgs = {
               ...fileInfo,
