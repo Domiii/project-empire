@@ -127,6 +127,7 @@ export default class PresentationSessionList extends Component {
 
 /**
 ==Basics==
+  -> bug: online presentations don't have sessionId (need "fix" migrations)
   -> let [P]resenter (not only [O]) also be able to change order of presentations (→ edit mode button?)
   -> button to shuffle PENDING presentations
   -> finish PresSess
