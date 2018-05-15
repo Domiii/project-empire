@@ -267,12 +267,7 @@ export default class DataProviderBase {
     // update cache
     setDataIn(this._cache, localPath, val);
 
-    // notify all listeners
-    const listeners = this.getListeners(localPath) || EmptyArray;
-
-    // listeners will get called once per path
-    //setTimeout(() => 
-    listeners.forEach(listener => listener(query, val));
+    this._notifyListeners(localPath, query);
     //);
     // setTimeout(() => {
     //   for (let i = listeners.length-1; i >= 0; --i) {
@@ -280,6 +275,15 @@ export default class DataProviderBase {
     //     listeners[i](query, val);
     //   }
     // });
+  }
+
+  _notifyListeners(localPath, query) {
+    // notify all listeners
+    const listeners = this.getListeners(localPath) || EmptyArray;
+
+    // listeners will get called once per path
+    //setTimeout(() => 
+    listeners.forEach(listener => listener(query));
   }
 
 
@@ -396,6 +400,13 @@ export default class DataProviderBase {
     // downgrade load state at path
     this.setLoadState(localPath, LoadState.NotLoaded);
     this.actions.set(remotePath, NOT_LOADED);
+  }
+
+  markPossibleUpdate(queryInput) {
+    const query = this.getQueryByQueryInput(queryInput);
+    if (query) {
+      this._notifyListeners(query.localPath, query);
+    }
   }
 
   // #################################################################################################

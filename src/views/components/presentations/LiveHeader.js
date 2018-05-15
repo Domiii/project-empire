@@ -9,10 +9,15 @@ import { hrefPresentationSession } from '../../href';
 import styled from 'styled-components';
 
 
-const LiveTitle = styled(Well) `
+const Wrapper = styled(Well)`
 margin: auto;
 text-align: center;
 background-color: transparent;
+`;
+
+const Title = styled.h2`
+white-space: nowrap;
+text-overflow: ellipsis;
 `;
 
 
@@ -29,14 +34,14 @@ export default class LiveHeader extends Component {
   ) {
     if (livePresentationSessionId) {
       return (<F>
-        <LiveTitle>
-          <h2 className="no-margin color-darkblue">
-            Live session in progress 📹🎤
-        </h2>
-        </LiveTitle>
+        <Wrapper>
+          <Title className="no-margin color-darkblue">
+            Live Session 📹🎤
+          </Title>
+        </Wrapper>
       </F>);
     }
-    
+
     return <span />;
   }
 }

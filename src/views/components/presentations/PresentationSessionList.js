@@ -127,21 +127,14 @@ export default class PresentationSessionList extends Component {
 
 /**
 ==Basics==
-  -> sometimes, recording doesn't really start when pressing the button (it's probably a race condition where fileId isn't updated - probably overrode quite a few videos :'( ))
-  -> batch-upload to youtube
-  -> [O] Better recording controls + static view of controls
-    -> stabilize view/scroll position - http://jsfiddle.net/kirbysayshi/57HbV/ + https://bit.ly/1S2siEo
-  -> [O] video file status + time of recording 
-    -> status = not-started, not-local (has fileId but no file), Uploaded (has videoId)
-  -> [N, O, E] skip\unskip presentation
-  -> view youtube status, embed player, video's youtube link
-  -> PresentationSession views: be able to go from live to list
+  -> button to shuffle PENDING presentations
   -> finish PresSess
   -> start new PresSess
+  -> PresentationSession views: be able to go from live to list
     {}-> ideally based on all currently active projects + any individual user who does not have a project
     -> come up with manual strategy for now
+  -> finish many-2-many relationships
   -> proper project + user tagging for presentations
-      * finish relationships for this
 
   -> User + project management
     -> add user by name
@@ -158,12 +151,11 @@ export default class PresentationSessionList extends Component {
       -> account for every active project, and get at least a status update!
 
   -> Add tools to easily:
-    -> let presentation become project
-    -> generate presentations from currently active projects
+    -> start new project based on presentation
+    -> generate presentation list from currently active projects
     -> archive/unarchive projects
 
   -> generate youtube playlists
-  -> button to shuffle PENDING presentations
  */
 
 /**

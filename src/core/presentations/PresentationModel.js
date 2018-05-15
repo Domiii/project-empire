@@ -18,6 +18,10 @@ export const PresentationStatus = {
   Skipped: 15
 };
 
+export function isPresentationStatusGoTime(status) {
+  return status === PresentationStatus.GoingOnStage || status === PresentationStatus.InProgress;
+}
+
 export const PresentationViewMode = {
   Normal: 0,
   Edit: 1,
@@ -118,7 +122,7 @@ export default {
 
             children: {
               sessionId: 'sessionId', // the session this presentation belongs to
-              index: 'index', // the order during the session
+              presentationIndex: 'index', // the order during the session
 
               presentationStatus: 'presentationStatus',
               creatorUid: 'creatorUid', // the user who started this presentation

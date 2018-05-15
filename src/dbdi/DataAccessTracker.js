@@ -192,12 +192,20 @@ export default class DataAccessTracker {
       const allArgs = processArguments(node, writeArgs);
       allArgs.queryArgs = this._wrapArgs(allArgs.queryArgs, node);
 
+      if (allArgs.val && allArgs.val.____isWrapperProxy) {
+        //throw new Error();
+        allArgs.val = allArgs.val.____proxyGetUnderlyingTarget;
+      }
+
       return node.writeData(allArgs, this._readerProxy, this._injectProxy, this._writerProxy, this);
     };
 
     return this._decorateWrapper(wrappedWriteData, node);
   }
 
+  /**
+   * Decorate any access wrapper, be it read or write.
+   */
   _decorateWrapper(wrapper, node) {
     const { pathDescriptor } = node;
     if (!pathDescriptor) {
@@ -206,6 +214,12 @@ export default class DataAccessTracker {
     else {
       wrapper.getPath = (args) => {
         return pathDescriptor.getPath(args, this._readerProxy, this._injectProxy, this);
+      };
+      wrapper.notifyPathChanged = (args) => {
+        const path = pathDescriptor.getPath(args, this._readerProxy, this._injectProxy, this);
+        if (path) {
+          node.dataProvider.markPossibleUpdate(path);
+        }
       };
     }
     return wrapper;

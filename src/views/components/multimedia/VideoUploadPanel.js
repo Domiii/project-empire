@@ -73,7 +73,7 @@ export class YtMyChannelInfo extends Component {
     //   return '';
     // }
     if (!ytMyChannels.isLoaded()) {
-      return <LoadIndicator message="loading your channel..." />;
+      return <LoadIndicator className="singleline-text" message="loading your channel..." />;
     }
     else {
       //myChannelsEl = JSON.stringify(ytMyChannels, null, 2);
@@ -172,7 +172,7 @@ export class YtStatusPanel extends Component {
         break;
 
       case GapiStatus.Authorizing:
-        statusEl = <LoadIndicator block message="authorizing with YouTube..." />;
+        statusEl = <LoadIndicator className="singleline-text" block message="authorizing with YouTube..." />;
         break;
 
       case GapiStatus.Authorized:
@@ -180,7 +180,7 @@ export class YtStatusPanel extends Component {
         break;
 
       default:
-        statusEl = <LoadIndicator block message="initializing YouTube API..." />;
+        statusEl = <LoadIndicator className="singleline-text" block message="initializing YouTube API..." />;
     }
 
 

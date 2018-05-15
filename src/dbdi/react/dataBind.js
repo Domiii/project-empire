@@ -220,7 +220,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
 
 
     // ################################################
-    // Private methods + properties
+    // Initialization
     // ################################################
 
     /**
@@ -296,8 +296,37 @@ export default (propsOrPropCb) => _WrappedComponent => {
      * Build the proxy to deliver props, context and custom data.
      */
     _buildVariableProxy() {
+      // TODO: make this spreadable!
+      // TODO: implement ownKeys (and possibly enumerate) in handler
+      // see: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
+
+      const enumerableProps = () => {
+        return Object.assign({}, Object.keys(this.props || EmptyObject), Object.keys(this._customProps || EmptyObject));
+      };
+      const specialProps = {
+        /**
+         * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/iterator
+         */
+        [Symbol.iterator]: (target) => {
+          const p1 = this.props;
+          const p2 = this._customProps;
+          return function* () {
+            for (let p in p1) {
+              yield p1[p];
+            }
+            for (let p in p2) {
+              yield p2[p];
+            }
+          };
+        }
+      };
       this._variableProxy = new Proxy({}, {
         get: (target, name) => {
+          // 0) check special stuff
+          if (specialProps[name]) {
+            return specialProps[name](target);
+          }
+
           // 1) check custom data
           if (name in this._customProps) {
             return this._customProps[name];
@@ -334,6 +363,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
           //if (this._isMounted) 
           {
             //console.error(
+            debugger;
             throw new Error(
               `DI failed - Component requested props/context "${toString(name)}" but was not provided`
             );
@@ -369,6 +399,14 @@ export default (propsOrPropCb) => _WrappedComponent => {
           }
 
           return false;
+        },
+
+        enumerate() {
+          return enumerableProps();
+        },
+
+        ownKeys() {
+          return enumerableProps();
         }
       });
     }
@@ -486,6 +524,13 @@ export default (propsOrPropCb) => _WrappedComponent => {
       }
     }
 
+    // ################################################
+    // Misc private methods
+    // ################################################
+
+    _setIsRendering(isRendering) {
+      this._isRendering = isRendering;
+    }
 
     // ################################################
     // Public methods + properties
@@ -543,7 +588,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
       this._isMounted = false;
     }
 
-    _onNewData(query, val) {
+    _onNewData(query) {
       // const {
       //   localPath,
       //   queryInput
@@ -553,16 +598,15 @@ export default (propsOrPropCb) => _WrappedComponent => {
       //console.warn(WrappedComponent.name || '<unnamed component>', 'onNewData', localPath, val);
       //this.forceUpdate();
       if (this._isMounted) {
-        // TODO: this could happen during render, because render requests an object which can trigger new data to come down
-        try {
+        if (!this._isRendering) {
           this.setState(EmptyObject);
         }
-        catch (err) {
-          // TODO: use a new boolean to figure out if we are rendering instead
-          console.warn('setState failed -', err.message);
-          setTimeout(() => {
-            this.setState({});
-          });
+        else {
+          // new data could be triggered by render method → make sure, that that is taken care of
+          throw new Error('NYI: state updates during render');
+          // setTimeout(() => {
+          //   this.setState({});
+          // });
         }
       }
     }

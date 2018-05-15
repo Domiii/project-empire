@@ -20,20 +20,40 @@ const sessionReaders = {
     return currentUid && presentationSessionOperatorUid(args) === currentUid;
   },
 
-  async getUploadReadyPresentationList(
+  getFirstPendingPresentationIdInSession(
+    sessionArgs,
+    { orderedPresentations }
+  ) {
+    const presentations = orderedPresentations(sessionArgs);
+    const firstPendingPres = find(presentations, p => p.presentationStatus <= PresentationStatus.InProgress);
+    if (firstPendingPres) {
+      return firstPendingPres.id;
+    }
+    return null;
+  },
+
+  getUploadReadyPresentationCount(
+    sessionArgs,
+    { getUploadReadyPresentationList }
+  ) {
+    return size(getUploadReadyPresentationList(sessionArgs));
+  },
+
+  getUploadReadyPresentationList(
     sessionArgs,
     { orderedPresentations, streamFileExists }
   ) {
     let presentations = orderedPresentations(sessionArgs);
 
-    const presentationsReady = map(presentations, pres =>
+    let presentationsReady = map(presentations, pres => (
+      !pres.videoId &&
       pres.fileId &&
       pres.presentationStatus === PresentationStatus.Finished &&
-      streamFileExists({ fileId: pres.fileId }) || false
+      streamFileExists({ fileId: pres.fileId })) ||
+      false
     );
 
-    // presentationsReady contains a bunch of promises which have yet to resolve
-    await Promise.all(presentationsReady);
+    // TODO handle streamFileExists(...) === NOT_LOADED
 
     return filter(presentations, (pres, i) => presentationsReady[i]);
   },
@@ -90,21 +110,22 @@ const sessionWriters = {
     /*
           sessionId: 'sessionId', // the session this presentation belongs to
           index: 'index', // the order during the session
-
+ 
           presentationStatus: 'presentationStatus',
           creatorUid: 'creatorUid', // the user who started this presentation
           fileId: 'fileId', // local filesystem fileId (file only available to creator on the device + browser they used to record it with)
           videoId: 'videoId', // youtube videoId (once uploaded)
-
+ 
           title: 'title',
           commentText: 'commentText'*/
   },
 
-  addNewPresentation(
+  async addNewPresentation(
     sessionArgs,
     { },
     { },
-    { orderedPresentations, push_presentation }
+    { orderedPresentations, push_presentation,
+      fixPresentationSessionOrder }
   ) {
     const presentations = orderedPresentations(sessionArgs);
     const lastPres = findLast(presentations, { presentationStatus: PresentationStatus.Pending });
@@ -113,7 +134,10 @@ const sessionWriters = {
       index,
       presentationStatus: PresentationStatus.Pending
     };
-    push_presentation(newPres);
+    return Promise.all([
+      push_presentation(newPres),
+      await fixPresentationSessionOrder(sessionArgs)
+    ]);
   },
 
   startPresentationSessionStreaming(
@@ -196,27 +220,64 @@ const sessionWriters = {
     }
   },
 
-  finishPresentationSession(
-    sessionArgs,
+  async startPresentationInSession(
+    presentationArgs,
+    { get_presentation, getFirstPendingPresentationIdInSession },
     { },
-    { },
-    { setActivePresentationInSession }
+    { setActivePresentationInSession,
+      set_presentationIndex, fixPresentationSessionOrder }
   ) {
-    const { sessionId } = sessionArgs;
-    setActivePresentationInSession({ sessionId, presentationId: null });
+    const presentation = get_presentation(presentationArgs);
+    console.assert(presentation);
+
+    const { sessionId } = presentation;
+
+    // set as active
+    // console.warn({...presentationArgs});
+    await setActivePresentationInSession({ sessionId, ...presentationArgs });
+
+    // make sure, it's up next!
+    const { presentationId } = presentationArgs;
+    const sessionArgs = { sessionId };
+    const firstId = getFirstPendingPresentationIdInSession(sessionArgs);
+    if (firstId !== presentationId) {
+      const firstPres = get_presentation({ presentationId: firstId });
+      const { index: firstIndex } = firstPres;
+      await set_presentationIndex(presentationArgs, firstIndex - 0.0001);
+      return await fixPresentationSessionOrder(sessionArgs);
+    }
+    return true;
+  },
+
+  async fixPresentationSessionOrder(
+    sessionArgs,
+    { orderedPresentations, get_presentations },
+    { },
+    { set_presentationIndex, update_db }
+  ) {
+    const presentations = orderedPresentations(sessionArgs);
+    console.assert(presentations);
+
+    const updates = {};
+    forEach(presentations, ({ id }, i) => {
+      updates[set_presentationIndex.getPath({ presentationId: id })] = i;
+    });
+
+    const res = await update_db(updates);
+
+    get_presentations.notifyPathChanged(sessionArgs);
+
+    return res;
   },
 
   async goToFirstPendingPresentationInSession(
     { sessionId },
-    { orderedPresentations },
+    { getFirstPendingPresentationIdInSession },
     { },
     { setActivePresentationInSession }
   ) {
-    const sessionArgs = { sessionId };
-    const presentations = orderedPresentations(sessionArgs);
-    const firstPendingPres = find(presentations, p => p.presentationStatus <= PresentationStatus.InProgress);
-    if (firstPendingPres) {
-      const presentationId = firstPendingPres.id;
+    const presentationId = getFirstPendingPresentationIdInSession({ sessionId });
+    if (presentationId) {
       return await setActivePresentationInSession({ sessionId, presentationId });
     }
     return null;
@@ -224,7 +285,7 @@ const sessionWriters = {
 
   async setActivePresentationInSession(
     { sessionId, presentationId },
-    { presentationStatus, presentationFileId, presentationSessionActivePresentationId },
+    { get_presentation, presentationStatus, presentationFileId, presentationSessionActivePresentationId },
     { },
     { update_db, set_streamFileId }
   ) {
@@ -252,8 +313,15 @@ const sessionWriters = {
     const activePresId = presentationSessionActivePresentationId(sessionArgs);
     if (activePresId && activePresId !== presentationId &&
       presentationStatus({ presentationId: activePresId }) === PresentationStatus.InProgress) {
-      // set active presentation back to "Pending"
-      updates[presentationStatus.getPath({ presentationId: activePresId })] = PresentationStatus.Pending;
+      const pres = get_presentation({ presentationId: activePresId });
+      if (!pres.videoId) {
+        // set active presentation back to "Pending"
+        updates[presentationStatus.getPath({ presentationId: activePresId })] = PresentationStatus.Pending;
+      }
+      else {
+        // already has a video, so set status back to "Finished"
+        updates[presentationStatus.getPath({ presentationId: activePresId })] = PresentationStatus.Finished;
+      }
     }
 
     promises.push(update_db(updates));
@@ -334,6 +402,16 @@ const sessionWriters = {
       }
     });
     return await update_db(updates);
+  },
+
+  finishPresentationSession(
+    sessionArgs,
+    { },
+    { },
+    { setActivePresentationInSession }
+  ) {
+    const { sessionId } = sessionArgs;
+    setActivePresentationInSession({ sessionId, presentationId: null });
   }
 };
 

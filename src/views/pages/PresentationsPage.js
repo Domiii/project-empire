@@ -23,6 +23,11 @@ import PresentationSessionOperatorView from 'src/views/components/presentations/
 
 import { NOT_LOADED } from '../../dbdi';
 import { LoadOverlay } from 'src/views/components/overlays';
+import styled from 'styled-components';
+
+const Col = styled(Flexbox)`
+width: calc(50vw - 1px);
+`;
 
 
 const PresentationSessionDetails = withRouter(dataBind()(function ProjectPage(
@@ -80,19 +85,19 @@ const WrappedPresentationPage = withRouter(dataBind()(function WrappedPresentati
     isPresentationSessionOperator({ sessionId })) {
     // presentation operator mode
     return (<Flexbox className="full-width full-height">
-      <Flexbox className="full-width">
+      <Col>
         <PresentationSessionOperatorView sessionId={sessionId} />
-      </Flexbox>
-      <Flexbox className="full-width overflow-auto">
-        <div>
+      </Col>
+      <Col className="overflow-auto">
+        <div className="full-width">
           {defaultContents}
         </div>
-      </Flexbox>
+      </Col>
     </Flexbox>);
   }
   else {
     // default view mode
-    return (<div className="container">
+    return (<div className="container no-padding">
       {defaultContents}
     </div>);
   }

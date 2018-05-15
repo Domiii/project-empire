@@ -21,22 +21,22 @@ import MediaStreamPanel, { MediaPrepView } from 'src/views/components/multimedia
 import VideoUploadPanel from 'src/views/components/multimedia/VideoUploadPanel';
 import {
   PresentationStatus,
-  PresentationViewMode
+  //PresentationViewMode,
+  isPresentationStatusGoTime
 } from '../../../core/presentations/PresentationModel';
 import { YtStatusPanel } from '../multimedia/VideoUploadPanel';
 
 import PresentationEditor from './PresentationEditor';
 
 const StyledTable = styled(Table) `
-font-size: 1.5em;
 `;
 
 const TrOfStatus = styled.tr`
   color: ${props => props.highlight ? 'black' : 'lightgray'};
 `;
 
-function FullWidthTableCell({ children }) {
-  return <tr><td colSpan={99999}>{children}</td></tr>;
+function FullWidthTableCell({ children, noBorder }) {
+  return <tr><td className={noBorder && 'no-border' || ''} colSpan={99999}>{children}</td></tr>;
 }
 
 const CenteredTd = styled.td`
@@ -44,11 +44,20 @@ const CenteredTd = styled.td`
   color: black;
 `;
 
-const SingeLineTd = styled.td`
+// function _TextTd({ children }) {
+//   return (<td>
+//     <div>
+//       {children}
+//     </div>
+//   </td>);
+// }
+// const TextTd = styled(_TextTd)`
+const TextTd = styled.td`
 white-space: nowrap;
 overflow: hidden;
 text-overflow: ellipsis;
-max-width: 40vw;
+max-width: 20vw;
+font-size: 1.4em;
 `;
 
 const statusIconProps = {
@@ -105,21 +114,17 @@ class DownloadVideoFileButton extends Component {
 @dataBind({
   clickPlay(evt,
     { presentationId },
-    { get_presentation, setActivePresentationInSession }
+    { startPresentationInSession }
   ) {
-    const presentation = get_presentation({ presentationId });
-    const {
-      sessionId
-    } = presentation;
-    setActivePresentationInSession({ sessionId, presentationId });
+    startPresentationInSession({ presentationId });
   }
 })
 class PresentationOperatorDetails extends Component {
   render(
-    { presentationId, isSelected },
+    { presentationId },
     { clickPlay,
       get_presentation,
-      isStreamDown, isPresentationSessionOperator, presentationSessionActivePresentationId,
+      isStreamActive, isPresentationSessionOperator, presentationSessionActivePresentationId,
       get_videoUploadStatus },
     { }
   ) {
@@ -135,7 +140,7 @@ class PresentationOperatorDetails extends Component {
     const uploadStatus = get_videoUploadStatus(fileArgs);
     if (uploadStatus) {
       // TODO: fix this
-      uploadStatusEl = uploadStatus;
+      //uploadStatusEl = uploadStatus;
     }
 
     let rowControls;
@@ -144,11 +149,11 @@ class PresentationOperatorDetails extends Component {
     const activePresId = presentationSessionActivePresentationId(sessionArgs);
     //if (presentationStatus <= PresentationStatus.InProgress) {
     const streamArgs = { streamId: sessionId };
-    if (isOperator && isStreamDown(streamArgs) && activePresId !== presentationId) {
+    if (isOperator && !isStreamActive(streamArgs) && activePresId !== presentationId) {
       // only show button to operator, if stream is currently offline, and this is the active presentation
       rowControls = (<F>
         <Button bsStyle="default" className="no-padding" onClick={clickPlay}>
-          <FAIcon name="video-camera" color="red" />
+          <FAIcon name="play" color="darkblue" />
         </Button>
       </F>);
     }
@@ -176,8 +181,8 @@ class PresentationStatusSummary extends Component {
     } = presentation;
 
     let statusInfoEl, fileInfoEl;
-    if (videoId) {
-      // show button to show video directly
+    if (videoId && !isPresentationStatusGoTime(presentationStatus)) {
+      // button to show video directly
       // TODO: inline preview youtube video
       const url = ytVideoUrl({ videoId });
       statusInfoEl = (<a href={url} target="_blank">
@@ -190,7 +195,7 @@ class PresentationStatusSummary extends Component {
       // we don't want the file system access warning to pop up for normal visitors
       const shouldAccessFileSystem = fileId && isCurrentUserAdmin();
       if (shouldAccessFileSystem && streamFileExists({ fileId })) {
-        // there SHOULD NEVER BE, but there always might be inconsistencies
+        // (there SHOULD NEVER BE, but) there always might be inconsistencies
         if (fileId !== presentationId) {
           // shit!
           fileInfoEl = <FAIcon name="download" size=".8em" color="red" />;
@@ -259,16 +264,16 @@ class PresentationInfoRow extends Component {
       presentationStatus === PresentationStatus.InProgress;
     return (
       <TrOfStatus className="" highlight={isHighlighted} onDoubleClick={onDblClick}>
-        <td className="min">{index + 1}</td>
-        <SingeLineTd>
-          {title}
-        </SingeLineTd>
-        <SingeLineTd>
-          {userNamesString}
-        </SingeLineTd>
-        {/* <td>{health}</td> */}
+        <td className="min">{Math.round(index) + 1}</td>
         {summaryCell}
         {operatorCell}
+        <TextTd>
+          {title}
+        </TextTd>
+        <TextTd>
+          {userNamesString}
+        </TextTd>
+        {/* <td>{health}</td> */}
       </TrOfStatus>
     );
   }
@@ -309,14 +314,14 @@ class PresentationRow extends Component {
 
     const presentationId = presentation.id;
     if (isSelected) {
-      detailsEl = (<FullWidthTableCell>
+      detailsEl = (<FullWidthTableCell noBorder={true}>
         <PresentationRowDetails presentationId={presentationId} />
       </FullWidthTableCell>);
     }
 
     const fileArgs = { fileId: presentationId };
     if (ytIsVideoUploadInProgress(fileArgs)) {
-      uploadEl = (<FullWidthTableCell>
+      uploadEl = (<FullWidthTableCell noBorder={true}>
         <VideoUploadPanel {...fileArgs} />
       </FullWidthTableCell>);
     }
@@ -340,7 +345,7 @@ const UploadQueueControlPanel = dataBind({
   }
 })(function UploadQueueControlPanel(
   sessionArgs,
-  { isPresentationUploadMode, clickTogglePresentationUploadMode,
+  { isPresentationUploadMode, getUploadReadyPresentationCount, clickTogglePresentationUploadMode,
     isVideoUploadQueueRunning,
     videoUploadQueueRemainingCount, videoUploadQueueTotalCount,
     clickStartUploadPresentationSession }
@@ -353,6 +358,7 @@ const UploadQueueControlPanel = dataBind({
     const { sessionId } = sessionArgs;
     const queueArgs = { queueId: sessionId };
     const isUploading = isVideoUploadQueueRunning(queueArgs);
+
     if (isUploading) {
       const remainCount = videoUploadQueueRemainingCount(queueArgs);
       const totalCount = videoUploadQueueTotalCount(queueArgs);
@@ -362,9 +368,11 @@ const UploadQueueControlPanel = dataBind({
       </F>);
     }
 
+
+    const uploadReadyCount = getUploadReadyPresentationCount(sessionArgs);
     queueControls = (<F>
-      <Button bsStyle="info" disabled={isUploading} onClick={clickStartUploadPresentationSession} >
-        Upload <FAIcon name="upload" />
+      <Button bsStyle="info" disabled={isUploading || !uploadReadyCount} onClick={clickStartUploadPresentationSession} >
+        Upload <FAIcon name="upload" /> ({uploadReadyCount})
       </Button>
       <YtStatusPanel />
     </F>);
@@ -482,12 +490,15 @@ export default class PresentationsSessionDetails extends Component {
       <StyledTable condensed hover>
         <thead>
           <tr>
+            {/* index */}
             <th className="min">#</th>
+            {/* status */}
+            <th className="min"></th>
+            {/* operator buttons */}
+            {isOperator && <th className="min"></th>}
             <th>Title</th>
             <th>Contributors</th>
             {/* <th className="min">專案狀態</th> */}
-            <th className="min"></th>
-            {isOperator && <th className="min"></th>}
           </tr>
         </thead>
         <tbody>

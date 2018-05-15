@@ -10,6 +10,42 @@ body {
 }
 
 /*
+ * Fix scrollbars.
+ * See: https://www.w3schools.com/howto/howto_css_custom_scrollbar.asp
+ */
+/* width */
+*::-webkit-scrollbar {
+  width: 2px;
+  height: 2px;
+}
+
+/* Track */
+*::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+
+/* Handle */
+*::-webkit-scrollbar-thumb {
+  background: #888; 
+}
+
+/* Handle on hover */
+*::-webkit-scrollbar-thumb:hover {
+  background: #555; 
+}
+
+
+.app::-webkit-scrollbar {
+  width: 0px !important;
+}
+#root::-webkit-scrollbar {
+  width: 0px !important;
+}
+body::-webkit-scrollbar {
+  width: 0px !important;
+}
+
+/*
  * Never "select" buttons.
  * @see http://stackoverflow.com/questions/20340138/remove-blue-border-from-css-custom-styled-button-in-chrome
  */
@@ -27,6 +63,10 @@ button:active { outline:none !important; }
 
 .full-width {
   width: 100%;
+}
+
+.auto-width {
+  width: auto;
 }
 
 .default-width {
@@ -105,11 +145,21 @@ button:active { outline:none !important; }
 
    .container {
      padding: 0 !important;
+     width: 100%;
    }
 
    .container > .navbar-header, .container-fluid > .navbar-header, .container > .navbar-collapse, .container-fluid > .navbar-collapse {
       margin-right: 0 !important;
       margin-left: 0 !important;
+    }
+
+    .table-condensed > thead > tr > th, 
+    .table-condensed > tbody > tr > th, 
+    .table-condensed > tfoot > tr > th,
+    .table-condensed > thead > tr > td,
+    .table-condensed > tbody > tr > td,
+    .table-condensed > tfoot > tr > td {
+      padding: 1px !important;
     }
 
   .panel-body {
@@ -242,6 +292,9 @@ button:active { outline:none !important; }
 .color-red {
   color: red;
 }
+.color-lightred {
+  color: lightcoral;
+}
 .color-yellow {
   color: yellow;
 }
@@ -342,6 +395,12 @@ button:active { outline:none !important; }
   text-align: start !important;
 }
 
+
+.singleline-text {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .yellow-highlight-border {
   border: 4px solid rgba(255, 208, 0, 0.774) !important;
 };
@@ -377,8 +436,8 @@ table {
 }
 tr {}
 td, th {
-  width: auto !important;
-  border: 1px solid #eee !important;
+  width: auto;
+  /*border: 1px solid #eee !important;*/
   vertical-align: middle !important;
 }
 td.min, th.min {

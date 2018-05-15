@@ -73,7 +73,7 @@ class PresentationSessionStreamingPanel extends Component {
         Finished <FAIcon name="check" color="lightgreen" />
       </Button>);
       skipBtn = (<Button block bsStyle="danger" onClick={clickSetStatusSkipped}>
-        Skip <FAIcon name="times" color="lightred" />
+        Skip <FAIcon name="times" color="lightcoral" />
       </Button>);
     }
 
