@@ -36,13 +36,17 @@ export default class RegistrationPage extends Component {
       return <LoadIndicator />;
     }
 
+    let contentEl;
     if (!isCurrentUserDataComplete) {
-      return <RegistrationDataCompletion />;
+      contentEl= <RegistrationDataCompletion />;
     }
     else {
-      return <RegistrationFun />;
+      contentEl = <RegistrationFun />;
     }
 
+    return (<div className="container no-padding">
+      {contentEl}
+    </div>);
   }
 }
 

@@ -30,7 +30,7 @@ width: calc(50vw - 1px);
 `;
 
 
-const PresentationSessionDetails = withRouter(dataBind()(function ProjectPage(
+const SwitchMode = withRouter(dataBind()(function ProjectPage(
   { match },
   { },
   data
@@ -77,7 +77,7 @@ const WrappedPresentationPage = withRouter(dataBind()(function WrappedPresentati
 ) {
   const defaultContents = (<F>
     <LiveHeader />
-    <PresentationSessionDetails />
+    <SwitchMode />
   </F>);
 
   const sessionId = livePresentationSessionId;

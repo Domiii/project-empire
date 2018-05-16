@@ -52,8 +52,8 @@ const defaultConstraints = {
     //deviceId: audioDeviceId
   },
   video: {
-    width: 1280,
-    height: 720,
+    // width: 1280,
+    // height: 720,
     //deviceId: videoDeviceId
   }
 };

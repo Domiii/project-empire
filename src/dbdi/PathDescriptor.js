@@ -104,21 +104,7 @@ export default class PathDescriptor extends DataDescriptorNode {
     if (!_queryParamsInput) {
       // no custom query parameters
       return (args, readerProxy, injectProxy, callerNode, _accessTracker) => {
-        if (this.indices && this.indices.doesQueryMatchAnyPropertyIndex(args)) {
-          // match an index -> add index query
-
-          // console.log({
-          //   path: getPathRaw(args),
-          //   indx: this.indices.getIndexNameByKeys(args)
-          //   //queryParams: this.indices.where(args)
-          // });
-          return {
-            path: getPathRaw(args),
-            queryParams: this.indices.where(args)
-          };
-        }
-        
-        return getPathRaw(args);
+        return this._getPath(args, getPathRaw);
       };
     }
     else {
@@ -132,11 +118,38 @@ export default class PathDescriptor extends DataDescriptorNode {
         // apply transform
         const queryParams = this._transformQueryParams(queryParamsRaw);
         
-        return {
-          path: getPathRaw(args),
-          queryParams
-        };
+        if (queryParams) {
+          return {
+            path: getPathRaw(args),
+            queryParams
+          };
+        }
+        else {
+          return this._getPath(args, getPathRaw);
+        }
       };
     }
+  }
+
+  _getPath(args, getPathRaw) {
+    const path = getPathRaw(args);
+    // if (this.indices) {
+    //   console.warn(path, args, args.sessionId);
+    // }
+    if (this.indices && this.indices.doesQueryMatchAnyPropertyIndex(args)) {
+      // match an index -> add index query
+
+      // console.log({
+      //   path: getPathRaw(args),
+      //   indx: this.indices.getIndexNameByKeys(args)
+      //   //queryParams: this.indices.where(args)
+      // });
+      return {
+        path,
+        queryParams: this.indices.where(args)
+      };
+    }
+    
+    return path;
   }
 }

@@ -60,9 +60,11 @@ export default {
     path: 'presentations',
     children: {
       presentations: {
-        path: 'list',
-        indices: {
-          sessionId: 'sessionId'
+        path: {
+          path: 'list',
+          indices: {
+            sessionId: 'sessionId'
+          }
         },
         readers: {
           presentationCount(args, { get_presentations }) {
@@ -121,7 +123,7 @@ export default {
             },
 
             children: {
-              sessionId: 'sessionId', // the session this presentation belongs to
+              presentationSessionId: 'sessionId', // the session this presentation belongs to
               presentationIndex: 'index', // the order during the session
 
               presentationStatus: 'presentationStatus',

@@ -18,6 +18,7 @@ import { LoadOverlay } from '../overlays';
 import { hrefPresentationSessionView } from '../../href';
 import { LinkContainer } from 'react-router-bootstrap';
 import FAIcon from '../util/FAIcon';
+import { EmptyObject } from '../../../util';
 
 const itemsPerPage = 20;
 
@@ -70,7 +71,6 @@ const PresentationSessionLiveStatusElement = withRouter(dataBind({
     </Well>);
   }
 }));
-
 
 @dataBind()
 export default class PresentationSessionList extends Component {
@@ -126,6 +126,12 @@ export default class PresentationSessionList extends Component {
 
 
 /**
+
+== Bugs ==
+-> operator mode not working when not LIVE
+-> recording officially started but listeners not activated
+    -> need better view of all currently existing files and their size
+
 ==Basics==
   -> bug: online presentations don't have sessionId (need "fix" migrations)
   -> let [P]resenter (not only [O]) also be able to change order of presentations (→ edit mode button?)

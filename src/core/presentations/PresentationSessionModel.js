@@ -3,6 +3,7 @@ import forEach from 'lodash/forEach';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
 import findLast from 'lodash/findLast';
+import last from 'lodash/last';
 import size from 'lodash/size';
 
 import paginationNodes from 'src/dbdi/nodes/paginationNodes';
@@ -12,12 +13,12 @@ import { Promise } from 'firebase';
 
 
 const sessionReaders = {
-  isPresentationSessionInProgress(args, { presentationSessionOperatorUid }, { }) {
-    return !!presentationSessionOperatorUid(args);
+  isPresentationSessionInProgress(sessionArgs, { presentationSessionOperatorUid }, { }) {
+    return !!presentationSessionOperatorUid(sessionArgs);
   },
 
-  isPresentationSessionOperator(args, { presentationSessionOperatorUid }, { currentUid }) {
-    return currentUid && presentationSessionOperatorUid(args) === currentUid;
+  isPresentationSessionOperator(sessionArgs, { presentationSessionOperatorUid }, { currentUid }) {
+    return currentUid && presentationSessionOperatorUid(sessionArgs) === currentUid;
   },
 
   getFirstPendingPresentationIdInSession(
@@ -122,16 +123,25 @@ const sessionWriters = {
 
   async addNewPresentation(
     sessionArgs,
-    { },
-    { },
-    { orderedPresentations, push_presentation,
+    { orderedPresentations },
+    { currentUid },
+    { push_presentation,
       fixPresentationSessionOrder }
   ) {
     const presentations = orderedPresentations(sessionArgs);
-    const lastPres = findLast(presentations, { presentationStatus: PresentationStatus.Pending });
+    // let lastPres = findLast(presentations, p =>
+    //   p.presentationStatus === PresentationStatus.Pending ||
+    //   p.presentationStatus === PresentationStatus.GoingOnStage ||
+    //   p.presentationStatus === PresentationStatus.InProgress
+    // );
+    const lastPres = lastPres || last(presentations);
     const index = lastPres && lastPres.index + 0.00001 || 0;
+
+    const { sessionId } = sessionArgs;
     const newPres = {
+      sessionId,
       index,
+      creatorUid: currentUid,
       presentationStatus: PresentationStatus.Pending
     };
     return Promise.all([
@@ -382,7 +392,7 @@ const sessionWriters = {
 
   async fixAllPresentationStatuses(
     sessionArgs,
-    { get_presentations, get_presentationStatus, streamFileExists },
+    { get_presentations, get_presentationStatus, get_presentationSessionId, streamFileExists },
     { },
     { update_db }
   ) {
@@ -394,8 +404,14 @@ const sessionWriters = {
       const {
         fileId,
         videoId,
-        presentationStatus
+        presentationStatus,
+        sessionId
       } = pres;
+
+      // TODO: proper management of orphaned presentations
+      if (sessionId !== sessionArgs.sessionId) {
+        updates[get_presentationSessionId.getPath(presentationArgs)] = sessionArgs.sessionId;
+      }
       if (((fileId && streamFileExists({ fileId })) || videoId) &&
         presentationStatus !== PresentationStatus.Finished) {
         updates[get_presentationStatus.getPath(presentationArgs)] = PresentationStatus.Finished;

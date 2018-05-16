@@ -1,4 +1,5 @@
 import size from 'lodash/size';
+import map from 'lodash/map';
 
 import React, { Component, Fragment as F } from 'react';
 import dataBind from 'src/dbdi/react/dataBind';
@@ -17,6 +18,7 @@ import PresentationsSessionDetails from './PresentationsSessionDetails';
 import { hrefPresentationSession } from '../../href';
 import styled from 'styled-components';
 import { LoadOverlay } from '../overlays';
+import { EmptyObject } from '../../../util';
 
 
 const InlineFormInput = styled(FormControl)`
@@ -88,6 +90,35 @@ class NoPresentations extends Component {
   }
 }
 
+
+
+
+@dataBind()
+class OrphanedPresentations extends Component {
+  render(
+    { },
+    { get_presentations }
+  ) {
+    const list = get_presentations({ sessionId: null });
+    const ids = Object.keys(list || EmptyObject);
+    if (size(list)) {
+      return (<Panel>
+        <Panel.Heading>
+          Orphaned Presentations
+        </Panel.Heading>
+        <Panel.Body className="no-margin">
+          {
+            map(ids, (id) => id)
+          }
+        </Panel.Body>
+      </Panel>);
+    }
+
+    // return empty element
+    return '';
+  }
+}
+
 @dataBind()
 export default class PresentationSessionView extends Component {
   render(
@@ -118,6 +149,7 @@ export default class PresentationSessionView extends Component {
     // return (<Flexbox flexDirection="column">
     return (<div>
       {contentEl}
+      <OrphanedPresentations />
     </div>);
     //</Flexbox>);
   }

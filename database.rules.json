@@ -23,7 +23,10 @@
     "presentations": {
       ".read": "auth !== null",
       "list": {
-        ".indexOn": "updatedAt",
+        ".indexOn": [
+          "updatedAt",
+          "sessionId"
+        ],
         "$projectId": {
           ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
         }
