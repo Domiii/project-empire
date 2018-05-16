@@ -62,7 +62,7 @@ class PresentationSessionStreamingPanel extends Component {
     let errorEl;
     const fileId = streamFileId(streamArgs);
     if (fileId && presentationId !== fileId) {
-      console.error(presentationId, streamFileId(streamArgs));
+      console.error('BUG: fileId and presentationId diverged', presentationId, streamFileId(streamArgs));
       errorEl = <Alert bsStyle="danger">BUG: fileId and presentationId diverged!</Alert>;
     }
 

@@ -144,22 +144,21 @@ const sessionWriters = {
       creatorUid: currentUid,
       presentationStatus: PresentationStatus.Pending
     };
-    return Promise.all([
-      push_presentation(newPres),
-      await fixPresentationSessionOrder(sessionArgs)
-    ]);
+    
+    await push_presentation(newPres);
+    await fixPresentationSessionOrder(sessionArgs);
   },
 
-  startPresentationSessionStreaming(
+  async startPresentationSessionStreaming(
     sessionArgs,
     { },
     { currentUid },
     { set_presentationSessionOperatorUid, goToFirstPendingPresentationInSession, startStreamRecording }
   ) {
-    set_presentationSessionOperatorUid(sessionArgs, currentUid);
-    const res = goToFirstPendingPresentationInSession(sessionArgs);
+    await set_presentationSessionOperatorUid(sessionArgs, currentUid);
+    const res = await goToFirstPendingPresentationInSession(sessionArgs);
     if (res) {
-      startStreamRecording({ streamId: sessionArgs.sessionId });
+      return await startStreamRecording({ streamId: sessionArgs.sessionId });
     }
   },
 
@@ -170,7 +169,7 @@ const sessionWriters = {
     { set_presentationSessionOperatorUid }
   ) {
     if (currentUid && currentUid === presentationSessionOperatorUid(sessionArgs)) {
-      set_presentationSessionOperatorUid(sessionArgs, null);
+      return set_presentationSessionOperatorUid(sessionArgs, null);
     }
   },
 
@@ -192,12 +191,12 @@ const sessionWriters = {
       // start next presentation
       if (!await goToFirstPendingPresentationInSession(sessionArgs)) {
         // we are done!
-        finishPresentationSession(sessionArgs);
+        return await finishPresentationSession(sessionArgs);
       }
       else {
-        // reset stream
+        // reset stream, with new presentation
         const { sessionId } = sessionArgs;
-        await startStreamRecording({ streamId: sessionId });
+        return await startStreamRecording({ streamId: sessionId });
       }
     }
   },
@@ -220,12 +219,12 @@ const sessionWriters = {
       // start next presentation
       if (!await goToFirstPendingPresentationInSession(sessionArgs)) {
         // we are done!
-        finishPresentationSession(sessionArgs);
+        return await finishPresentationSession(sessionArgs);
       }
       else {
         // reset stream
         const { sessionId } = sessionArgs;
-        await startStreamRecording({ streamId: sessionId });
+        return await startStreamRecording({ streamId: sessionId });
       }
     }
   },
@@ -420,14 +419,14 @@ const sessionWriters = {
     return await update_db(updates);
   },
 
-  finishPresentationSession(
+  async finishPresentationSession(
     sessionArgs,
     { },
     { },
     { setActivePresentationInSession }
   ) {
     const { sessionId } = sessionArgs;
-    setActivePresentationInSession({ sessionId, presentationId: null });
+    return setActivePresentationInSession({ sessionId, presentationId: null });
   }
 };
 
@@ -439,7 +438,7 @@ export default {
     },
 
     writers: {
-      newPresentationSession(
+      async newPresentationSession(
         { },
         { },
         { },
@@ -452,7 +451,7 @@ export default {
         // create new set of presentations
 
         // set live id
-        set_livePresentationSessionId(sessionId);
+        await set_livePresentationSessionId(sessionId);
         return sessionId;
       }
     },

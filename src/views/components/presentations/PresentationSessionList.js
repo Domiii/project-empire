@@ -128,12 +128,12 @@ export default class PresentationSessionList extends Component {
 /**
 
 == Bugs ==
+  -> bug: online presentations don't have sessionId (need "fix" migrations)
 -> operator mode not working when not LIVE
 -> recording officially started but listeners not activated
     -> need better view of all currently existing files and their size
 
 ==Basics==
-  -> bug: online presentations don't have sessionId (need "fix" migrations)
   -> let [P]resenter (not only [O]) also be able to change order of presentations (→ edit mode button?)
   -> button to shuffle PENDING presentations
   -> finish PresSess
@@ -173,6 +173,9 @@ export default class PresentationSessionList extends Component {
 
 /**
 ==Advanced features==
+* 讓他們上傳他們的簡報
+* 提出問題／提示給他們 (notifications)
+* 客觀的寶寶村制度？？？
   -> Improved presentation mode
     -> [N] Who is up?
     -> [N] Who is next?

@@ -82,6 +82,9 @@ export default {
             }
 
             // since we lose the id when converting to array, we do an ugly hack-around here
+            if (presentations && filter(presentations, p => !p).length > 0) {
+              console.error('problem fetching presentations', presentations);
+            }
             forEach(presentations, (p, id) => p.id = id);
 
             return sortBy(presentations, 'index');
