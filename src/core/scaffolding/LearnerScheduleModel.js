@@ -50,12 +50,13 @@ const readers = {
     { learnerSchedule },
     { }
   ) {
-    if (!learnerSchedule.isLoaded({ scheduleId })) {
-      return NOT_LOADED;
+    const schedule = learnerSchedule({ scheduleId });
+    if (!schedule) {
+      return schedule; // null or NOT_LOADED
     }
 
     const now = Date.now();
-    const { startTime, cycleOffset, cycleTime } = learnerSchedule({ scheduleId });
+    const { startTime, cycleOffset, cycleTime } = schedule;
     const dt = now - startTime + cycleOffset;
     return Math.floor(dt / cycleTime) + 1;
   },
@@ -118,12 +119,13 @@ const writers = {
     { },
     { set_scheduleStartTime }
   ) {
-    if (!learnerSchedule.isLoaded({ scheduleId })) {
-      return NOT_LOADED;
+    const schedule = learnerSchedule({ scheduleId });
+    if (!schedule) {
+      return schedule; // null or NOT_LOADED
     }
     const now = Date.now();
 
-    const { startTime, cycleTime } = learnerSchedule({ scheduleId });
+    const { startTime, cycleTime } = schedule;
 
     const totalTimePassed = now - startTime;
     const inCycleOffset = totalTimePassed % cycleTime;

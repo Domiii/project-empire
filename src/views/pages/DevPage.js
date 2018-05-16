@@ -113,6 +113,35 @@ class ScheduleManipulator extends Component {
 }
 
 
+// @dataBind()
+// class SessionManipulator extends Component {
+//   render() {
+//   }
+// }
+
+@dataBind({
+  clickDelete(evt,
+    { },
+    { deleteAllVideoIdsInSession },
+    { livePresentationSessionId }
+  ) {
+    const sessionArgs = { sessionId: livePresentationSessionId };
+    deleteAllVideoIdsInSession(sessionArgs);
+  }
+})
+class SessionsManipulator extends Component {
+  render(
+    { },
+    { clickDelete },
+    { livePresentationSessionId }
+  ) {
+    return (<Button disabled={!livePresentationSessionId} onClick={clickDelete}>
+      Delete all fileIds of active session
+    </Button>);
+  }
+}
+
+
 @dataBind({
 
 })
@@ -129,13 +158,21 @@ export default class DevPage extends Component {
       return (<Alert bsStyle="warning">Devs only :/</Alert>);
     }
 
-    return (<div className="container">
+    return (<div className="container no-padding">
       <Panel bsStyle="primary">
         <Panel.Heading>
           Schedule Settings
-          </Panel.Heading>
+        </Panel.Heading>
         <Panel.Body>
           <ScheduleManipulator />
+        </Panel.Body>
+      </Panel>
+      <Panel bsStyle="primary">
+        <Panel.Heading>
+          Presentation Sessions
+      </Panel.Heading>
+        <Panel.Body>
+          <SessionsManipulator />
         </Panel.Body>
       </Panel>
     </div>);

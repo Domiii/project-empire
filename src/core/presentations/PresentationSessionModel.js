@@ -144,7 +144,7 @@ const sessionWriters = {
       creatorUid: currentUid,
       presentationStatus: PresentationStatus.Pending
     };
-    
+
     await push_presentation(newPres);
     await fixPresentationSessionOrder(sessionArgs);
   },
@@ -395,28 +395,24 @@ const sessionWriters = {
     { },
     { update_db }
   ) {
-    const presentations = get_presentations(sessionArgs);
+    // const presentations = get_presentations(sessionArgs);
 
-    const updates = {};
-    forEach(presentations, (pres, presentationId) => {
-      const presentationArgs = { presentationId };
-      const {
-        fileId,
-        videoId,
-        presentationStatus,
-        sessionId
-      } = pres;
-
-      // TODO: proper management of orphaned presentations
-      if (sessionId !== sessionArgs.sessionId) {
-        updates[get_presentationSessionId.getPath(presentationArgs)] = sessionArgs.sessionId;
-      }
-      if (((fileId && streamFileExists({ fileId })) || videoId) &&
-        presentationStatus !== PresentationStatus.Finished) {
-        updates[get_presentationStatus.getPath(presentationArgs)] = PresentationStatus.Finished;
-      }
-    });
-    return await update_db(updates);
+    // // for each presentation: set status to finished, if fileId + videoId are present?
+    // const updates = {};
+    // forEach(presentations, (pres, presentationId) => {
+    //   const presentationArgs = { presentationId };
+    //   const {
+    //     fileId,
+    //     videoId,
+    //     presentationStatus
+    //   } = pres;
+      
+    //   if (((fileId && streamFileExists({ fileId })) || videoId) &&
+    //     presentationStatus !== PresentationStatus.Finished) {
+    //     updates[get_presentationStatus.getPath(presentationArgs)] = PresentationStatus.Finished;
+    //   }
+    // });
+    // return await update_db(updates);
   },
 
   async finishPresentationSession(
@@ -427,6 +423,29 @@ const sessionWriters = {
   ) {
     const { sessionId } = sessionArgs;
     return setActivePresentationInSession({ sessionId, presentationId: null });
+  },
+
+  async deleteAllVideoIdsInSession(
+    sessionArgs,
+    { get_presentations, get_presentationVideoId },
+    { },
+    { update_db }
+  ) {
+    const presentations = get_presentations(sessionArgs);
+
+    const updates = {};
+    debugger;
+    forEach(presentations, (pres, presentationId) => {
+      const presentationArgs = { presentationId };
+      const {
+        videoId
+      } = pres;
+
+      if (videoId) {
+        updates[get_presentationVideoId.getPath(presentationArgs)] = null;
+      }
+    });
+    return await update_db(updates);
   }
 };
 
