@@ -115,10 +115,10 @@ export default {
                 } = pres;
 
                 // TODO: handle non-chinese names properly (cannot just split by whitespace)
-                const userNames = userNamesString.split(/\s+/);
+                const userNames = (userNamesString || '').split(/\s+/);
                 const censoredUsersString = censorUserNames(userNames);
 
-                return `${title} (${censoredUsersString.join(',  ')})`;
+                return `${title || ''} (${censoredUsersString.join(',  ')})`;
               }
             },
 
