@@ -230,6 +230,12 @@ button:active { outline:none !important; }
 .spaced-inline-children > *:last-child {
   margin-right: 0;
 }
+.spaced-inline-children-2 > * {
+  margin-right: 2em;
+}
+.spaced-inline-children-2 > *:last-child {
+  margin-right: 0;
+}
 
 .margin-half {
   margin: 0.5em !important;

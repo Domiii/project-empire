@@ -132,16 +132,64 @@ const SessionHeader = dataBind({
 });
 
 @dataBind({
-  // getTableRowData(
-  //   { sessionId },
-  //   { orderedPresentationsOfSession }
-  // ) {
-  // }
-  clickAddPresentation(evt, allArgs, { addNewPresentation }) {
-    const { sessionId } = allArgs;
+  clickAddPresentation(evt, 
+    { sessionId }, 
+    { addNewPresentation }
+  ) {
     return addNewPresentation({ sessionId });
+  },
+  clickStartLiveSession(evt,
+    { sessionId },
+    { set_livePresentationSessionId }
+  ) {
+    set_livePresentationSessionId(sessionId);
+  },
+  clickStopLiveSession(evt,
+    { },
+    { set_livePresentationSessionId }
+  ) {
+    set_livePresentationSessionId(null);
   }
 })
+class PresentationSessionControls extends Component {
+  render(
+    { sessionId },
+    { clickAddPresentation, clickStartLiveSession, clickStopLiveSession },
+    { livePresentationSessionId }
+  ) {
+    if (livePresentationSessionId === NOT_LOADED) {
+      return <LoadIndicator />;
+    }
+    const addBtn = (<Button bsStyle="success"
+      onClick={clickAddPresentation}>
+      Add presentation <FAIcon name="plus" />
+    </Button>);
+
+    const isLive = livePresentationSessionId === sessionId;
+    const stopLiveSessionBtn = (isLive &&
+      <Button bsStyle="danger"
+        onClick={clickStopLiveSession}>
+        Finish live session
+      </Button>
+    );
+
+    const startLiveSessionBtn = (!isLive &&
+      <Button bsStyle="danger"
+        disabled={livePresentationSessionId}
+        onClick={clickStartLiveSession}>
+        Go live!
+      </Button>
+    );
+
+    return (<div className="spaced-inline-children-2">
+      {addBtn}
+      {startLiveSessionBtn}
+      {stopLiveSessionBtn}
+    </div>);
+  }
+}
+
+@dataBind({})
 export default class PresentationsSessionDetails extends Component {
   state = {}
 
@@ -155,8 +203,7 @@ export default class PresentationsSessionDetails extends Component {
 
   render(
     { sessionId },
-    { orderedPresentations, isPresentationSessionOperator,
-      clickAddPresentation },
+    { orderedPresentations, isPresentationSessionOperator },
     { isCurrentUserAdmin }
   ) {
     const sessionArgs = { sessionId };
@@ -167,11 +214,11 @@ export default class PresentationsSessionDetails extends Component {
 
     const { selectedPresentation } = this.state;
 
-    let footerControlEl;
+    let sessionFooterControls;
     if (isCurrentUserAdmin) {
-      footerControlEl = (<Button bsStyle="success" onClick={clickAddPresentation}>
-        Add presentation <FAIcon name="plus" />
-      </Button>);
+      sessionFooterControls = (
+        <PresentationSessionControls {...sessionArgs} />
+      );
     }
 
     const isOperator = isPresentationSessionOperator(sessionArgs);
@@ -202,8 +249,7 @@ export default class PresentationsSessionDetails extends Component {
           }
         </tbody>
       </StyledTable>
-
-      {footerControlEl}
+      {sessionFooterControls}
     </F >);
   }
 }

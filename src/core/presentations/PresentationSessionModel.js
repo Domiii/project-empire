@@ -2,7 +2,6 @@ import map from 'lodash/map';
 import forEach from 'lodash/forEach';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
-import findLast from 'lodash/findLast';
 import last from 'lodash/last';
 import size from 'lodash/size';
 
@@ -10,6 +9,7 @@ import paginationNodes from 'src/dbdi/nodes/paginationNodes';
 import { downloadSpreadsheetJSON } from '../../util/SpreadsheetUtil';
 import { PresentationStatus } from './PresentationModel';
 import { Promise } from 'firebase';
+import { NOT_LOADED } from '../../dbdi';
 
 
 const sessionReaders = {
@@ -406,7 +406,7 @@ const sessionWriters = {
     //     videoId,
     //     presentationStatus
     //   } = pres;
-      
+
     //   if (((fileId && streamFileExists({ fileId })) || videoId) &&
     //     presentationStatus !== PresentationStatus.Finished) {
     //     updates[get_presentationStatus.getPath(presentationArgs)] = PresentationStatus.Finished;
@@ -446,6 +446,47 @@ const sessionWriters = {
       }
     });
     return await update_db(updates);
+  },
+
+  async deletePresentationSession(
+    sessionArgs,
+    { get_presentation, get_presentations,
+      get_presentationSession,
+      get_livePresentationSessionId },
+    { },
+    { update_db }
+  ) {
+    const { sessionId } = sessionArgs;
+
+    const sess = get_presentationSession(sessionArgs);
+    const presentations = get_presentations(sessionArgs);
+    const liveSessionId = get_livePresentationSessionId();
+    if (sess === NOT_LOADED |
+      presentations === NOT_LOADED |
+      liveSessionId === NOT_LOADED) {
+      return NOT_LOADED;
+    }
+
+    if (!sess) {
+      throw new Error('invalid sessionId for deletion', sessionId);
+    }
+
+    const updates = {};
+
+    // delete session
+    updates[get_presentationSession.getPath(sessionArgs)] = null;
+
+    if (liveSessionId === sessionId) {
+      // delete live sessionId
+      updates[get_livePresentationSessionId.getPath()] = null;
+    }
+
+    // delete all presentations of sessions
+    forEach(presentations, (pres, presentationId) => {
+      updates[get_presentation.getPath({ presentationId })] = null;
+    });
+
+    return await update_db(updates);
   }
 };
 
@@ -465,12 +506,14 @@ export default {
           set_livePresentationSessionId }
       ) {
         // create new session
-        const sessionId = push_presentationSession({}).key;
+        const newSess = {};
+        const sessionId = push_presentationSession(newSess).key;
 
         // create new set of presentations
 
         // set live id
         await set_livePresentationSessionId(sessionId);
+        console.warn('new session', sessionId);
         return sessionId;
       }
     },

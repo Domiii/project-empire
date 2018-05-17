@@ -42,11 +42,15 @@ const PresentationSessionRow = dataBind()(function PresentationSessionRow(
 });
 
 const PresentationSessionLiveStatusElement = withRouter(dataBind({
-  clickNewPresentationSession(evt, { history }, { newPresentationSession }, { }) {
-    const sessionId = newPresentationSession();
+  async clickNewPresentationSession(evt, { history }, { newPresentationSession }, { }) {
+    const sessionId = await newPresentationSession();
     history.push(hrefPresentationSessionView(sessionId));
   },
-  clickGoToLivePresentationSession(evt, { history }, { }, { livePresentationSessionId }) {
+  clickGoToLivePresentationSession(evt, 
+    { history }, 
+    { }, 
+    { livePresentationSessionId }
+  ) {
     history.push(hrefPresentationSessionView(livePresentationSessionId));
   }
 })(function PresentationSessionLiveStatusElement(

@@ -21,7 +21,10 @@ import { LoadOverlay } from '../overlays';
 import { EmptyObject } from '../../../util';
 
 
-const InlineFormInput = styled(FormControl)`
+const defaultPublishId = '2PACX-1vSsOx1s1Bu9p2be7Gc1HT-tor1zJSBRO3iINyieaT0TlT_p3euML1AoIXkOSz282bjIpOypTmJRlS0n';
+const defaultGid = '494255921';
+
+const InlineFormInput = styled(FormControl) `
 vertical-align: middle;
 text-align: center;
 display: inline;
@@ -33,9 +36,6 @@ function getSelectedId() {
   return window.location.hash && window.location.hash.substring(1);
 }
 
-
-const defaultPublishId = '2PACX-1vSsOx1s1Bu9p2be7Gc1HT-tor1zJSBRO3iINyieaT0TlT_p3euML1AoIXkOSz282bjIpOypTmJRlS0n';
-const defaultGid = '1036040670';
 
 @dataBind()
 class NoPresentations extends Component {
@@ -57,7 +57,10 @@ class NoPresentations extends Component {
     this.setState({ gid: event.target.value });
   }
 
-  clickImport = async(evt, { sessionId }, { importPresentationsToSession }) => {
+  clickImport = async (evt, 
+    { sessionId }, 
+    { importPresentationsToSession }
+  ) => {
     const { publishId, gid } = this.state;
     this.setState({ isBusy: true });
 

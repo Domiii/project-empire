@@ -15,6 +15,7 @@ import { LoadOverlay } from 'src/views/components/overlays';
 import DynamicForm from 'src/views/tools/DynamicForm';
 import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
+import { NOT_LOADED } from '../../dbdi';
 
 
 export const schemaTemplate = {
@@ -49,7 +50,7 @@ const uiSchema = {
 };
 
 @dataBind({
-  writer(
+  updateCycleId(
     args,
     { },
     { learnerScheduleAdjustOffsetForCycleId }
@@ -57,37 +58,40 @@ const uiSchema = {
     return learnerScheduleAdjustOffsetForCycleId(args);
   }
 })
-class ScheduleManipulator extends Component {
+class LearnerScheduleCycleForm extends Component {
   static propTypes = {
-    writer: PropTypes.func.isRequired
+    updateCycleId: PropTypes.func.isRequired
   };
 
   onChange = ({ formData }) => {
-    return this.props.writer(formData);
+    return this.props.updateCycleId(formData);
   }
 
   render(
     { },
     { learnerScheduleSettings },
-    { currentLearnerScheduleId,
-      currentLearnerScheduleId_isLoaded }
+    { currentLearnerScheduleId }
   ) {
-    if (!currentLearnerScheduleId_isLoaded) {
+    const scheduleId = currentLearnerScheduleId;
+    if (scheduleId === NOT_LOADED) {
       return <LoadIndicator />;
+    }
+    if (!scheduleId) {
+      return (<Alert className="no-margin no-padding" bsStyle="warning">
+        no schedule
+      </Alert>);
     }
 
     const {
-      writer
+      updateCycleId
     } = this.props;
 
-    const scheduleId = currentLearnerScheduleId;
-
-    // supply scheduleId for writer
+    // supply scheduleId for updateCycleId
     const idArgs = {
       scheduleId
     };
 
-    // supply scheduleId for writer
+    // supply scheduleId for updateCycleId
     // const formArgs = {
     //   scheduleId
     // };
@@ -98,7 +102,7 @@ class ScheduleManipulator extends Component {
 
       idArgs,
       reader: learnerScheduleSettings,
-      writer: writer,
+      writer: updateCycleId,
 
       onChange: this.onChange
 
@@ -120,24 +124,39 @@ class ScheduleManipulator extends Component {
 // }
 
 @dataBind({
-  clickDelete(evt,
+  clickDeleteFileIds(evt,
     { },
     { deleteAllVideoIdsInSession },
     { livePresentationSessionId }
   ) {
     const sessionArgs = { sessionId: livePresentationSessionId };
     deleteAllVideoIdsInSession(sessionArgs);
+  },
+  
+  clickDeleteSession(evt,
+    { },
+    { deletePresentationSession },
+    { livePresentationSessionId }
+  ) {
+    const sessionArgs = { sessionId: livePresentationSessionId };
+    deletePresentationSession(sessionArgs);
   }
 })
 class SessionsManipulator extends Component {
   render(
     { },
-    { clickDelete },
+    { clickDeleteFileIds, clickDeleteSession },
     { livePresentationSessionId }
   ) {
-    return (<Button disabled={!livePresentationSessionId} onClick={clickDelete}>
-      Delete all fileIds of active session
-    </Button>);
+    return (<div>
+      <Button bsStyle="danger" disabled={!livePresentationSessionId} onClick={clickDeleteFileIds}>
+        Delete all fileIds of active session
+      </Button>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <Button bsStyle="danger" disabled={!livePresentationSessionId} onClick={clickDeleteSession}>
+        ️⚠️ Delete live presentation session ⚠️
+      </Button>
+    </div>);
   }
 }
 
@@ -164,7 +183,7 @@ export default class DevPage extends Component {
           Schedule Settings
         </Panel.Heading>
         <Panel.Body>
-          <ScheduleManipulator />
+          <LearnerScheduleCycleForm />
         </Panel.Body>
       </Panel>
       <Panel bsStyle="primary">
