@@ -25,19 +25,33 @@ import {
 } from '../../../core/presentations/PresentationModel';
 import { YtStatusPanel } from '../multimedia/VideoUploadPanel';
 
+import { PresentationInfoRow } from './PresentationRow';
+import { MediaStatus } from '../../../core/multimedia/StreamModel';
+
 
 
 
 @dataBind({
-  async startStreaming(streamArgs,
+  async clickStartStreaming(streamArgs,
     sessionArgs,
     { startPresentationSessionStreaming }
   ) {
     await startPresentationSessionStreaming(sessionArgs);
   },
 
-  onFinished(streamArgs, sessionArgs, { finishPresentationSessionStreaming }) {
-    finishPresentationSessionStreaming(sessionArgs);
+  async onStartStreamRecorder(streamArgs,
+    { presentationId },
+    { set_streamFileId, set_presentationFileId }
+  ) {
+    console.warn('onStartStreamRecorder', streamArgs, presentationId);
+    return Promise.all([
+      set_streamFileId(streamArgs, presentationId),
+      set_presentationFileId({ presentationId }, presentationId)
+    ]);
+  },
+
+  async onFinished(streamArgs, sessionArgs, { finishPresentationSessionStreaming }) {
+    return await finishPresentationSessionStreaming(sessionArgs);
   },
 
   clickSetStatusFinished(evt, sessionArgs, { finishPresentationSessionStreaming }) {
@@ -46,50 +60,94 @@ import { YtStatusPanel } from '../multimedia/VideoUploadPanel';
 
   clickSetStatusSkipped(evt, sessionArgs, { skipPresentationInSession }) {
     skipPresentationInSession(sessionArgs);
+  },
+
+  clickUnsetFileId(evt, allArgs, { set_presentationFileId }) {
+    set_presentationFileId(allArgs, null);
   }
 })
 class PresentationSessionStreamingPanel extends Component {
   render(
     { sessionId, presentationId },
-    { startStreaming, onFinished, streamFileId,
-      get_presentationStatus,
-      clickSetStatusFinished, clickSetStatusSkipped }
+    { streamFileId, streamFileExists, get_streamStatus, isStreamActive,
+      get_presentationStatus, get_presentationFileId,
+      clickSetStatusFinished, clickSetStatusSkipped,
+      onStartStreamRecorder, onFinished,
+      clickUnsetFileId }
   ) {
+    const presentationArgs = {
+      presentationId
+    };
     const streamArgs = {
       streamId: sessionId
     };
+    const fileArgs = {
+      fileId: presentationId
+    };
+
+    const status = get_presentationStatus(presentationArgs);
+    const streamStatus = get_streamStatus(streamArgs);
+    const streamNotStarted = streamStatus === MediaStatus.Down || streamStatus === MediaStatus.Ready;
+    //console.warn(streamNotStarted, streamNotStarted);
+    if (status === NOT_LOADED ||
+      (streamNotStarted & streamFileExists(fileArgs) === NOT_LOADED)) {
+      return <LoadIndicator block size="2em" />;
+    }
 
     let errorEl;
-    const fileId = streamFileId(streamArgs);
-    if (fileId && presentationId !== fileId) {
-      console.error('BUG: fileId and presentationId diverged', presentationId, streamFileId(streamArgs));
-      errorEl = <Alert bsStyle="danger">BUG: fileId and presentationId diverged!</Alert>;
+    const fileId = get_presentationFileId(presentationArgs);
+    if (fileId) {
+      //console.warn(presentationId, get_presentationFileId(presentationArgs));
+      const currentSessionFileId = streamFileId(streamArgs);
+      if (currentSessionFileId && presentationId !== currentSessionFileId) {
+        console.error('BUG: fileId and presentationId diverged', presentationId, streamFileId(streamArgs));
+        errorEl = (<Alert bsStyle="danger">BUG: fileId and presentationId diverged!</Alert>);
+      }
+      else if (streamNotStarted && streamFileExists(fileArgs)) {
+        errorEl = (<div>
+          <Alert bsStyle="danger">這個簡報已經有檔案。重錄嗎？</Alert>
+          <Button bsStyle="danger" bsSize="small" onClick={clickUnsetFileId} className="display-block margin-auto">
+            丟棄檔案！
+          </Button>
+        </div>);
+      }
     }
 
     let finishBtn, skipBtn;
-    const status = get_presentationStatus({ presentationId });
+    const isStreaming = isStreamActive(streamArgs);
     if (status < PresentationStatus.Finished) {
-      finishBtn = (<Button block bsStyle="success" onClick={clickSetStatusFinished}>
+      finishBtn = (<Button bsStyle="success" disabled={isStreaming} onClick={clickSetStatusFinished}>
         Finished <FAIcon name="check" color="lightgreen" />
       </Button>);
-      skipBtn = (<Button block bsStyle="danger" onClick={clickSetStatusSkipped}>
+      skipBtn = (<Button bsStyle="danger" disabled={isStreaming || !!fileId} 
+        onClick={clickSetStatusSkipped}>
         Skip <FAIcon name="times" color="lightcoral" />
       </Button>);
     }
 
+    const headerEl = ((finishBtn || skipBtn) && (<Flexbox className="">
+      <Flexbox>
+        <Table condensed hover className="no-margin">
+          <tbody>
+            <PresentationInfoRow presentationId={presentationId} />
+          </tbody>
+        </Table>
+      </Flexbox>
+      {finishBtn && <Flexbox className="">
+        {finishBtn}
+      </Flexbox>}
+      {skipBtn && <Flexbox className="">
+        {skipBtn}
+      </Flexbox>}
+    </Flexbox>));
 
     return (<div className="full-width">
-      {(finishBtn || skipBtn) && (<Flexbox className="full-width">
-        {finishBtn && <Flexbox className="full-width margin-right-3">
-          {finishBtn}
-        </Flexbox>}
-        {skipBtn && <Flexbox className="full-width">
-          {skipBtn}
-        </Flexbox>}
-      </Flexbox>)}
+      {headerEl}
       {errorEl}
       {!errorEl && <MediaStreamPanel hideStatus={true} streamArgs={streamArgs}
-        startStreaming={startStreaming} onFinished={onFinished} />}
+        // startStreaming={clickStartStreaming} 
+        onStartStreamRecorder={onStartStreamRecorder}
+        onFinished={onFinished} />}
     </div>);
   }
 }
@@ -108,18 +166,13 @@ class PresentationSessionStreamingPanel extends Component {
 class Footer extends Component {
   render(
     { },
-    { clickStop, clickFixAll },
-    { isCurrentUserAdmin }
+    { clickStop },
+    { }
   ) {
     return (<div>
       <Button bsSize="small" bsStyle="danger" onClick={clickStop}>
         Stop Operating
       </Button>
-      {isCurrentUserAdmin &&
-        <Button bsSize="small" bsStyle="danger" onClick={clickFixAll}>
-          <FAIcon name="wrench" />
-        </Button>
-      }
     </div>);
   }
 }
@@ -128,12 +181,29 @@ class Footer extends Component {
 export default class PresentationSessionOperatorView extends Component {
   render(
     { sessionId },
-    { presentationSessionActivePresentationId }
+    { presentationSessionActivePresentationId, hasPendingPresentations }
   ) {
     const sessionArgs = { sessionId };
     const presentationId = presentationSessionActivePresentationId(sessionArgs);
-    const streamControls = (presentationId && <PresentationSessionStreamingPanel
-      sessionId={sessionId} presentationId={presentationId} />);
+
+    if (presentationId === NOT_LOADED) {
+      return (
+        <LoadIndicator className="margin-auto" size="2em" block />
+      );
+    }
+
+    let streamControls;
+    if (presentationId || hasPendingPresentations(sessionArgs)) {
+      streamControls = (<PresentationSessionStreamingPanel
+        sessionId={sessionId} presentationId={presentationId} />);
+    }
+    else {
+      streamControls = (<Flexbox className="full-width full-height" justifyContent="center" alignItems="center">
+        <Alert bsStyle="info" className="margin-auto">
+          Session finished!
+        </Alert>
+      </Flexbox>);
+    }
 
     return (<Flexbox flexDirection="column" className="full-width full-height">
       <Flexbox className="full-width full-height">

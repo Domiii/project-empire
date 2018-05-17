@@ -143,17 +143,24 @@ function getDefaultRecorderOptions() {
  * ############################################################
  */
 
-function prepareRecorder(stream, streamArgs, fileId,
-  { get_streamFileSegments },
+function prepareRecorder(stream, streamArgs,
+  { get_streamFileId, get_streamFileSegments },
   { streamFileWrite, set_streamFileSegments, set_streamStatus }
 ) {
   const recorder = new MediaRecorder(stream, getDefaultRecorderOptions());
-  const fileArgs = { fileId };
 
-  set_streamFileSegments(fileArgs, [{}]);
-
+  let fileId;
+  let fileArgs;
   recorder.onstart = (e) => {
+    console.warn('recorder.onstart');
     //console.log('MediaRecorder start');
+    fileId = get_streamFileId(streamArgs);
+    if (!fileId) {
+      throw new Error('fileId not set when starting MediaRecorder');
+    }
+    fileArgs = { fileId };
+
+    set_streamFileSegments(fileArgs, [{}]);
   };
   recorder.onpause = (e) => {
     //console.log('MediaRecorder pause');
@@ -204,7 +211,9 @@ const mediaInputSelection = {
 
       const constraints = {};
       constraints.video = videoDeviceId && {
-        deviceId: videoDeviceId
+        deviceId: videoDeviceId,
+        width: { ideal: 4096 },
+        height: { ideal: 2160 }
       } || false;
 
       constraints.audio = audioDeviceId && {
@@ -265,15 +274,15 @@ export default {
         writers
       ) {
         const streamArgs = { streamId };
-        const { get_mediaStreams, get_streamObject, get_streamFileId } = readers;
+        const { get_mediaStreams, get_streamObject } = readers;
         const { set_mediaStream, set_mediaStreams,
           set_streamObject,
           set_streamRecorderObject, stopStreamRecorder,
           set_streamStatus,
-          newStreamFile, set_streamFileId,
-          shutdownStream,
           initStreamFs
         } = writers;
+
+        set_streamStatus(streamArgs, MediaStatus.Preparing);
 
         // make sure, previous stream (if any) is dead
         //shutdownStream(streamArgs);
@@ -282,14 +291,11 @@ export default {
           set_streamRecorderObject(streamArgs, null);
         }
 
-        set_streamStatus(streamArgs, MediaStatus.Preparing);
-
         const streamPromise = get_streamObject(streamArgs) || getStream(mediaInputConstraints);
-        const fileIdPromise = get_streamFileId(streamArgs) || newStreamFile();
+        //const fileIdPromise = get_streamFileId(streamArgs) || newStreamFile();
 
         return Promise.all([
           streamPromise,
-          fileIdPromise,
           initStreamFs()
         ]).then(([streamObject, fileId]) => {
           set_mediaStream(streamArgs, {});
@@ -309,9 +315,8 @@ export default {
           // return Promise.all([
           set_streamObject(streamArgs, streamObject);
           set_streamStatus(streamArgs, MediaStatus.Ready);
-          set_streamFileId(streamArgs, fileId);
 
-          const mediaRecorder = prepareRecorder(streamObject, streamArgs, fileId, readers, writers);
+          const mediaRecorder = prepareRecorder(streamObject, streamArgs, readers, writers);
           set_streamRecorderObject(streamArgs, mediaRecorder);
           // ]);
         }).then(() => streamId)
@@ -375,19 +380,74 @@ export default {
           streamSize(streamArgs,
             { streamFileId, streamFileSize }
           ) {
-            return streamFileSize({ fileId: streamFileId(streamArgs) });
+            const fileId = streamFileId(streamArgs);
+            if (!fileId) {
+              return 0;
+            }
+            return streamFileSize({ fileId });
           },
 
           streamDuration(streamArgs,
             { streamFileId, streamFileDuration }
           ) {
-            return streamFileDuration({ fileId: streamFileId(streamArgs) });
+            const fileId = streamFileId(streamArgs);
+            if (!fileId) {
+              return 0;
+            }
+            return streamFileDuration({ fileId });
           },
 
           streamUrl(streamArgs,
             { streamFileId, streamFileUrl }
           ) {
-            return streamFileUrl({ fileId: streamFileId(streamArgs) });
+            const fileId = streamFileId(streamArgs);
+            if (!fileId) {
+              return null;
+            }
+            return streamFileUrl({ fileId });
+          },
+
+          streamGetVolume(
+            streamArgs,
+            { streamObject }
+          ) {
+            const stream = streamObject(streamArgs);
+            if (!stream) {
+              return stream;
+            }
+
+            // shutdown all streams
+            let volume;
+            stream.getTracks().forEach(track => {
+              const settings = track.getSettings();
+              if (settings && settings.volume) {
+                volume = settings.volume;
+              }
+            });
+
+            return volume;
+          },
+
+          streamVideoResolution(
+            streamArgs,
+            { streamObject }
+          ) {
+            const stream = streamObject(streamArgs);
+            if (!stream) {
+              return stream;
+            }
+
+            const res = {
+              width: 0,
+              height: 0
+            };
+            stream.getTracks().forEach(track => {
+              const settings = track.getSettings();
+              res.width = settings && settings.width || 0;
+              res.height = settings && settings.height || 0;
+            });
+
+            return res.width === 0 ? null : res;
           }
         },
 
@@ -398,8 +458,7 @@ export default {
             { },
             { set_streamObject,
               set_streamRecorderObject,
-              set_streamStatus,
-              set_streamFileId }
+              set_streamStatus }
           ) {
             const stream = streamObject(streamArgs);
             if (stream) {

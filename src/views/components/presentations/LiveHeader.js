@@ -36,7 +36,7 @@ export default class LiveHeader extends Component {
     { livePresentationSessionId }
   ) {
     if (livePresentationSessionId) {
-      return (<StyledWell>
+      return (<StyledWell className="no-margin">
         <Flexbox justifyContent="space-between" align-items="center">
           <Flexbox className="font-size-2">
             <Link to={hrefPresentationSession('list')}>↩</Link>

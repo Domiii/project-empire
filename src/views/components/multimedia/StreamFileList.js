@@ -17,7 +17,7 @@ import LoadIndicator from 'src/views/components/util/LoadIndicator';
 import {
   Alert, Button, Jumbotron, Well, Panel
 } from 'react-bootstrap';
-
+import Moment from 'react-moment';
 import Flexbox from 'flexbox-react';
 
 import FancyPanelToggleTitle from 'src/views/components/util/FancyPanelToggleTitle';
@@ -39,20 +39,28 @@ export class StreamFilePanelHeader extends Component {
 
   render(
     { },
-    { streamFileSize }
+    { streamFileSize, streamFileLastModified }
   ) {
     const { fileId, isSelected } = this.props;
     const fileArgs = { fileId };
     const size = streamFileSize(fileArgs) || 0;
+    const lastModified = streamFileLastModified(fileArgs);
 
     //return (<HashLink smooth to={link}>
     return (<FancyPanelToggleTitle>
       <Flexbox className="full-width" justifyContent="space-between" alignItems="center">
-        <span>
-          <span className="color-gray">(untitled recording) [{fileId}]</span>&nbsp;
-          {renderSize(size)}
+        <span className="spaced-inline-children">
+          <span className="color-gray">
+            (untitled recording) [{fileId}]
+          </span>
+          <span>
+            {renderSize(size)}
+          </span>
+          <span>
+            [<Moment fromNow>{lastModified}</Moment> (
+            <Moment format="MMMM Do YYYY, hh:mm:ss">{lastModified}</Moment>]
+          </span>
         </span>
-
       </Flexbox>
     </FancyPanelToggleTitle>);
     //</HashLink>);
@@ -195,9 +203,9 @@ export default class StreamFileList extends Component {
   render(
     { },
     { },
-    { streamFileList }
+    { orderedStreamFileList }
   ) {
-    if (!streamFileList) {
+    if (!orderedStreamFileList) {
       return <LoadIndicator />;
     }
 
@@ -212,7 +220,7 @@ export default class StreamFileList extends Component {
       quotaInfo = `- ${filesize(usedBytes)} / ${filesize(grantedBytes)} used (${quotaPct}%)`;
     }
 
-    const fileEls = expanded && map(streamFileList, file =>
+    const fileEls = expanded && map(orderedStreamFileList, file =>
       (<StreamFilePanel key={file.name} fileId={file.name} isSelected={selectedId === file.name}
         onSelect={this.onSelect} />)
     );
@@ -220,7 +228,7 @@ export default class StreamFileList extends Component {
     return (<Panel expanded={expanded} onToggle={this.toggleExpand}>
       <Panel.Heading>
         <FancyPanelToggleTitle>
-          {size(streamFileList)} Saved Files {quotaInfo}
+          {size(orderedStreamFileList)} Saved Files {quotaInfo}
         </FancyPanelToggleTitle>
       </Panel.Heading>
       <Panel.Body collapsible>

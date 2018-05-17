@@ -2,8 +2,11 @@ import map from 'lodash/map';
 import flatten from 'lodash/flatten';
 import reduce from 'lodash/reduce';
 import some from 'lodash/some';
+import sortBy from 'lodash/sortBy';
+import isEqual from 'lodash/isEqual';
+import zipObject from 'lodash/zipObject';
 
-import { EmptyObject } from '../../util';
+import { EmptyObject, EmptyArray } from '../../util';
 import { NOT_LOADED } from '../../dbdi/react';
 
 import fs from 'bro-fs';
@@ -192,6 +195,26 @@ export default {
       streamFileDirectory: {
         path: 'streamFileDirectory',
         readers: {
+          orderedStreamFileList(
+            { },
+            { streamFileList, streamFileLastModified }
+          ) {
+            let files = streamFileList();
+            if (!files) {
+              return files;
+            }
+
+            const fileNames = map(files, 'name');
+            const fileTimes = map(files, f => streamFileLastModified({ fileId: f.name }));
+            if (some(fileTimes, t => t === NOT_LOADED)) {
+              // not fully loaded yet
+              return NOT_LOADED;
+            }
+
+            const timesById = zipObject(fileNames, fileTimes);
+            const orderedFiles = sortBy(files, f => -timesById[f.name]);
+            return orderedFiles;
+          },
           streamFileList(
             { },
             { get__streamFileList },
@@ -240,10 +263,10 @@ export default {
 
           streamFileSize(
             streamFileArgs,
-            { get__streamFileMetadataSize,
+            { get__streamFileMetadata,
               get_streamFileSegments, streamFileSegmentSize },
             { },
-            { set__streamFileMetadataSize }
+            { set__streamFileMetadata }
           ) {
             const { fileId } = streamFileArgs;
             // TODO: this only works while recording and data won't be available later
@@ -264,12 +287,12 @@ export default {
                 if (await fs.exists(path)) {
                   const metadata = await fs.stat(path);
                   const { size } = metadata;
-                  if (size !== get__streamFileMetadataSize(streamFileArgs)) {
-                    set__streamFileMetadataSize(streamFileArgs, size);
+                  if (!isEqual(metadata, get__streamFileMetadata(streamFileArgs))) {
+                    set__streamFileMetadata(streamFileArgs, metadata);
                   }
                 }
               })();
-              return get__streamFileMetadataSize(streamFileArgs) || 0;
+              return (get__streamFileMetadata(streamFileArgs) || EmptyObject).size || 0;
             }
           },
 
@@ -338,7 +361,7 @@ export default {
         children: {
           streamFileWriter: 'streamFileWriter',
           _blobQueue: '_blobQueue',
-          _streamFileMetadataSize: '_size',
+          _streamFileMetadata: '_metadata',
 
           // streamFileStat: {
           //   path: 'streamFileStat',
@@ -363,6 +386,21 @@ export default {
               await initStreamFs();
               const path = getFilePath(fileId);
               return await fs.getEntry(path);
+            }
+          },
+          streamFileLastModified: {
+            path: 'lastModified',
+            async fetch(
+              { fileId },
+              { },
+              { },
+              { initStreamFs }
+            ) {
+              await initStreamFs();
+              const path = getFilePath(fileId);
+              const stats = await fs.stat(path);
+
+              return stats.modificationTime.getTime();
             }
           },
           streamFileUrl: {

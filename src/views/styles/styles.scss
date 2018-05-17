@@ -225,7 +225,7 @@ button:active { outline:none !important; }
   margin-right: 0;
 }
 .spaced-inline-children > * {
-  margin-right: 8px;
+  margin-right: 0.5em;
 }
 .spaced-inline-children > *:last-child {
   margin-right: 0;
@@ -261,6 +261,10 @@ button:active { outline:none !important; }
 
 .margin-right-3 {
   margin-right: 3em;
+}
+
+.display-block {
+  display: block !important;
 }
 
 .padding-01 {

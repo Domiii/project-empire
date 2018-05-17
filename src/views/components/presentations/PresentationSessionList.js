@@ -15,7 +15,7 @@ import { withRouter } from 'react-router-dom';
 import Flexbox from 'flexbox-react';
 
 import { LoadOverlay } from '../overlays';
-import { hrefPresentationSessionView } from '../../href';
+import { hrefPresentationSessionView, hrefPresentationSession } from '../../href';
 import { LinkContainer } from 'react-router-bootstrap';
 import FAIcon from '../util/FAIcon';
 import { EmptyObject } from '../../../util';
@@ -43,15 +43,18 @@ const PresentationSessionRow = dataBind()(function PresentationSessionRow(
 
 const PresentationSessionLiveStatusElement = withRouter(dataBind({
   async clickNewPresentationSession(evt, { history }, { newPresentationSession }, { }) {
-    const sessionId = await newPresentationSession();
-    history.push(hrefPresentationSessionView(sessionId));
+    // new session is automatically live
+    await newPresentationSession();
+
+    // default view is live view
+    history.push(hrefPresentationSession());
   },
   clickGoToLivePresentationSession(evt, 
     { history }, 
     { }, 
-    { livePresentationSessionId }
+    { }
   ) {
-    history.push(hrefPresentationSessionView(livePresentationSessionId));
+    history.push(hrefPresentationSession());
   }
 })(function PresentationSessionLiveStatusElement(
   { },
@@ -132,22 +135,32 @@ export default class PresentationSessionList extends Component {
 /**
 
 == Bugs ==
-  -> bug: online presentations don't have sessionId (need "fix" migrations)
--> operator mode not working when not LIVE
--> recording officially started but listeners not activated
-    -> need better view of all currently existing files and their size
+MediaRecorder finished recording
+FirebaseDataProvider.js:116 W [ Upd /presentations/list/-LCj05T6hNojEVG0_4HL ]  {
+  presentationStatus: 10, 
+  finishTime: 1526576137012, 
+  updatedAt: {…}
+}
+FirebaseDataProvider.js:116 W [ Upd / ]  {
+    /presentationSessions/list/-LCj04sAINRd_FQpDoko/presentationSessionActivePresentationId: "-LCj05UN30JSXHA2_hj9", 
+    /presentations/list/-LCj05UN30JSXHA2_hj9/presentationStatus: 4
+  }
+
+  Problem found:
+    -> onNewData is not called anymore at some point!
+    -> upgrade to latest firebase (5.0.2) and try again!
 
 ==Basics==
+  -> finish operator layout to not resize all the time (disabled/invisible, not hidden!)
   -> let [P]resenter (not only [O]) also be able to change order of presentations (→ edit mode button?)
   -> button to shuffle PENDING presentations
   -> finish PresSess
   -> import + ready up this week's presentation list!
       -> account for every single user!
+  -> be able to observe more detailed [O]peration info online (so we can watch non-admin operator)
+  -> non-admin [O]perator
 
-  -> PresentationSession views: be able to go from live to list
   -> [N, O, (E)] network-enabled presentation timer!
-  -> improve [O]perator view
-    -> fix preview (cannot stop preview)
 
   -> finish many-2-many relationships
   -> proper project + user tagging for presentations

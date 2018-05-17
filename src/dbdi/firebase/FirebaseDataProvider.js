@@ -59,7 +59,7 @@ export default class FirebaseDataProvider extends DataProviderBase {
       val = null;
     }
 
-    //console.warn('onNewData', query.remotePath, val);
+    console.log('onNewData', query.remotePath, val);
     this.notifyNewData(query, val);
   }
 
@@ -67,7 +67,7 @@ export default class FirebaseDataProvider extends DataProviderBase {
     console.error(`[${this.constructor.name}] ${err.stack}`);
   }
 
-  _getRef(query) {
+  _getRefByQuery(query) {
     const {
       remotePath,
       queryInput: {
@@ -92,7 +92,7 @@ export default class FirebaseDataProvider extends DataProviderBase {
   onPathListenStart(query, firstListener) {
     const hook = snap => this._onNewData(query, snap);
 
-    const ref = this._getRef(query);
+    const ref = this._getRefByQuery(query);
     ref.on('value',
       hook,
       this._onError);
@@ -103,7 +103,7 @@ export default class FirebaseDataProvider extends DataProviderBase {
    * Not a single soul cares about the localPath in the given query anymore
    */
   onPathListenEnd(query, listener, hook) {
-    const ref = this._getRef(query);
+    const ref = this._getRefByQuery(query);
     ref.off('value', hook);
   }
 
@@ -117,16 +117,21 @@ export default class FirebaseDataProvider extends DataProviderBase {
     return true;
   }
 
+  _getRefByPath(remotePath) {
+    const ref = this.database().ref().child(remotePath);
+    return ref;
+  }
+
   actions = {
     set: (remotePath, val) => {
       this._onWrite('Set', remotePath, val);
-      let ref = this.database().ref().child(remotePath);
+      let ref = this._getRefByPath(remotePath);
       return ref.set(val);
     },
 
     push: (remotePath, val) => {
       this._onWrite('Pus', remotePath, val);
-      let ref = this.database().ref().child(remotePath);
+      let ref = this._getRefByPath(remotePath);
       return ref.push(val);
     },
 

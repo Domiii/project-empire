@@ -22,13 +22,17 @@ import {
 } from '../../../core/presentations/PresentationModel';
 
 import PresentationEditor from './PresentationEditor';
+import { getOptionalArgument } from '../../../dbdi/dataAccessUtil';
 
 const TrOfStatus = styled.tr`
   color: ${props => props.highlight ? 'black' : 'lightgray'};
+  background-color: ${props => props.highlight ? 'lightyellow' : 'transparent'};
 `;
 
 function FullWidthTableCell({ children, noBorder }) {
-  return <tr><td className={noBorder && 'no-border' || ''} colSpan={99999}>{children}</td></tr>;
+  return (<tr><td className={noBorder && 'no-border' || ''} colSpan={99999}>
+    {children}
+  </td></tr>);
 }
 
 const CenteredTd = styled.td`
@@ -68,7 +72,7 @@ const statusIconProps = {
   }),
   [PresentationStatus.Skipped]: ({
     name: 'times',
-    color: 'red'
+    color: 'orange'
   })
 };
 const statusIconPropsDefault = {
@@ -81,13 +85,12 @@ const statusIconPropsDefault = {
 @dataBind({})
 class DownloadVideoFileButton extends Component {
   render(
-    fileArgs,
+    { title, fileId },
     { streamFileExists, streamFileUrl }
   ) {
-    let { title } = fileArgs;
     title = title || 'video';
-    if (streamFileExists(fileArgs)) {
-      const url = streamFileUrl(fileArgs);
+    if (fileId) {
+      const url = streamFileExists({ fileId }) && streamFileUrl({ fileId }) || '';
       const href = url;
 
       // TODO: proper file name when downloading
@@ -165,13 +168,16 @@ class PresentationOperatorDetails extends Component {
 class PresentationStatusSummary extends Component {
   render(
     { presentationId, isSelected },
-    { get_presentation, streamFileExists, isCurrentUserAdmin, ytVideoUrl },
+    { get_presentation, streamFileExists,
+      isPresentationSessionOperator, isCurrentUserAdmin,
+      ytVideoUrl },
     { }
   ) {
     const presentation = get_presentation({ presentationId });
     const {
       fileId,
       videoId,
+      sessionId,
       //status: projectStatus,
       presentationStatus
     } = presentation;
@@ -189,16 +195,22 @@ class PresentationStatusSummary extends Component {
       statusInfoEl = (<FAIcon {...(statusIconProps[presentationStatus] || statusIconPropsDefault)} />);
 
       // we don't want the file system access warning to pop up for normal visitors
-      const shouldAccessFileSystem = fileId && isCurrentUserAdmin();
-      if (shouldAccessFileSystem && streamFileExists({ fileId })) {
-        // (there SHOULD NEVER BE, but) there always might be inconsistencies
-        if (fileId !== presentationId) {
-          // shit!
-          fileInfoEl = <FAIcon name="download" size=".8em" color="red" />;
+      const shouldAccessFileSystem = fileId &&
+        (isCurrentUserAdmin() || isPresentationSessionOperator({ sessionId }));
+      if (shouldAccessFileSystem) {
+        if (!streamFileExists.isLoaded({ fileId })) {
+          fileInfoEl = '.';
         }
-        else {
-          // should all be great
-          fileInfoEl = <FAIcon name="download" size=".8em" />;
+        else if (streamFileExists({ fileId })) {
+          // (there SHOULD NEVER BE, but) there always might be inconsistencies
+          if (fileId !== presentationId) {
+            // shit!
+            fileInfoEl = <FAIcon name="download" size=".8em" color="red" />;
+          }
+          else {
+            // should all be great
+            fileInfoEl = <FAIcon name="download" size=".8em" />;
+          }
         }
       }
     }
@@ -220,22 +232,63 @@ class PresentationStatusSummary extends Component {
     { }
   ) {
     selectRow(presentationId);
+  },
+
+  getShouldHighlight(
+    { presentationId },
+    { get_presentationStatus }
+  ) {
+    const presentationStatus = get_presentationStatus({ presentationId });
+    return presentationStatus === PresentationStatus.GoingOnStage ||
+      presentationStatus === PresentationStatus.InProgress;
   }
 })
-class PresentationInfoRow extends Component {
+export class PresentationInfoRow extends Component {
+  state = {};
+
+  constructor(props) {
+    super(props);
+    this.refToEl = React.createRef();
+  }
+
+  componentDidUpdate() {
+    const isHighlighted = this.props.getShouldHighlight();
+    if (!isHighlighted) {
+      return;
+    }
+
+    const el = this.refToEl.current;
+    //isHighlighted && console.warn(isHighlighted, this.wasHighlighted, !!el);
+    if (isHighlighted && !this.wasHighlighted && el && el.scrollIntoView) {
+      // see https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+      this.wasHighlighted = true;
+      //console.warn('scrolling', this.props.presentationId);
+      setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 250);
+      //setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 1000);
+    }
+    else if (!isHighlighted && this.wasHighlighted) {
+      this.wasHighlighted = false;
+    }
+  }
+
   render(
-    { sessionId, presentationId, isSelected },
+    args,
     { get_presentation, isPresentationSessionOperator,
-      clickSelectRow },
+      clickSelectRow, getShouldHighlight },
     { isCurrentUserAdmin }
   ) {
+    const { presentationId } = args;
+    const isSelected = getOptionalArgument(args, 'isSelected');
     const presentation = get_presentation({ presentationId });
+    if (!presentation) {
+      return '';
+    }
+
     const {
       index,
+      sessionId,
       title,
-      userNamesString,
-      //status: projectStatus,
-      presentationStatus
+      userNamesString
     } = presentation;
 
     //const clazz = presentationStatus === PresentationStatus.InProgress && 'red-highlight-border' || 'no-highlight-border';
@@ -256,18 +309,19 @@ class PresentationInfoRow extends Component {
     </CenteredTd>);
 
     //GoingOnStage
-    const isHighlighted = presentationStatus === PresentationStatus.GoingOnStage ||
-      presentationStatus === PresentationStatus.InProgress;
+    const isHighlighted = getShouldHighlight();
+
     return (
-      <TrOfStatus className="" highlight={isHighlighted} onDoubleClick={onDblClick}>
-        <td className="min">{Math.round(index) + 1}</td>
+      <TrOfStatus className="" highlight={isHighlighted}
+        onDoubleClick={onDblClick}>
+        <td ref={this.refToEl} className="min">{Math.round(index) + 1}</td>
         {summaryCell}
         {operatorCell}
         <TextTd>
-          {title}
+          {userNamesString}
         </TextTd>
         <TextTd>
-          {userNamesString}
+          {title}
         </TextTd>
         {/* <td>{health}</td> */}
       </TrOfStatus>
@@ -287,11 +341,16 @@ class PresentationRowDetails extends Component {
     const sessionArgs = { sessionId };
     const isOperator = isPresentationSessionOperator(sessionArgs);
 
+    const {
+      title,
+      fileId
+    } = presentation;
+
     const editorEl = isCurrentUserAdmin && <PresentationEditor presentationId={presentationId} />;
     let controlEls;
     if (isOperator) {
-      const fileName = presentation.title + ' (' + presentation.userNamesString + ')';
-      controlEls = <DownloadVideoFileButton title={fileName} fileId={presentationId} />;
+      const fileName = title + ' (' + presentation.userNamesString + ')';
+      controlEls = <DownloadVideoFileButton title={fileName} fileId={fileId} />;
     }
     return (<div>
       {editorEl}

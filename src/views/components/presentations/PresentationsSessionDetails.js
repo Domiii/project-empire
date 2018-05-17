@@ -191,7 +191,7 @@ class PresentationSessionControls extends Component {
 
 @dataBind({})
 export default class PresentationsSessionDetails extends Component {
-  state = {}
+  state = { };
 
   selectRow = (id) => {
     const { selectedPresentation } = this.state;
@@ -235,8 +235,8 @@ export default class PresentationsSessionDetails extends Component {
             <th className="min"></th>
             {/* operator buttons */}
             {isOperator && <th className="min"></th>}
-            <th>Title</th>
-            <th>Contributors</th>
+            <th>誰？</th>
+            <th>主題</th>
             {/* <th className="min">專案狀態</th> */}
           </tr>
         </thead>

@@ -11,6 +11,9 @@ import { PresentationStatus } from './PresentationModel';
 import { Promise } from 'firebase';
 import { NOT_LOADED } from '../../dbdi';
 
+async function doWait(ms) {
+  return new Promise((r, j) => setTimeout(r, ms));
+}
 
 const sessionReaders = {
   isPresentationSessionInProgress(sessionArgs, { presentationSessionOperatorUid }, { }) {
@@ -21,12 +24,21 @@ const sessionReaders = {
     return currentUid && presentationSessionOperatorUid(sessionArgs) === currentUid;
   },
 
+  hasPendingPresentations(
+    sessionArgs,
+    { getFirstPendingPresentationIdInSession }
+  ) {
+    return !!getFirstPendingPresentationIdInSession(sessionArgs);
+  },
+
   getFirstPendingPresentationIdInSession(
     sessionArgs,
-    { orderedPresentations }
+    { orderedPresentations, get_presentationStatus }
   ) {
     const presentations = orderedPresentations(sessionArgs);
-    const firstPendingPres = find(presentations, p => p.presentationStatus <= PresentationStatus.InProgress);
+    const firstPendingPres = find(presentations, p =>
+      //p.presentationStatus <= PresentationStatus.InProgress
+      get_presentationStatus({ presentationId: p.id }) <= PresentationStatus.InProgress);
     if (firstPendingPres) {
       return firstPendingPres.id;
     }
@@ -173,48 +185,31 @@ const sessionWriters = {
     }
   },
 
-  async skipPresentationInSession(
-    sessionArgs,
-    { presentationSessionActivePresentationId },
+  async _updatePresentationInSession(
+    { sessionId, newStatus },
+    { presentationSessionActivePresentationId, hasSelectedInputMedia, get_presentationStatus },
     { },
-    { finishPresentationSession, update_presentation, goToFirstPendingPresentationInSession, startStreamRecording }
+    { finishPresentationSession, update_presentation,
+      goToFirstPendingPresentationInSession,
+      startStreamRecording }
   ) {
+    const sessionArgs = { sessionId };
     const presentationId = presentationSessionActivePresentationId(sessionArgs);
     if (presentationId) {
       const presentationArgs = { presentationId };
       //const presentation = get_presentation(presentationArgs);
       await update_presentation(presentationArgs, {
-        presentationStatus: PresentationStatus.Skipped,
+        presentationStatus: newStatus,
         finishTime: new Date().getTime()
       });
 
-      // start next presentation
-      if (!await goToFirstPendingPresentationInSession(sessionArgs)) {
-        // we are done!
-        return await finishPresentationSession(sessionArgs);
+      if (get_presentationStatus(presentationArgs) !== newStatus) {
+        console.warn('Status was not updated: ' + get_presentationStatus(presentationArgs));
+        await doWait(800);
+        if (get_presentationStatus(presentationArgs) !== newStatus) {
+          console.warn('Status was not updated(2): ' + get_presentationStatus(presentationArgs));
+        }
       }
-      else {
-        // reset stream, with new presentation
-        const { sessionId } = sessionArgs;
-        return await startStreamRecording({ streamId: sessionId });
-      }
-    }
-  },
-
-  async finishPresentationSessionStreaming(
-    sessionArgs,
-    { presentationSessionActivePresentationId },
-    { },
-    { finishPresentationSession, update_presentation, goToFirstPendingPresentationInSession, startStreamRecording }
-  ) {
-    const presentationId = presentationSessionActivePresentationId(sessionArgs);
-    if (presentationId) {
-      const presentationArgs = { presentationId };
-      //const presentation = get_presentation(presentationArgs);
-      await update_presentation(presentationArgs, {
-        presentationStatus: PresentationStatus.Finished,
-        finishTime: new Date().getTime()
-      });
 
       // start next presentation
       if (!await goToFirstPendingPresentationInSession(sessionArgs)) {
@@ -224,9 +219,29 @@ const sessionWriters = {
       else {
         // reset stream
         const { sessionId } = sessionArgs;
-        return await startStreamRecording({ streamId: sessionId });
+        return hasSelectedInputMedia() && await startStreamRecording({ streamId: sessionId });
       }
     }
+  },
+
+  async skipPresentationInSession(
+    sessionArgs,
+    { },
+    { },
+    { _updatePresentationInSession }
+  ) {
+    const { sessionId } = sessionArgs;
+    return _updatePresentationInSession({sessionId, newStatus: PresentationStatus.Skipped});
+  },
+
+  async finishPresentationSessionStreaming(
+    sessionArgs,
+    { },
+    { },
+    { _updatePresentationInSession }
+  ) {
+    const { sessionId } = sessionArgs;
+    return _updatePresentationInSession({sessionId, newStatus: PresentationStatus.Finished});
   },
 
   async startPresentationInSession(
@@ -286,38 +301,34 @@ const sessionWriters = {
     { setActivePresentationInSession }
   ) {
     const presentationId = getFirstPendingPresentationIdInSession({ sessionId });
-    if (presentationId) {
-      return await setActivePresentationInSession({ sessionId, presentationId });
+    if (presentationId !== NOT_LOADED) {
+      await setActivePresentationInSession({ sessionId, presentationId });
+      return presentationId;
     }
-    return null;
   },
 
   async setActivePresentationInSession(
     { sessionId, presentationId },
-    { get_presentation, presentationStatus, presentationFileId, presentationSessionActivePresentationId },
+    { get_presentation, presentationStatus,
+      presentationSessionActivePresentationId },
     { },
-    { update_db, set_streamFileId }
+    { update_db }
   ) {
     const sessionArgs = { sessionId };
+
     const updates = {
       [presentationSessionActivePresentationId.getPath(sessionArgs)]: presentationId
     };
     if (presentationId) {
       const presentationArgs = { presentationId };
       Object.assign(updates, {
-        [presentationStatus.getPath(presentationArgs)]: PresentationStatus.InProgress,
-        [presentationFileId.getPath(presentationArgs)]: presentationId
-        //[presentationFileId.getPath(presentationArgs)]: null
+        [presentationStatus.getPath(presentationArgs)]: PresentationStatus.InProgress
       });
     }
 
-    // TODO: don't set fileId before startStreamRecorder!!!
-    // [presentationFileId.getPath(presentationArgs)]: presentationId
-
     // must make this update separate because that goes to a different DataProvider (MemoryDataProvider),
     // and (for now) update_db is set to the firebase DataProvider
-    const streamArgs = { streamId: sessionId };
-    const promises = [set_streamFileId(streamArgs, presentationId)];
+    const promises = [];
 
     const activePresId = presentationSessionActivePresentationId(sessionArgs);
     if (activePresId && activePresId !== presentationId &&
@@ -419,10 +430,15 @@ const sessionWriters = {
     sessionArgs,
     { },
     { },
-    { setActivePresentationInSession }
+    { setActivePresentationInSession,
+      stopPresentationSessionStreaming,
+      shutdownStream }
   ) {
     const { sessionId } = sessionArgs;
-    return setActivePresentationInSession({ sessionId, presentationId: null });
+    await setActivePresentationInSession({ sessionId, presentationId: null });
+    await stopPresentationSessionStreaming(sessionArgs);
+    const streamArgs = { streamId: sessionId };
+    await shutdownStream(streamArgs);
   },
 
   async deleteAllVideoIdsInSession(
