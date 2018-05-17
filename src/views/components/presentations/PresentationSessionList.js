@@ -149,6 +149,7 @@ FirebaseDataProvider.js:116 W [ Upd / ]  {
   Problem found:
     -> onNewData is not called anymore at some point!
     -> upgrade to latest firebase (5.0.2) and try again!
+    -> try add error callbacks to write operations? (maybe the connection got lost?)
 
 ==Basics==
   -> finish operator layout to not resize all the time (disabled/invisible, not hidden!)
