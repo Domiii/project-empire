@@ -220,6 +220,7 @@ const sessionWriters = {
         // reset stream
         const { sessionId } = sessionArgs;
         return hasSelectedInputMedia() && await startStreamRecording({ streamId: sessionId });
+        //return true;
       }
     }
   },

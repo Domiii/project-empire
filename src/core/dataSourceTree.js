@@ -10,6 +10,7 @@ import YtApiModel from './multimedia/youtube/YtApiModel';
 import LearnerScheduleModel from './scaffolding/LearnerScheduleModel';
 import ProjectModel from './projects/projectModel';
 import PresentationModels from './presentations';
+import SimulatorModel from './testing/SimulatorModel';
 
 // import LearnerKBModel from './scaffolding/LearnerKBModel';
 // import LearnerEntryModel from './scaffolding/LearnerEntryModel';
@@ -70,7 +71,9 @@ const dataModelConfig = {
   db: {
     dataProvider: 'firebase',
     path: '/',
-    children: merge({},
+    children: merge({
+      isConnected: '.info/connected'
+    },
       UserModel,
 
       CohortModel,
@@ -78,6 +81,8 @@ const dataModelConfig = {
       LearnerScheduleModel,
       ProjectModel,
       PresentationModels,
+
+      SimulatorModel
 
       //GoalModel,
 

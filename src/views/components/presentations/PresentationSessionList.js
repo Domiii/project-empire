@@ -147,26 +147,44 @@ FirebaseDataProvider.js:116 W [ Upd / ]  {
   }
 
   Problem found:
-    -> onNewData is not called anymore at some point!
-    -> upgrade to latest firebase (5.0.2) and try again!
-    -> try add error callbacks to write operations? (maybe the connection got lost?)
+    -> onNewData is not called anymore, at some point!
+    -> upgrade to latest firebase (5.0.3) and try again!
+    -> detect/show connection state (path = ".info/connected")
+    -> is ref.off() called?
+    -> add error callbacks to write operations (maybe the promise catch operation is not invoked?)
 
 ==Basics==
-  -> finish operator layout to not resize all the time (disabled/invisible, not hidden!)
+  -> setup automatic stress testing
+  -> delete unused files
+  -> be able to keep writing file, option not to override
+  -> more advanced on-the-spot error handling
+  -> fix layout for [O]perator to prevent elements from moving around (disabled/invisible, not hidden!)
   -> let [P]resenter (not only [O]) also be able to change order of presentations (→ edit mode button?)
   -> button to shuffle PENDING presentations
-  -> finish PresSess
+  -> better session management (especially title)
   -> import + ready up this week's presentation list!
       -> account for every single user!
   -> be able to observe more detailed [O]peration info online (so we can watch non-admin operator)
   -> non-admin [O]perator
+    -> finish registration + cohort adding first
+
+  -> generate per presentation youtube playlists
 
   -> [N, O, (E)] network-enabled presentation timer!
+    -> https://firebase.google.com/docs/database/web/offline-capabilities#server-timestamps
+    ->  var offsetRef = firebase.database().ref(".info/serverTimeOffset");
+        offsetRef.on("value", function(snap) {
+          var offset = snap.val();
+          var estimatedServerTimeMs = new Date().getTime() + offset;
+        });
 
   -> finish many-2-many relationships
   -> proper project + user tagging for presentations
 
   -> User management
+    -> https://firebase.google.com/support/release-notes/js#4.6.0
+      -> Added firebase.User.prototype.metadata which includes information about user creation time and last sign in time.
+      -> Added the isNewUser property to firebase.auth.AdditionalUserInfo, which is returned by sign in methods to indicate whether a user is a new or returning user.
     -> add user by name
       -> match user name to actual (but unregistered) user via admin interface
       {}-> fix all edge cases for when we merge two user objects into one, any data that references the user gets orphaned
@@ -175,6 +193,8 @@ FirebaseDataProvider.js:116 W [ Upd / ]  {
       -> last login time
       -> Easily edit all info
       -> Easily approve all (and/or individual) unregistered users
+
+  -> generate per user playlists
 
   -> project management
     -> account for every active project
@@ -186,7 +206,7 @@ FirebaseDataProvider.js:116 W [ Upd / ]  {
   -> start new project based on presentation
   -> archive/unarchive projects
 
-  -> generate youtube playlists
+  -> generate per project playlists
  */
 
 /**
