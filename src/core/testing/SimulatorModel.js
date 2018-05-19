@@ -64,10 +64,12 @@ process.env.NODE_ENV !== 'production' && (function () {
           args,
           { },
           { },
-          { set_activeTimer }
+          { simPresentationSessionStop, set_activeTimer }
         ) {
+          simPresentationSessionStop();
+
           const { startDelay, finishDelay, nReps } = getOptionalArguments(args, {
-            startDelay: 4000,
+            startDelay: 3000,
             finishDelay: 6000,
             nReps: 20
           });

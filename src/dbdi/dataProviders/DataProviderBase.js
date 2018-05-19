@@ -138,7 +138,7 @@ export default class DataProviderBase {
   }
 
   registerListener(queryInput, listener, who) {
-    console.assert(isFunction(listener), '[INTERNAL ERROR] listener must be function.');
+    console.assert(isFunction(listener), '[INTERNAL ERROR] listener must be function but found: ' + listener);
 
     const localPath = this.getLocalPath(queryInput);
 
