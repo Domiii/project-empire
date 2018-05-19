@@ -156,7 +156,7 @@ export default class DataProviderBase {
     }
 
     if (listeners.has(listener) && !this._listenerData.get(listener)) {
-      console.warn('registerListener:', listeners.has(listener), !!this._listenerData.get(listener));
+      console.error('something wrong with registerListener:', listeners.has(listener), !!this._listenerData.get(listener));
     }
     if (!listeners.has(listener)) {
       // add listener to set (if not already listening)
@@ -210,7 +210,7 @@ export default class DataProviderBase {
 
     if (isEmpty(listenerData.byPath)) {
       // we removed the last path for listener: delete listener, as well
-      console.warn('listeners.delete');
+      //console.warn('listeners.delete');
       listeners.delete(listener);
       this._listenerData.delete(listener);
     }
@@ -225,6 +225,10 @@ export default class DataProviderBase {
 
   _onPathUnused(localPath) {
     const query = this.getQueryByLocalPath(localPath);
+    if (!query) {
+      // already removed
+      return;
+    }
 
     console.log('UNLOAD', localPath);
     delete this._listenersByPath[localPath];
@@ -254,13 +258,11 @@ export default class DataProviderBase {
     }
     else if (!this.isDataLoaded(localPath)) {
       this.setLoadState(localPath, LoadState.Loaded);
-      console.log('LOADED ', localPath, ' -> ', val);
+      console.log('LOAD ', localPath, ' -> ', val);
     }
     else {
       //console.log('NEW DATA ', localPath, ' -> ', val);
     }
-
-    //console.warn('DATA [', query.remotePath, '] ', val);
 
     // update cache
     setDataIn(this._cache, localPath, val);

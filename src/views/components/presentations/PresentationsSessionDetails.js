@@ -95,10 +95,10 @@ const SessionToolbar = dataBind({})(function SessionHeader(
     controlEls = <UploadQueueControlPanel sessionId={sessionId} />;
   }
 
-  return (<Flexbox className="full-width">
+  return (<Flexbox className="full-width" alignItems="center">
     <Flexbox className="full-width" justifyContent="flex-start">
     </Flexbox>
-    <Flexbox justifyContent="flex-end" className="spaced-inline-children">
+    <Flexbox justifyContent="flex-end" alignItems="center" className="spaced-inline-children">
       {controlEls}
     </Flexbox>
   </Flexbox>);

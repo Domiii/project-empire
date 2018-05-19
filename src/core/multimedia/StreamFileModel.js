@@ -322,22 +322,22 @@ export default {
             let writer = get_streamFileWriter(queryArgs);
             if (!writer) {
               writer = await prepareWriter(queryArgs, readers, writers);
-            }
 
-            const files = _streamFileList();
-            if (files && !some(files, { name: fileId })) {
-              const { set__streamFileList, set_streamFileUrl } = writers;
+              const files = _streamFileList();
+              if (files && !some(files, { name: fileId })) {
+                const { set__streamFileList, set_streamFileUrl } = writers;
 
-              // add file to streamFileList
-              const path = getFilePath(fileId);
-              const fileEntry = await fs.getEntry(path);
-              files.push(fileEntry);
-              set__streamFileList(files);
+                // add file to streamFileList
+                const path = getFilePath(fileId);
+                const fileEntry = await fs.getEntry(path);
+                files.push(fileEntry);
+                set__streamFileList(files);
 
-              // // set URL
-              // fs.getUrl(path).then(url =>
-              //   set_streamFileUrl(queryArgs, url)
-              // );
+                // // set URL
+                // fs.getUrl(path).then(url =>
+                //   set_streamFileUrl(queryArgs, url)
+                // );
+              }
             }
 
             return writer;

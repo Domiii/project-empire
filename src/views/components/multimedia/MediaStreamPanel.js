@@ -393,7 +393,7 @@ export default class MediaStreamPanel extends Component {
     { streamStatus,
       streamRecorderMimeType,
       isStreamActive, isStreamOffline,
-      streamSize, streamDuration, streamFileId,
+      streamSize, streamDuration,
       streamGetVolume,
       streamVideoResolution
     },

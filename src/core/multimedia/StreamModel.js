@@ -158,8 +158,8 @@ function prepareRecorder(stream, streamArgs,
     if (!fileId) {
       throw new Error('fileId not set when starting MediaRecorder');
     }
-    fileArgs = { fileId };
 
+    fileArgs = { fileId };
     set_streamFileSegments(fileArgs, [{}]);
   };
   recorder.onpause = (e) => {
@@ -212,8 +212,9 @@ const mediaInputSelection = {
       const constraints = {};
       constraints.video = videoDeviceId && {
         deviceId: videoDeviceId,
-        width: { ideal: 4096 },
-        height: { ideal: 2160 }
+        //width: { ideal: 4096 },
+        //height: { ideal: 2160 }
+        height: 720
       } || false;
 
       constraints.audio = audioDeviceId && {
@@ -288,7 +289,6 @@ export default {
         //shutdownStream(streamArgs);
         {
           await stopStreamRecorder(streamArgs);
-          set_streamRecorderObject(streamArgs, null);
         }
 
         const streamPromise = get_streamObject(streamArgs) || getStream(mediaInputConstraints);
@@ -452,13 +452,13 @@ export default {
         },
 
         writers: {
-          shutdownStream(
+          async shutdownStream(
             streamArgs,
-            { streamObject, streamRecorderObject },
+            { streamObject },
             { },
             { set_streamObject,
-              set_streamRecorderObject,
-              set_streamStatus }
+              //set_streamStatus,
+              stopStreamRecorder }
           ) {
             const stream = streamObject(streamArgs);
             if (stream) {
@@ -466,9 +466,9 @@ export default {
               stream.getTracks().forEach(track => track.stop());
 
               set_streamObject(streamArgs, null);
-              set_streamRecorderObject(streamArgs, null);
-              set_streamStatus(streamArgs, MediaStatus.Down);
+              //set_streamStatus(streamArgs, MediaStatus.Down);
               //set_streamFileId(streamArgs, null);
+              return await stopStreamRecorder(streamArgs);
             }
           }
         },
@@ -509,10 +509,16 @@ export default {
             writers: {
               startStreamRecorder(
                 streamArgs,
-                { streamRecorderObject },
+                { streamRecorderObject, get_streamFileId },
                 { },
-                { set_streamStatus }
+                { set_streamStatus, shutdownStream }
               ) {
+                const fileId = get_streamFileId(streamArgs);
+                if (!fileId) {
+                  setTimeout(() => shutdownStream(streamArgs));
+                  throw new Error('fileId not set when starting MediaRecorder');
+                }
+                
                 const segmentLength = getOptionalArgument(streamArgs, 'timeout');
                 const recorder = streamRecorderObject(streamArgs);
                 recorder.start(segmentLength || 40);
@@ -522,9 +528,9 @@ export default {
 
               async stopStreamRecorder(
                 streamArgs,
-                { streamRecorderObject },
+                { streamObject, streamRecorderObject, streamStatus },
                 { },
-                { set_streamStatus }
+                { set_streamStatus, set_streamRecorderObject }
               ) {
                 //const { timeout } = streamArgs;
                 const recorder = streamRecorderObject(streamArgs);
@@ -533,11 +539,17 @@ export default {
                   return false;
                 }
 
+                const oldStream = streamObject(streamArgs);
+
                 const result = new Promise((resolve, reject) => {
                   recorder.onstop = (e) => {
                     console.log('MediaRecorder finished recording');
 
-                    set_streamStatus(streamArgs, MediaStatus.Finished);
+                    if (oldStream === streamObject(streamArgs) && 
+                      streamStatus(streamArgs) < MediaStatus.Finished) {
+                      set_streamStatus(streamArgs, MediaStatus.Finished);
+                      set_streamRecorderObject(streamArgs, null);
+                    }
                     resolve(true);
                   };
                 });

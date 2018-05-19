@@ -59,7 +59,7 @@ export default class FirebaseDataProvider extends DataProviderBase {
       val = null;
     }
 
-    console.log('onNewData', query.remotePath, val);
+    //console.log('onNewData', query.remotePath, val);
     this.notifyNewData(query, val);
   }
 
