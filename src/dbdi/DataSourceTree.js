@@ -16,7 +16,9 @@ import merge from 'lodash/merge';
 
 import autoBind from 'src/util/auto-bind';
 
-import { EmptyObject, EmptyArray } from 'src/util';
+//import { EmptyObject, EmptyArray } from 'src/util';
+
+import DataAccessTracker from './DataAccessTracker';
 
 
 /**
@@ -489,5 +491,13 @@ class DataSourceTree {
 
     this._addImmediateDescendants(writeDescendants, node, childNode => childNode.isWriter);
     node._writeDescendants = writeDescendants;
+  }
+
+  newAccessTracker(listener, name) {
+    return new DataAccessTracker(
+      this,
+      listener, 
+      name
+    );
   }
 }

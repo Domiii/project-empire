@@ -25,6 +25,7 @@ export const LoadState = {
  * from cache after unloading (in ms)
  */
 const purgeCacheDelayDefault = 60 * 1000;
+//const purgeCacheDelayDefault = 10;
 
 const fetchFailDelay = 5 * 1000;
 
@@ -117,7 +118,7 @@ export default class DataProviderBase {
         localPath,
         remotePath,
         customData,
-        //_useCount: 1
+        _useCount: 0
       };
       this._setQueryCache(cachedQuery);
     }
@@ -153,15 +154,23 @@ export default class DataProviderBase {
       const customData = this.onPathListenStart(query, listener);
       query.customData = customData;
     }
+
+    if (listeners.has(listener) && !this._listenerData.get(listener)) {
+      console.warn('registerListener:', listeners.has(listener), !!this._listenerData.get(listener));
+    }
     if (!listeners.has(listener)) {
       // add listener to set (if not already listening)
       listeners.add(listener);
-      this._listenerData.set(listener, {
+    }
+
+    let listenerData = this._listenerData.get(listener);
+    if (!listenerData) {
+      this._listenerData.set(listener, listenerData = {
         byPath: {}
       });
     }
 
-    if (!this._listenerData.get(listener).byPath[localPath]) {
+    if (!listenerData.byPath[localPath]) {
       this._listenerData.get(listener).byPath[localPath] = {
         //query,
       };
@@ -196,40 +205,27 @@ export default class DataProviderBase {
       return;
     }
 
+    // delete all kinds of stuff
+    delete listenerData.byPath[localPath];
+
+    if (isEmpty(listenerData.byPath)) {
+      // we removed the last path for listener: delete listener, as well
+      console.warn('listeners.delete');
+      listeners.delete(listener);
+      this._listenerData.delete(listener);
+    }
+
     setTimeout(() => {
-      // const byPathData = listenerData.byPath[localPath];
-      // const {
-      //   query
-      // } = byPathData;
-      const query = this.getQueryByLocalPath(localPath);
-
-
-      // delete all kinds of stuff
-      delete listenerData.byPath[localPath];
-
-      // reduce queryInputCache useCount
-      //--query._useCount;
-
-      // if (!query._useCount) {
-      //   // this is already handled in _onPathUnused
-      // }
-
-      if (isEmpty(listenerData.byPath)) {
-        // we removed the last path for listener: delete listener, as well
-        listeners.delete(listener);
-        this._listenerData.delete(listener);
-
-        if (isEmpty(listeners)) {
-          // we removed the last listener at path
-          this._onPathUnused(localPath);
-        }
+      if (isEmpty(listeners)) {
+        // we removed the last listener at path
+        this._onPathUnused(localPath);
       }
-
-      this.onPathListenEnd(query, listener, query.customData);
     }, purgeCacheDelayDefault);
   }
 
   _onPathUnused(localPath) {
+    const query = this.getQueryByLocalPath(localPath);
+
     console.log('UNLOAD', localPath);
     delete this._listenersByPath[localPath];
     this._queriesByLocalPath.delete(localPath);
@@ -237,6 +233,8 @@ export default class DataProviderBase {
     if (this._fetchFails[localPath]) {
       delete this._fetchFails[localPath];
     }
+
+    this.onPathListenEnd(query, query.customData);
   }
 
   // #################################################################################################
@@ -423,7 +421,7 @@ export default class DataProviderBase {
   /**
    * Not a single soul cares about the localPath in the given query anymore
    */
-  onPathListenEnd(query, listener, customData) {
+  onPathListenEnd(query, customData) {
     //throw new Error('DataProvider did not implement `onListenerRemove` method');
   }
 

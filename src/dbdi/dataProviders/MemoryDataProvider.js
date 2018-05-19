@@ -45,7 +45,7 @@ export default class MemoryDataProvider extends DataProviderBase {
 
   }
 
-  onPathListenEnd(query, listener, customData) {
+  onPathListenEnd(query, customData) {
 
   }
 

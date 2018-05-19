@@ -88,7 +88,7 @@ export default class DataReadDescriptor extends DataDescriptorNode {
       dataProvider
     } = callerNode;
 
-    accessTracker.recordDataAccess(dataProvider, queryInput);
+    accessTracker._recordDataAccess(dataProvider, queryInput);
     const result = dataProvider.readData(queryInput);
     if (result === NOT_LOADED) {
       this._doFetch(queryInput, args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);

@@ -2,6 +2,7 @@ import { writeParameterConfig } from 'src/dbdi/DataWriteDescriptor';
 
 import isObject from 'lodash/isObject';
 import isPlainObject from 'lodash/isPlainObject';
+import noop from 'lodash/noop';
 
 import autoBind from 'src/util/auto-bind';
 
@@ -24,7 +25,7 @@ export default class DataAccessTracker {
   constructor(dataSourceTree, listener, name) {
     this._dataSourceTree = dataSourceTree;
     this._listener = listener;
-    this._name = name;
+    this._name = name || '<unnamed DataAccessTracker>';
 
     autoBind(this);
 
@@ -225,8 +226,20 @@ export default class DataAccessTracker {
     return wrapper;
   }
 
+  /**
+   * Internally used by DataReadDescriptor to make sure that
+   * we will track the given path once it has been read once, until unmount is called.
+   */
+  _recordDataAccess(dataProvider, path) {
+    if (this._listener) {
+      dataProvider.registerListener(path, this._listener, this._name);
+      this._dataProviders.add(dataProvider);
+    }
+  }
+
+
   // ################################################
-  // Public methods + properties
+  // Resolution
   // ################################################
 
   resolveReadData(name) {
@@ -276,16 +289,38 @@ export default class DataAccessTracker {
     return writeData;
   }
 
-  recordDataAccess(dataProvider, path) {
-    dataProvider.registerListener(path, this._listener, this._name);
-    this._dataProviders.add(dataProvider);
+  unmount() {
+    if (this._listener) {
+      // unregister listener from all data providers
+      this._dataProviders.forEach(dataProvider => {
+        dataProvider.unregisterListener(this._listener);
+      });
+      this._dataProviders = new Set();
+    }
   }
 
-  unmount() {
-    // reset all
-    this._dataProviders.forEach(dataProvider => {
-      dataProvider.unregisterListener(this._listener);
-    });
-    this._dataProviders = new Set();
+
+  // ################################################
+  // Direct reads + writes
+  // ################################################
+
+  get read() {
+    return this._readerProxy;
+  }
+
+  get write() {
+    return this._writerProxy;
+  }
+
+  /**
+   * A lot of "writers" are actually more like "actions", 
+   * so "do" is a more appropriate verb.
+   */
+  get do() {
+    return this._writerProxy;
+  }
+
+  get get() {
+    return this._injectProxy;
   }
 }

@@ -1,37 +1,126 @@
+import doWait from '../../util/doWait';
+import CancelablePromise from '../../util/CancelablePromise';
+import dataSourceTree from '../dataSourceTree';
+import { getOptionalArguments } from '../../dbdi/dataAccessUtil';
+
 let SimulatorModel;
 
-if (process.env.NODE_ENV !== 'production') {
+//function 
+
+/* globals window document */
+
+process.env.NODE_ENV !== 'production' && (function () {
+  const $ = document.querySelector.bind(document);
+
+  function clickElem(sel) {
+    const elem = $(sel);
+    if (!elem) {
+      throw new Error(`element ${sel} does not exist`);
+    }
+    simulateClick(elem);
+  }
+
+  /**
+   * Simulate a click event.
+   */
+  function simulateClick(elem) {
+    // Create our event (with options)
+    var evt = new window.MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      view: window
+    });
+    // If cancelled, don't dispatch our event
+    //var canceled = !elem.dispatchEvent(evt);
+    elem.dispatchEvent(evt);
+  }
+
+  // a bit hacky, but we'll fix it eventually!
+  let dataAccess;
+  Object.defineProperty(window, 'dbdi', {
+    get() {
+      return dataAccess || (dataAccess = dataSourceTree.newAccessTracker('TESTER'));
+    }
+  });
+
+  // now we can do something like this in the console:
+
+  // dbdi.do.simPresentationSessionStart();
+
   SimulatorModel = {
     simulator: {
+      dataProvider: 'memory',
+
+      readers: {
+        isSimActive(
+          { },
+          { },
+          { activeTimer }
+        ) {
+          return activeTimer !== null;
+        }
+      },
+
       writers: {
         async simPresentationSessionStart(
-          { startDelay, finishDelay },
+          args,
           { },
-          { set_simActive }
+          { },
+          { set_activeTimer }
         ) {
-          const timer = setTimeout();
-          set_simActive(timer);
+          const { startDelay, finishDelay, nReps } = getOptionalArguments(args, {
+            startDelay: 4000,
+            finishDelay: 6000,
+            nReps: 20
+          });
+
+          console.warn(`starting sim: run ${nReps} times, startDelay: ${startDelay}, finishDelay: ${finishDelay}`);
+
+          const timer = CancelablePromise.resolve();
+          set_activeTimer(timer);
+
+          try {
+            // skip the preparation stuff
+            const prepBtn = '#start-stream-btn';
+            if ($(prepBtn)) {
+              clickElem(prepBtn);
+              await doWait(500);
+            }
+
+            // let's go!
+            for (let i = 0; i < nReps; ++i) {
+              await doWait(startDelay);
+              clickElem('#stream-control-btn');
+              await doWait(finishDelay);
+              clickElem('#stream-finish-btn');
+            }
+            console.warn(`[SUCCESS] Finished sim (${nReps} reps)!`);
+          }
+          catch (err) {
+            console.error('sim failed:', err.stack);
+          }
+          finally {
+            set_activeTimer(null);
+          }
         },
 
         async simPresentationSessionStop(
           { },
-          { get_simActive },
-          { }
+          { },
+          { activeTimer },
+          { set_activeTimer }
         ) {
-          const timer = get_simActive();
-          if (timer) {
-            clearTimeout(timer);
+          if (activeTimer) {
+            set_activeTimer(null);
+            activeTimer.cancel();
           }
         }
       },
       children: {
-        simActive: 'simActive'
+        activeTimer: 'activeTimer'
       }
     }
   };
-}
-else {
-  SimulatorModel = {};
-}
+}());
 
-export default SimulatorModel;
+export default SimulatorModel || {};

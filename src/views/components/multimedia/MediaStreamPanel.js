@@ -137,35 +137,35 @@ const RecorderCtrlButton = dataBind(injectedActions)(function RecorderCtrlButton
       icon = '';
       break;
   }
-  return (<Button disabled={!action} onClick={action} bsStyle={bsStyle} bsSize={bsSize}>
+  return (<Button id="stream-control-btn" disabled={!action} onClick={action} bsStyle={bsStyle} bsSize={bsSize}>
     <FAIcon name={icon} />{text}
   </Button>);
 });
 
-@dataBind({})
-class DownloadStreamFileButton extends Component {
-  render(
-    { streamArgs, disabled },
-    { streamSize, streamUrl }
-  ) {
-    const size = streamSize(streamArgs);
-    const href = disabled ? '' : (streamUrl(streamArgs) + '?s=' + size);
-    return (<a href={href} download="stream.webm" target="_blank" role="button"
-      className="btn btn-info btn-block">
-      <Flexbox justifyContent="center" alignItems="center" className="inline-hcenter">
-        <Flexbox>
-          Download&nbsp;
-        </Flexbox>
-        <Flexbox>
-          <FAIcon name="download" />
-        </Flexbox>
-        <Flexbox>
-          &nbsp;(<span className="digital-number-font">{renderSize(size || 0)}</span>)
-        </Flexbox>
-      </Flexbox>
-    </a>);
-  }
-}
+// @dataBind({})
+// class DownloadStreamFileButton extends Component {
+//   render(
+//     { streamArgs, disabled },
+//     { streamSize, streamUrl }
+//   ) {
+//     const size = streamSize(streamArgs);
+//     const href = disabled ? '' : (streamUrl(streamArgs) + '?s=' + size);
+//     return (<a href={href} download="stream.webm" target="_blank" role="button"
+//       className="btn btn-info btn-block">
+//       <Flexbox justifyContent="center" alignItems="center" className="inline-hcenter">
+//         <Flexbox>
+//           Download&nbsp;
+//         </Flexbox>
+//         <Flexbox>
+//           <FAIcon name="download" />
+//         </Flexbox>
+//         <Flexbox>
+//           &nbsp;(<span className="digital-number-font">{renderSize(size || 0)}</span>)
+//         </Flexbox>
+//       </Flexbox>
+//     </a>);
+//   }
+// }
 
 
 /**
@@ -192,7 +192,8 @@ export const MediaPrepView = dataBind({})(function MediaPrepView(
         <MediaSettingsPanel />
       </div>
       <br />
-      <Button bsSize="large" bsStyle="info"
+      <Button id="start-stream-btn"
+        bsSize="large" bsStyle="info"
         disabled={!mediaReady}
         onClick={startStreaming} block>
         <FAIcon name="play-circle" /> Start!
@@ -523,7 +524,7 @@ export default class MediaStreamPanel extends Component {
               </Button> 
             </Flexbox> */}
             <Flexbox className="">
-              {size > 1 && <Button bsStyle="danger" disabled={!hasStarted} onClick={this.clickFinish} block>
+              {size > 1 && <Button bsStyle="danger" id="stream-finish-btn" disabled={!hasStarted} onClick={this.clickFinish} block>
                 Finish <FAIcon name="stop" />
               </Button>}
             </Flexbox>

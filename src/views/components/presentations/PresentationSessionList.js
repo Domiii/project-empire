@@ -211,6 +211,9 @@ FirebaseDataProvider.js:116 W [ Upd / ]  {
 
 /**
 ==Advanced features==
+  -> DBDI is currently really not testable at all...
+        -> https://medium.com/welldone-software/an-overview-of-javascript-testing-in-2018-f68950900bc3
+
 * 讓他們上傳他們的簡報
 * 提出問題／提示給他們 (notifications)
 * 客觀的寶寶村制度？？？

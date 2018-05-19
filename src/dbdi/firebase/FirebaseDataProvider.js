@@ -102,7 +102,7 @@ export default class FirebaseDataProvider extends DataProviderBase {
   /**
    * Not a single soul cares about the localPath in the given query anymore
    */
-  onPathListenEnd(query, listener, hook) {
+  onPathListenEnd(query, hook) {
     const ref = this._getRefByQuery(query);
     ref.off('value', hook);
   }

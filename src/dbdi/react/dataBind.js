@@ -154,11 +154,16 @@ export default (propsOrPropCb) => _WrappedComponent => {
 
       this._shouldUpdate = false;
       this._isMounted = false;
+
+      // prepare access tracker
       this._dataSourceTree = getDataSourceTreeFromReactContext(context);
+      this._dataAccessTracker = this._dataSourceTree.newAccessTracker(
+        this._onNewData,
+        _WrappedComponent.name || '<unnamed component>'
+      );
+      
+      // get context data
       this._customContext = Object.assign({}, getCustomContextFromReactContext(context) || {});
-      this._dataAccessTracker = new DataAccessTracker(
-        this._dataSourceTree, this._onNewData,
-        _WrappedComponent.name || '<unnamed component>');
 
 
       // prepare all the stuff
