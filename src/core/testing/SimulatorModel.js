@@ -69,7 +69,7 @@ process.env.NODE_ENV !== 'production' && (function () {
           simPresentationSessionStop();
 
           const { startDelay, finishDelay, nReps } = getOptionalArguments(args, {
-            startDelay: 3000,
+            startDelay: 4000,
             finishDelay: 6000,
             nReps: 20
           });
