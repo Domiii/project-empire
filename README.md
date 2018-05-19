@@ -15,15 +15,17 @@
       {}-> fix all edge cases for when we merge two user objects into one, any data that references the user gets orphaned
     * User table
       -> show all info
-      -> last login time
-          * "Added firebase.User.prototype.metadata which includes information about user creation time and last sign in time." -> https://firebase.google.com/support/release-notes/js#4.6.0
     * Easily edit all info
     * Easily approve all (and/or individual) unregistered users
 
+* many2many relationships
+    * for all deletes: add an optional batchUpdate parameter
+      * delete calls that did not receive it, create one themselves
+        * and flush it at the end of their call
+          
 * 讓 user 提供　檔案　連結
     * make sessions viewable by normal users
     * Match user ids to presentation
-        * many2many relationships must work for this
         * match by fullName and add stronger user editing features
     * New screen for users to see and edit their own presentations
         * Button to quickly edit their stuff from the PresentationView
@@ -60,7 +62,8 @@
           var estimatedServerTimeMs = new Date().getTime() + offset;
         });
 
-* finish many-2-many relationships
+* show user last login time
+  * "Added firebase.User.prototype.metadata which includes information about user creation time and last sign in time." -> https://firebase.google.com/support/release-notes/js#4.6.0
 
 * generate per user playlists
 
