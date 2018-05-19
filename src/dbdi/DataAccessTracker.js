@@ -2,7 +2,7 @@ import { writeParameterConfig } from 'src/dbdi/DataWriteDescriptor';
 
 import isObject from 'lodash/isObject';
 import isPlainObject from 'lodash/isPlainObject';
-import noop from 'lodash/noop';
+import isFunction from 'lodash/isFunction';
 
 import autoBind from 'src/util/auto-bind';
 
@@ -23,8 +23,11 @@ export default class DataAccessTracker {
   _wrappedWriters = {};
 
   constructor(dataSourceTree, listener, name) {
+    console.assert(!listener || isFunction(listener), 'listener must be function');
+
     this._dataSourceTree = dataSourceTree;
     this._listener = listener;
+
     this._name = name || '<unnamed DataAccessTracker>';
 
     autoBind(this);

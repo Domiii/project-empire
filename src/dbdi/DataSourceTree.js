@@ -493,7 +493,7 @@ class DataSourceTree {
     node._writeDescendants = writeDescendants;
   }
 
-  newAccessTracker(listener, name) {
+  newAccessTracker(name, listener) {
     return new DataAccessTracker(
       this,
       listener, 

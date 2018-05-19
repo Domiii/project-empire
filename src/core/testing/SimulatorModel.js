@@ -36,16 +36,14 @@ process.env.NODE_ENV !== 'production' && (function () {
   }
 
   // a bit hacky, but we'll fix it eventually!
+  // this allows us to do something like this in the console:
+  // dbdi.do.simPresentationSessionStart();
   let dataAccess;
   Object.defineProperty(window, 'dbdi', {
     get() {
       return dataAccess || (dataAccess = dataSourceTree.newAccessTracker('TESTER'));
     }
   });
-
-  // now we can do something like this in the console:
-
-  // dbdi.do.simPresentationSessionStart();
 
   SimulatorModel = {
     simulator: {
@@ -66,8 +64,10 @@ process.env.NODE_ENV !== 'production' && (function () {
           args,
           { },
           { },
-          { set_activeTimer }
+          { simPresentationSessionStop, set_activeTimer }
         ) {
+          simPresentationSessionStop();
+
           const { startDelay, finishDelay, nReps } = getOptionalArguments(args, {
             startDelay: 4000,
             finishDelay: 6000,

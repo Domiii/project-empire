@@ -48,7 +48,7 @@ function shallowEqual(objA, objB) {
   }
 
   if (typeof objA !== 'object' || objA === null ||
-      typeof objB !== 'object' || objB === null) {
+    typeof objB !== 'object' || objB === null) {
     return false;
   }
 
@@ -158,10 +158,10 @@ export default (propsOrPropCb) => _WrappedComponent => {
       // prepare access tracker
       this._dataSourceTree = getDataSourceTreeFromReactContext(context);
       this._dataAccessTracker = this._dataSourceTree.newAccessTracker(
-        this._onNewData,
-        _WrappedComponent.name || '<unnamed component>'
+        _WrappedComponent.name || '<unnamed component>',
+        this._onNewData
       );
-      
+
       // get context data
       this._customContext = Object.assign({}, getCustomContextFromReactContext(context) || {});
 
@@ -352,7 +352,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
             //console.warn('get from customContext: ' + name);
             return this._customContext[name];
           }
-          
+
           // 5) check special properties
           if (name in sharedArgumentProxyProperties) {
             return sharedArgumentProxyProperties[name];
@@ -397,7 +397,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
           if (name in this._customContext) {
             return true;
           }
-          
+
           // 5) check special properties
           if (name in sharedArgumentProxyProperties) {
             return true;
@@ -550,7 +550,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
       return buildReactContextForDataBind(this.context, this._customContext);
     }
 
-    componentWillUpdate() {
+    UNSAFE_componentWillUpdate() {
       this._prepareInjectedProps();
     }
 
@@ -566,7 +566,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
       return true;
     }
 
-    componentWillMount() {
+    UNSAFE_componentWillMount() {
       //console.log('dataBind.componentWillMount');
 
       const newContext = this.props.setContext;
