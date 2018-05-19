@@ -7,26 +7,52 @@
 * [Expensive; Windows only] SparkoCam Virtual Webcam: https://sparkosoft.com/how-to-use-dslr-as-webcam
 
 ## TODO: Basics
-  -> 讓 user 提供　檔案　連結
-    -> needs many-to-many relations + basic user management
-  -> 麥克風如果接線的話，沒有麥克風的時候，要收動叫系統切換 audio input
-    -> can I detect when a multimedia device is gone?
-      -> or poll continuously?
-    -> change to default when gone
-      -> restore when available again?
+* Basic user management
+    * Add new option: auto-registering of new users can be turned on + off (for short periods of time)
+        * -> Turn on next Friday
+    * presentation <-> user name matching
+      -> match user name to actual (but unregistered) user via admin interface
+      {}-> fix all edge cases for when we merge two user objects into one, any data that references the user gets orphaned
+    * User table
+      -> show all info
+      -> last login time
+          * "Added firebase.User.prototype.metadata which includes information about user creation time and last sign in time." -> https://firebase.google.com/support/release-notes/js#4.6.0
+    * Easily edit all info
+    * Easily approve all (and/or individual) unregistered users
+
+* 讓 user 提供　檔案　連結
+    * make sessions viewable by normal users
+    * Match user ids to presentation
+        * many2many relationships must work for this
+        * match by fullName and add stronger user editing features
+    * New screen for users to see and edit their own presentations
+        * Button to quickly edit their stuff from the PresentationView
+
+
+* External mic support
+    * 沒有麥克風的時候，要收動叫系統切換 audio input
+    * can I detect when a multimedia device is gone?
+        * or poll continuously?
+    * change to default when gone
+        * restore when available again?
+
   -> be able to keep writing file, option not to override
   -> let [P]resenter (not only [O]) also be able to change order of presentations (→ edit mode button?)
   -> button to shuffle PENDING presentations
-  -> better session management (especially title)
   -> import + ready up this week's presentation list!
       -> account for every single user!
-  -> be able to observe more detailed [O]peration info online (so we can watch non-admin operator)
-  -> non-admin [O]perator
-    -> finish registration + cohort adding first
 
-  -> generate per presentation youtube playlists
+* non-admin [O]perator
+    * new database write rules
+        * change all (most) rules to use displayRole instead of role, so it's more accurate when testing
+    * dropdown component to let admin set operator [OperatorSelection]
+    * be able to observe more detailed [O]peration info online (so we can watch non-admin operator)
+    * test with non-admin account
 
-  -> [N, O, (E)] network-enabled presentation timer!
+* generate per session playlists
+    * edit + view session title
+
+* [N, O, (E)] network-enabled presentation timer!
     -> https://firebase.google.com/docs/database/web/offline-capabilities#server-timestamps
     ->  var offsetRef = firebase.database().ref(".info/serverTimeOffset");
         offsetRef.on("value", function(snap) {
@@ -34,25 +60,13 @@
           var estimatedServerTimeMs = new Date().getTime() + offset;
         });
 
-  -> finish many-2-many relationships
-  -> proper project + user tagging for presentations
+* finish many-2-many relationships
 
-  -> User management
-    -> https://firebase.google.com/support/release-notes/js#4.6.0
-      -> Added firebase.User.prototype.metadata which includes information about user creation time and last sign in time.
-      -> Added the isNewUser property to firebase.auth.AdditionalUserInfo, which is returned by sign in methods to indicate whether a user is a new or returning user.
-    -> add user by name
-      -> match user name to actual (but unregistered) user via admin interface
-      {}-> fix all edge cases for when we merge two user objects into one, any data that references the user gets orphaned
-    -> User table
-      -> show all info
-      -> last login time
-      -> Easily edit all info
-      -> Easily approve all (and/or individual) unregistered users
+* generate per user playlists
 
-  -> generate per user playlists
+* proper project + user tagging for presentations
 
-  -> project management
+* project management
     -> account for every active project
       -> possibly get a status update for each presentation that has a project in its focus
     -> archive/unarchive projects
@@ -82,7 +96,7 @@
 
   -> [E] inline editing
   
-  -> let normal users use this:
+  -> features for normal users:
       -> presentation session + presentation
       -> own + participating playlists
       -> see + review feedback
