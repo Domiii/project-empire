@@ -37,7 +37,8 @@ export default class HomePage extends Component {
     { }
   ) {
     return (
-      <Redirect to={routePaths.PROJECTS_VIEW} />
+      //<Redirect to={routePaths.PROJECTS_VIEW} />
+      <Redirect to={routePaths.PRESENTATION_SESSIONS} />
       // <div>
       //   <ProjectList />
       // </div>

@@ -9,21 +9,21 @@
 ## TODO: Basics
   -> 讓 user 提供　檔案　連結
     -> needs many-to-many relations + basic user management
+  -> fix camera issues!
   -> 麥克風如果接線的話，沒有麥克風的時候，要收動叫系統切換 audio input
     -> can I detect when a multimedia device is gone?
       -> or poll continuously?
-    -> change to default when gone
-      -> restore when available again?
+    -> change to default when external mic is gone
+      -> restore when available again
+  -> non-admin [O]perator
+    -> finish registration + cohort adding first
+    -> be able to observe more detailed [O]peration info online (so we can watch non-admin operator and make sure, everything is right)
+
   -> be able to keep writing file, option not to override
   -> let [P]resenter (not only [O]) also be able to change order of presentations (→ edit mode button?)
   -> button to shuffle PENDING presentations
-  -> better session management (especially title)
-  -> import + ready up this week's presentation list!
-      -> account for every single user!
-  -> be able to observe more detailed [O]peration info online (so we can watch non-admin operator)
-  -> non-admin [O]perator
-    -> finish registration + cohort adding first
 
+  -> session titles
   -> generate per presentation youtube playlists
 
   -> [N, O, (E)] network-enabled presentation timer!
