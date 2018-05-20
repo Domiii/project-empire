@@ -212,9 +212,8 @@ const mediaInputSelection = {
       const constraints = {};
       constraints.video = videoDeviceId && {
         deviceId: videoDeviceId,
-        //width: { ideal: 4096 },
-        //height: { ideal: 2160 }
-        height: 720
+        width: { ideal: 4096 },
+        height: { ideal: 2160 }
       } || false;
 
       constraints.audio = audioDeviceId && {
