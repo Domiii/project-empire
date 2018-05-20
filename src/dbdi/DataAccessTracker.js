@@ -174,6 +174,10 @@ export default class DataAccessTracker {
       return node.isDataLoaded(this._wrapArgs(args, node), this._readerProxy, this._injectProxy, this._writerProxy, this);
     };
 
+    wrappedReadData.readOnce = (args) => {
+      return node.readOnce(this._wrapArgs(args, node), this._readerProxy, this._injectProxy, this._writerProxy, this);
+    };
+
     wrappedReadData.areAllLoaded = (idArgs, args) => {
       return node.areAllLoaded(idArgs, this._wrapArgs(args, node), this._readerProxy, this._injectProxy, this._writerProxy, this);
     };

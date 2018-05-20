@@ -50,13 +50,13 @@ function capitalize(name) {
 const _allNameProxies = {};
 
 const _relationshipNameGenerators = {
-  asOfB: (n) => `${n.as}Of${n.B}`, // (usersOfProject)
-  aIdsOfBs: (n) => `${n.aIds}Of${n.Bs}`, // (uidsOfProjects)
-  aIdsOfB: (n) => `${n.aIds}Of${n.B}`, // (uidsOfProject)
-  aIdOfB: (n) => `${n.aId}Of${n.B}`, // (uidOfProject)
-  countAsOfB: (n) => `count${n.As}Of${n.B}`, // (countUsersOfProject)
-  anyAsOfB: (n) => `any${n.As}Of${n.Bs}`, // (anyUsersOfProject)
-  bIdsWithoutA: (n) => `${n.bIds}Without${n.A}`, // (projectIdsWithoutUser)
+  asOfB: (n) => `${n.as}Of${n.B}`, // (e.g. usersOfProject)
+  aIdsOfBs: (n) => `${n.aIds}Of${n.Bs}`, // (e.g. uidsOfProjects)
+  aIdsOfB: (n) => `${n.aIds}Of${n.B}`, // (e.g. uidsOfProject)
+  aIdOfB: (n) => `${n.aId}Of${n.B}`, // (e.g. uidOfProject)
+  countAsOfB: (n) => `count${n.As}Of${n.B}`, // (e.g. countUsersOfProject)
+  anyAsOfB: (n) => `any${n.As}Of${n.Bs}`, // (e.g. anyUsersOfProject)
+  bIdsWithoutA: (n) => `${n.bIds}Without${n.A}`, // (e.g. projectIdsWithoutUser)
 };
 
 const _nameProxyHandler = {
@@ -300,6 +300,38 @@ const dataModelGenerators = {
       writers: {
         [n.addAToB](args, readers, injected, writers) {
           writers[n.aIdOfB](args, 1);
+        }
+      }
+    };
+  }
+};
+
+const specializedDataModelGenerators = {
+  // deletes need special attention, depending on the relationship type
+  hasMany(n, cfg) {
+    return {
+      children: {
+
+      },
+      readers: {
+
+      },
+      writers: {
+        [n.deleteB](args, readers, injected, writers) {
+          const aIds = readers[n.aIdsOfB](args);
+
+          if (aIds === NOT_LOADED) {
+            // TODO: let DataProvider provide a way of getting a promise for not-loaded data
+            throw new Error(`Cannot delete '${n.b}' when '${n.aIdsOfB}' have not been loaded yet`);
+          }
+
+          // only handle the "b hasMany a" case
+          writers[n.aIdsOfB](args, null);
+
+          // if a belongsTo b, also delete all a's
+          if (cfg.deleteAsWithBs) {
+
+          }
         }
       }
     };

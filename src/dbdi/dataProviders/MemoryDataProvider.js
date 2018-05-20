@@ -38,6 +38,10 @@ export default class MemoryDataProvider extends DataProviderBase {
   // Any DataProvider can/needs to implement the following methods
   // #################################################################
 
+  async fetchOnce() {
+    return null;
+  }
+
   /**
    * A listener started listening on a path for the fast time
    */

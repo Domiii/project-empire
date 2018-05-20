@@ -25,9 +25,9 @@ import {
  *  groupBy
  */
 
- /**
-  * The FirebaseDataProvider allows 
-  */
+/**
+ * The FirebaseDataProvider allows 
+ */
 export default class FirebaseDataProvider extends DataProviderBase {
   _database;
 
@@ -85,6 +85,14 @@ export default class FirebaseDataProvider extends DataProviderBase {
   // ################################################
   // Public properties + methods
   // ################################################
+
+
+  async fetchOnce(queryInput) {
+    const q = this.justGimmeAQuery(queryInput);
+    const ref = this._getRefByQuery(q);
+    const snap = await ref.once('value');
+    return snap.val();
+  }
 
   /**
    * A listener started listening on a path for the fast time

@@ -20,7 +20,6 @@ import PresentationsPage from './pages/PresentationsPage';
 
 import VideoRecordingPage from './pages/VideoRecordingPage';
 
-import TestPage from './pages/TestPage';
 import LearnerKBPage from './pages/LearnerKBPage';
 
 
@@ -31,6 +30,10 @@ const signedInRoutes = [
   {
     path: routeTemplates.DEBUG,
     component: DebugPage
+  },
+  process.env.NODE_ENV !== 'production' && {
+    path: routeTemplates.TEST,
+    component: require('./pages/TestPage').default
   }
 ];
 
@@ -78,7 +81,6 @@ const AppRoutes = dataBind()(function AppRoutes(
 
         <Route exact path={routeTemplates.GM} component={GMPage} />
         <Route exact path={routeTemplates.DEV} component={DevPage} />
-        <Route exact path={routeTemplates.TEST} component={TestPage} />
 
         <Route exact path={routeTemplates.PROJECTS} component={ProjectPage} />
         <Route exact path={routeTemplates.PRESENTATION_SESSIONS} component={PresentationsPage} />

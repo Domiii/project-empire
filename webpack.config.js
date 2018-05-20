@@ -37,11 +37,14 @@ const cssLoaders = [{
 const loaders = [
   {
     test: /\.js[x]?$/,
-    exclude: /node_modules/,
+    exclude: [
+      /node_modules/
+    ],
     loader: 'babel-loader'
   },
   {
-    test: /\.json$/, loader: 'json-loader'
+    test: /\.json$/, 
+    loader: 'json-loader'
   },
   {
     test: /\.[s]?css$/, 
@@ -163,6 +166,8 @@ if (ENV_DEVELOPMENT) {
 //  PRODUCTION
 //-------------------------------------
 if (ENV_PRODUCTION) {
+  loaders[0].exclude.push(/TestPage\.js$/);
+  
   config.devtool = 'eval';
 
   config.entry.vendor = './src/vendor.js';

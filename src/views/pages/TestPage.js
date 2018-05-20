@@ -14,6 +14,19 @@ const dataProviders = {
 const dataStructureConfig = {
   testCfg: {
     dataProvider: 'memory',
+    writers: {
+      async testFetch(
+        args,
+        { fetchGood, someTestResults },
+        { },
+        { set_someTestResults }
+      ) {
+        const res = await fetchGood.readOnce();
+        set_someTestResults(res);
+
+        console.assert(res && someTestResults() === res, 'someTestResults did not get set!');
+      }
+    },
     children: {
       fetchGood: {
         path: 'fetchGood',
@@ -38,6 +51,7 @@ const dataStructureConfig = {
           return NOT_LOADED;
         }
       },
+      someTestResults: 'someTestResults'
     }
   }
 };
@@ -49,11 +63,31 @@ async function doWait(ms) {
 
 @dataBind({})
 class TestFetch extends Component {
-  render({ }, { }, { fetchGood, fetchFail1, fetchFail1_isLoaded, fetchFail2, fetchFail2_isLoaded }) {
+  constructor(props) {
+    super(props);
+
+    this.dataBindMethods(
+      'componentDidMount'
+    );
+  }
+
+  componentDidMount(
+    { },
+    { testFetch }
+  ) {
+    testFetch();
+  }
+
+  render(
+    { },
+    { },
+    { fetchGood, fetchFail1, fetchFail1_isLoaded, fetchFail2, fetchFail2_isLoaded, someTestResults }
+  ) {
     return (<div>
       <p>fetchGood: {fetchGood || 'loading...'}</p>
       <p>fetchFail1: {fetchFail1_isLoaded && 'loaded!' || 'loading (not ready)...'} {fetchFail1}</p>
       <p>fetchFail2: {fetchFail2_isLoaded && 'loaded!' || 'loading (not ready)...'} {fetchFail2}</p>
+      <p>someTestResults: {someTestResults}</p>
     </div>);
   }
 }
@@ -65,7 +99,7 @@ const WrappedView = ({ }) => (
 );
 
 export default () => {
-  return (<div>
+  return (<div className="container no-padding">
     <WrappedView />
     <DBDIFormExample />
   </div>);

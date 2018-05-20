@@ -53,9 +53,9 @@ process.env.NODE_ENV !== 'production' && (function () {
         isSimActive(
           { },
           { },
-          { activeTimer }
+          { simActiveTimer }
         ) {
-          return activeTimer !== null;
+          return simActiveTimer !== null;
         }
       },
 
@@ -64,7 +64,7 @@ process.env.NODE_ENV !== 'production' && (function () {
           args,
           { },
           { },
-          { simPresentationSessionStop, set_activeTimer }
+          { simPresentationSessionStop, set_simActiveTimer }
         ) {
           simPresentationSessionStop();
 
@@ -77,7 +77,7 @@ process.env.NODE_ENV !== 'production' && (function () {
           console.warn(`starting sim: run ${nReps} times, startDelay: ${startDelay}, finishDelay: ${finishDelay}`);
 
           const timer = CancelablePromise.resolve();
-          set_activeTimer(timer);
+          set_simActiveTimer(timer);
 
           try {
             // skip the preparation stuff
@@ -100,24 +100,24 @@ process.env.NODE_ENV !== 'production' && (function () {
             console.error('sim failed:', err.stack);
           }
           finally {
-            set_activeTimer(null);
+            set_simActiveTimer(null);
           }
         },
 
         async simPresentationSessionStop(
           { },
           { },
-          { activeTimer },
-          { set_activeTimer }
+          { simActiveTimer },
+          { set_simActiveTimer }
         ) {
-          if (activeTimer) {
-            set_activeTimer(null);
-            activeTimer.cancel();
+          if (simActiveTimer) {
+            set_simActiveTimer(null);
+            simActiveTimer.cancel();
           }
         }
       },
       children: {
-        activeTimer: 'activeTimer'
+        simActiveTimer: 'simActiveTimer'
       }
     }
   };

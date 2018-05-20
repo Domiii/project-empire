@@ -1,4 +1,3 @@
-
 ## TODO: External Camera
 * Camera resolution is not really @ 720p
 * "Currently, people who want to do Video Conferencing with 'non-webcam' cameras, (internal/USB HDMI capture cards) are forced to use Xsplit to setup their video source, then Skype or Zoom will 'see' Xsplit as an available webcam input."
@@ -10,9 +9,9 @@
 * Basic user management
     * Add new option: auto-registering of new users can be turned on + off (for short periods of time)
         * -> Turn on next Friday
+        * annoying to test this -> consider doing some automated testing here
     * presentation <-> user name matching
       -> match user name to actual (but unregistered) user via admin interface
-      {}-> fix all edge cases for when we merge two user objects into one, any data that references the user gets orphaned
     * User table
       -> show all info
     * Easily edit all info
