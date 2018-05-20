@@ -219,9 +219,13 @@ class ImmediateRead extends PathDescriptorReader {
 
 
 // ####################################################################################################
-// readOnce (read or fetch)
+// AsyncRead
 // ####################################################################################################
 
+/**
+ * AsyncRead is used for the readOnce method which is an asynchronous one-shot read or fetch
+ * and does not trigger cache or listener updates.
+ */
 class AsyncRead extends PathDescriptorReader {
   wrappedRead = async (...allArgs) => {
     try {
@@ -258,7 +262,7 @@ class AsyncRead extends PathDescriptorReader {
       dataProvider
     } = callerNode;
 
-    // NOTE: we don't need to tell the DataAccessTracker, since this is not "data-bound"
+    // NOTE: we don't need to tell the DataAccessTracker, since we don't need data binding for this.
 
     // read data
     return dataProvider.readData(queryInput);
