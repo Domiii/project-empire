@@ -57,6 +57,14 @@ const _relationshipNameGenerators = {
   countAsOfB: (n) => `count${n.As}Of${n.B}`, // (e.g. countUsersOfProject)
   anyAsOfB: (n) => `any${n.As}Of${n.Bs}`, // (e.g. anyUsersOfProject)
   bIdsWithoutA: (n) => `${n.bIds}Without${n.A}`, // (e.g. projectIdsWithoutUser)
+
+  addAToB: n => `add${n.A}To${n.B}`,
+  deleteAFromB: n => `delete${n.A}From${n.B}`,
+  deleteAllAsFromB: n => `deleteAll${n.As}From${n.B}`,
+  deleteB: n => `delete${n.B}`,
+  update_aIdOfB: (n) => `update_${n.aIdOfB}`,
+  update_aIdsOfB: (n) => `update_${n.aIdsOfB}`,
+  update_aIdsOfBs: (n) => `update_${n.aIdsOfBs}`
 };
 
 const _nameProxyHandler = {
@@ -177,22 +185,40 @@ function getIdNameFromPathTemplate(pathTemplate) {
  * ####################################################################################
  */
 
-const dataModelGenerators = {
-  /**
-   * Add data nodes for one-to-many relationship.
-   */
-  hasMany(n) {
-    // TODO: addAToB
-    // TODO: removeAllAsFromB
-    // TODO: removeAFromB
-    // TODO: since we want deletion to be atomic, we need a new kind of "update generator" that merges all delete updates together
-    //    -> add write stack to DataAccessTracker
-    //    -> use the write stack to maintain a "writeUpdates" object which can be accessed through the write proxy
-    //    -> when first used -> initialize new "writeUpdates"
-    //    -> when stack empties -> flush "writeUpdates" to the DataProvider of the first (and also last) write node on the stack
-    //    -> Problem! Doesn't play well with asnychronous writes
-    //    -> We will need to somehow identify the different "asynchronous write stacks" during any write operation (or "threads" / ("sagas" (?)))
+/** 
+ * Batch multiple write operations into a single update operation.
+ * Will maintain an optional argument '_batchedUpdates', which carries the
+ * wanted updates through any amount of write operations.
+ * The given `generateUpdates` callback is an asynchronous call; once
+ * it returns at the top level, will commit all updates to DB.
+ * 
+ * TODO: does not currently work when using paths of different dataProviders.
+ */
+async function batchUpdate(args, writers, generateUpdates) {
+  let _batchedUpdates = getOptionalArgument(args, '_batchedUpdates');
+  const isFirstOnStack = !_batchedUpdates;
+  if (isFirstOnStack) {
+    // inject new _batchedUpdates object
+    _batchedUpdates = {};
+    args = { ...args, _batchedUpdates };
+  }
 
+  const newUpdates = await generateUpdates(args);
+  Object.assign(_batchedUpdates, newUpdates);
+
+  if (isFirstOnStack) {
+    // actually send out the updates
+    return await writers.update_db(_batchedUpdates);
+  }
+  return _batchedUpdates;
+}
+
+/**
+ * The config generated from this is added to any hasMany relationship node, even
+ * if it is a many2many node.
+ */
+const basicDataModelGenerators = {
+  hasMany(n) {
     return {
       children: {
         [n.aIdsOfBs]: {
@@ -298,41 +324,148 @@ const dataModelGenerators = {
       },
 
       writers: {
-        [n.addAToB](args, readers, injected, writers) {
-          writers[n.aIdOfB](args, 1);
+        async [n.addAToB](args, readers, injected, writers) {
+          return await batchUpdate(args, writers, async (args) => {
+            return {
+              [readers[n.aIdOfB].getPath(args)]: 1
+            };
+          });
+        },
+        
+        async [n.deleteAFromB](args, readers, injected, writers) {
+          return await batchUpdate(args, writers, async (args) => {
+            return {
+              [readers[n.aIdOfB].getPath(args)]: null
+            };
+          });
+        },
+
+        async [n.deleteAllAsFromB](args, readers, injected, writers) {
+          return await batchUpdate(args, writers, async (args) => {
+            TODO!
+            return {
+              [readers[n.aIdOfB].getPath(args)]: null
+            };
+          });
         }
       }
     };
   }
 };
 
+/**
+ * Some data access (especially delete calls) have 
+ * different implementation, depending on the relationship type.
+ * 
+ * Any relationship will only add one of these.
+ */
 const specializedDataModelGenerators = {
-  // deletes need special attention, depending on the relationship type
-  hasMany(n, cfg) {
+  /**
+   * Only one-to-many relationships have these data model nodes
+   */
+  oneToMany(n, cfg) {
     return {
       children: {
-
       },
       readers: {
-
       },
       writers: {
-        [n.deleteB](args, readers, injected, writers) {
-          const aIds = readers[n.aIdsOfB](args);
+        // handles the "b hasMany a" case
+        async [n.deleteB](args, readers, injected, writers) {
+          return await batchUpdate(args, writers, async (args) => {
+            const updates = {};
+            if (cfg.aBelongsToB) {
+              const aIds = await readers[n.aIdsOfB].readAsync(args) || EmptyObject;
 
-          if (aIds === NOT_LOADED) {
-            // TODO: let DataProvider provide a way of getting a promise for not-loaded data
-            throw new Error(`Cannot delete '${n.b}' when '${n.aIdsOfB}' have not been loaded yet`);
-          }
+              // delete all a's that belong to given b
+              Object.assign(updates, zipObject(
+                map(aIds, aId => readers[n.a].getPath({
+                  ...args,
+                  [n.aId]: aId
+                })),
+                times(aIds.length, () => null)
+              ));
+            }
 
-          // only handle the "b hasMany a" case
-          writers[n.aIdsOfB](args, null);
+            // remove all a's from this b
+            updates[readers[n.aIdsOfB].getPath(args)] = null;
 
-          // if a belongsTo b, also delete all a's
-          if (cfg.deleteAsWithBs) {
+            // finally, actually delete b
+            updates[readers[n.b].getPath(args)] = null;
 
-          }
+            return updates;
+          });
         }
+      }
+    };
+  },
+
+  /**
+   * Only many-to-many relationships have these data model nodes.
+   * 
+   * @param {*} n1 Names for b-hasMany-a relationship
+   * @param {*} n2 Names for a-hasMany-b relationship (effectively reversing meaning of a + b)
+   */
+  manyToMany(n1, n2, cfg) {
+    const genDeleteB = ((n1, n2) => {
+      return async function (args, readers, injected, writers) {
+        const aIds = await readers[n1.aIdsOfB].readAsync(args) || EmptyObject;
+
+        return await batchUpdate(args, writers, async (args) => {
+          // remove b from all it's a's
+          const updates = zipObject(
+            map(aIds, aId => readers[n2.aIdOfB].getPath({
+              ...args,
+              [n1.aId]: aId
+            })),
+            times(aIds.length, () => null)
+          );
+
+          // remove all a's from this b
+          updates[readers[n1.aIdsOfB].getPath(args)] = null;
+
+          // finally, actually delete b
+          updates[readers[n1.b].getPath(args)] = null;
+        });
+      };
+    })();
+    return {
+      children: {
+      },
+      readers: {
+      },
+      writers: {
+        /**
+         * NOTE: This is a bi-directional, homogeneous operation. It is the same for either a or b.
+         */
+        async [n1.connectAB](args, readers, injected, writers) {
+          return await batchUpdate(args, writers, async (args) => {
+            // add a to b and b to a
+            return {
+              [readers[n1.aIdOfB].getPath(args)]: 1,
+              [readers[n2.aIdOfB].getPath(args)]: 1
+            };
+          });
+        },
+        
+        /**
+         * NOTE: This is a bi-directional, homogeneous operation. It is the same for either a or b.
+         */
+        async [n1.disconnectAB](args, readers, injected, writers) {
+          return await batchUpdate(args, writers, async (args) => {
+            // remove a of b and b of a
+            return {
+              [readers[n1.aIdOfB].getPath(args)]: null,
+              [readers[n2.aIdOfB].getPath(args)]: null
+            };
+          });
+        },
+
+        // delete b and remove all relationship edges to and from it
+        [n1.deleteB]: genDeleteB(n1, n2),
+
+        // delete a and remove all relationship edges to and from it
+        [n1.deleteA]: genDeleteB(n2, n1)
       }
     };
   }
@@ -408,7 +541,7 @@ class BHasManyARelationship extends Relationship {
   build() {
     const n = _getNameProxy();
     // parentCfgNode
-    cfgNode[b] = dataModelGenerators.hasMany(n);
+    cfgNode[b] = basicDataModelGenerators.hasMany(n);
   }
 
   _getNameProxy(a) {
@@ -692,83 +825,4 @@ export function DataRelationshipPlugin(tree) {
 // a = project
 // b = user
 const readers = {
-  /**
-   * Cut all ties of B with all of it's A's
-   */
-  m2mDisconnectBUpdates(
-    args,
-    { uidsOfProject, projectOfUser }
-  ) {
-    const { projectId } = args;
-    const projectArgs = { projectId };
-
-    if (!uidsOfProject.isLoaded(projectArgs)) {
-      return NOT_LOADED;
-    }
-
-    const uids = Object.keys(uidsOfProject(projectArgs) || EmptyObject);
-
-    const updates = getOptionalArgument(args, 'updates', {});
-
-    // disconnect b from all it's a's
-    Object.assign(updates, zipObject(
-      map(uids, uid => projectOfUser.getPath({ uid, projectId })),
-      times(uids.length, () => null)
-    ));
-
-    // disconnect all a's from this b
-    updates[uidsOfProject.getPath(projectArgs)] = null;
-
-    return updates;
-  }
-};
-
-
-
-const writers = {
-  connectUserProject(
-    { uid, projectId },
-    { uidOfProject, projectIdOfUser },
-    { },
-    { updateAll }) {
-    return updateAll({
-      pathArgs: { uid, projectId },
-      readers: [uidOfProject, projectIdOfUser],
-      val: 1
-    });
-  },
-
-  disconnectUserProject(
-    { uid, projectId },
-    { uidOfProject, projectIdOfUser },
-    { },
-    { updateAll }) {
-    return updateAll({
-      pathArgs: { uid, projectId },
-      readers: [uidOfProject, projectIdOfUser],
-      val: null
-    });
-  },
-
-  deleteB(
-    args,
-    { m2mDisconnectBUpdates, projectById },
-    { },
-    { update_db }
-  ) {
-    const { projectId } = args;
-    const projectArgs = { projectId };
-
-    let updates = m2mDisconnectBUpdates(args);
-
-    // actually delete b
-    updates[projectById.getPath(projectArgs)] = null;
-
-    // merge in further updates that atomically need to succeed to make the deletion work
-    const moreUpdates = getOptionalArgument(args, 'moreUpdates');
-    if (moreUpdates) {
-      updates = Object.assign(updates, moreUpdates);
-    }
-    return update_db(updates);
-  },
 };

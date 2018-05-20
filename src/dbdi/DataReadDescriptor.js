@@ -12,7 +12,7 @@ import { NOT_LOADED } from './dataProviders/DataProviderBase';
 
 export default class DataReadDescriptor extends DataDescriptorNode {
   readData;
-  readOnce;
+  readAsync;
   reader;
   fetch;
 
@@ -45,7 +45,7 @@ export default class DataReadDescriptor extends DataDescriptorNode {
   _buildReaders() {
     // build reader from pathDescriptor
     this.readData = new ImmediateRead().buildReader(this);
-    this.readOnce = new AsyncRead().buildReader(this);
+    this.readAsync = new AsyncRead().buildReader(this);
   }
 
 
@@ -70,7 +70,7 @@ export default class DataReadDescriptor extends DataDescriptorNode {
 
 /**
  * The final read data function has many levels.
- * readOnce cuts some corners, but also needs special handling for promises.
+ * readAsync cuts some corners, but also needs special handling for promises.
  */
 class PathDescriptorReader {
   dataReadDescriptor;
@@ -157,7 +157,7 @@ class ImmediateRead extends PathDescriptorReader {
   customFetchOnly = (args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) => {
     // fetch is an asynchronous call that generally returns a prommise, and not an immediate value
     throw new Error('Invalid immediate read on node that does neither have path nor custom reader. ' +
-      'Maybe you wanted to call readOnce (which returns a promise) instead?');
+      'Maybe you wanted to call readAsync (which returns a promise) instead?');
   }
 
   customFetchAndRead = (args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) => {
@@ -223,7 +223,7 @@ class ImmediateRead extends PathDescriptorReader {
 // ####################################################################################################
 
 /**
- * AsyncRead is used for the readOnce method which is an asynchronous one-shot read or fetch
+ * AsyncRead is used for the readAsync method which is an asynchronous one-shot read or fetch
  * and does not trigger cache or listener updates.
  */
 class AsyncRead extends PathDescriptorReader {

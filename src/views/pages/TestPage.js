@@ -21,7 +21,7 @@ const dataStructureConfig = {
         { },
         { set_someTestResults }
       ) {
-        const res = await fetchGood.readOnce();
+        const res = await fetchGood.readAsync();
         set_someTestResults(res);
 
         console.assert(res && someTestResults() === res, 'someTestResults did not get set!');

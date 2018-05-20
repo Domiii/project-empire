@@ -103,14 +103,14 @@ export default class DataSourceNode {
       accessTracker);
   }
 
-  async readOnce(args, readerProxy, injectProxy, writerProxy, accessTracker) {
+  async readAsync(args, readerProxy, injectProxy, writerProxy, accessTracker) {
     args = args || EmptyObject;
     if (!this._readDescriptor) {
       throw new Error(`Tried to read data from "${this.fullName}", 
         but node does not have a reader.`);
     }
 
-    return await this._readDescriptor.readOnce(
+    return await this._readDescriptor.readAsync(
       args,
       readerProxy,
       injectProxy,
