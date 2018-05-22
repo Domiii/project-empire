@@ -137,100 +137,6 @@ const SessionHeader = dataBind({
   </F>);
 });
 
-@dataBind({
-  clickToggleEditMode(evt,
-    { },
-    { set_isPresentEditMode },
-    { isPresentEditMode }
-  ) {
-    set_isPresentEditMode(!isPresentEditMode);
-  },
-  clickAddPresentation(evt,
-    { sessionId },
-    { addNewPresentation }
-  ) {
-    return addNewPresentation({ sessionId });
-  },
-  clickStartLiveSession(evt,
-    { sessionId },
-    { set_livePresentationSessionId }
-  ) {
-    set_livePresentationSessionId(sessionId);
-  },
-  clickStopLiveSession(evt,
-    { },
-    { set_livePresentationSessionId }
-  ) {
-    set_livePresentationSessionId(null);
-  }
-})
-class PresentationSessionControls extends Component {
-  constructor(args) {
-    super(args);
-
-    this.dataBindMethods(
-      'componentWillUnmount'
-    );
-  }
-
-  componentWillUnmount(
-    { },
-    { set_isPresentEditMode }
-  ) {
-    // always leave edit mode when controls are gone
-    set_isPresentEditMode(false);
-  }
-
-  render(
-    { sessionId },
-    { clickToggleEditMode, clickAddPresentation,
-      clickStartLiveSession, clickStopLiveSession },
-    { livePresentationSessionId, isPresentEditMode }
-  ) {
-    if (livePresentationSessionId === NOT_LOADED) {
-      return <LoadIndicator />;
-    }
-
-    const editBtn = (<Button bsStyle="info"
-      active={isPresentEditMode}
-      onClick={clickToggleEditMode}>
-      <FAIcon name="edit" />
-    </Button>);
-
-    const addBtn = (<Button bsStyle="success"
-      onClick={clickAddPresentation}>
-      <FAIcon name="plus" />
-    </Button>);
-
-    const isLive = livePresentationSessionId === sessionId;
-    const stopLiveSessionBtn = (isLive &&
-      <Button bsStyle="danger"
-        onClick={clickStopLiveSession}>
-        Finish live session
-      </Button>
-    );
-
-    const startLiveSessionBtn = (!isLive &&
-      <Button bsStyle="danger"
-        disabled={livePresentationSessionId}
-        onClick={clickStartLiveSession}>
-        Go live!
-      </Button>
-    );
-
-    return (<Flexbox justifyContent="space-between" alignItems="center">
-      <Flexbox alignItems="center" className="spaced-inline-children-5">
-        {editBtn}
-        {addBtn}
-      </Flexbox>
-      <Flexbox alignItems="center">
-        {startLiveSessionBtn}
-        {stopLiveSessionBtn}
-      </Flexbox>
-    </Flexbox>);
-  }
-}
-
 @dataBind()
 class DraggableRow extends Component {
   state = {};
@@ -403,19 +309,11 @@ export default class PresentationsSessionTable extends Component {
 
   render(
     { sessionId },
-    { get_presentations, isPresentationSessionOperator },
-    { isCurrentUserAdmin }
+    { get_presentations, isPresentationSessionOperator }
   ) {
     const sessionArgs = { sessionId };
     if (!get_presentations.isLoaded(sessionArgs)) {
       return <LoadIndicator block />;
-    }
-
-    let sessionFooterControls;
-    if (isCurrentUserAdmin) {
-      sessionFooterControls = (
-        <PresentationSessionControls {...sessionArgs} />
-      );
     }
 
     const isOperator = isPresentationSessionOperator(sessionArgs);
@@ -446,7 +344,6 @@ export default class PresentationsSessionTable extends Component {
           </Droppable>
         </DragDropContext>
       </StyledTable>
-      {sessionFooterControls}
     </F >);
   }
 }

@@ -276,23 +276,28 @@ export class PresentationInfoRow extends Component {
   }
 
   componentDidUpdate() {
-    const isHighlighted = this.props.getShouldHighlight();
-    if (!isHighlighted) {
+    const shouldHighlight = this.props.getShouldHighlight();
+    if (!shouldHighlight || this.wasHighlighted) {
       return;
     }
 
     const el = this.refToEl.current;
     //isHighlighted && console.warn(isHighlighted, this.wasHighlighted, !!el);
-    if (isHighlighted && !this.wasHighlighted && el && el.scrollIntoView) {
+    if (shouldHighlight && el && el.scrollIntoView) {
       // see https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
       this.wasHighlighted = true;
       //console.warn('scrolling', this.props.presentationId);
       setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 250);
+      
+      setTimeout(() => {
+        // do not highlight again for a little while
+        this.wasHighlighted = false;
+      }, 5000);
       //setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 1000);
     }
-    else if (!isHighlighted && this.wasHighlighted) {
-      this.wasHighlighted = false;
-    }
+    // else if (!shouldHighlight && this.wasHighlighted) {
+    //   this.wasHighlighted = false;
+    // }
   }
 
   render(
@@ -355,7 +360,8 @@ export class PresentationInfoRow extends Component {
         {...dragProps}
       >
         {/* the first cell is the drag handle (if any) */}
-        <CenteredTd className={'min no-padding padding-right-03'} ref={this.refToEl}
+        <CenteredTd className={'min no-padding padding-right-03'} 
+          innerRef={this.refToEl}
           {...dragHandleProps}>
           {Math.round(index) + 1}
         </CenteredTd>

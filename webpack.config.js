@@ -166,7 +166,7 @@ if (ENV_DEVELOPMENT) {
 //  PRODUCTION
 //-------------------------------------
 if (ENV_PRODUCTION) {
-  loaders[0].exclude.push(/TestPage\.js$/);
+  //loaders[0].exclude.push(/TestPage\.js$/);
   
   config.devtool = 'eval';
 

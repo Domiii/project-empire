@@ -122,12 +122,12 @@ export default class FirebaseDataProvider extends DataProviderBase {
    */
   _onWrite(action, remotePath, val) {
     console.log('W [', action, remotePath, '] ', val);
-    const query = this.getQuery(remotePath);
-    if (query) {
-      // send a notification early
-      //  because it can save us the time of a round-trip to the database (which is when on('value') fires)
-      this.notifyNewData(query, val);
-    }
+
+    // send a notification early
+    //  because it can save us the time of a round-trip to the database (which is on('value') fires)
+    //  TODO: insufficient since cache has not been updated yet, also does not move up the hierarchy.
+    //this.markPossibleUpdate(remotePath);
+
     return true;
   }
 
@@ -139,22 +139,30 @@ export default class FirebaseDataProvider extends DataProviderBase {
   actions = {
     set: (remotePath, val) => {
       let ref = this._getRefByPath(remotePath);
-      return ref.set(val) && this._onWrite('Set', remotePath, val);
+      const promise = ref.set(val);
+      this._onWrite('Set', remotePath, val);
+      return promise;
     },
 
     push: (remotePath, val) => {
       let ref = this._getRefByPath(remotePath);
-      return ref.push(val) && this._onWrite('Pus', remotePath, val);
+      const promise = ref.push(val);
+      this._onWrite('Pus', remotePath, val);
+      return promise;
     },
 
     update: (remotePath, val) => {
       let ref = this.database().ref().child(remotePath);
-      return ref.update(val) && this._onWrite('Upd', remotePath, val);
+      const promise = ref.update(val);
+      this._onWrite('Upd', remotePath, val);
+      return promise;
     },
 
     delete: (remotePath) => {
       let ref = this.database().ref().child(remotePath);
-      return ref.set(null) && this._onWrite('Del', remotePath);
+      const promise = ref.set(null);
+      this._onWrite('Del', remotePath);
+      return promise;
     },
 
     transaction: () => {
