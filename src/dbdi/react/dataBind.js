@@ -42,35 +42,6 @@ export { NOT_LOADED } from '../dataProviders/DataProviderBase';
 //   // TODO: proper pub-sub bindings
 // }
 
-function shallowEqual(objA, objB) {
-  if (objA === objB) {
-    return true;
-  }
-
-  if (typeof objA !== 'object' || objA === null ||
-    typeof objB !== 'object' || objB === null) {
-    return false;
-  }
-
-  var keysA = Object.keys(objA);
-  var keysB = Object.keys(objB);
-
-  if (keysA.length !== keysB.length) {
-    return false;
-  }
-
-  // Test for A's keys different from B.
-  var bHasOwnProperty = Object.prototype.hasOwnProperty.bind(objB);
-  for (var i = 0; i < keysA.length; i++) {
-    if (!bHasOwnProperty(keysA[i]) || objA[keysA[i]] !== objB[keysA[i]]) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-
 /**
  * Build + wrap render method of component class
  */
@@ -342,16 +313,16 @@ export default (propsOrPropCb) => _WrappedComponent => {
             return this.props[name];
           }
 
-          // 3) check context
-          if (name in this.context) {
-            return this.context[name];
-          }
+          // // 3) check context
+          // if (name in this.context) {
+          //   return this.context[name];
+          // }
 
-          // 4) check custom context
-          if (name in this._customContext) {
-            //console.warn('get from customContext: ' + name);
-            return this._customContext[name];
-          }
+          // // 4) check custom context
+          // if (name in this._customContext) {
+          //   //console.warn('get from customContext: ' + name);
+          //   return this._customContext[name];
+          // }
 
           // 5) check special properties
           if (name in sharedArgumentProxyProperties) {
@@ -388,15 +359,15 @@ export default (propsOrPropCb) => _WrappedComponent => {
             return true;
           }
 
-          // 3) check context
-          if (name in this.context) {
-            return true;
-          }
+          // // 3) check context
+          // if (name in this.context) {
+          //   return true;
+          // }
 
-          // 4) check custom context
-          if (name in this._customContext) {
-            return true;
-          }
+          // // 4) check custom context
+          // if (name in this._customContext) {
+          //   return true;
+          // }
 
           // 5) check special properties
           if (name in sharedArgumentProxyProperties) {

@@ -7,6 +7,8 @@ import first from 'lodash/first';
 import last from 'lodash/last';
 import times from 'lodash/times';
 import constant from 'lodash/constant';
+import findIndex from 'lodash/findIndex';
+
 import { NOT_LOADED } from '../../dbdi/react/dataBind';
 
 export const PresentationStatus = {
@@ -46,7 +48,7 @@ function censorUserName(name) {
   }
   const start = first(name);
   const end = name.length > 2 ? last(name) : '';
-  const middle = times(size(name)-size(start)-size(end), constant('*')).join('');
+  const middle = times(size(name) - size(start) - size(end), constant('*')).join('');
 
   return `${start}${middle}${end}`;
 }
@@ -88,6 +90,23 @@ export default {
             forEach(presentations, (p, id) => p.id = id);
 
             return sortBy(presentations, 'index');
+          },
+
+          nonPendingPresentations(
+            args,
+            { orderedPresentations }
+          ) {
+            const ps = orderedPresentations(args);
+            const i = findIndex(ps, p => p.presentationStatus === PresentationStatus.Pending);
+            return ps.slice(0, i);
+          },
+          pendingPresentations(
+            args,
+            { orderedPresentations }
+          ) {
+            const ps = orderedPresentations(args);
+            const i = findIndex(ps, p => p.presentationStatus === PresentationStatus.Pending);
+            return ps.slice(i);
           }
         },
         children: {

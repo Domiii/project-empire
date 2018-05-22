@@ -97,7 +97,9 @@ const WrappedPresentationPage = withRouter(dataBind()(function WrappedPresentati
   }
   else {
     // default view mode
-    return (<div className="container no-padding">
+    // NOTE: we must add overflow: auto
+    //    (or else, for some reason, DnD won't get the droppable height right)
+    return (<div className="container no-padding overflow-auto">
       {defaultContents}
     </div>);
   }

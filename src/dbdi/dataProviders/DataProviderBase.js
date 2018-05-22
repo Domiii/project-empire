@@ -67,6 +67,11 @@ export default class DataProviderBase {
     return this.getQueryByLocalPath(localPath);
   }
 
+  getQuery(queryInput) {
+    const localPath = this.getLocalPath(queryInput);
+    return this.getQueryByLocalPath(localPath);
+  }
+
   getOrCreateQuery(queryInput) {
     const localPath = this.getLocalPath(queryInput);
     return this._getOrCreateQuery(localPath, queryInput);
@@ -286,6 +291,7 @@ export default class DataProviderBase {
     }
 
     // update cache
+    //const oldVal = getDataIn();
     setDataIn(this._cache, localPath, val);
 
     this._notifyListeners(query);

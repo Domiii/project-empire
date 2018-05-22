@@ -231,9 +231,17 @@ button:active { outline:none !important; }
   margin-right: 0;
 }
 .spaced-inline-children-2 > * {
+  @extend .spaced-inline-children;
   margin-right: 2em;
 }
 .spaced-inline-children-2 > *:last-child {
+  margin-right: 0;
+}
+.spaced-inline-children-5 > * {
+  @extend .spaced-inline-children;
+  margin-right: 5em;
+}
+.spaced-inline-children-5 > *:last-child {
   margin-right: 0;
 }
 
@@ -257,6 +265,10 @@ button:active { outline:none !important; }
 }
 .margin-bottom-5 {
   margin-bottom: 5em !important;
+}
+
+.margin-right-03 {
+  margin-right: 0.3em;
 }
 
 .margin-right-3 {
@@ -284,6 +296,14 @@ button:active { outline:none !important; }
 }
 .padding10 {
   padding: 10em !important;
+}
+
+.padding-right-03 {
+  padding-right: 0.3em !important;
+}
+
+.line-height-half {
+  line-height: 0.5 !important;
 }
 
 
@@ -430,6 +450,10 @@ button:active { outline:none !important; }
 
 .overflow-auto {
   overflow: auto;
+}
+
+.rotate-ccw-90 {
+  transform: rotate(-90deg);
 }
 
 
@@ -862,6 +886,17 @@ td.min, th.min {
   padding: 0 !important;
 }
 
+.grippy-left {}
+
+.grippy-invisible > *:first-child, 
+.grippy-left > *:first-child {
+  padding-left: 0.5em !important;
+  height: 0.1em !important;
+}
+.grippy-left:hover > *:first-child {
+  background: url(//ssl.gstatic.com/ui/v1/icons/mail/grippy_large.png) no-repeat 1px 50%;
+}
+
 @font-face {
   font-family: 'digital';
   src: url('../../../resources/digital.ttf') format('woff');
@@ -885,4 +920,14 @@ td.min, th.min {
 
 .digital-number-font {
   font-family: 'minisystem';
+}
+
+
+/* Animations */
+.fadein {
+  animation: fadein 1s;
+}
+@keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }

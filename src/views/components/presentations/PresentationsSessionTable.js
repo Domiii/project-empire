@@ -1,5 +1,4 @@
 import map from 'lodash/map';
-import size from 'lodash/size';
 
 import { EmptyObject, EmptyArray } from '../../../util';
 
@@ -12,6 +11,7 @@ import {
 import Moment from 'react-moment';
 import styled from 'styled-components';
 import Flexbox from 'flexbox-react';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 import ImageLoader from 'src/views/components/util/react-imageloader';
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
@@ -21,9 +21,15 @@ import { MediaPrepView } from 'src/views/components/multimedia/MediaStreamPanel'
 import { YtStatusPanel } from '../multimedia/VideoUploadPanel';
 
 import PresentationRow from './PresentationRow';
+import shallowEqual from '../../../util/shallowEqual';
+import { getOptionalArguments, getOptionalArgument } from '../../../dbdi/dataAccessUtil';
+import { PresentationStatus } from '../../../core/presentations/PresentationModel';
 
 
 const StyledTable = styled(Table) `
+`;
+
+const TBody = styled.tbody`
 `;
 
 const UploadQueueControlPanel = dataBind({
@@ -132,8 +138,15 @@ const SessionHeader = dataBind({
 });
 
 @dataBind({
-  clickAddPresentation(evt, 
-    { sessionId }, 
+  clickToggleEditMode(evt,
+    { },
+    { set_isPresentEditMode },
+    { isPresentEditMode }
+  ) {
+    set_isPresentEditMode(!isPresentEditMode);
+  },
+  clickAddPresentation(evt,
+    { sessionId },
     { addNewPresentation }
   ) {
     return addNewPresentation({ sessionId });
@@ -152,17 +165,41 @@ const SessionHeader = dataBind({
   }
 })
 class PresentationSessionControls extends Component {
+  constructor(args) {
+    super(args);
+
+    this.dataBindMethods(
+      'componentWillUnmount'
+    );
+  }
+
+  componentWillUnmount(
+    { },
+    { set_isPresentEditMode }
+  ) {
+    // always leave edit mode when controls are gone
+    set_isPresentEditMode(false);
+  }
+
   render(
     { sessionId },
-    { clickAddPresentation, clickStartLiveSession, clickStopLiveSession },
-    { livePresentationSessionId }
+    { clickToggleEditMode, clickAddPresentation,
+      clickStartLiveSession, clickStopLiveSession },
+    { livePresentationSessionId, isPresentEditMode }
   ) {
     if (livePresentationSessionId === NOT_LOADED) {
       return <LoadIndicator />;
     }
+
+    const editBtn = (<Button bsStyle="info"
+      active={isPresentEditMode}
+      onClick={clickToggleEditMode}>
+      <FAIcon name="edit" />
+    </Button>);
+
     const addBtn = (<Button bsStyle="success"
       onClick={clickAddPresentation}>
-      Add presentation <FAIcon name="plus" />
+      <FAIcon name="plus" />
     </Button>);
 
     const isLive = livePresentationSessionId === sessionId;
@@ -181,38 +218,198 @@ class PresentationSessionControls extends Component {
       </Button>
     );
 
-    return (<div className="spaced-inline-children-2">
-      {addBtn}
-      {startLiveSessionBtn}
-      {stopLiveSessionBtn}
-    </div>);
+    return (<Flexbox justifyContent="space-between" alignItems="center">
+      <Flexbox alignItems="center" className="spaced-inline-children-5">
+        {editBtn}
+        {addBtn}
+      </Flexbox>
+      <Flexbox alignItems="center">
+        {startLiveSessionBtn}
+        {stopLiveSessionBtn}
+      </Flexbox>
+    </Flexbox>);
+  }
+}
+
+@dataBind()
+class DraggableRow extends Component {
+  state = {};
+
+  // _rebuildDraggableChildFactory = () => {
+  //   // NOTE: this is stupid design by the DnD plugin...
+  //   //    The function must be supplied as child, however will only ever be called once, that's horrible!
+  //   //    That means if anything changed, we need to re-build the function so it passes non-stale props.
+  //   return 
+  // }
+
+  // getDerivedStateFromProps(nextProps) {
+  //   if ((!this.state || !this.state.draggableChildFactory) || 
+  //     !shallowEqual(nextProps, this.props)
+  //   ) {
+  //     return {
+  //       draggableChildFactory: this._rebuildDraggableChildFactory()
+  //     };
+  //   }
+  // }
+
+  render() {
+    const {
+      presentationId,
+      i
+    } = this.props;
+
+    return (
+      <Draggable draggableId={presentationId} index={i}>
+        {
+          (dragProvided, draggingSnapshot) => {
+            const {
+              presentationId, isSelected, selectRow
+            } = this.props;
+
+            const rowProps = {
+              presentationId, isSelected, selectRow,
+              draggingSnapshot, dragProvided
+            };
+            return (<PresentationRow {...rowProps} />);
+          }
+        }
+        {/* {this.state.draggableChildFactory} */}
+      </Draggable>
+    );
   }
 }
 
 @dataBind({})
-export default class PresentationsSessionTable extends Component {
-  state = { };
+class TableBody extends Component {
+  state = {};
+
+  constructor(args) {
+    super(args);
+  }
 
   selectRow = (id) => {
-    const { selectedPresentation } = this.state;
-    if (selectedPresentation === id) {
+    const { selectedPresentationId } = this.state;
+    if (selectedPresentationId === id) {
       id = null;
     }
-    this.setState({ selectedPresentation: id });
+    this.setState({ selectedPresentationId: id });
+  }
+  render(
+    args,
+    { isPresentationSessionOperator,
+      nonPendingPresentations, pendingPresentations },
+    { isPresentEditMode }
+  ) {
+    const { sessionId, pendingRows } = args;
+    const sessionArgs = { sessionId };
+    const canBeDraggable = pendingRows;
+
+    let presentations;
+    let RowComp;
+    if (!pendingRows) {
+      // finished presentations are fixed
+      presentations = nonPendingPresentations(sessionArgs);
+      RowComp = PresentationRow;
+    }
+    else {
+      // pending rows can be dragged
+      const isOperator = isPresentationSessionOperator(sessionArgs);
+      const canDrag = isPresentEditMode || isOperator;
+      presentations = pendingPresentations(sessionArgs);
+      RowComp = canDrag ? DraggableRow : PresentationRow;
+      //RowComp = PresentationRow;
+    }
+
+    const { selectedPresentationId } = this.state;
+    const droppableProvided = getOptionalArgument(args, 'droppableProvided');
+    const onTBodyRef = getOptionalArgument(args, 'onTBodyRef');
+
+    return (<TBody
+      innerRef={onTBodyRef}
+      {...(droppableProvided && droppableProvided.droppableProps || EmptyObject)}
+    >
+      {
+        map(presentations, (p, i) => (
+          <RowComp key={p.id} presentationId={p.id}
+            i={i}
+            isSelected={selectedPresentationId === p.id}
+            selectRow={this.selectRow} />
+        ))
+      }
+    </TBody>);
+  }
+}
+
+@dataBind({
+  async setPresentationIndex(
+    { presentationId, i, direction },
+    { sessionId },
+    { set_presentationIndex, fixPresentationSessionOrder, pendingPresentations }
+  ) {
+    const presentationArgs = { presentationId };
+
+    // WARNING: the given i is the index within the pendingPresentations array.
+    //    We need to add the base index of that set to get the right actual index.
+    // Also:
+    //    if we move up, we want a smaller number than the target index (so we subtract a small delta).
+    //    if we move down, we want a bigger number than the target index (so we add a small delta).
+    const ps = pendingPresentations({ sessionId });
+    const p0 = ps[0];
+    const index = i + p0.index + direction * 0.001;
+    console.log(index, direction);
+
+    set_presentationIndex(presentationArgs, index);
+    return await fixPresentationSessionOrder({ sessionId });
+  }
+})
+export default class PresentationsSessionTable extends Component {
+  state = {};
+
+  onTBodyRef = (ref) => {
+    this.tbodyRef = ref;
+    this.droppableProvided.innerRef(ref);
+  }
+
+  onDragEnd = (result) => {
+    if (!result.destination || result.destination.index === result.source.index) {
+      return;
+    }
+
+    const presentationId = result.draggableId;
+    const i = result.destination.index;
+    const direction = result.destination.index - result.source.index;
+    this.props.setPresentationIndex({
+      presentationId,
+      i,
+      direction: direction / Math.abs(direction)
+    });
+  }
+
+  renderFixedRows() {
+    const { sessionId } = this.props;
+    return (<TableBody pendingRows={false} sessionId={sessionId} />);
+  }
+
+  // WARNING: droppableChildFactory will generally only be called once
+  //      -> so don't put anything in that you want to change over time!
+  droppableChildFactory = (droppableProvided) => {
+    const { sessionId } = this.props;
+    this.droppableProvided = droppableProvided;
+
+    return (<TableBody pendingRows={true} sessionId={sessionId}
+      droppableProvided={this.droppableProvided}
+      onTBodyRef={this.onTBodyRef} />);
   }
 
   render(
     { sessionId },
-    { orderedPresentations, isPresentationSessionOperator },
+    { get_presentations, isPresentationSessionOperator },
     { isCurrentUserAdmin }
   ) {
     const sessionArgs = { sessionId };
-    const presentations = orderedPresentations(sessionArgs);
-    if (presentations === NOT_LOADED) {
+    if (!get_presentations.isLoaded(sessionArgs)) {
       return <LoadIndicator block />;
     }
-
-    const { selectedPresentation } = this.state;
 
     let sessionFooterControls;
     if (isCurrentUserAdmin) {
@@ -226,7 +423,7 @@ export default class PresentationsSessionTable extends Component {
     return (<F>
       <SessionHeader sessionId={sessionId} />
 
-      <StyledTable condensed hover>
+      <StyledTable condensed hover className="no-margin">
         <thead>
           <tr>
             {/* index */}
@@ -240,14 +437,14 @@ export default class PresentationsSessionTable extends Component {
             {/* <th className="min">專案狀態</th> */}
           </tr>
         </thead>
-        <tbody>
-          {
-            map(presentations, p => (
-              <PresentationRow key={p.id} sessionId={sessionId} presentation={p}
-                isSelected={selectedPresentation === p.id} selectRow={this.selectRow} />
-            ))
-          }
-        </tbody>
+
+        {this.renderFixedRows()}
+
+        <DragDropContext onDragEnd={this.onDragEnd}>
+          <Droppable droppableId="da-table">
+            {this.droppableChildFactory}
+          </Droppable>
+        </DragDropContext>
       </StyledTable>
       {sessionFooterControls}
     </F >);

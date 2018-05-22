@@ -122,6 +122,12 @@ export default class FirebaseDataProvider extends DataProviderBase {
    */
   _onWrite(action, remotePath, val) {
     console.log('W [', action, remotePath, '] ', val);
+    const query = this.getQuery(remotePath);
+    if (query) {
+      // send a notification early
+      //  because it can save us the time of a round-trip to the database (which is when on('value') fires)
+      this.notifyNewData(query, val);
+    }
     return true;
   }
 
@@ -132,27 +138,23 @@ export default class FirebaseDataProvider extends DataProviderBase {
 
   actions = {
     set: (remotePath, val) => {
-      this._onWrite('Set', remotePath, val);
       let ref = this._getRefByPath(remotePath);
-      return ref.set(val);
+      return ref.set(val) && this._onWrite('Set', remotePath, val);
     },
 
     push: (remotePath, val) => {
-      this._onWrite('Pus', remotePath, val);
       let ref = this._getRefByPath(remotePath);
-      return ref.push(val);
+      return ref.push(val) && this._onWrite('Pus', remotePath, val);
     },
 
     update: (remotePath, val) => {
-      this._onWrite('Upd', remotePath, val);
       let ref = this.database().ref().child(remotePath);
-      return ref.update(val);
+      return ref.update(val) && this._onWrite('Upd', remotePath, val);
     },
 
     delete: (remotePath) => {
-      this._onWrite('Del', remotePath);
       let ref = this.database().ref().child(remotePath);
-      return ref.set(null);
+      return ref.set(null) && this._onWrite('Del', remotePath);
     },
 
     transaction: () => {

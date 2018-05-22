@@ -26,7 +26,23 @@ import { getOptionalArgument } from '../../../dbdi/dataAccessUtil';
 
 const TrOfStatus = styled.tr`
   color: ${props => props.highlight ? 'black' : 'lightgray'};
-  background-color: ${props => props.highlight ? 'lightyellow' : 'transparent'};
+  background-color: ${props => {
+    if (props.isDragging) {
+      return 'rgba(150, 254, 195, 0.3)';
+    }
+    else if (props.highlight) {
+      return 'lightyellow';
+    }
+    else {
+      return 'transparent';
+    }
+  }}
+`;
+
+const UpArrow = styled.span`
+font-size: 1.4em;
+display: table;
+margin: auto;
 `;
 
 function FullWidthTableCell({ children, noBorder }) {
@@ -37,6 +53,10 @@ function FullWidthTableCell({ children, noBorder }) {
 
 const CenteredTd = styled.td`
   text-align: center;
+  color: black;
+`;
+
+const ControlTd = styled.td`
   color: black;
 `;
 
@@ -112,16 +132,21 @@ class DownloadVideoFileButton extends Component {
     { startPresentationInSession }
   ) {
     startPresentationInSession({ presentationId });
+  },
+  clickMoveToTop(evt,
+    { presentationId },
+    { movePresentationUpNext }
+  ) {
+    movePresentationUpNext({ presentationId });
   }
 })
-class PresentationOperatorDetails extends Component {
+class PresentationControls extends Component {
   render(
     { presentationId },
-    { clickPlay,
+    { clickPlay, clickMoveToTop,
       get_presentation,
-      isStreamActive, isPresentationSessionOperator, presentationSessionActivePresentationId,
-      get_videoUploadStatus },
-    { }
+      isStreamActive, isPresentationSessionOperator, presentationSessionActivePresentationId },
+    { isPresentEditMode }
   ) {
     const presentation = get_presentation({ presentationId });
     const {
@@ -134,19 +159,10 @@ class PresentationOperatorDetails extends Component {
       console.error('presentation has no sessionId', presentation.title, presentation);
     }
 
-    let uploadStatusEl;
-    const fileArgs = { fileId: presentationId };
-    const uploadStatus = get_videoUploadStatus(fileArgs);
-    if (uploadStatus) {
-      // TODO: fix this
-      //uploadStatusEl = uploadStatus;
-    }
-
     let rowControls;
     const sessionArgs = { sessionId };
     const isOperator = isPresentationSessionOperator(sessionArgs);
     const activePresId = presentationSessionActivePresentationId(sessionArgs);
-    //if (presentationStatus <= PresentationStatus.InProgress) {
     const streamArgs = { streamId: sessionId };
     if (isOperator && !isStreamActive(streamArgs) && activePresId !== presentationId) {
       // only show button to operator, if stream is currently offline, and this is the active presentation
@@ -156,9 +172,17 @@ class PresentationOperatorDetails extends Component {
         </Button>
       </F>);
     }
+    else if ((isOperator || isPresentEditMode) && presentationStatus < PresentationStatus.InProgress) {
+      rowControls = (<F>
+        <div className="rotate-ccw-90 inline-hcenter">
+          <Button bsStyle="default" className="no-padding line-height-half" onClick={clickMoveToTop}>
+            <UpArrow>➠</UpArrow>
+          </Button>
+        </div>
+      </F>);
+    }
 
     return (<span className="spaced-inline-children">
-      {uploadStatusEl}
       {rowControls}
     </span>);
   }
@@ -275,10 +299,14 @@ export class PresentationInfoRow extends Component {
     args,
     { get_presentation, isPresentationSessionOperator,
       clickSelectRow, getShouldHighlight },
-    { isCurrentUserAdmin }
+    { isCurrentUserAdmin, isPresentEditMode }
   ) {
     const { presentationId } = args;
     const isSelected = getOptionalArgument(args, 'isSelected');
+    const isDragging = getOptionalArgument(args, 'isDragging');
+    const dragProvided = getOptionalArgument(args, 'dragProvided');
+    const canDrag = !!dragProvided;
+
     const presentation = get_presentation({ presentationId });
     if (!presentation) {
       return '';
@@ -300,23 +328,40 @@ export class PresentationInfoRow extends Component {
       onDblClick = clickSelectRow;
     }
 
-    const summaryCell = (<CenteredTd className="min">
+    const summaryCell = (<ControlTd className="min no-padding">
       <PresentationStatusSummary isSelected={isSelected} presentationId={presentationId} />
-    </CenteredTd>);
+    </ControlTd>);
 
-    const operatorCell = isOperator && (<CenteredTd className="min">
-      <PresentationOperatorDetails isSelected={isSelected} presentationId={presentationId} />
-    </CenteredTd>);
+    const canControl = isOperator || isPresentEditMode;
+    const controlEls = canControl && (<ControlTd className="min">
+      <PresentationControls isSelected={isSelected} presentationId={presentationId} />
+    </ControlTd>);
 
     //GoingOnStage
     const isHighlighted = getShouldHighlight();
 
+    const dragClass = canDrag && ' grippy-left' || ' grippy-invisible';
+
+    const dragProps = !canDrag && EmptyObject || {
+      innerRef: dragProvided.innerRef,
+      ...dragProvided.draggableProps
+    };
+    const dragHandleProps = !canDrag && EmptyObject || dragProvided.dragHandleProps;
+
     return (
-      <TrOfStatus className="" highlight={isHighlighted}
-        onDoubleClick={onDblClick}>
-        <td ref={this.refToEl} className="min">{Math.round(index) + 1}</td>
+      <TrOfStatus className={dragClass} highlight={isHighlighted}
+        onDoubleClick={onDblClick}
+        isDragging={isDragging}
+        {...dragProps}
+      >
+        {/* the first cell is the drag handle (if any) */}
+        <CenteredTd className={'min no-padding padding-right-03'} ref={this.refToEl}
+          {...dragHandleProps}>
+          {Math.round(index) + 1}
+        </CenteredTd>
+
         {summaryCell}
-        {operatorCell}
+        {controlEls}
         <TextTd>
           {userNamesString}
         </TextTd>
@@ -324,7 +369,7 @@ export class PresentationInfoRow extends Component {
           {title}
         </TextTd>
         {/* <td>{health}</td> */}
-      </TrOfStatus>
+      </TrOfStatus >
     );
   }
 }
@@ -362,29 +407,43 @@ class PresentationRowDetails extends Component {
 @dataBind({})
 export default class PresentationRow extends Component {
   render(
-    { sessionId, presentation, isSelected, selectRow },
+    args,
     { ytIsVideoUploadInProgress }
   ) {
-    let detailsEl, uploadEl;
+    let detailsRow, uploadRow;
 
-    const presentationId = presentation.id;
-    if (isSelected) {
-      detailsEl = (<FullWidthTableCell noBorder={true}>
+    const {
+      presentationId, isSelected, selectRow
+    } = args;
+    //const presentation = get_presentation({ presentationId });
+
+    const draggingSnapshot = getOptionalArgument(args, 'draggingSnapshot');
+    const isDragging = draggingSnapshot && draggingSnapshot.isDragging;
+    const dragProvided = getOptionalArgument(args, 'dragProvided');
+
+    if (!isDragging && isSelected) {
+      detailsRow = (<FullWidthTableCell noBorder={true}>
         <PresentationRowDetails presentationId={presentationId} />
       </FullWidthTableCell>);
     }
 
     const fileArgs = { fileId: presentationId };
-    if (ytIsVideoUploadInProgress(fileArgs)) {
-      uploadEl = (<FullWidthTableCell noBorder={true}>
+    if (!isDragging && ytIsVideoUploadInProgress(fileArgs)) {
+      uploadRow = (<FullWidthTableCell noBorder={true}>
         <VideoUploadPanel {...fileArgs} />
       </FullWidthTableCell>);
     }
 
+    const infoRowProps = {
+      presentationId,
+      isSelected, selectRow,
+      isDragging, dragProvided,
+    };
+
     return (<F>
-      <PresentationInfoRow {...{ sessionId, presentationId, isSelected, selectRow }} />
-      {detailsEl}
-      {uploadEl}
+      <PresentationInfoRow {...infoRowProps} />
+      {detailsRow}
+      {uploadRow}
     </F>);
   }
 }

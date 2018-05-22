@@ -28,7 +28,11 @@ const sessionReaders = {
     sessionArgs,
     { getFirstPendingPresentationIdInSession }
   ) {
-    return !!getFirstPendingPresentationIdInSession(sessionArgs);
+    const id = getFirstPendingPresentationIdInSession(sessionArgs);
+    if (id === NOT_LOADED) {
+      return NOT_LOADED;
+    }
+    return !!id;
   },
 
   getFirstPendingPresentationIdInSession(
@@ -232,7 +236,7 @@ const sessionWriters = {
     { _updatePresentationInSession }
   ) {
     const { sessionId } = sessionArgs;
-    return _updatePresentationInSession({sessionId, newStatus: PresentationStatus.Skipped});
+    return _updatePresentationInSession({ sessionId, newStatus: PresentationStatus.Skipped });
   },
 
   async finishPresentationSessionStreaming(
@@ -242,15 +246,41 @@ const sessionWriters = {
     { _updatePresentationInSession }
   ) {
     const { sessionId } = sessionArgs;
-    return _updatePresentationInSession({sessionId, newStatus: PresentationStatus.Finished});
+    return _updatePresentationInSession({ sessionId, newStatus: PresentationStatus.Finished });
+  },
+
+  async movePresentationUpNext(
+    { presentationId },
+    { get_presentation, getFirstPendingPresentationIdInSession },
+    { },
+    { set_presentationIndex, fixPresentationSessionOrder }
+  ) {
+    const presentationArgs = { presentationId };
+    const presentation = get_presentation(presentationArgs);
+
+    const { sessionId } = presentation;
+    const sessionArgs = { sessionId };
+    
+    // get first presentation
+    const firstId = getFirstPendingPresentationIdInSession(sessionArgs);
+    if (firstId && firstId !== presentationId) {
+      const firstPres = get_presentation({ presentationId: firstId });
+      const firstStatus = firstPres.presentationStatus;
+      const firstIndex = firstPres.index;
+      let delta = -0.0001; // before first
+      if (firstStatus > PresentationStatus.Pending) {
+        delta *= -1; // after first
+      }
+      set_presentationIndex(presentationArgs, firstIndex + delta);
+      return await fixPresentationSessionOrder(sessionArgs);
+    }
   },
 
   async startPresentationInSession(
     presentationArgs,
-    { get_presentation, getFirstPendingPresentationIdInSession },
+    { get_presentation },
     { },
-    { setActivePresentationInSession,
-      set_presentationIndex, fixPresentationSessionOrder }
+    { setActivePresentationInSession, movePresentationUpNext }
   ) {
     const presentation = get_presentation(presentationArgs);
     console.assert(presentation);
@@ -262,15 +292,7 @@ const sessionWriters = {
     await setActivePresentationInSession({ sessionId, ...presentationArgs });
 
     // make sure, it's up next!
-    const { presentationId } = presentationArgs;
-    const sessionArgs = { sessionId };
-    const firstId = getFirstPendingPresentationIdInSession(sessionArgs);
-    if (firstId !== presentationId) {
-      const firstPres = get_presentation({ presentationId: firstId });
-      const { index: firstIndex } = firstPres;
-      await set_presentationIndex(presentationArgs, firstIndex - 0.0001);
-      return await fixPresentationSessionOrder(sessionArgs);
-    }
+    movePresentationUpNext(presentationArgs);
     return true;
   },
 
@@ -302,7 +324,7 @@ const sessionWriters = {
     { setActivePresentationInSession }
   ) {
     const presentationId = getFirstPendingPresentationIdInSession({ sessionId });
-    if (presentationId !== NOT_LOADED) {
+    if (presentationId) {
       await setActivePresentationInSession({ sessionId, presentationId });
       return presentationId;
     }

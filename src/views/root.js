@@ -6,7 +6,6 @@ import AppRoutes from './AppRoutes';
 import DataSourceProvider from 'src/dbdi/react/DataSourceProvider';
 import dataSourceTree from 'src/core/dataSourceTree';
 
-
 export default function Root({ }) {
 
   return (
@@ -15,6 +14,7 @@ export default function Root({ }) {
     // ##########################################################################  
     <DataSourceProvider dataSourceTree={dataSourceTree}>
       <BrowserRouter>
+
         <App>
           <AppRoutes />
         </App>

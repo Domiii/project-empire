@@ -57,11 +57,11 @@ export class App extends Component {
     // });
   }
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     this._onInit();
   }
 
-  componentWillUpdate() {
+  UNSAFE_componentWillUpdate() {
     this._onInit();
   }
 
