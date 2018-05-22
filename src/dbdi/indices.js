@@ -1,19 +1,32 @@
-import _ from 'lodash';
 import isArray from 'lodash/isArray';
 import isPlainObject from 'lodash/isPlainObject';
 import isString from 'lodash/isString';
 import isArrayLike from 'lodash/isArrayLike';
+import isFunction from 'lodash/isFunction';
+import isElement from 'lodash/isElement';
+import isError from 'lodash/isError';
+import isNumber from 'lodash/isNumber';
+import isBoolean from 'lodash/isBoolean';
+import isDate from 'lodash/isDate';
 import sortBy from 'lodash/sortBy';
 import zipObject from 'lodash/zipObject';
 import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
+import findKey from 'lodash/findKey';
+import keys from 'lodash/keys';
+import some from 'lodash/some';
+import has from 'lodash/has';
+import flatten from 'lodash/flatten';
+import join from 'lodash/join';
+import every from 'lodash/every';
+import includes from 'lodash/includes';
+
 
 /**
  * Determine whether two arrays contain exactly the same elements, independent of order.
  * @see https://stackoverflow.com/questions/32103252/expect-arrays-to-be-equal-ignoring-order/48973444#48973444
  */
 function cmpIgnoreOrder(a, b) {
-  const { every, includes } = _;
   return a.length === b.length && every(a, v => includes(b, v));
 }
 
@@ -81,8 +94,8 @@ const IndexUtils = {
     // }
     // else 
     if (isPlainObject(cfg)) {
-      return _.zipObject(_.keys(cfg),
-        _.map(cfg, (indexCfg) => {
+      return zipObject(keys(cfg),
+        map(cfg, (indexCfg) => {
           let cfgEntry;
           if (isArray(indexCfg)) {
             // only provide array of keys
@@ -124,50 +137,50 @@ const IndexUtils = {
       return null;
     }
 
-    if (_.isUndefined(val)) {
+    if (val === undefined) {
       val = null;
     }
-    if (_.isString(val)) {
+    if (isString(val)) {
       return val;
     }
-    else if (_.isArrayLike(val)) {
-      return _.map(val, child => this.convertToSortedValueSet(child, nDepth + 1));
+    else if (isArrayLike(val)) {
+      return map(val, child => this.convertToSortedValueSet(child, nDepth + 1));
     }
-    else if (_.isPlainObject(val)) {
+    else if (isPlainObject(val)) {
       // make sure, entries in resulting string representation are sorted by key
-      const converted = _.flatten(_.map(val, (v, k) => [k, this.convertToSortedValueSet(v)]));
+      const converted = flatten(map(val, (v, k) => [k, this.convertToSortedValueSet(v)]));
       return sortBy(converted, ([k, v]) => k);
     }
     return val;
   },
 
   encodeValue(val, forceSimple) {
-    if (_.isFunction(val) || _.isElement(val) || _.isError(val)) {
-      throw new Error('[ERROR] Cannot encode element or function values - ' + val);
+    if (isFunction(val) || isElement(val) || isError(val)) {
+      throw new Error('[ERROR] Cannot encode element or functions - ' + val);
     }
-    if (_.isString(val) || _.isBoolean(val) || _.isNumber(val) || _.isNull(val)) {
+    if (isString(val) || isBoolean(val) || isNumber(val) || val === null) {
       return val;
     }
-    if (_.isDate(val)) {
+    if (isDate(val)) {
       return val.getTime();
     }
     if (forceSimple) {
-      if (_.isArrayLike(val)) {
-        return _.join(val, '\uFFFF');
+      if (isArrayLike(val)) {
+        return join(val, '\uFFFF');
       }
-      else if (_.isPlainObject(val)) {
+      else if (isPlainObject(val)) {
         // object should already have been converted to a sorted array
         throw new Error('[ERROR] Something went wrong... object could not be encoded: ' + JSON.stringify(val));
       }
-      else if (_.isMap(val) || _.isSet(val) || _.isBuffer(val) || _.isSymbol(val) || _.isRegExp(val)) {
-        throw new Error('[ERROR] NYI - cannot yet encode values of this type: ' + val);
-      }
+      // else if (isMap(val) || isSet(val) || isBuffer(val)) {
+      //   throw new Error('[ERROR] NYI - cannot yet encode values of this type: ' + val);
+      // }
       else {
         throw new Error('[ERROR] Could not encode value (unknown type): ' + val);
       }
     }
     else {
-      return _.isArrayLike(val) && JSON.stringify(val) || val;
+      return isArrayLike(val) && JSON.stringify(val) || val;
     }
   },
 
@@ -211,8 +224,8 @@ class IndexSet {
 
     this.cfg = completeCfg;
 
-    this.indexNames = _.keys(keysByIndexName);
-    this.allKeys = _.keys(indexNamesByKey);
+    this.indexNames = keys(keysByIndexName);
+    this.allKeys = keys(indexNamesByKey);
 
     this.keysByIndexName = keysByIndexName;
     this.indexNamesByKey = indexNamesByKey;
@@ -224,8 +237,8 @@ class IndexSet {
   }
 
   getIndexNameByKeys(keys) {
-    //return _.findKey(this.keysByIndexName, v => _.isEqual(v, keys));
-    return _.findKey(this.keysByIndexName, keyArr => cmpIgnoreOrder(keyArr, keys));
+    //return findKey(this.keysByIndexName, v => isEqual(v, keys));
+    return findKey(this.keysByIndexName, keyArr => cmpIgnoreOrder(keyArr, keys));
   }
 
   doesQueryMatchAnyIndex(query) {
@@ -317,7 +330,7 @@ All indices: ${JSON.stringify(this.keysByIndexName, null, 2)}`);
     if (keys.length === 1) {
       return IndexUtils.encodeValueDeep(val[keys[0]], settings.forceSimpleEncoding);
     }
-    const values = _.map(keys, key => val[key]);
+    const values = map(keys, key => val[key]);
     return IndexUtils.encodeValueDeep(values, settings.forceSimpleEncoding);
   }
 
@@ -327,7 +340,7 @@ All indices: ${JSON.stringify(this.keysByIndexName, null, 2)}`);
 
   // called before write to any object of indexed path
   updateIndices(val) {
-    if (!_.isObject(val)) return;
+    if (!isPlainObject(val)) return;
 
     for (var indexName in this.keysByIndexName) {
       const cfg = this.getCfg(indexName);
@@ -339,7 +352,7 @@ All indices: ${JSON.stringify(this.keysByIndexName, null, 2)}`);
         // single-entry keys are already properties don't need explicit writes
         if (keys.length < 2) continue;
 
-        if (_.some(keys, key => !_.has(val, key))) {
+        if (some(keys, key => !has(val, key))) {
           // problem: at least one of the participating keys is missing!
           if (this.cfg[indexName].isRequired) {
             console.warn(`Could not update indices on object because value did not define index "${indexName}", and is also missing some of its keys: 

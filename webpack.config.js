@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
 const webpack = require('webpack');
 const WebpackMd5Hash = require('webpack-md5-hash');
-
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 //=========================================================
 //  ENVIRONMENT VARS
@@ -135,9 +135,9 @@ if (ENV_DEVELOPMENT) {
     loaders
   };
 
-  config.plugins.push(
-    new webpack.HotModuleReplacementPlugin()
-  );
+  config.plugins.push(new webpack.HotModuleReplacementPlugin());
+  
+  //config.plugins.push(new BundleAnalyzerPlugin());
 
   config.devServer = {
     contentBase: './src',

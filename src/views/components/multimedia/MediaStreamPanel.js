@@ -22,8 +22,8 @@ import Flexbox from 'flexbox-react';
 //import { Z_DEFAULT_COMPRESSION } from 'zlib';
 
 import MediaInputSelect from './MediaInputSelect';
-import VideoPlayer from './VideoPlayer';
-import StreamFileList from './StreamFileList';
+//import VideoPlayer from './VideoPlayer';
+//import StreamFileList from './StreamFileList';
 import { YtMyChannelInfo, YtStatusPanel } from './VideoUploadPanel';
 
 import { MediaStatus } from '../../../core/multimedia/StreamModel';

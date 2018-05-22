@@ -1,5 +1,4 @@
 import { makeRefWrapper } from 'src/refwrappers';
-import _ from 'lodash';
 
 
 const UserActivityLogRef = makeRefWrapper({
