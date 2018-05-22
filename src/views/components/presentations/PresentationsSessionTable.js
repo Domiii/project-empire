@@ -190,7 +190,7 @@ class PresentationSessionControls extends Component {
 }
 
 @dataBind({})
-export default class PresentationsSessionDetails extends Component {
+export default class PresentationsSessionTable extends Component {
   state = { };
 
   selectRow = (id) => {

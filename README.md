@@ -6,6 +6,7 @@
 * [Expensive; Windows only] SparkoCam Virtual Webcam: https://sparkosoft.com/how-to-use-dslr-as-webcam
 
 ## TODO: Basics
+* let [P]resenter (not only [O]) also be able to change order of presentations (→ edit mode button?)
 * Basic user management
     * Add new option: auto-registering of new users can be turned on + off (for short periods of time)
         * -> Turn on next Friday
@@ -37,11 +38,10 @@
     * change to default when gone
         * restore when available again?
 
-  -> be able to keep writing file, option not to override
-  -> let [P]resenter (not only [O]) also be able to change order of presentations (→ edit mode button?)
-  -> button to shuffle PENDING presentations
-  -> import + ready up this week's presentation list!
-      -> account for every single user!
+* be able to keep writing file, option not to override
+* button to shuffle PENDING presentations
+* import + ready up this week's presentation list!
+    * account for every single user!
 
 * non-admin [O]perator
     * new database write rules

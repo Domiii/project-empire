@@ -14,7 +14,7 @@ import Flexbox from 'flexbox-react';
 import LoadIndicator from '../util/LoadIndicator';
 import { Redirect } from 'react-router-dom';
 
-import PresentationsSessionDetails from './PresentationsSessionDetails';
+import PresentationsSessionTable from './PresentationsSessionTable';
 import { hrefPresentationSession } from '../../href';
 import styled from 'styled-components';
 import { LoadOverlay } from '../overlays';
@@ -146,7 +146,7 @@ export default class PresentationSessionView extends Component {
     }
     else {
       contentEl = (<F>
-        <PresentationsSessionDetails sessionId={sessionId} />
+        <PresentationsSessionTable sessionId={sessionId} />
       </F>);
     }
     // return (<Flexbox flexDirection="column">

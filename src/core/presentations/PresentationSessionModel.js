@@ -558,7 +558,6 @@ export default {
             ],
 
             readers: sessionReaders,
-
             writers: sessionWriters,
 
             children: {
@@ -568,6 +567,14 @@ export default {
               ytPlaylistId: 'ytPlaylistId',
             }
           }
+        }
+      },
+
+      presenterPreferences: {
+        path: 'presenterPreferences',
+        dataProvider: 'memory',
+        children: {
+          isPresentEditMode: 'isPresentEditMode'
         }
       }
     }
