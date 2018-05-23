@@ -84,7 +84,7 @@ export default class DataSourceNode {
   }
 
   areAllLoaded(idArgs, ...allArgs) {
-    return reduce(idArgs, (idArg, res) => res | this.isDataLoaded(idArg, ...allArgs), true);
+    return reduce(idArgs, (idArg, res) => (res | this.isDataLoaded(idArg, ...allArgs)), true);
   }
 
   readData(args, readerProxy, injectProxy, writerProxy, accessTracker) {
