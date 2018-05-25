@@ -84,7 +84,7 @@ const _nameProxyHandler = {
 /**
  * Generate names.
  */
-function _getNameProxy(...allNames) {
+function getNameProxy(...allNames) {
   const [aName, bName, aIdName, bIdName, bListName] = allNames;
   const nameSetId = allNames.join('_');
   if (_allNameProxies[nameSetId]) {
@@ -130,7 +130,7 @@ function _getNameProxy(...allNames) {
   return p;
 }
 
-function getRelationshipParentName(aName, bName) {
+function getRelationshipName(aName, bName) {
   return [aName, bName].sort().join('_');
 }
 
@@ -203,6 +203,7 @@ async function batchUpdate(args, writers, generateUpdates) {
     args = { ...args, _batchedUpdates };
   }
 
+  // collect updates (possibly recursively)
   const newUpdates = await generateUpdates(args);
   Object.assign(_batchedUpdates, newUpdates);
 
@@ -214,8 +215,8 @@ async function batchUpdate(args, writers, generateUpdates) {
 }
 
 /**
- * The config generated from this is added to any hasMany relationship node, even
- * if it is a many2many node.
+ * The config generated from this is added to any hasMany relationship.
+ * Many2many relationships will add these once for each direction.
  */
 const basicDataModelGenerators = {
   hasMany(n) {
@@ -266,7 +267,8 @@ const basicDataModelGenerators = {
         },
 
         [n.bIdsWithoutA](args, readers) {
-          // WARNING: this doesn't scale well, with large sets of B's
+          // WARNING: this doesn't scale well once there are many B's
+
           const getAllBs = readers[n.bList];
           const getAIdsOfB = readers[n.aIdsOfB];
           if (!getAllBs.isLoaded(args)) {
@@ -286,7 +288,8 @@ const basicDataModelGenerators = {
           }
 
           // return all Bs that don't have any A
-          return filter(idArgs, idArg => !size(getAIdsOfB(idArg)));
+          const emptyIdArgs = filter(idArgs, idArg => !size(getAIdsOfB(idArg)));
+          return map(emptyIdArgs, idArg => idArg[n.bId]);
         },
 
         // /**
@@ -321,33 +324,6 @@ const basicDataModelGenerators = {
         //     // return size(userProjectIdIndex[uid]) <= excludeSize;
         //   });
         // },
-      },
-
-      writers: {
-        async [n.addAToB](args, readers, injected, writers) {
-          return await batchUpdate(args, writers, async (args) => {
-            return {
-              [readers[n.aIdOfB].getPath(args)]: 1
-            };
-          });
-        },
-        
-        async [n.deleteAFromB](args, readers, injected, writers) {
-          return await batchUpdate(args, writers, async (args) => {
-            return {
-              [readers[n.aIdOfB].getPath(args)]: null
-            };
-          });
-        },
-
-        async [n.deleteAllAsFromB](args, readers, injected, writers) {
-          return await batchUpdate(args, writers, async (args) => {
-            TODO!
-            return {
-              [readers[n.aIdOfB].getPath(args)]: null
-            };
-          });
-        }
       }
     };
   }
@@ -370,6 +346,32 @@ const specializedDataModelGenerators = {
       readers: {
       },
       writers: {
+        async [n.addAToB](args, readers, injected, writers) {
+          return await batchUpdate(args, writers, async (args) => {
+            return {
+              [readers[n.aIdOfB].getPath(args)]: 1
+            };
+          });
+        },
+
+        async [n.deleteAFromB](args, readers, injected, writers) {
+          return await batchUpdate(args, writers, async (args) => {
+            return {
+              [readers[n.aIdOfB].getPath(args)]: null
+            };
+          });
+        },
+
+        async [n.deleteAllAsFromB](args, readers, injected, writers) {
+          return await batchUpdate(args, writers, async (args) => {
+            throw new Error('NYI');
+            // TODO!
+            // return {
+            //   [readers[n.aIdOfB].getPath(args)]: null
+            // };
+          });
+        },
+
         // handles the "b hasMany a" case
         async [n.deleteB](args, readers, injected, writers) {
           return await batchUpdate(args, writers, async (args) => {
@@ -447,7 +449,7 @@ const specializedDataModelGenerators = {
             };
           });
         },
-        
+
         /**
          * NOTE: This is a bi-directional, homogeneous operation. It is the same for either a or b.
          */
@@ -514,39 +516,48 @@ function parseHasManyConfig(hasMany) {
  * Relationships represent uni-directional and bi-directional edges in the Graph.
  */
 class Relationship {
-  parentCfgNode;
-
-  constructor(parentCfgNode, a, b) {
-    this.parentCfgNode = parentCfgNode;
-
+  a;
+  b;
+  cfg;
+  constructor(a, b, cfg) {
     this.a = a;
     this.b = b;
+    this.cfg = cfg;
   }
 
-  get relationshipParentName() {
-    return getRelationshipParentName(this.a.name, this.b.name);
+  buildConfigEntry() {
+    // all relationship implement a function to build their config entry
+  }
+
+  get relationshipName() {
+    return getRelationshipName(this.a.name, this.b.name);
   }
 }
 
 /**
- * Unidirectional relationship
+ * Base-line "hasMany" relationship, could be one-to-many or
+ * part of a many-to-many.
  */
 class BHasManyARelationship extends Relationship {
-  constructor(parentCfgNode, a, b) {
-    super(parentCfgNode, a, b);
+  constructor(a, b, cfg) {
+    super(a, b, cfg);
 
     b.hasMany.push(this);
   }
 
-  build() {
-    const n = _getNameProxy();
-    // parentCfgNode
-    cfgNode[b] = basicDataModelGenerators.hasMany(n);
+  buildConfigEntry() {
+    const n = getNameProxy();
+    return basicDataModelGenerators.hasMany(n, this.cfg);
   }
 
-  _getNameProxy(a) {
-
-    return _getNameProxy(aName, bName, aIdName, bIdName, bListName);
+  getNameProxy() {
+    const { a, b } = this;
+    const aName = a.name;
+    const bName = b.name;
+    const aIdName = a.idName;
+    const bIdName = b.idName;
+    const bListName = b.listName;
+    return getNameProxy(aName, bName, aIdName, bIdName, bListName);
   }
 }
 
@@ -559,11 +570,48 @@ class BHasManyARelationship extends Relationship {
 // }
 
 /**
- * Bidirectional relationship
+ * Unidirectional relationship: simply encapsulates a single hasMany relationship.
+ * Has specialized data model that is different from m2m relationship.
  */
-class M2MRelationship extends Relationship {
-  constructor(parentCfgNode, a, b) {
-    super(parentCfgNode, a, b);
+class OneToManyRelationship extends Relationship {
+  constructor(hasMany) {
+    super(hasMany.a, hasMany.b, hasMany.cfg);
+
+    this.hasMany = hasMany;
+  }
+
+  buildConfigEntry() {
+    const n = this.hasMany.getNameProxy();
+
+    return Object.assign({},
+      this.hasMany.buildConfigEntry(),
+      specializedDataModelGenerators.oneToMany(n, this.cfg)
+    );
+  }
+}
+
+/**
+ * Bidirectional relationship: Built from two hasMany relationships.
+ */
+class ManyToManyRelationship extends Relationship {
+  constructor(bHasManyA, aHasManyB) {
+    //super(bHasManyA, aHasManyB);
+    const { a, b } = bHasManyA;
+    super(a, b);
+
+    this.bHasManyA = bHasManyA;
+    this.aHasManyB = aHasManyB;
+  }
+
+  buildConfigEntry() {
+    const n1 = this.bHasManyA.getNameProxy();
+    const n2 = this.aHasManyB.getNameProxy();
+
+    return Object.assign({},
+      this.bHasManyA.buildConfigEntry(),
+      this.aHasManyB.buildConfigEntry(),
+      specializedDataModelGenerators.manyToMany(n1, n2, this.cfg)
+    );
   }
 
 }
@@ -575,17 +623,17 @@ class M2MRelationship extends Relationship {
  */
 
 /**
- * Any graphNode represents a treeNode with at least one of two types of relationships:
+ * GraphNodes wrap treeNodes,
+ * specifically any treeNode with at least one of two types of relationships:
  * 
  * 1) Either: has (owns) one or more other nodes (b of hasMany relationship)
  * 2) Or: belongs to one or more other nodes (a of hasMany relationship)
- * 
- * (...or both)
+ * 3) Or: both (many-to-many)
  */
 class GraphNode {
   // relationships
   hasMany = [];
-  belongsTo = [];
+  //belongsTo = [];
 
   // settings
   hasManyCfg;
@@ -628,7 +676,10 @@ class GraphNode {
 export class DataRelationshipGraph {
   nodesByName = {};
 
-  relationships = [];
+  hasManyRelationships = [];
+
+  // stored by name, since they are only inserted once, no matter if uni- or bi-directional
+  specializedRelationships = {};
 
   /**
    * ####################################################################################
@@ -709,15 +760,26 @@ export class DataRelationshipGraph {
       }
     };
 
+    // build graph
     this.forEachNode(this._addRelationshipsForNode);
+
+    // categorize all relationships into one-to-many and many-to-many
+    this.categorizeEdges();
+
+    // generate config
+    this.buildRelationshipConfig();
   }
 
   _getConfigNode(relationshipName) {
     return this.relationshipDataConfig.children[relationshipName];
   }
 
-  _getOrCreateConfigNodeForRelationship(aName, bName) {
-    const relationshipName = getRelationshipParentName(aName, bName);
+  /**
+   * Gets (creates if necessary) empty node containing the data model for the relationship
+   */
+  _getOrCreateConfigNodeForRelationship(rel) {
+    const { a, b } = rel;
+    const relationshipName = getRelationshipName(a.Name, b.Name);
     let node = this._getConfigNode(relationshipName);
     if (!node) {
       node = this.relationshipDataConfig.children[relationshipName] = {};
@@ -732,37 +794,48 @@ export class DataRelationshipGraph {
     forEach(bGraphNode.hasManyCfg, (hasManyEntry, aName) => {
       const aTreeNode = this.tree.root.getReadDescendantByName(aName);
       if (!aTreeNode) {
-        throw new Error(`invalid "hasMany" relationship in ${bName} - ${aName} does not exist in data (sub-)tree`);
+        throw new Error(`invalid "hasMany" relationship in ${bName}: ${aName} does not exist in data (sub-)tree`);
       }
-      if (!aTreeNode.isWriter) {
-        throw new Error(`invalid "hasMany" relationship in ${bName} - ${aName} must be (but is not) readable and writable`);
+      if (!aTreeNode.isWriter || !aTreeNode.isReader) {
+        throw new Error(`invalid "hasMany" relationship in ${bName}: ${aName} must be (but is not) readable and writable`);
       }
       const aGraphNode = this._getOrCreateGraphNodeForTreeNode(aTreeNode);
 
-      const cfgNode = this._getOrCreateConfigNodeForRelationship(aName, bName);
+      // add hasMany relationship
+      this.addHasManyRelation(aGraphNode, bGraphNode);
+    });
 
-      // 1. hasMany relationship
-      this.addHasManyRelation(aGraphNode, bGraphNode, cfgNode);
+    // TODO: belongsTo relationships
+  }
 
-      // 2. many-to-many relationship
-
-
-      // 3. clean up all relationships of any node when deleting (owning and owned!)
+  categorizeEdges() {
+    // TODO: categorize and add one-to-many + many-to-many relationship entries
+    this.hasManyRelationships.forEach(hasMany => {
+      // TODO!
+      if (hasMany.a.) {
+        // only goes in one direction
+        new OneToManyRelationship(hasMany);
+      }
+      else if (!specializedRelationships[hasMany.relationshipName]) {
+        // found first node of an m2m relationship
+        new ManyToManyRelationship();
+      }
+      else {
+        // nothing to do! (second node of an m2m relationship)
+      }
     });
   }
 
   _addRelationship(rel) {
-    this.relationships[rel.relationshipParentName] = rel;
+    this.hasManyRelationships.push(rel);
   }
 
   /**
    * Add relationship to cfgNode
    */
-  addHasManyRelation(a, b, cfgNode) {
-    this._addRelationship(new BHasManyARelationship(cfgNode, a, b));
+  addHasManyRelation(a, b) {
+    this._addRelationship(new BHasManyARelationship(a, b));
     //this._addRelationship(new ABelongsToBRelationship(cfgNode, a, b));
-
-    // TODO
   }
 
   /**
@@ -770,27 +843,14 @@ export class DataRelationshipGraph {
    */
   addManyToManyRelation(a, b) {
 
-    // index name combines the two names.
-    // to make sure it's the same in both directions, we need to sort the two in some universal order
-    const indexName = [aName, bName].sort().join('_');
-    const path = indexName;
-    // this.addHasManyRelation(aName, bName);
-    // this.addHasManyRelation(bName, aName);
-
-    // get all a-ids that have at least one b, but are not connected to given b (and vice versa!)
-    // connect a to b: add a to b, and b to a
-    // disconnect a and b: remove a from b, and b from a
   }
 
-  /**
-   * 
-   */
-  _addCleanup(aName) {
-    // TODO
+  buildRelationshipConfig() {
+    this.hasManyRelationships.forEach(rel => {
+      const cfgNode = this._getOrCreateConfigNodeForRelationship(rel);
 
-    // when deleting any node:
-    //    1. delete all owned references
-    //    2. delete all it's references from all owners
+      // TODO
+    });
   }
 
   // _completeEdges() {
