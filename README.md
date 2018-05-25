@@ -1,3 +1,11 @@
+
+系統問題
+0. Last finished entry in presentation table split into "pending" table
+0.5. Can edit multiple rows at a time (one per table split).
+1. Recording should be possible even when the internet is cut off.
+2. things get messed up when the order is distorted during recording? (a video somehow got overwritten... maybe it was also because of the internet connection?)
+3. deal with a way of cancelling/resuming uploads?
+
 ## TODO: External Camera
 * Camera resolution is not really @ 720p
 * "Currently, people who want to do Video Conferencing with 'non-webcam' cameras, (internal/USB HDMI capture cards) are forced to use Xsplit to setup their video source, then Skype or Zoom will 'see' Xsplit as an available webcam input."
