@@ -102,8 +102,8 @@ const sessionWriters = {
   ) {
     const csvOptions = {
       columnArr: {
-        start: 4,
-        end: 7,
+        start: 1,
+        end: 5,
         name: 'userNames'
       }
     };
