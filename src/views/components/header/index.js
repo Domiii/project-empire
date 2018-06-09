@@ -18,6 +18,7 @@ import {
 
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
 import { FAIcon } from 'src/views/components/util';
+import { PresentationStatus } from '../../../core/presentations/PresentationModel';
 
 class NavWrap extends Component {
   static propTypes = {
@@ -42,15 +43,24 @@ class NavWrap extends Component {
 }
 
 
-const PresentationsStatus = dataBind()(function PresentationsStatus(
+const PresentationStatusIcon = dataBind()(function PresentationsStatus(
   { },
-  { },
-  { isAnyStreamOnline, livePresentationSessionId }
+  { presentationSessionActivePresentationId, get_presentationStatus },
+  { livePresentationSessionId }
 ) {
+  if (!livePresentationSessionId) return <span />;
+
+  const sessionArgs = { sessionId: livePresentationSessionId };
+  const presentationId = presentationSessionActivePresentationId(sessionArgs);
+  if (!presentationId) return <span />;
+
+  const status = get_presentationStatus({ presentationId });
+  const isInProgress = status === PresentationStatus.InProgress;
+
   return (
-    livePresentationSessionId &&
-    <FAIcon className={isAnyStreamOnline && 'slow-blink' || ''} name="microphone" color={isAnyStreamOnline && 'red' || 'gray'} /> ||
-    <span />
+    <FAIcon className={isInProgress && 'slow-blink' || ''} 
+      name="microphone"
+      color={isInProgress && 'red' || 'gray'} />
   );
 });
 
@@ -109,7 +119,8 @@ export default class Header extends Component {
     //const isGuardian = hasDisplayRole(currentUserRef, Roles.Guardian);
     const lang = currentUser && currentUser.locale || 'en';
 
-    // elements
+    // tools
+
     const adminToolsEL = isCurrentUserAdminReal && (
       <NavItem className="header-right">
         <Button
@@ -169,17 +180,12 @@ export default class Header extends Component {
     //   );
     // }
 
+    // pages
+
     const adminEls = isCurrentUserAdmin && [
       (
         <NavWrap key="divider1" className="divider-vertical">
         </NavWrap>
-      ),
-      (
-        <LinkContainer key="pres" to="/pres">
-          <NavItem eventKey={10}>
-            Presentations <PresentationsStatus />
-          </NavItem>
-        </LinkContainer>
       ),
       (
         <LinkContainer key="projects" to="/projects">
@@ -232,6 +238,11 @@ export default class Header extends Component {
           </Navbar.Header>
           <Navbar.Collapse className="no-padding no-margin">
             <Nav>
+              <LinkContainer key="pres" to="/pres">
+                <NavItem eventKey={10}>
+                  Presentations <PresentationStatusIcon />
+                </NavItem>
+              </LinkContainer>
               {/* { <LinkContainer to="/myprojects">
                 <NavItem eventKey={2}>My Projects</NavItem>
               </LinkContainer>

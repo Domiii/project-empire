@@ -13,15 +13,15 @@ import { NOT_LOADED } from '../../dbdi/react/dataBind';
 
 export const PresentationStatus = {
   Pending: 1,
-  //Preparing: 2,
-  GoingOnStage: 3,
+  GettingReady: 2,
+  OnStage: 3,
   InProgress: 4,
   Finished: 10,
   Skipped: 15
 };
 
 export function isPresentationStatusGoTime(status) {
-  return status === PresentationStatus.GoingOnStage || status === PresentationStatus.InProgress;
+  return status === PresentationStatus.GettingReady || status === PresentationStatus.InProgress;
 }
 
 export const PresentationViewMode = {
@@ -77,16 +77,20 @@ export default {
 
             return size(presentations);
           },
+          
           orderedPresentations(args, { get_presentations }) {
-            const presentations = get_presentations(args);
+            let presentations = get_presentations(args);
             if (presentations === NOT_LOADED) {
               return NOT_LOADED;
             }
 
-            // since we lose the id when converting to array, we do an ugly hack-around here
+            // some odd bug introduces null entries for presentations somehow
             if (presentations && filter(presentations, p => !p).length > 0) {
               console.error('problem fetching presentations', presentations);
+              presentations = filter(presentations, p => !!p);
             }
+
+            // since we lose the id when converting to array, we do an ugly hack-around here
             forEach(presentations, (p, id) => p.id = id);
 
             return sortBy(presentations, 'index');
@@ -97,7 +101,10 @@ export default {
             { orderedPresentations }
           ) {
             const ps = orderedPresentations(args);
-            const i = findIndex(ps, p => p.presentationStatus === PresentationStatus.Pending);
+            const i = findIndex(ps, p => 
+              p.presentationStatus === PresentationStatus.Pending || 
+              p.presentationStatus === PresentationStatus.GettingReady
+            );
             return ps.slice(0, i);
           },
           pendingPresentations(
@@ -105,7 +112,10 @@ export default {
             { orderedPresentations }
           ) {
             const ps = orderedPresentations(args);
-            const i = findIndex(ps, p => p.presentationStatus === PresentationStatus.Pending);
+            const i = findIndex(ps, p => 
+              p.presentationStatus === PresentationStatus.Pending || 
+              p.presentationStatus === PresentationStatus.GettingReady
+            );
             return ps.slice(i);
           }
         },

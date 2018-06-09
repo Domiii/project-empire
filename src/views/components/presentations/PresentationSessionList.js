@@ -11,12 +11,12 @@ import styled from 'styled-components';
 import {
   Button, Alert, Panel, Well
 } from 'react-bootstrap';
-import { withRouter } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom';
+// import { LinkContainer } from 'react-router-bootstrap';
 import Flexbox from 'flexbox-react';
 
 import { LoadOverlay } from '../overlays';
 import { hrefPresentationSessionView, hrefPresentationSession } from '../../href';
-import { LinkContainer } from 'react-router-bootstrap';
 import FAIcon from '../util/FAIcon';
 import { EmptyObject } from '../../../util';
 
@@ -32,11 +32,13 @@ const PresentationSessionRow = dataBind()(function PresentationSessionRow(
   { presentationSessionId }
 ) {
   return (<Flexbox>
-    <Flexbox>
-      {presentationSessionId}
-      <LinkContainer to={hrefPresentationSessionView(presentationSessionId)}>
-        <Button><FAIcon name="mail-forward" /></Button>
-      </LinkContainer>
+    <Flexbox alignItems="center">
+      <Link to={hrefPresentationSessionView(presentationSessionId)}>
+        {presentationSessionId}
+      </Link>
+      
+        {/* <Button> */}
+        {/* </Button> */}
     </Flexbox>
   </Flexbox>);
 });

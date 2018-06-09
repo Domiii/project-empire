@@ -1,10 +1,10 @@
-
-系統問題
-0. Last finished entry in presentation table split into "pending" table
-0.5. Can edit multiple rows at a time (one per table split).
-1. Recording should be possible even when the internet is cut off.
-2. things get messed up when the order is distorted during recording? (a video somehow got overwritten... maybe it was also because of the internet connection?)
-3. deal with a way of cancelling/resuming uploads?
+* more detailed project status (during operating)
+* user table, user operator, new user access privileges
+* evaluations, note taking, tracking projects
+* creating new presentations from list of previous session
+* multiple cohorts
+* when user logs in sees self highlighted in list
+    * also sees warning + estimated time in "live session" header
 
 ## TODO: External Camera
 * Camera resolution is not really @ 720p
@@ -14,7 +14,6 @@
 * [Expensive; Windows only] SparkoCam Virtual Webcam: https://sparkosoft.com/how-to-use-dslr-as-webcam
 
 ## TODO: Basics
-* let [P]resenter (not only [O]) also be able to change order of presentations (→ edit mode button?)
 * Basic user management
     * Add new option: auto-registering of new users can be turned on + off (for short periods of time)
         * -> Turn on next Friday
@@ -90,6 +89,11 @@
   
   -> fix layout for [O]perator to prevent elements from moving around (disabled/invisible, not hidden!)
 
+## Bugs
+* Last finished entry in presentation table is in the wrong part of table ("pending")
+    * Should not be able to edit multiple rows at a time (one per table split).
+* things get messed up when the order is distorted during recording?
+    * first video somehow got overwritten... when someone changed order at around the same time as recording started
 
 ## TODO: Advanced
 * Proper testing setup
@@ -120,6 +124,7 @@
 * Screen recording
     * (be able to record projector output as well as the speaker)
     * https://github.com/muaz-khan/RecordRTC/blob/master/simple-demos/video-plus-screen-recording.html
+* Recording should be possible even when the internet is cut off.
 
 ## TODO: Cohorts
 

@@ -30,7 +30,6 @@ import { MediaStatus } from '../../../core/multimedia/StreamModel';
 
 
 
-
 @dataBind({
   async clickStartStreaming(streamArgs,
     sessionArgs,
@@ -41,13 +40,13 @@ import { MediaStatus } from '../../../core/multimedia/StreamModel';
 
   async onStartStreamRecorder(streamArgs,
     { presentationId },
-    { set_streamFileId, set_presentationFileId }
+    { startPresentationSessionStreamRecording }
   ) {
     console.warn('onStartStreamRecorder', streamArgs, presentationId);
-    return Promise.all([
-      set_streamFileId(streamArgs, presentationId),
-      set_presentationFileId({ presentationId }, presentationId)
-    ]);
+    return startPresentationSessionStreamRecording({
+      presentationId,
+      streamArgs
+    });
   },
 
   async onFinished(streamArgs, sessionArgs, { finishPresentationSessionStreaming }) {
@@ -119,7 +118,7 @@ class PresentationSessionStreamingPanel extends Component {
       finishBtn = (<Button bsStyle="success" disabled={isStreaming} onClick={clickSetStatusFinished}>
         Finished <FAIcon name="check" color="lightgreen" />
       </Button>);
-      skipBtn = (<Button bsStyle="danger" disabled={isStreaming || !!fileId} 
+      skipBtn = (<Button bsStyle="danger" disabled={isStreaming || !!fileId}
         onClick={clickSetStatusSkipped}>
         Skip <FAIcon name="times" color="lightcoral" />
       </Button>);
@@ -155,9 +154,9 @@ class PresentationSessionStreamingPanel extends Component {
 @dataBind({
   clickStop(evt,
     args,
-    { stopPresentationSessionStreaming }
+    { stopOperatingPresentationSession }
   ) {
-    stopPresentationSessionStreaming(args);
+    stopOperatingPresentationSession(args);
   },
   clickFixAll(evt, sessionArgs, { fixPresentationSession }) {
     fixPresentationSession(sessionArgs);

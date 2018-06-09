@@ -25,13 +25,30 @@ import PresentationEditor from './PresentationEditor';
 import { getOptionalArgument } from '../../../dbdi/dataAccessUtil';
 
 const TrOfStatus = styled.tr`
-  color: ${props => props.highlight ? 'black' : 'lightgray'};
-  background-color: ${props => {
-    if (props.isDragging) {
+  color: ${({ presentationStatus }) => {
+    if (presentationStatus === PresentationStatus.InProgress) {
+      return 'black';
+    }
+    else if (presentationStatus === PresentationStatus.OnStage) {
+      return 'black';
+    }
+    else if (presentationStatus === PresentationStatus.GettingReady) {
+      return 'darkgray';
+    }
+    return 'lightgray';
+  }};
+  background-color: ${({isDragging, presentationStatus}) => {
+    if (isDragging) {
       return 'rgba(150, 254, 195, 0.3)';
     }
-    else if (props.highlight) {
-      return 'lightyellow';
+    else if (presentationStatus === PresentationStatus.InProgress) {
+      return '#FFF1F1';
+    }
+    else if (presentationStatus === PresentationStatus.OnStage) {
+      return '#FBEEE6';
+    }
+    else if (presentationStatus === PresentationStatus.GettingReady) {
+      return '#FFFAF3';
     }
     else {
       return 'transparent';
@@ -80,6 +97,17 @@ const statusIconProps = {
   [PresentationStatus.Pending]: ({
     name: 'clock-o',
     color: 'gray'
+  }),
+  [PresentationStatus.GettingReady]: ({
+    name: '',
+    //color: 'black',
+    children: <span>🏃</span>
+  }),
+  [PresentationStatus.OnStage]: ({
+    name: '',
+    //color: 'orange',
+    //className: 'slow-blink',
+    children: <span>💃</span>
   }),
   [PresentationStatus.InProgress]: ({
     name: 'video-camera',
@@ -172,7 +200,7 @@ class PresentationControls extends Component {
         </Button>
       </F>);
     }
-    else if ((isOperator || isPresentEditMode) && presentationStatus < PresentationStatus.InProgress) {
+    else if ((isOperator || isPresentEditMode) && presentationStatus < PresentationStatus.OnStage) {
       rowControls = (<F>
         <div className="rotate-ccw-90 inline-hcenter">
           <Button bsStyle="default" className="no-padding line-height-half" onClick={clickMoveToTop}>
@@ -216,7 +244,14 @@ class PresentationStatusSummary extends Component {
       </a>);
     }
     else {
-      statusInfoEl = (<FAIcon {...(statusIconProps[presentationStatus] || statusIconPropsDefault)} />);
+      const statusInfoStyles = statusIconProps[presentationStatus] || statusIconPropsDefault;
+      // if (statusInfoStyles.children) {
+      //   statusInfoEl = (<span />);
+      // }
+      // else 
+      {
+        statusInfoEl = (<FAIcon {...statusInfoStyles} />);
+      }
 
       // we don't want the file system access warning to pop up for normal visitors
       const shouldAccessFileSystem = fileId &&
@@ -258,13 +293,16 @@ class PresentationStatusSummary extends Component {
     selectRow(presentationId);
   },
 
-  getShouldHighlight(
+  isActivePresentation(
     { presentationId },
     { get_presentationStatus }
   ) {
     const presentationStatus = get_presentationStatus({ presentationId });
-    return presentationStatus === PresentationStatus.GoingOnStage ||
-      presentationStatus === PresentationStatus.InProgress;
+    return (
+      //presentationStatus === PresentationStatus.GettingReady || 
+      presentationStatus === PresentationStatus.OnStage ||
+      presentationStatus === PresentationStatus.InProgress
+    );
   }
 })
 export class PresentationInfoRow extends Component {
@@ -276,7 +314,7 @@ export class PresentationInfoRow extends Component {
   }
 
   componentDidUpdate() {
-    const shouldHighlight = this.props.getShouldHighlight();
+    const shouldHighlight = this.props.isActivePresentation();
     if (!shouldHighlight || this.wasHighlighted) {
       return;
     }
@@ -288,7 +326,7 @@ export class PresentationInfoRow extends Component {
       this.wasHighlighted = true;
       //console.warn('scrolling', this.props.presentationId);
       setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 250);
-      
+
       setTimeout(() => {
         // do not highlight again for a little while
         this.wasHighlighted = false;
@@ -303,7 +341,8 @@ export class PresentationInfoRow extends Component {
   render(
     args,
     { get_presentation, isPresentationSessionOperator,
-      clickSelectRow, getShouldHighlight },
+      clickSelectRow,
+      isActivePresentation },
     { isCurrentUserAdmin, isPresentEditMode }
   ) {
     const { presentationId } = args;
@@ -321,7 +360,8 @@ export class PresentationInfoRow extends Component {
       index,
       sessionId,
       title,
-      userNamesString
+      userNamesString,
+      presentationStatus
     } = presentation;
 
     //const clazz = presentationStatus === PresentationStatus.InProgress && 'red-highlight-border' || 'no-highlight-border';
@@ -342,10 +382,11 @@ export class PresentationInfoRow extends Component {
       <PresentationControls isSelected={isSelected} presentationId={presentationId} />
     </ControlTd>);
 
-    //GoingOnStage
-    const isHighlighted = getShouldHighlight();
+    let className = canDrag && ' grippy-left' || ' grippy-invisible';
 
-    const dragClass = canDrag && ' grippy-left' || ' grippy-invisible';
+    if (presentationStatus === PresentationStatus.OnStage) {
+      className += ' slow-blink';
+    }
 
     const dragProps = !canDrag && EmptyObject || {
       innerRef: dragProvided.innerRef,
@@ -354,13 +395,14 @@ export class PresentationInfoRow extends Component {
     const dragHandleProps = !canDrag && EmptyObject || dragProvided.dragHandleProps;
 
     return (
-      <TrOfStatus className={dragClass} highlight={isHighlighted}
+      <TrOfStatus className={className}
+        presentationStatus={presentation.presentationStatus}
         onDoubleClick={onDblClick}
         isDragging={isDragging}
         {...dragProps}
       >
         {/* the first cell is the drag handle (if any) */}
-        <CenteredTd className={'min no-padding padding-right-03'} 
+        <CenteredTd className={'min no-padding padding-right-03'}
           innerRef={this.refToEl}
           {...dragHandleProps}>
           {Math.round(index) + 1}
