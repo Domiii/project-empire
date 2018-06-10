@@ -3,6 +3,13 @@ import Roles, {
 } from 'src/core/users/Roles';
 
 import pick from 'lodash/pick';
+import isEmpty from 'lodash/isEmpty';
+import map from 'lodash/map';
+import mapValues from 'lodash/mapValues';
+import sortBy from 'lodash/sortBy';
+
+
+
 import { NOT_LOADED } from '../../dbdi/react';
 
 export default {
@@ -66,9 +73,6 @@ export default {
         return currentUser && currentUser.cohortId;
       },
 
-
-
-
       userHasRole({ uid, role }, { userPublic }, { }) {
         const user = userPublic({ uid });
         if (!user) {
@@ -76,6 +80,27 @@ export default {
         }
         return hasRole(user.role, role);
       },
+
+      roleUserLists({ roleNames }, { }, { usersPublic }) {
+        const allUids = Object.keys(usersPublic);
+        const sortedUids = sortBy(allUids, uid => usersPublic[uid].role || 1);
+        const userLists = map(roleNames, name => ({ name, role: Roles[name], list: {} }));
+
+        // sort users into userLists by role
+        let listI = 0;
+        for (let i = 0; i < sortedUids.length; ++i) {
+          const uid = sortedUids[i];
+          const user = usersPublic[uid];
+          while (listI < roleNames.length - 1 && 
+            user.role && 
+            user.role >= userLists[listI + 1].role
+          ) {
+            ++listI;
+          }
+          userLists[listI].list[uid] = user;
+        }
+        return userLists;
+      }
     },
 
 

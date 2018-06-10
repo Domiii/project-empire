@@ -20,11 +20,14 @@ import {
   Panel, Button, ListGroup, ListGroupItem, Alert, Badge
 } from 'react-bootstrap';
 
+import BootstrapTable from 'react-bootstrap-table-next';
+import paginationFactory from 'react-bootstrap-table2-paginator';
+
 import ConfirmModal from 'src/views/components/util/ConfirmModal';
-import { FAIcon } from 'src/views/components/util';
+import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
-import UserList from 'src/views/components/users/UserList';
+//import UserList from 'src/views/components/users/UserList';
 import UserIcon from 'src/views/components/users/UserIcon';
 
 import FancyPanelToggleTitle from 'src/views/components/util/FancyPanelToggleTitle';
@@ -47,7 +50,15 @@ export class UserTable extends Component {
         return (<Panel key={name}>
           <Panel.Heading>{name}</Panel.Heading>
           <Panel.Body>
-            hi!
+            
+            (<div className="default-width">
+              <BootstrapTable
+                data={data}
+                pagination={this.pagination}
+                onTableChange={this.handleTableChange}
+
+                {...__defaultProps} />
+            </div>);
           </Panel.Body>
         </Panel>);
       })

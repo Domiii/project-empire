@@ -38,11 +38,11 @@ export class CohortTable extends Component {
     { }
   ) {
     return (<div>{
-      map([], (userList) => {
+      map([], (cohorts) => {
         const {
           name,
           list
-        } = userList;
+        } = cohorts;
 
         return (<Panel key={name}>
           <Panel.Heading>{name}</Panel.Heading>

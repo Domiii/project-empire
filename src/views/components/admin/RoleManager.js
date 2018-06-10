@@ -120,32 +120,14 @@ const RenderUser = dataBind({})(
   }
 );
 
-@dataBind({
-  userLists({ }, { }, { usersPublic }) {
-    const allUids = Object.keys(usersPublic);
-    const sortedUids = sortBy(allUids, uid => usersPublic[uid].role || 1);
-    const userLists = map(RoleNames, name => ({ name, role: Roles[name], list: {} }));
-
-    // sort users into userLists by role
-    let listI = 0;
-    for (let i = 0; i < sortedUids.length; ++i) {
-      const uid = sortedUids[i];
-      const user = usersPublic[uid];
-      while (listI < RoleNames.length - 1 && user.role && user.role >= userLists[listI + 1].role) {
-        ++listI;
-      }
-      userLists[listI].list[uid] = user;
-    }
-    return userLists;
-  }
-})
+@dataBind({})
 export class RoleLists extends Component {
   render(
     { },
-    { userLists }
+    { roleUserLists }
   ) {
     return (<div>{
-      map(userLists(), (userList) => {
+      map(roleUserLists(), (userList) => {
         const {
           name,
           list

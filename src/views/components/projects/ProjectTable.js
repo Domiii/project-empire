@@ -13,7 +13,6 @@ import Moment from 'react-moment';
 
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
-import overlayFactory from 'react-bootstrap-table2-overlay';
 
 import ImageLoader from 'src/views/components/util/react-imageloader';
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
@@ -97,7 +96,8 @@ function convertToTableData(objects, customTableData) {
     // the actual data
     ...o,
 
-    // custom data must be looked up and merged (e.g. for contributor data we want only the count)
+    // custom data must be looked up and merged 
+    //  (e.g. for contributor data we want only the count)
     ...mapValues(customTableData, fn => fn(id, o))
   }));
 }
