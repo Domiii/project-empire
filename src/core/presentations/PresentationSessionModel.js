@@ -9,7 +9,7 @@ import pickBy from 'lodash/pickBy';
 import paginationNodes from 'src/dbdi/nodes/paginationNodes';
 import { downloadSpreadsheetJSON } from '../../util/SpreadsheetUtil';
 import { PresentationStatus } from './PresentationModel';
-import { Promise } from 'firebase';
+//import { Promise } from 'firebase';
 import { NOT_LOADED } from '../../dbdi';
 import { EmptyObject } from '../../util';
 

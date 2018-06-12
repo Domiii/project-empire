@@ -1,4 +1,5 @@
-import firebase from 'firebase';
+import firebase from 'firebase/app';
+import 'firebase/auth';
 
 import DBStatusModel from 'src/core/DBStatusModel';
 
@@ -57,13 +58,13 @@ export class App extends Component {
     // });
   }
 
-  UNSAFE_componentWillMount() {
+  componentDidMount() {
     this._onInit();
   }
 
-  UNSAFE_componentWillUpdate() {
-    this._onInit();
-  }
+  // UNSAFE_componentWillUpdate() {
+  //   this._onInit();
+  // }
 
 
   signOut = () => {

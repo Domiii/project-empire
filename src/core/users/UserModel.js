@@ -1,3 +1,6 @@
+import firebase from 'firebase/app';
+import 'firebase/database';
+
 import Roles, {
   hasRole, hasDisplayRole, getRole
 } from 'src/core/users/Roles';
@@ -91,8 +94,8 @@ export default {
         for (let i = 0; i < sortedUids.length; ++i) {
           const uid = sortedUids[i];
           const user = usersPublic[uid];
-          while (listI < roleNames.length - 1 && 
-            user.role && 
+          while (listI < roleNames.length - 1 &&
+            user.role &&
             user.role >= userLists[listI + 1].role
           ) {
             ++listI;
@@ -117,6 +120,8 @@ export default {
       ) {
         const uid = currentUid;
         const userArgs = { uid };
+
+        // TODO: proper cohort management
         const defaultCohortId = 1;
 
         //setTimeout(() => {
@@ -132,8 +137,7 @@ export default {
         let userData = providerData && providerData.length && providerData[0];
         if (!userData) {
           userData = {
-            displayName: displayName || '<unknown user>',
-            email
+            displayName: displayName || '<unknown user>'
           };
         }
 
@@ -141,10 +145,27 @@ export default {
 
         console.warn('Registering new user:', userData);
 
+        const privateUserData = {
+          ...userData,
+          email
+        };
+
         return Promise.all([
           setUserData({ uid, userData }),
-          set_userPrivateData(userArgs, userData)
+          set_userPrivateData(userArgs, privateUserData)
         ]);
+      },
+
+      _updateUserLastLoginTime(
+        { },
+        { },
+        { currentUid },
+        { set_userLastLogin }
+      ) {
+        const uid = currentUid;
+        const userArgs = { uid };
+
+        return set_userLastLogin(userArgs, firebase.database.ServerValue.TIMESTAMP);
       },
 
       /**
@@ -154,7 +175,7 @@ export default {
         { },
         { userPublic, userPrivate },
         { currentUid, currentUid_isLoaded },
-        { _addNewUser }
+        { _addNewUser, _updateUserLastLoginTime }
       ) {
 
         if (!currentUid_isLoaded) {
@@ -170,12 +191,7 @@ export default {
           return false;
         }
 
-
-        // TODO: handle all kinds of cases:
-        //  1. logged out user
-        //  2. unregistered user
-        //  3. registered user
-        // TODO: use this info to render the right page (AppRouter)
+        _updateUserLastLoginTime();
 
         if (!!userPublic(userArgs) && !!userPrivate(userArgs)) {
           // existing user
@@ -262,7 +278,12 @@ export default {
             ],
             children: {
               // personal user data (we copy this from firebase auth on first use)
-              userPrivateData: 'data'
+              userPrivateData: {
+                path: 'data',
+                children: {
+                  userEmail: 'email'
+                }
+              }
             }
           }
         }
@@ -334,6 +355,7 @@ export default {
               userDisplayName: 'displayName',
               userPhotoURL: 'photoURL',
               userFullName: 'fullName',
+              userLastLogin: 'lastLogin',
               userCohortId: 'cohortId',
               userSelfLabel: 'selfLabel',
               userLocale: 'locale',

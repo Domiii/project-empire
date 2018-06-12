@@ -1,4 +1,5 @@
-import firebase from 'firebase';
+import firebase from 'firebase/app';
+import 'firebase/database';
 
 import CohortModel from './cohorts/CohortModel';
 import UserModel from './users/UserModel';

@@ -4,7 +4,8 @@ import filter from 'lodash/filter';
 import take from 'lodash/take';
 import takeRight from 'lodash/takeRight';
 
-import firebase from 'firebase';
+import firebase from 'firebase/app';
+import 'firebase/auth';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 

@@ -2,7 +2,9 @@ import times from 'lodash/times';
 import map from 'lodash/map';
 import zipObject from 'lodash/zipObject';
 
-import firebase from 'firebase';
+import firebase from 'firebase/app';
+import 'firebase/database';
+
 import { NOT_LOADED } from '../../../../dbdi/react';
 import { EmptyObject } from '../../../../util';
 

@@ -12,5 +12,8 @@ import 'react-bootstrap';
 
 //
 import 'classnames';
-import 'firebase';
+import 'firebase/app';
+import 'firebase/auth';
+import 'firebase/database';
+
 import 'reselect';

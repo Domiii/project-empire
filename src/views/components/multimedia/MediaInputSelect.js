@@ -18,7 +18,7 @@ import {
 import Flexbox from 'flexbox-react';
 import Select from 'react-select';
 import { NOT_LOADED } from '../../../dbdi/react';
-import { Promise } from 'firebase';
+//import { Promise } from 'firebase';
 
 const validDeviceIdRegex = /[0-9A-Fa-f]{6}/g;
 

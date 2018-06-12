@@ -1,5 +1,9 @@
 * more detailed project status (during operating)
-* user table, user operator, new user access privileges
+    * -> Done?!
+* user table
+    * one-click and mass registration
+    * auto-registration + "unverified registered user status" (to be verified via user table)
+* user operator, new user access privileges
 * evaluations, note taking, tracking projects
 * creating new presentations from list of previous session
 * multiple cohorts
@@ -69,7 +73,6 @@
         });
 
 * show user last login time
-  * "Added firebase.User.prototype.metadata which includes information about user creation time and last sign in time." -> https://firebase.google.com/support/release-notes/js#4.6.0
 
 * generate per user playlists
 
