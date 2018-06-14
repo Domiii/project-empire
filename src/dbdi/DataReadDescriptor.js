@@ -118,6 +118,8 @@ class PathDescriptorReader {
 
     // 1) Get the path/queryInput(s) (essentially a higher level version of a "query")
     const { pathDescriptor, readMod } = this.dataReadDescriptor;
+
+    // TODO: Make getPath work properly with async fetch
     const queryInput = pathDescriptor.getPath(args,
       readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
     if (queryInput === NOT_LOADED) {
@@ -236,6 +238,12 @@ class AsyncRead extends PathDescriptorReader {
     }
   }
 
+  customReadOnly = (args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) => {
+    throw new Error('Tried to fetch data asynchronously from reader that neither defined `fetch` nor `path');
+    // const { reader } = this.dataReadDescriptor;
+    // return reader(args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
+  }
+
   customFetchOnly = async (args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) => {
     const { fetch } = this.dataReadDescriptor;
     let result = await fetch(args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
@@ -277,6 +285,7 @@ class AsyncRead extends PathDescriptorReader {
     } = callerNode;
 
     const { fetch } = this.dataReadDescriptor;
+    //console.warn(this.dataReadDescriptor, queryInput, fetch, pathDescriptor);
     if (!fetch) {
       // no custom fetch provided -> go to DataProvider
       // (fetch and forget)

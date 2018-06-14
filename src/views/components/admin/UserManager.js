@@ -1,21 +1,18 @@
 import isEmpty from 'lodash/isEmpty';
 import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
+import pickBy from 'lodash/pickBy';
 import size from 'lodash/size';
-import sortBy from 'lodash/sortBy';
-import groupBy from 'lodash/groupBy';
-import zipObject from 'lodash/zipObject';
 
 import { EmptyObject, EmptyArray } from 'src/util';
 
 import Roles, { hasRole } from 'src/core/users/Roles';
 
-import React, { Component } from 'react';
+import React, { Component, Fragment as F } from 'react';
 import PropTypes from 'prop-types';
 import dataBind, { NOT_LOADED } from '../../../dbdi/react/dataBind';
 
 import autoBind from 'react-autobind';
-
 
 import {
   Panel, Button, ListGroup, ListGroupItem, Alert, Badge
@@ -95,12 +92,16 @@ const __defaultProps = {
     //   text: 'Contributors'
     // }
   ],
-  defaultSorted: [{
-    dataField: 'fullName',
-    order: 'desc'
-  }],
-
-  cellEdit: cellEditFactory({ mode: 'click' })
+  defaultSorted: [
+    {
+      dataField: 'role',
+      order: 'desc'
+    },
+    {
+      dataField: 'lastLogin',
+      order: 'desc'
+    }
+  ]
   // remote: {
   //   pagination: true,
   //   sort: true
@@ -134,16 +135,23 @@ export class UserTable extends Component {
   constructor(props) {
     super(props);
 
+    this.dataBindMethods(
+      'componentDidMount',
+      'afterSaveCell'
+    );
+
     this.tableProps = Object.assign({}, __defaultProps);
 
     // assign renderers
     this.tableProps.columns.forEach(col => col.formatter = this['render_' + col.dataField]);
 
-    // assign editor hooks
-    this.tableProps.beforeSaveCell = this.beforeSaveCell;
-    this.tableProps.afterSaveCell = this.afterSaveCell;
-
-    this.dataBindMethods('componentDidMount');
+    // editor settings + hooks
+    // see: https://react-bootstrap-table.github.io/react-bootstrap-table2/docs/cell-edit-props.html#celleditbeforesavecell-function
+    this.tableProps.cellEdit = cellEditFactory({
+      mode: 'click',
+      beforeSaveCell: this.beforeSaveCell,
+      afterSaveCell: this.afterSaveCell
+    });
   }
 
   componentDidMount(
@@ -155,7 +163,7 @@ export class UserTable extends Component {
     };
   }
 
-  render_photoURL(cell, row, rowIndex, formatExtraData) {
+  render_photoURL = (cell, row, rowIndex, formatExtraData) => {
     // const {
     //   title,
     //   iconUrl
@@ -167,7 +175,7 @@ export class UserTable extends Component {
     </span>);
   }
 
-  render_fullName(cell, row, rowIndex, formatExtraData) {
+  render_fullName = (cell, row, rowIndex, formatExtraData) => {
     // const {
     //   title,
     //   iconUrl
@@ -177,7 +185,7 @@ export class UserTable extends Component {
     </span>);
   }
 
-  render_email(cell, row, rowIndex, formatExtraData) {
+  render_email = (cell, row, rowIndex, formatExtraData) => {
     // const {
     //   title,
     //   iconUrl
@@ -190,13 +198,16 @@ export class UserTable extends Component {
     </span>);
   }
 
-  // render_displayName(cell, row, rowIndex, formatExtraData) {
+  // render_displayName = (cell, row, rowIndex, formatExtraData) => {
 
   // }
 
-  render_lastLogin(cell, row, rowIndex, formatExtraData) {
+  render_lastLogin = (cell, row, rowIndex, formatExtraData) => {
     if (!cell) {
-      return <span className="color-gray">(unknown)</span>;
+      cell = row.createdAt;
+      if (!cell) {
+        return <span className="color-gray">(unknown)</span>;
+      }
     }
     return (<span>
       <Moment fromNow>{cell}</Moment> (
@@ -205,54 +216,103 @@ export class UserTable extends Component {
     </span>);
   }
 
-  render_role(cell, row, rowIndex, formatExtraData) {
+  render_role = (cell, row, rowIndex, formatExtraData) => {
     return (<span>
       {cell || 0}
     </span>);
   }
 
-  beforeSaveCell = (oldValue, newValue, row, column) => {
-    // TODO: save user data
-  }
+  // beforeSaveCell = (oldValue, newValue, user, column) => {
+  //   console.warn('beforeSaveCell', oldValue, newValue, user, column);
+  // }
 
-  afterSaveCell = (oldValue, newValue, row, column) => {
+  afterSaveCell = async (oldValue, newValue, user, column,
+    { },
+    { update_user }
+  ) => {
+    const uid = user.id;
+    const prop = column.dataField;
+    //console.warn('afterSaveCell', oldValue, newValue, user, column);
+
+    const upd = { [prop]: newValue };
+    await update_user({ uid }, upd);
+
+    // prompt a re-render
+    this.setState({});
   }
 
   // render_role(cell, row, rowIndex, formatExtraData) {
 
   // }
 
+  toggleExpand = () => {
+    const { expanded } = this.state;
+    this.setState({ expanded: !expanded });
+  }
+
   render(
-    { },
+    { title, predicate, collapsible },
     { usersOfCohort }
   ) {
     // TODO: cohorts
     const cohortId = 1;
-    const list = usersOfCohort({ cohortId });
+
+    let list = usersOfCohort({ cohortId });
+    list = predicate && pickBy(list, predicate) || list;
 
     if (list === NOT_LOADED) {
       return <LoadIndicator block message="loading users..." />;
     }
     const data = convertToTableData(list, this.customTableData);
 
-    return (<div className="default-width">
+    let header = <span>{title} ({size(list)})</span>;
+
+    let tableBody = (<div className="default-width">
       <BootstrapTable
         data={data}
         {...this.tableProps} />
     </div>);
+
+    if (collapsible) {
+      header = (<FancyPanelToggleTitle>
+        {header}
+      </FancyPanelToggleTitle>);
+
+      tableBody = (<div>{this.state.expanded && tableBody
+        || <div className="margin10" />
+      }</div>);
+    }
+
+    return (<Panel expanded={this.state.expanded} onToggle={this.toggleExpand}>
+      <Panel.Heading>
+        {header}
+      </Panel.Heading>
+      <Panel.Body collapsible={collapsible}>
+        {tableBody}
+      </Panel.Body>
+    </Panel>);
   }
 }
 
 
-@dataBind({})
+@dataBind({
+  clickRegisterAllUnregisteredUsers(evt,
+    { },
+    { registerAllUnregisteredUsers }
+  ) {
+    return registerAllUnregisteredUsers();
+  }
+})
 export default class UserManager extends Component {
   state = {
     expanded: false
   };
 
-  toggleExpand = () => {
-    const { expanded } = this.state;
-    this.setState({ expanded: !expanded });
+  constructor(p) {
+    super(p);
+
+    this._newUsersPredicate = u => !u.role || u.role <= Roles.Unregistered;
+    this._oldUsersPredicate = u => u.role > Roles.Unregistered;
   }
 
   onSelect = (fileId) => {
@@ -261,8 +321,8 @@ export default class UserManager extends Component {
 
   render(
     { },
-    { },
-    { isCurrentUserAdmin, usersPublic_isLoaded }
+    { clickRegisterAllUnregisteredUsers },
+    { isCurrentUserAdmin, usersPublic_isLoaded, unregisteredUids }
   ) {
     if (!usersPublic_isLoaded) {
       return <LoadIndicator />;
@@ -273,21 +333,15 @@ export default class UserManager extends Component {
       );
     }
 
+    const nUnregistered = size(unregisteredUids);
 
-    const { expanded } = this.state;
-
-    return (<Panel expanded={expanded} onToggle={this.toggleExpand}>
-      <Panel.Heading>
-        <FancyPanelToggleTitle>
-          Users
-        </FancyPanelToggleTitle>
-      </Panel.Heading>
-      <Panel.Body collapsible>
-        <div>{expanded &&
-          <UserTable />
-          || <div className="margin10" />
-        }</div>
-      </Panel.Body>
-    </Panel>);
+    return (<F>
+      <Button bsStyle="danger" disabled={!nUnregistered} 
+        onClick={clickRegisterAllUnregisteredUsers}>
+        Register All ({nUnregistered})
+      </Button>
+      <UserTable title="New Users" predicate={this._newUsersPredicate} collapsible={false} />
+      <UserTable title="Users" predicate={this._oldUsersPredicate} collapsible={true} />
+    </F>);
   }
 }

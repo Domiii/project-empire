@@ -333,9 +333,9 @@ const sessionWriters = {
       const firstIndex = firstPres.index;
       let delta = -0.0001; // before first
       if (firstStatus > PresentationStatus.Pending) {
-        //delta *= -1; // after first
+        delta *= -1; // after first
       }
-      set_presentationIndex(presentationArgs, firstIndex + delta);
+      await set_presentationIndex(presentationArgs, firstIndex + delta);
       return await fixPresentationSessionOrder(sessionArgs);
     }
   },
@@ -351,12 +351,13 @@ const sessionWriters = {
 
     const { sessionId } = presentation;
 
-    // make sure, it's up next!
-    await movePresentationUpNext(presentationArgs);
-
     // set as active
     // console.warn({...presentationArgs});
     await setActivePresentationInSession({ sessionId, ...presentationArgs });
+
+    // make sure, it's up next!
+    await movePresentationUpNext(presentationArgs);
+
 
     // set runner up
     return true;
@@ -366,7 +367,7 @@ const sessionWriters = {
     sessionArgs,
     { orderedPresentations, get_presentations },
     { },
-    { set_presentationIndex, update_db }
+    { set_presentationIndex, setGettingReadyPresentationInSession, update_db }
   ) {
     const presentations = orderedPresentations(sessionArgs);
     console.assert(presentations);
@@ -377,6 +378,8 @@ const sessionWriters = {
     });
 
     const res = await update_db(updates);
+
+    setGettingReadyPresentationInSession(sessionArgs);
 
     get_presentations.notifyPathChanged(sessionArgs);
 
@@ -454,7 +457,7 @@ const sessionWriters = {
     const activePresStatus = activePresId && presentationStatus({ presentationId: activePresId });
     if (activePresId &&
       activePresId !== presentationId &&
-      activePresId !== getSecondPendingPresentationIdInSession(sessionArgs) &&
+      //activePresId !== getSecondPendingPresentationIdInSession(sessionArgs) &&
       (activePresStatus === PresentationStatus.InProgress || activePresStatus === PresentationStatus.OnStage)) {
       // update status of previously active presentation
       const pres = get_presentation({ presentationId: activePresId });
@@ -468,11 +471,13 @@ const sessionWriters = {
       }
     }
 
-    // set GettingReady state
-    promises.push(setGettingReadyPresentationInSession({ sessionId }));
-
     promises.push(update_db(updates));
-    return await Promise.all(promises);
+    const res = Promise.all(promises);
+    res.then(() => {
+      // set GettingReady state
+      promises.push(setGettingReadyPresentationInSession({ sessionId }));
+    });
+    return await res;
   },
 
   /**

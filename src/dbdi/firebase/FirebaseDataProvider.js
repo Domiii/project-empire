@@ -18,6 +18,7 @@ import {
   getDataIn,
   //setDataIn
 } from '../PathUtil';
+import PromiseModel from '../../core/scaffolding/PromiseModel';
 
 
 /**
@@ -191,6 +192,22 @@ export class FirebaseAuthProvider extends DataProviderBase {
     autoBind(this);
   }
 
+  async fetchOnce(queryInput) {
+    const query = this.justGimmeAQuery(queryInput);
+    return new Promise((resolve, reject) => {
+      let unsubscribe;
+      unsubscribe = this.auth().onAuthStateChanged(user => {
+        this._onNewData(query, user);
+        unsubscribe();
+        resolve(getDataIn(user, query.remotePath, null));
+      }, 
+      err => {
+        unsubscribe();
+        reject(err);
+      });
+    });
+  }
+
   auth() {
     if (!this._auth) {
       this._auth = firebase.auth();
@@ -198,11 +215,15 @@ export class FirebaseAuthProvider extends DataProviderBase {
     return this._auth;
   }
 
+  _onNewData(query, user) {
+    this.notifyNewData(this.getOrCreateQuery(''), user || null);
+    this.notifyNewData(query, user && getDataIn(user, query.remotePath, null) || user);
+  }
+
   onPathListenStart(query, listener) {
     // add listener once the first request comes in
     this.auth().onAuthStateChanged((user) => {
-      this.notifyNewData(this.getOrCreateQuery(''), user || null);
-      this.notifyNewData(query, user && getDataIn(user, query.remotePath, null) || user);
+      this._onNewData(query, user);
     });
   }
 
