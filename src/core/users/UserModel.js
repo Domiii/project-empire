@@ -86,7 +86,7 @@ export default {
 
       roleUserLists({ roleNames }, { }, { usersPublic }) {
         const allUids = Object.keys(usersPublic);
-        const sortedUids = sortBy(allUids, uid => usersPublic[uid].role || 1);
+        const sortedUids = sortBy(allUids, uid => usersPublic[uid].role || 0);
         const userLists = map(roleNames, name => ({ name, role: Roles[name], list: {} }));
 
         // sort users into userLists by role
@@ -165,31 +165,28 @@ export default {
         const uid = currentUid;
         const userArgs = { uid };
 
+        console.warn('_updateUserLastLoginTime');
         return set_userLastLogin(userArgs, firebase.database.ServerValue.TIMESTAMP);
       },
 
       /**
        * Store new user data in database after first login
        */
-      ensureUserInitialized(
+      async ensureUserInitialized(
         { },
-        { userPublic, userPrivate },
-        { currentUid, currentUid_isLoaded },
+        { userPublic, userPrivate, get_currentUid },
+        { },
         { _addNewUser, _updateUserLastLoginTime }
       ) {
-
-        if (!currentUid_isLoaded) {
-          // still loading
-          return false;
-        }
-
-        const uid = currentUid;
+        // wait for currentUid to have loaded
+        const uid = await get_currentUid.readAsync();
         const userArgs = { uid };
 
-        if (!userPublic.isLoaded(userArgs) | !userPrivate.isLoaded(userArgs)) {
-          // still loading
-          return false;
-        }
+        // wait for user data to have loaded
+        await Promise.all([
+          await userPublic.readAsync(userArgs),
+          await userPrivate.readAsync(userArgs),
+        ]);
 
         _updateUserLastLoginTime();
 
@@ -248,7 +245,7 @@ export default {
         return setUserData({ uid, userData });
       },
 
-      setRole({ uid, role }, { }, { }, { update_userPublic }) {
+      setRole({ uid, role }, { }, { }, { update_user }) {
         const roleNum = getRole(role) || 0;
 
         // make sure to set display role first.
@@ -257,11 +254,11 @@ export default {
         //   this.set_userRole(uid, roleNum)
         // );
 
-        const val = {
+        const upd = {
           role: roleNum,
           displayRole: roleNum
         };
-        return update_userPublic({ uid }, val);
+        return update_user({ uid }, upd);
       },
     },
 

@@ -46,18 +46,19 @@ function RoleChangeLabel({ newRole, oldRole }) {
     {newRole}
   </span>);
 }
-RoleChangeLabel.propTypes = {
-  newRole: PropTypes.oneOfType([
-    PropTypes.number,
-    PropTypes.string
-  ]).isRequired,
-  oldRole: PropTypes.oneOfType([
-    PropTypes.number,
-    PropTypes.string
-  ]).isRequired
-};
+// RoleChangeLabel.propTypes = {
+//   newRole: PropTypes.oneOfType([
+//     PropTypes.number,
+//     PropTypes.string
+//   ]).isRequired,
+//   oldRole: PropTypes.oneOfType([
+//     PropTypes.number,
+//     PropTypes.string
+//   ]).isRequired
+// };
 
 function ChangeRoleButton({ oldRole, newRole, open }) {
+  console.log('oldRole', oldRole);
   return (<Button onClick={open} bsSize="small" className="no-padding">
     <RoleChangeLabel oldRole={oldRole} newRole={newRole} />
   </Button>);
@@ -83,16 +84,15 @@ const RoleEditor = dataBind({
 
   return (<ConfirmModal
     key={newRole}
-    header={<span>Make user <RoleChangeLabel newRole={newRole} oldRole={user.role} />?</span>}
+    header={<span>Make user <RoleChangeLabel newRole={newRole} oldRole={user.role || 0} />?</span>}
     ButtonCreator={ChangeRoleButton}
     onConfirm={changeRole}
 
-    oldRole={user.role}
+    oldRole={user.role || 0}
     newRole={newRole}
   >
     <span>
-      Promote/demote {user.displayName} t
-      o <RoleChangeLabel newRole={newRole} oldRole={user.role} />?
+      Promote/demote {user.displayName} to <RoleChangeLabel newRole={newRole} oldRole={user.role || 0} />?
     </span>
   </ConfirmModal>);
 });
@@ -127,7 +127,7 @@ export class RoleLists extends Component {
     { roleUserLists }
   ) {
     return (<div>{
-      map(roleUserLists(), (userList) => {
+      map(roleUserLists({roleNames: RoleNames}), (userList) => {
         const {
           name,
           list

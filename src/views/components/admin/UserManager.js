@@ -177,15 +177,37 @@ export class UserTable extends Component {
     </span>);
   }
 
+  render_email(cell, row, rowIndex, formatExtraData) {
+    // const {
+    //   title,
+    //   iconUrl
+    // } = row;
+    if (cell === NOT_LOADED) {
+      return <LoadIndicator />;
+    }
+    return (<span>
+      {cell}
+    </span>);
+  }
+
   // render_displayName(cell, row, rowIndex, formatExtraData) {
 
   // }
 
   render_lastLogin(cell, row, rowIndex, formatExtraData) {
+    if (!cell) {
+      return <span className="color-gray">(unknown)</span>;
+    }
     return (<span>
       <Moment fromNow>{cell}</Moment> (
       <Moment format="MMMM Do YYYY">{cell}</Moment>
       )
+    </span>);
+  }
+
+  render_role(cell, row, rowIndex, formatExtraData) {
+    return (<span>
+      {cell || 0}
     </span>);
   }
 
