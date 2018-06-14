@@ -61,7 +61,7 @@ const PresentationSessionLiveStatusElement = withRouter(dataBind({
 })(function PresentationSessionLiveStatusElement(
   { },
   { clickNewPresentationSession, clickGoToLivePresentationSession },
-  { livePresentationSessionId }
+  { livePresentationSessionId, isCurrentUserAdmin }
 ) {
   if (livePresentationSessionId) {
     // we are currently live in action
@@ -71,7 +71,7 @@ const PresentationSessionLiveStatusElement = withRouter(dataBind({
       </BigButton>
     </Well>);
   }
-  else {
+  else if (isCurrentUserAdmin) {
     // nothing going on, yet!
     return (<Well className="background-none">
       <BigButton bsStyle="danger" onClick={clickNewPresentationSession} block>
@@ -79,6 +79,7 @@ const PresentationSessionLiveStatusElement = withRouter(dataBind({
       </BigButton>
     </Well>);
   }
+  return <span />;
 }));
 
 @dataBind()
