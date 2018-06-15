@@ -1,12 +1,14 @@
-* more detailed project status (during operating)
-    * -> Done?!
-* user table
-    * one-click and mass registration
-    * auto-registration + "unverified registered user status" (to be verified via user table)
-* user operator, new user access privileges
-* evaluations, note taking, tracking projects
+## 緊急的事情
+
+* 一些順序不會同步到大家的頁面了
+* Space
+    * files are not deleted after upload
+    * space errors were not reported or shown at all
+    * need a space indicator in the operator view
+* user operator & new user access privileges
 * creating new presentations from list of previous session
-* multiple cohorts
+* evaluations, note taking, tracking "projects" (or "teams"?)
+* multiple cohorts!!!
 * when user logs in sees self highlighted in list
     * also sees warning + estimated time in "live session" header
 
