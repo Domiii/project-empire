@@ -1,10 +1,13 @@
 ## 緊急的事情
 
-* 一些順序不會同步到大家的頁面了
+* "order" is not in sync (when dragging?)
 * Space
-    * files are not deleted after upload
+    * button to delete all uploaded video files of session
     * space errors were not reported or shown at all
     * need a space indicator in the operator view
+* Show connection status in live session?
+* Operator/presenter should have it easier to double check user name + title?
+
 * user operator & new user access privileges
 * creating new presentations from list of previous session
 * evaluations, note taking, tracking "projects" (or "teams"?)
