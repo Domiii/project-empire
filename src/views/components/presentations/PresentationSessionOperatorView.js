@@ -1,5 +1,6 @@
 import map from 'lodash/map';
 import size from 'lodash/size';
+import isEqual from 'lodash/isEqual';
 
 import { EmptyObject, EmptyArray } from '../../../util';
 
@@ -7,11 +8,12 @@ import React, { Component, Fragment as F } from 'react';
 import dataBind, { NOT_LOADED } from '../../../dbdi/react/dataBind';
 
 import {
-  Button, Alert, Panel, Table
+  Button, Alert, Panel, Table, ProgressBar
 } from 'react-bootstrap';
 import Moment from 'react-moment';
 import styled from 'styled-components';
 import Flexbox from 'flexbox-react';
+import filesize from 'filesize';
 
 import ImageLoader from 'src/views/components/util/react-imageloader';
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
@@ -28,6 +30,57 @@ import { YtStatusPanel } from '../multimedia/VideoUploadPanel';
 import { PresentationInfoRow } from './PresentationRow';
 import { MediaStatus } from '../../../core/multimedia/StreamModel';
 
+
+@dataBind({})
+class FileSystemStatus extends Component {
+  state = {};
+
+  refresh = () => {
+    //const quota = await fs.usage();
+    window.navigator.webkitPersistentStorage.queryUsageAndQuota((usedBytes, grantedBytes) => {
+      const quota = { usedBytes, grantedBytes };
+      if (!isEqual(quota, this.state.quota)) {
+        this.setState({ quota });
+      }
+    });
+  }
+
+  componentDidMount() {
+    this.refresh();
+  }
+
+  render() {
+    this.refresh();
+
+    const { quota } = this.state;
+
+    let quotaPct = 0;
+    let quotaInfo;
+    if (quota) {
+      const { usedBytes, grantedBytes } = quota;
+      quotaPct = Math.round(usedBytes / grantedBytes * 100);
+      quotaInfo = `${filesize(usedBytes)} / ${filesize(grantedBytes)}`;
+      //pct = 
+    }
+
+    let bsStyle;
+    if (quotaPct > 70) {
+      bsStyle = 'danger';
+    }
+    else if (quotaPct > 40) {
+      bsStyle = 'warning';
+    }
+    else {
+      bsStyle = 'success';
+    }
+
+    return (<Flexbox>
+      <Flexbox className="full-width">
+        <ProgressBar className="full-width" now={quotaPct} bsStyle={bsStyle} label={quotaInfo} />
+      </Flexbox>
+    </Flexbox>);
+  }
+}
 
 
 @dataBind({
@@ -142,6 +195,7 @@ class PresentationSessionStreamingPanel extends Component {
 
     return (<div className="full-width">
       {headerEl}
+      <FileSystemStatus />
       {errorEl}
       {!errorEl && <MediaStreamPanel hideStatus={true} streamArgs={streamArgs}
         // startStreaming={clickStartStreaming} 

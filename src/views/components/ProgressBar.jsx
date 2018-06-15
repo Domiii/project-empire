@@ -48,7 +48,7 @@ export default class ProgressBar extends Component {
             width: '100%'}}>
               <span>{ !isNaN(progressPct) && (progressPct + '%') || '' }</span>
         </div>
-        </Well>
+      </Well>
     );
   }
 }

@@ -443,12 +443,14 @@ export default class MediaStreamPanel extends Component {
             trim: false
           })}
         </span>
-        {videoDeviceId && res && <span>
-          {<FAIcon color="green" name="video-camera" />} {res.width}x{res.height}
-        </span>}
         {audioDeviceId && <span>
           {<FAIcon color="green" name="microphone" />}
           {/* {volume * 100 || 0}% */}
+        </span>}
+        {videoDeviceId && res && <span>
+          {<FAIcon color="green" name="video-camera" />} 
+            {/* {res.width}x{res.height} */}
+            {res.height}p
         </span>}
       </span>);
 
