@@ -110,11 +110,11 @@ const sessionReaders = {
   ) {
     // TODO: keep it ordered because it adds the id to each presentation?!
     let presentations = orderedPresentations(sessionArgs);
+    //console.warn(sessionArgs.sessionId, presentations);
 
     let presentationsReady = map(presentations, pres => (
       pres.videoId &&
       pres.fileId &&
-      pres.presentationStatus === PresentationStatus.Finished &&
       streamFileExists({ fileId: pres.fileId })) ||
       false
     );
@@ -137,6 +137,8 @@ const sessionReaders = {
   ) {
     // TODO: keep it ordered because it adds the id to each presentation?!
     let presentations = orderedPresentations(sessionArgs);
+
+    // TODO: fix orderedPresentations
 
     let presentationsReady = map(presentations, pres => (
       !pres.videoId &&
@@ -673,7 +675,7 @@ const sessionWriters = {
         fileId,
         id: presentationId
       } = p;
-      
+
       !fileId && console.error('fileId not set in presentation', p);
       try {
         await streamFileDelete({ fileId });

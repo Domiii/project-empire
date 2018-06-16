@@ -79,7 +79,10 @@ export default {
           },
           
           orderedPresentations(args, { get_presentations }) {
+            !args.sessionId && console.error('called orderedPresentation without `sessionId`');
+
             let presentations = get_presentations(args);
+            
             if (presentations === NOT_LOADED) {
               return NOT_LOADED;
             }
@@ -92,6 +95,7 @@ export default {
 
             // since we lose the id when converting to array, we do an ugly hack-around here
             forEach(presentations, (p, id) => p.id = id);
+            console.warn(args.sessionId, sortBy(presentations, 'index'));
 
             return sortBy(presentations, 'index');
           },
