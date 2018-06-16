@@ -46,6 +46,7 @@ export default class FancyPanelToggleTitle extends Panel {
       className,
       openIndicatorComponent,
       closedIndicatorComponent,
+      compressed,
       ...otherProps
     } = this.props;
 
@@ -60,9 +61,19 @@ export default class FancyPanelToggleTitle extends Panel {
       StatusIndicator = closedIndicatorComponent || ClosedIndicatorDefault;
     }
 
+    let layoutProps;
+    let justifyContent;
+    if (!compressed) {
+      justifyContent = 'space-between';
+      layoutProps = { className: 'full-width' };
+    }
+    else {
+      justifyContent = 'flex-start';
+    }
+
     return (<Panel.Title className={className} {...otherProps} toggle>
-      <Flexbox className="full-width" justifyContent="space-between" alignItems="center">
-        <Flexbox className="full-width" alignItems="center">
+      <Flexbox {...layoutProps} justifyContent={justifyContent} alignItems="center">
+        <Flexbox {...layoutProps} alignItems="center">
           {children}
         </Flexbox>
         <Flexbox>

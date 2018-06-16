@@ -9,7 +9,8 @@ import { EmptyObject, EmptyArray, waitAsync } from 'src/util';
 
 import {
   getDataIn,
-  setDataIn
+  setDataIn,
+  getPathParent
 } from '../PathUtil';
 
 export const NOT_LOADED = undefined;
@@ -51,6 +52,32 @@ export default class DataProviderBase {
 
   isDataLoaded(localPath) {
     return this._loadState[localPath] === LoadState.Loaded;
+  }
+
+  isDataLoadedInHierarchy(query) {
+    const {
+      localPath,
+      remotePath
+    } = query;
+
+    if (this.isDataLoaded(localPath)) {
+      return true;
+    }
+
+    if (localPath === remotePath) {
+      let path = remotePath;
+      do {
+        path = getPathParent(path);
+        if (this.isDataLoaded(path)) {
+          return true;
+        }
+      } while (path);
+      return false;
+    }
+    else {
+      // cannot reliably/easily destructure (or make sense of) a path that contains advanced query data
+      return false;
+    }
   }
 
   setLoadState(localPath, state) {
@@ -314,16 +341,17 @@ export default class DataProviderBase {
     const { localPath } = query;
     const val = getDataIn(this._cache, localPath, NOT_LOADED);
 
-    if (val === NOT_LOADED) {
-      // TODO: make use of the hierarchical structure
-      //    -> return null if any ascendant is loaded
-      if (this.isDataLoaded(localPath)) {
-        // return null, if it is already loaded
+    if (this.isDataLoadedInHierarchy(query)) {
+      if (val !== NOT_LOADED) {
+        return val;
+      }
+      else {
         return null;
       }
     }
-
-    return val;
+    else {
+      return NOT_LOADED;
+    }
   }
 
   markPossibleUpdate(queryInput) {

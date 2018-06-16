@@ -76,16 +76,37 @@ class PathDescriptorReader {
   dataReadDescriptor;
   _doRead;
 
+  // TODO: make fetch work through-out the hierarchy
+  getFetchInHierarchy() {
+    // TODO: Problem - queryInput and callerNode need to be fixed correspondingly
+    // TODO: hierarchical fetch lookup must be implemented in every place where fetch is used
+    //    -> in case, this node does not have a fetch entry, but any of it's parents does, go to the closest parent and fetch that first
+    // let node = !fetch && callerNode.parent;
+    // while (!fetch && node) {
+    //   if (node.readDescriptor) {
+    //     fetch = node.readDescriptor.fetch;
+    //   }
+    //   if (node.parent) {
+    //     node = node.parent;
+    //   }
+    // }
+
+    let { fetch } = this.dataReadDescriptor;
+    return fetch;
+  }
+
   buildReader(dataReadDescriptor) {
     this.dataReadDescriptor = dataReadDescriptor;
+
+    const fetch = this.getFetchInHierarchy();
 
     if (dataReadDescriptor.pathDescriptor) {
       this._doRead = this.readFromPathDescriptor;
     }
-    else if (dataReadDescriptor.fetch && dataReadDescriptor.reader) {
+    else if (fetch && dataReadDescriptor.reader) {
       this._doRead = this.customFetchAndRead;
     }
-    else if (dataReadDescriptor.fetch) {
+    else if (fetch) {
       this._doRead = this.customFetchOnly;
     }
     else if (dataReadDescriptor.reader) {
@@ -189,10 +210,8 @@ class ImmediateRead extends PathDescriptorReader {
       dataProvider
     } = callerNode;
 
-    // TODO: let callerNode manage an entire fetch hierarchy
-    //    -> in case, this node does not have a fetch entry, but any of it's parents does, go to the closest parent and fetch that first
+    const fetch = this.getFetchInHierarchy();
 
-    const { fetch } = this.dataReadDescriptor;
     if (!fetch) return;
 
     (async () => {
@@ -245,13 +264,13 @@ class AsyncRead extends PathDescriptorReader {
   }
 
   customFetchOnly = async (args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) => {
-    const { fetch } = this.dataReadDescriptor;
+    const fetch = this.getFetchInHierarchy();
     let result = await fetch(args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
     return result;
   }
 
   customFetchAndRead = async (args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) => {
-    const { reader, fetch } = this.dataReadDescriptor;
+    const fetch = this.getFetchInHierarchy();
     let result = await fetch(args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
 
     // 4) If there is a custom reader (readMod), use that to modify the result
@@ -284,16 +303,16 @@ class AsyncRead extends PathDescriptorReader {
       dataProvider
     } = callerNode;
 
-    const { fetch } = this.dataReadDescriptor;
+    const fetch = this.getFetchInHierarchy();
     //console.warn(this.dataReadDescriptor, queryInput, fetch, pathDescriptor);
-    if (!fetch) {
-      // no custom fetch provided -> go to DataProvider
-      // (fetch and forget)
-      return await dataProvider.fetchOnce(queryInput);
+    if (fetch) {
+      // custom fetch
+      return await fetch(args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
     }
 
-    // custom fetch
-    return await fetch(args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
+    // no custom fetch provided -> go to DataProvider
+    // (fetch and forget)
+    return await dataProvider.fetchOnce(queryInput);
   }
 
   /**
@@ -302,7 +321,7 @@ class AsyncRead extends PathDescriptorReader {
   applyReadMod = async (result, args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) => {
     // result is actually a promise here -> resolve before moving on!
     result = await result;
-    const { reader } = this.dataReadDescriptor;
+    //const { reader } = this.dataReadDescriptor;
     return await this.reader(result, args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
   }
 }

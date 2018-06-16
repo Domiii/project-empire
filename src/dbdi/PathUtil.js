@@ -174,6 +174,7 @@ export function getDataIn(obj, path, defaultValue = undefined) {
   }
   return get(obj, path, defaultValue);
 }
+
 export function setDataIn(obj, path, val) {
   path = _convertPathToObjNotation(path);
   if (!path) {
@@ -184,4 +185,19 @@ export function setDataIn(obj, path, val) {
     }
   }
   return set(obj, path, val);
+}
+
+export function getPathParent(path) {
+  if (!path) return null;
+
+  while (path.endsWith('/')) {
+    path = path.substring(0, path.length-1);
+  }
+
+  const idx = path.lastIndexOf('/');
+  if (idx < 0) {
+    return null;
+  }
+
+  return path.substring(0, idx);
 }

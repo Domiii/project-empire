@@ -32,14 +32,19 @@ const renderSize = filesize.partial({
 });
 
 
-@dataBind({})
+@dataBind({
+  clickDelete(evt, { fileId }, { streamFileDelete }) {
+    evt.preventDefault();
+    return streamFileDelete({ fileId });
+  }
+})
 export class StreamFilePanelHeader extends Component {
   toggleView = () => {
   }
 
   render(
     { },
-    { streamFileSize, streamFileLastModified }
+    { streamFileSize, streamFileLastModified, clickDelete }
   ) {
     const { fileId, isSelected } = this.props;
     const fileArgs = { fileId };
@@ -47,22 +52,31 @@ export class StreamFilePanelHeader extends Component {
     const lastModified = streamFileLastModified(fileArgs);
 
     //return (<HashLink smooth to={link}>
-    return (<FancyPanelToggleTitle>
-      <Flexbox className="full-width" justifyContent="space-between" alignItems="center">
-        <span className="spaced-inline-children">
-          <span className="color-gray">
-            (untitled recording) [{fileId}]
-          </span>
-          <span>
-            {renderSize(size)}
-          </span>
-          <span>
-            [<Moment fromNow>{lastModified}</Moment> (
-            <Moment format="MMMM Do YYYY, hh:mm:ss">{lastModified}</Moment>]
-          </span>
-        </span>
+    return (<Flexbox justifyContent="space-between" alignItems="center">
+      <Flexbox>
+        <FancyPanelToggleTitle compressed>
+          <Flexbox justifyContent="flex-start" alignItems="center">
+            <span className="spaced-inline-children">
+              <span className="color-gray">
+                (untitled recording) [{fileId}]
+              </span>
+              <span>
+                {renderSize(size)}
+              </span>
+              <span>
+                [<Moment fromNow>{lastModified}</Moment> (
+                <Moment format="MMMM Do YYYY, hh:mm:ss">{lastModified}</Moment>)]
+              </span>
+            </span>
+          </Flexbox>
+        </FancyPanelToggleTitle>
       </Flexbox>
-    </FancyPanelToggleTitle>);
+      <Flexbox>
+        <Button bsStyle="danger" onClick={clickDelete}>
+          <FAIcon name="trash" />
+        </Button>
+      </Flexbox>
+    </Flexbox>);
     //</HashLink>);
   }
 }

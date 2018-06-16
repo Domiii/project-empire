@@ -5,6 +5,7 @@ import find from 'lodash/find';
 import last from 'lodash/last';
 import size from 'lodash/size';
 import pickBy from 'lodash/pickBy';
+import reduce from 'lodash/reduce';
 
 import paginationNodes from 'src/dbdi/nodes/paginationNodes';
 import { downloadSpreadsheetJSON } from '../../util/SpreadsheetUtil';
@@ -87,6 +88,42 @@ const sessionReaders = {
     return Object.keys(presentations);
   },
 
+  getPresentationSessionDeletableFileCount(
+    sessionArgs,
+    { getPresentationSessionDeletableFileList }
+  ) {
+    return size(getPresentationSessionDeletableFileList(sessionArgs));
+  },
+
+  getPresentationSessionDeletableFileSize(
+    sessionArgs,
+    { getPresentationSessionDeletableFileList, streamFileSize }
+  ) {
+    return reduce(getPresentationSessionDeletableFileList(sessionArgs), (prev, presentation) =>
+      prev + (streamFileSize({ fileId: presentation.fileId }) || 0)
+      , 0);
+  },
+
+  getPresentationSessionDeletableFileList(
+    sessionArgs,
+    { orderedPresentations, streamFileExists }
+  ) {
+    // TODO: keep it ordered because it adds the id to each presentation?!
+    let presentations = orderedPresentations(sessionArgs);
+
+    let presentationsReady = map(presentations, pres => (
+      pres.videoId &&
+      pres.fileId &&
+      pres.presentationStatus === PresentationStatus.Finished &&
+      streamFileExists({ fileId: pres.fileId })) ||
+      false
+    );
+
+    // TODO handle streamFileExists(...) === NOT_LOADED
+
+    return filter(presentations, (pres, i) => presentationsReady[i]);
+  },
+
   getUploadReadyPresentationCount(
     sessionArgs,
     { getUploadReadyPresentationList }
@@ -98,6 +135,7 @@ const sessionReaders = {
     sessionArgs,
     { orderedPresentations, streamFileExists }
   ) {
+    // TODO: keep it ordered because it adds the id to each presentation?!
     let presentations = orderedPresentations(sessionArgs);
 
     let presentationsReady = map(presentations, pres => (
@@ -111,21 +149,7 @@ const sessionReaders = {
     // TODO handle streamFileExists(...) === NOT_LOADED
 
     return filter(presentations, (pres, i) => presentationsReady[i]);
-  },
-
-  async canUploadPresentationSession(
-    sessionArgs,
-    { isVideoUploadQueueRunning, getUploadReadyPresentationList }
-  ) {
-    const { sessionId } = sessionArgs;
-    const queueArgs = { queueId: sessionId };
-
-    return (
-      // must not already be uploading
-      !isVideoUploadQueueRunning(queueArgs) &&
-      size(await getUploadReadyPresentationList(sessionArgs)) > 0
-    );
-  },
+  }
 };
 
 const sessionWriters = {
@@ -635,6 +659,35 @@ const sessionWriters = {
     });
 
     return await update_db(updates);
+  },
+
+  async deletePresentationSessionFiles(
+    sessionArgs,
+    { getPresentationSessionDeletableFileList },
+    { },
+    { streamFileDelete, set_presentationFileId }
+  ) {
+    const pres = getPresentationSessionDeletableFileList(sessionArgs);
+    const promises = map(pres, async (p) => {
+      const {
+        fileId,
+        id: presentationId
+      } = p;
+      
+      !fileId && console.error('fileId not set in presentation', p);
+      try {
+        await streamFileDelete({ fileId });
+
+        console.assert(presentationId);
+        set_presentationFileId({ presentationId }, null);
+      }
+      catch (err) {
+        console.error(`Could not delete presentation file ${p.title} (${presentationId}): ` +
+          err.stack);
+      }
+    });
+
+    return Promise.all(promises);
   }
 };
 

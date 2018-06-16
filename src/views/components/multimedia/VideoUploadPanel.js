@@ -81,6 +81,10 @@ export class YtMyChannelInfo extends Component {
       if (!snippet) {
         return (<Alert bsStyle="warning" className="no-margin no-padding">
           Could not get channel info :(
+          &nbsp;
+          <Button onClick={clickSelectChannel} bsSize="small" className="no-padding">
+            <FAIcon name="exchange" />
+          </Button>
         </Alert>);
       }
       const { title, thumbnails } = snippet;
@@ -89,8 +93,12 @@ export class YtMyChannelInfo extends Component {
       const editUrl = 'https://www.youtube.com/channel/' + channelId;
       return (<div className="no-wrap inline-hcenter">
         <img src={thumbUrl} className="max-size-2" /> {title} &nbsp;
-        <a href={editUrl} rel="noopener noreferrer" target="_blank"><FAIcon name="edit" /></a> &nbsp;
-        <Button onClick={clickSelectChannel} bsSize="small" className="no-padding"><FAIcon name="exchange" /></Button>
+        <a href={editUrl} rel="noopener noreferrer" target="_blank">
+          <FAIcon name="edit" />
+        </a> &nbsp;
+        <Button onClick={clickSelectChannel} bsSize="small" className="no-padding">
+          <FAIcon name="exchange" />
+        </Button>
       </div>);
     }
   }
@@ -107,11 +115,12 @@ export class YtMyChannelInfo extends Component {
  * Display the current auth status and -if authed- the selected channel.
  */
 @dataBind({
-  clickResetGapiStatus(evt,
+  async clickResetGapiStatus(evt,
     { },
-    { resetGapiStatus }
+    { resetGapiStatus, gapiHardAuth }
   ) {
-    return resetGapiStatus();
+    await resetGapiStatus();
+    await gapiHardAuth();
   },
 
   async clickGapiHardAuth(evt,

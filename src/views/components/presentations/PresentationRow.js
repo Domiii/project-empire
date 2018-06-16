@@ -353,7 +353,7 @@ export class PresentationInfoRow extends Component {
 
     const presentation = get_presentation({ presentationId });
     if (!presentation) {
-      return '';
+      return <tr><td>&nbsp;</td></tr>;
     }
 
     const {
@@ -368,6 +368,8 @@ export class PresentationInfoRow extends Component {
 
     let onDblClick;
     const sessionArgs = { sessionId };
+    // TODO: sessionId sometimes null (probably in operator view before the actual list has been loaded)
+    !sessionId && console.error(sessionId, 'sessionId not given: ', presentation);
     const isOperator = isPresentationSessionOperator(sessionArgs);
     if (isOperator || isCurrentUserAdmin) {
       onDblClick = clickSelectRow;

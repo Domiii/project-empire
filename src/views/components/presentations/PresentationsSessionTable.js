@@ -1,6 +1,7 @@
 import map from 'lodash/map';
 
 import { EmptyObject, EmptyArray } from '../../../util';
+import filesize from 'filesize';
 
 import React, { Component, Fragment as F } from 'react';
 import dataBind, { NOT_LOADED } from '../../../dbdi/react/dataBind';
@@ -32,6 +33,12 @@ const StyledTable = styled(Table) `
 const TBody = styled.tbody`
 `;
 
+const renderFileSize = filesize.partial({
+  base: 10,
+  round: 2
+});
+
+
 const UploadQueueControlPanel = dataBind({
   clickStartUploadPresentationSession(evt, sessionArgs, { startUploadPresentationSession }) {
     startUploadPresentationSession(sessionArgs);
@@ -39,16 +46,35 @@ const UploadQueueControlPanel = dataBind({
   clickTogglePresentationUploadMode(evt, sessionArgs, { isPresentationUploadMode, set_isPresentationUploadMode }) {
     const isMode = isPresentationUploadMode(sessionArgs);
     set_isPresentationUploadMode(sessionArgs, !isMode);
+  },
+  clickDeletePresentationSessionFiles(evt, sessionArgs, {
+    deletePresentationSessionFiles
+  }) {
+    return deletePresentationSessionFiles(sessionArgs);
   }
 })(function UploadQueueControlPanel(
   sessionArgs,
   { isPresentationUploadMode, getUploadReadyPresentationCount, clickTogglePresentationUploadMode,
     isVideoUploadQueueRunning,
     videoUploadQueueRemainingCount, videoUploadQueueTotalCount,
-    clickStartUploadPresentationSession }
+    clickStartUploadPresentationSession,
+    getPresentationSessionDeletableFileCount, getPresentationSessionDeletableFileSize,
+    clickDeletePresentationSessionFiles },
+  { gapiIsAuthenticated }
 ) {
   // upload buttons + queue status
   let queueStatusEl, queueControls, toggleModeButton;
+
+  let fileStatusEl;
+  const deletableFileCount = getPresentationSessionDeletableFileCount(sessionArgs);
+  if (deletableFileCount) {
+    const totalSize = renderFileSize(getPresentationSessionDeletableFileSize(sessionArgs));
+    fileStatusEl = (<span>
+      <Button bsStyle="danger" onClick={clickDeletePresentationSessionFiles}>
+        Delete {deletableFileCount} files ({totalSize})
+      </Button>
+    </span>);
+  }
 
   const isUploadMode = isPresentationUploadMode(sessionArgs);
   if (isUploadMode) {
@@ -68,7 +94,8 @@ const UploadQueueControlPanel = dataBind({
 
     const uploadReadyCount = getUploadReadyPresentationCount(sessionArgs);
     queueControls = (<F>
-      <Button bsStyle="info" disabled={isUploading || !uploadReadyCount} onClick={clickStartUploadPresentationSession} >
+      <Button bsStyle="info" disabled={!gapiIsAuthenticated || isUploading || !uploadReadyCount}
+        onClick={clickStartUploadPresentationSession} >
         Upload <FAIcon name="upload" /> ({uploadReadyCount})
       </Button>
       <YtStatusPanel />
@@ -81,6 +108,7 @@ const UploadQueueControlPanel = dataBind({
     </Button>
   </F>);
   return (<F>
+    {fileStatusEl}
     {queueStatusEl}
     {queueControls}
     {toggleModeButton}
@@ -92,11 +120,13 @@ const UploadQueueControlPanel = dataBind({
  */
 const SessionToolbar = dataBind({})(function SessionHeader(
   sessionArgs,
-  { },
+  { isPresentationSessionOperator },
   { isCurrentUserAdmin }
 ) {
   let controlEls;
-  if (isCurrentUserAdmin) {
+  const isOperator = isPresentationSessionOperator(sessionArgs);
+
+  if (isCurrentUserAdmin || isOperator) {
     const { sessionId } = sessionArgs;
     controlEls = <UploadQueueControlPanel sessionId={sessionId} />;
   }

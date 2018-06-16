@@ -44,9 +44,11 @@ export default {
             mine: true,
             part: 'id,snippet,contentDetails' // ,statistics
           });
+          //console.info('ytMyChannels succeeded', response);
           return response.result;
         }
         catch (_err) {
+          console.error('ytMyChannels failed', _err);
           // handle weird errors by the YT Api
           let err = _err;
           if (err && err.result) {
@@ -63,6 +65,7 @@ export default {
           return null;
         }
       }
+      set_gapiError('[INTERNAL ERROR] - was not authenticated');
       return null;
     },
     children: {

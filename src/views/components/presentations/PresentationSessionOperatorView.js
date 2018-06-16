@@ -3,6 +3,7 @@ import size from 'lodash/size';
 import isEqual from 'lodash/isEqual';
 
 import { EmptyObject, EmptyArray } from '../../../util';
+import filesize from 'filesize';
 
 import React, { Component, Fragment as F } from 'react';
 import dataBind, { NOT_LOADED } from '../../../dbdi/react/dataBind';
@@ -13,7 +14,6 @@ import {
 import Moment from 'react-moment';
 import styled from 'styled-components';
 import Flexbox from 'flexbox-react';
-import filesize from 'filesize';
 
 import ImageLoader from 'src/views/components/util/react-imageloader';
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
@@ -22,13 +22,16 @@ import FAIcon from 'src/views/components/util/FAIcon';
 import MediaStreamPanel, { MediaPrepView } from 'src/views/components/multimedia/MediaStreamPanel';
 
 import {
-  PresentationStatus,
-  PresentationViewMode
+  PresentationStatus
 } from '../../../core/presentations/PresentationModel';
-import { YtStatusPanel } from '../multimedia/VideoUploadPanel';
 
 import { PresentationInfoRow } from './PresentationRow';
 import { MediaStatus } from '../../../core/multimedia/StreamModel';
+
+const renderFileSize = filesize.partial({
+  base: 10,
+  round: 2
+});
 
 
 @dataBind({})
@@ -57,28 +60,24 @@ class FileSystemStatus extends Component {
     let quotaPct = 0;
     let quotaInfo;
     if (quota) {
-      const { usedBytes, grantedBytes } = quota;
+      let { usedBytes, grantedBytes } = quota;
+
+      //usedBytes = grantedBytes * 0.8; // for testing...
+
       quotaPct = Math.round(usedBytes / grantedBytes * 100);
-      quotaInfo = `${filesize(usedBytes)} / ${filesize(grantedBytes)}`;
+      quotaInfo = `WARNING: Space is running out (${renderFileSize(usedBytes)} / ${renderFileSize(grantedBytes)})`;
       //pct = 
+
+      if (quotaPct > 50) {
+        return (<Flexbox>
+          <Flexbox className="full-width">
+            <ProgressBar className="full-width" now={quotaPct} bsStyle={'danger'} label={quotaInfo} />
+          </Flexbox>
+        </Flexbox>);
+      }
     }
 
-    let bsStyle;
-    if (quotaPct > 70) {
-      bsStyle = 'danger';
-    }
-    else if (quotaPct > 40) {
-      bsStyle = 'warning';
-    }
-    else {
-      bsStyle = 'success';
-    }
-
-    return (<Flexbox>
-      <Flexbox className="full-width">
-        <ProgressBar className="full-width" now={quotaPct} bsStyle={bsStyle} label={quotaInfo} />
-      </Flexbox>
-    </Flexbox>);
+    return '';
   }
 }
 

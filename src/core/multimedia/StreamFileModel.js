@@ -21,9 +21,11 @@ const {
 
 const FileDirName = '/streamFiles';
 const MetaFileDirName = '/streamFiles.meta';
-const DefaultFileSystemConfig = {
+
+const DefaultFileSystemSettings = {
   type: window.PERSISTENT,
   bytes: 5 * 1024 * 1024 * 1024
+  //bytes: 5 * 1024
 };
 
 const StreamFsStatus = {
@@ -157,7 +159,7 @@ export default {
         // not ready -> initialize first!
         try {
           // initialize
-          await fs.init(DefaultFileSystemConfig);
+          await fs.init(DefaultFileSystemSettings);
 
           // make sure, the directory exists
           await fs.mkdir(FileDirName);
@@ -354,6 +356,18 @@ export default {
             const segmentIndex = currentSegmentId({ fileId });
             const streamFileSegmentArgs = { fileId, segmentIndex, blobEvent };
             return writeStreamSegmentBlob(streamFileSegmentArgs);
+          },
+
+          async streamFileDelete(
+            { fileId },
+            { },
+            { },
+            { set_streamFile, set__streamFileList }
+          ) {
+            const path = getFilePath(fileId);
+            await fs.unlink(path);
+            set_streamFile({fileId}, null);
+            set__streamFileList(NOT_LOADED);
           }
         },
 
