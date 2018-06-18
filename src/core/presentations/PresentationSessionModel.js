@@ -260,6 +260,7 @@ const sessionWriters = {
     { },
     { set_streamFileId, set_presentationFileId, set_presentationStatus }
   ) {
+    console.warn('startPresentationSessionStreamRecording');
     return Promise.all([
       set_streamFileId(streamArgs, presentationId),
       set_presentationFileId({ presentationId }, presentationId),
@@ -335,6 +336,7 @@ const sessionWriters = {
     { },
     { _updateActivePresentationInSession }
   ) {
+    console.warn('finishPresentationSessionStreaming');
     const { sessionId } = sessionArgs;
     return _updateActivePresentationInSession({ sessionId, newStatus: PresentationStatus.Finished });
   },
@@ -457,8 +459,7 @@ const sessionWriters = {
   async setActivePresentationInSession(
     { sessionId, presentationId },
     { get_presentation, presentationStatus,
-      presentationSessionActivePresentationId,
-      getSecondPendingPresentationIdInSession },
+      presentationSessionActivePresentationId },
     { },
     { update_db, setGettingReadyPresentationInSession }
   ) {

@@ -34,7 +34,7 @@ export default class DataAccessTracker {
 
     this._buildProxies();
   }
-
+s
   // ################################################
   // Private methods + properties
   // ################################################
@@ -63,6 +63,14 @@ export default class DataAccessTracker {
 
         const fn = this.resolveReadData(name);
         return !!fn;
+      },
+
+      enumerate() {
+        throw new Error('[NYI] cannot enumerate "Inject" proxy (yet)');
+      },
+
+      ownKeys() {
+        throw new Error('[NYI] cannot enumerate "Inject" proxy (yet)');
       }
     };
   }
@@ -85,6 +93,14 @@ export default class DataAccessTracker {
 
         const fn = this.resolveReadData(name);
         return !!fn;
+      },
+
+      enumerate() {
+        throw new Error('[NYI] cannot enumerate "Reader" proxy (yet)');
+      },
+
+      ownKeys() {
+        throw new Error('[NYI] cannot enumerate "Reader" proxy (yet)');
       }
     };
   }
@@ -107,6 +123,14 @@ export default class DataAccessTracker {
 
         const fn = this.resolveWriteData(name);
         return !!fn;
+      },
+
+      enumerate() {
+        throw new Error('[NYI] cannot enumerate "Writer" proxy (yet)');
+      },
+
+      ownKeys() {
+        throw new Error('[NYI] cannot enumerate "Writer" proxy (yet)');
       }
     };
   }
@@ -127,6 +151,14 @@ export default class DataAccessTracker {
         return true;
       }
       return target.hasOwnProperty(name);
+    },
+
+    enumerate(target) {
+      return Object.keys(target);
+    },
+
+    ownKeys(target) {
+      return Object.keys(target);
     }
   };
 

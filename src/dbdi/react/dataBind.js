@@ -175,10 +175,11 @@ export default (propsOrPropCb) => _WrappedComponent => {
       let render;
       if (isStatefulComponent) {
         // create new class for every instance of this component
-        this.WrappedComponent = class __WrappedComponent extends _WrappedComponent { };
-        Object.defineProperty(this.WrappedComponent, 'name', {
+        class __WrappedComponent extends _WrappedComponent { };
+        Object.defineProperty(__WrappedComponent, 'name', {
           value: _WrappedComponent.name + '_dataBind'
         });
+        this.WrappedComponent = __WrappedComponent;
 
         // inject custom methods into stateful component
         Object.assign(this.WrappedComponent.prototype,
@@ -277,7 +278,12 @@ export default (propsOrPropCb) => _WrappedComponent => {
       // see: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
 
       const enumerableProps = () => {
-        return Object.assign({}, Object.keys(this.props || EmptyObject), Object.keys(this._customProps || EmptyObject));
+        //return Object.assign({}, Object.keys(this.props || EmptyObject), Object.keys(this._customProps || EmptyObject));
+        return [...Object.keys(this.props || EmptyObject), ...Object.keys(this._customProps || EmptyObject)];
+      };
+      const defaultPropDesc = {
+        enumerable: true,
+        configurable: true,
       };
       const specialProps = {
         /**
@@ -377,11 +383,15 @@ export default (propsOrPropCb) => _WrappedComponent => {
           return false;
         },
 
-        enumerate() {
+        enumerate(target) {
           return enumerableProps();
         },
 
-        ownKeys() {
+        getOwnPropertyDescriptor() {
+          return defaultPropDesc;
+        },
+
+        ownKeys(target) {
           return enumerableProps();
         }
       });
@@ -443,6 +453,14 @@ export default (propsOrPropCb) => _WrappedComponent => {
           }
 
           return false;
+        },
+
+        enumerate() {
+          throw new Error('[NYI] cannot enumerate "Function" proxy (yet)');
+        },
+  
+        ownKeys() {
+          throw new Error('[NYI] cannot enumerate "Function" proxy (yet)');
         }
       });
     }

@@ -79,7 +79,7 @@ export default {
           },
           
           orderedPresentations(args, { get_presentations }) {
-            !args.sessionId && console.error('called orderedPresentation without `sessionId`');
+            !size(Object.keys(args)) && console.error('called orderedPresentation without `sessionId`', {...args});
 
             let presentations = get_presentations(args);
             
@@ -95,7 +95,6 @@ export default {
 
             // since we lose the id when converting to array, we do an ugly hack-around here
             forEach(presentations, (p, id) => p.id = id);
-            console.warn(args.sessionId, sortBy(presentations, 'index'));
 
             return sortBy(presentations, 'index');
           },
@@ -168,7 +167,7 @@ export default {
               presentationVideoId: 'videoId', // youtube videoId (once uploaded)
               presentationFinishTime: 'finishTime',
 
-              title: 'title',
+              presentationTitle: 'title',
               userNamesString: 'userNamesString',
               commentText: 'commentText'
             }

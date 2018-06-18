@@ -201,7 +201,7 @@ class PresentationSessionControls extends Component {
 
     const startLiveSessionBtn = (!isLive &&
       <Button bsStyle="danger"
-        disabled={livePresentationSessionId}
+        disabled={!!livePresentationSessionId}
         onClick={clickStartLiveSession}>
         Go live!
       </Button>

@@ -121,7 +121,7 @@ class PresentationSessionStreamingPanel extends Component {
   render(
     { sessionId, presentationId },
     { streamFileId, streamFileExists, get_streamStatus, isStreamActive,
-      get_presentationStatus, get_presentationFileId,
+      get_presentationStatus, get_presentationFileId, get_presentationTitle,
       clickSetStatusFinished, clickSetStatusSkipped,
       onStartStreamRecorder, onFinished,
       clickUnsetFileId }
@@ -151,8 +151,10 @@ class PresentationSessionStreamingPanel extends Component {
       //console.warn(presentationId, get_presentationFileId(presentationArgs));
       const currentSessionFileId = streamFileId(streamArgs);
       if (currentSessionFileId && presentationId !== currentSessionFileId) {
-        console.error('BUG: fileId and presentationId diverged', presentationId, streamFileId(streamArgs));
-        errorEl = (<Alert bsStyle="danger">BUG: fileId and presentationId diverged!</Alert>);
+        const msg = 'BUG: fileId and presentationId diverged - ' +
+          `${presentationId} - ${get_presentationTitle({presentationId})}, ${streamFileId(streamArgs)} - ${get_presentationTitle({presentationId: streamFileId(streamArgs)})}`;
+        console.error(msg);
+        errorEl = (<Alert bsStyle="danger">{msg}</Alert>);
       }
       else if (streamNotStarted && streamFileExists(fileArgs)) {
         errorEl = (<div>

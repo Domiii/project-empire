@@ -54,7 +54,7 @@ export default class MemoryDataProvider extends DataProviderBase {
   }
 
   _onWrite(action, remotePath, val) {
-    // console.log('W [', action, remotePath, '] ', val);
+    console.log('W [', action, remotePath, '] ', val);
 
     // local and remote path are equal for the MemoryDataProvider (for now)
     const query = this.getOrCreateQuery(remotePath);

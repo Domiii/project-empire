@@ -1,9 +1,25 @@
 ## 緊急的事情
+* presentationStatus gets overridden if I select the "preparing" presentation
+* when fileId has been set before, "startPresentationSessionStreamRecording" causes problems:
+      set_streamFileId(streamArgs, presentationId),
+      set_presentationFileId({ presentationId }, presentationId),
+* Every third video, when finishing it won't jump to the next video
+    * Every second time, we get "debugUtil.js:20 Warning: Can't call setState (or forceUpdate) on an unmounted component. This is a no-op, but it indicates a memory leak in your application. To fix, cancel all subscriptions and asynchronous tasks in the componentWillUnmount method.
+    in FileSystemStatus_dataBind (at dataBind.js:60)
+    in FileSystemStatus_dataBind (at PresentationSessionOperatorView.js:199)
+    in div (at PresentationSessionOperatorView.js:197)"
 
-* "order" is not in sync (when dragging?)
-* Space
-    * button to delete all uploaded video files of session
-    * space errors were not reported or shown at all
+* Possibly unlreated Error?
+    * Could not get stream - TypeError: Failed to execute 'getUserMedia' on 'MediaDevices': At least one of audio and video must be requested
+    at getStream (StreamModel.js:79)
+    at _callee$ (StreamModel.js:293)
+    at tryCatch (runtime.js:65)
+    at Generator.invoke [as _invoke] (runtime.js:299)
+    at Generator.prototype.(anonymous function) [as next] (http://localhost:3000/main.js:85887:21)
+    at step (StreamModel.js:6)
+    at StreamModel.js:6
+    at StreamModel.js:84
+* Space: no errors shown when trying to save and out of space (or in general when writing blobs)
     * need a space indicator in the operator view
 * Show connection status in live session?
 * Operator/presenter should have it easier to double check user name + title?
