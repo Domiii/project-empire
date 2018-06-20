@@ -55,6 +55,10 @@ export default class DataSourceNode {
   // Public properties + methods
   // ################################################
 
+  get parent() {
+    return this._parent;
+  }
+
   get dataProvider() {
     return this._dataProvider;
   }
@@ -75,8 +79,10 @@ export default class DataSourceNode {
     return !!this._readDescriptor;
   }
 
+  // has custom writer or path
   get isWriter() {
-    return !!this._writeDescriptor;
+    // If it has path, will have a corresponding set_* writer
+    return !!this._writeDescriptor || !!this.pathDescriptor;
   }
 
   isDataLoaded(...allArgs) {

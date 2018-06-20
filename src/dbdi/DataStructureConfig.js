@@ -103,7 +103,9 @@ export class DataStructureConfigNode {
   constructor(name, parent, cfg) {
     this.name = name;
     this.parent = parent;
-    this.isReadOnly = cfg.isReadOnly || false;
+
+    cfg !== null && cfg !== undefined || 
+      console.error('DataStructureConfig missing config object:', name, parent);
 
     this._parseConfig(cfg);
   }
@@ -130,6 +132,8 @@ export class DataStructureConfigNode {
     }
     else if (isPlainObject(cfg)) {
       // more complex descriptor node
+      Object.assign(this, cfg);
+      this.isReadOnly = cfg.isReadOnly || false;
       this._parsePath(cfg, cfg.path || cfg.pathTemplate);
       this._parseChildren(cfg);
       this._parseReader(cfg);
@@ -205,6 +209,10 @@ export class DataStructureConfigNode {
     }
   }
 
+  _parseChildren(cfg) {
+    this.children = cfg.children && parseConfigChildren(this, cfg.children) || null;
+  }
+
   _parseReader(cfg) {
     if (cfg.read || cfg.reader) {
       // a custom reader for this node
@@ -213,10 +221,10 @@ export class DataStructureConfigNode {
   }
 
   _parseFetch(cfg) {
-    if (cfg.fetch) {
-      // a custom reader for this node
-      this.fetch = cfg.fetch;
-    }
+    //if (cfg.fetch) {
+    // a custom reader for this node
+    this.fetch = cfg.fetch;
+    //}
   }
 
   _parseReaders(cfg) {
@@ -257,9 +265,5 @@ export class DataStructureConfigNode {
       );
       this.children = Object.assign({}, this.children, writerNodes);
     }
-  }
-
-  _parseChildren(cfg) {
-    this.children = cfg.children && parseConfigChildren(this, cfg.children) || null;
   }
 }

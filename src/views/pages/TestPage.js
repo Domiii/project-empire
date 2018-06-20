@@ -55,7 +55,6 @@ const dataStructureConfig = {
     }
   }
 };
-const dataSourceTree = buildSourceTree(dataProviders, dataStructureConfig);
 
 async function doWait(ms) {
   return new Promise((r, j) => setTimeout(r, ms));
@@ -92,8 +91,13 @@ class TestFetch extends Component {
   }
 }
 
+
+let dataSourceTree;
 const WrappedView = ({ }) => (
-  <DataSourceProvider dataSourceTree={dataSourceTree}>
+  <DataSourceProvider 
+    dataSourceTree={dataSourceTree = 
+      dataSourceTree || 
+      buildSourceTree(dataProviders, dataStructureConfig)}>
     <TestFetch />
   </DataSourceProvider>
 );

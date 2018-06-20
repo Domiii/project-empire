@@ -14,6 +14,7 @@ import isArray from 'lodash/isArray';
 import zipObject from 'lodash/zipObject';
 import times from 'lodash/times';
 import uniq from 'lodash/uniq';
+import merge from 'lodash/merge';
 
 import pluralize from 'pluralize';
 
@@ -516,9 +517,22 @@ function parseHasManyConfig(hasMany) {
  * Relationships represent uni-directional and bi-directional edges in the Graph.
  */
 class Relationship {
+  /**
+   * @type GraphNode
+   */
   a;
+  /**
+   * @type GraphNode
+   */
   b;
+  /**
+   * Settings for this relationship.
+   * E.g.: "aBelongsToB"
+   * 
+   * @type Object
+   */
   cfg;
+  
   constructor(a, b, cfg) {
     this.a = a;
     this.b = b;
@@ -527,6 +541,7 @@ class Relationship {
 
   buildConfigEntry() {
     // all relationship implement a function to build their config entry
+    throw new Error('[INTERNAL ERROR] Relationship did not override buildConfigEntry()');
   }
 
   get relationshipName() {
@@ -542,7 +557,7 @@ class BHasManyARelationship extends Relationship {
   constructor(a, b, cfg) {
     super(a, b, cfg);
 
-    b.hasMany.push(this);
+    //b.hasMany.push(this);
   }
 
   buildConfigEntry() {
@@ -583,7 +598,7 @@ class OneToManyRelationship extends Relationship {
   buildConfigEntry() {
     const n = this.hasMany.getNameProxy();
 
-    return Object.assign({},
+    return merge({},
       this.hasMany.buildConfigEntry(),
       specializedDataModelGenerators.oneToMany(n, this.cfg)
     );
@@ -607,7 +622,7 @@ class ManyToManyRelationship extends Relationship {
     const n1 = this.bHasManyA.getNameProxy();
     const n2 = this.aHasManyB.getNameProxy();
 
-    return Object.assign({},
+    return merge({},
       this.bHasManyA.buildConfigEntry(),
       this.aHasManyB.buildConfigEntry(),
       specializedDataModelGenerators.manyToMany(n1, n2, this.cfg)
@@ -631,10 +646,6 @@ class ManyToManyRelationship extends Relationship {
  * 3) Or: both (many-to-many)
  */
 class GraphNode {
-  // relationships
-  hasMany = [];
-  //belongsTo = [];
-
   // settings
   hasManyCfg;
 
@@ -646,7 +657,7 @@ class GraphNode {
     const { hasMany } = configNode;
 
     // parse hasMany config
-    this.hasManyCfg = this.parseHasManyConfig(hasMany);
+    this.hasManyCfg = parseHasManyConfig(hasMany);
   }
 
   doesHaveMany(aName) {
@@ -676,7 +687,11 @@ class GraphNode {
 export class DataRelationshipGraph {
   nodesByName = {};
 
-  hasManyRelationships = [];
+  // array of basic relationships (BHasManyARelationship)
+  basicRelationships = [];
+
+  // Basic relationships by their owner ("b") graph node
+  basicRelationshipsByNode = new Map();
 
   // stored by name, since they are only inserted once, no matter if uni- or bi-directional
   specializedRelationships = {};
@@ -705,6 +720,8 @@ export class DataRelationshipGraph {
     // build graph of all nodes that have explicit relationships with other nodes
     this.tree.root.forEachNodeInSubTree(this._getOrCreateGraphNodeForTreeNode);
 
+    console.log(this.nodesByName);
+
     // actually build the relationships
     this._buildAllRelationships();
 
@@ -731,7 +748,7 @@ export class DataRelationshipGraph {
 
       if (hasMany || relationship) {
         if (!treeNode.parent) {
-          throw new Error('Cannot add relationship to root node');
+          throw new Error('Trying to (but not allowed to) add relationship to root node');
         }
 
         graphNode = new GraphNode(this, treeNode);
@@ -753,103 +770,105 @@ export class DataRelationshipGraph {
    */
 
   _buildAllRelationships() {
-    this.relationshipDataConfig = {
+    this.relationshipDataConfigChildren = {
       _relationships: {
-        path: '_rel',
+        path: '_relationships',
         children: {}
       }
     };
 
-    // build graph
-    this.forEachNode(this._addRelationshipsForNode);
+    // build graph nodes + add basic relationships
+    this.forEachNode(this._addBasicRelationshipsForNode);
 
-    // categorize all relationships into one-to-many and many-to-many
-    this.categorizeEdges();
+    // build specialized relationships (one-to-many and many-to-many)
+    this.buildSpecializedRelationships();
 
     // generate config
     this.buildRelationshipConfig();
   }
 
   _getConfigNode(relationshipName) {
-    return this.relationshipDataConfig.children[relationshipName];
+    return this.relationshipDataConfigChildren.children[relationshipName];
   }
 
   /**
    * Gets (creates if necessary) empty node containing the data model for the relationship
    */
   _getOrCreateConfigNodeForRelationship(rel) {
-    const { a, b } = rel;
-    const relationshipName = getRelationshipName(a.Name, b.Name);
+    const { relationshipName } = rel;
+    console.assert(relationshipName, 'relationshipName not defined in Relationship');
     let node = this._getConfigNode(relationshipName);
     if (!node) {
-      node = this.relationshipDataConfig.children[relationshipName] = {};
+      node = this.relationshipDataConfigChildren.children[relationshipName] = {};
     }
     return node;
   }
 
-  _addRelationshipsForNode(bGraphNode) {
+  _addBasicRelationshipsForNode(bGraphNode) {
     const { treeNode: bTreeNode } = bGraphNode;
     const bName = bGraphNode.name;
 
-    forEach(bGraphNode.hasManyCfg, (hasManyEntry, aName) => {
+    forEach(bGraphNode.hasManyCfg, (hasManyCfg, aName) => {
       const aTreeNode = this.tree.root.getReadDescendantByName(aName);
       if (!aTreeNode) {
         throw new Error(`invalid "hasMany" relationship in ${bName}: ${aName} does not exist in data (sub-)tree`);
       }
       if (!aTreeNode.isWriter || !aTreeNode.isReader) {
+        console.error(aTreeNode);
         throw new Error(`invalid "hasMany" relationship in ${bName}: ${aName} must be (but is not) readable and writable`);
       }
       const aGraphNode = this._getOrCreateGraphNodeForTreeNode(aTreeNode);
 
       // add hasMany relationship
-      this.addHasManyRelation(aGraphNode, bGraphNode);
+      this.addHasManyRelation(aGraphNode, bGraphNode, hasManyCfg);
     });
 
     // TODO: belongsTo relationships
   }
 
-  categorizeEdges() {
-    // TODO: categorize and add one-to-many + many-to-many relationship entries
-    this.hasManyRelationships.forEach(hasMany => {
-      // TODO!
-      if (hasMany.a.) {
-        // only goes in one direction
-        new OneToManyRelationship(hasMany);
-      }
-      else if (!specializedRelationships[hasMany.relationshipName]) {
-        // found first node of an m2m relationship
-        new ManyToManyRelationship();
-      }
-      else {
-        // nothing to do! (second node of an m2m relationship)
-      }
-    });
-  }
-
-  _addRelationship(rel) {
-    this.hasManyRelationships.push(rel);
-  }
-
   /**
-   * Add relationship to cfgNode
+   * Add simple HasMany relationship
    */
-  addHasManyRelation(a, b) {
-    this._addRelationship(new BHasManyARelationship(a, b));
+  addHasManyRelation(a, b, hasManyCfg) {
+    const rel = new BHasManyARelationship(a, b, hasManyCfg);
+    this.basicRelationships.push(rel);
+    this.basicRelationshipsByNode.set(b, rel);
     //this._addRelationship(new ABelongsToBRelationship(cfgNode, a, b));
   }
 
   /**
-   * a has many b, AND b has many a
+   * Build all specialized relationships (one-to-many and many-to-many)
    */
-  addManyToManyRelation(a, b) {
+  buildSpecializedRelationships() {
+    this.basicRelationships.forEach(hasMany => {
+      let newRel;
 
+      const relName = hasMany.relationshipName;
+      console.assert(relName);
+
+      if (!this.basicRelationshipsByNode.get(hasMany.a)) {
+        // only goes in one direction
+        newRel = new OneToManyRelationship(hasMany);
+      }
+      else if (!this.specializedRelationships[relName]) {
+        // found first node of an m2m relationship
+        newRel = new ManyToManyRelationship();
+      }
+      else {
+        // nothing to do! (second node of an m2m relationship)
+      }
+
+      if (newRel) {
+        this.specializedRelationships[relName] = newRel;
+      }
+    });
   }
 
   buildRelationshipConfig() {
-    this.hasManyRelationships.forEach(rel => {
+    forEach(this.specializedRelationships, rel => {
       const cfgNode = this._getOrCreateConfigNodeForRelationship(rel);
-
-      // TODO
+      cfgNode.path = rel.relationshipName;
+      cfgNode.children = rel.buildConfigEntry();
     });
   }
 
@@ -865,8 +884,8 @@ export function DataRelationshipPlugin(tree) {
   graph._buildGraph();
 
   // when finished building, add to tree!
-  console.warn(graph.relationshipDataConfig);
-  tree.addChildToRoot(graph.relationshipDataConfig);
+  console.warn(graph.relationshipDataConfigChildren);
+  tree.addChildrenToRoot(graph.relationshipDataConfigChildren);
 
   return graph;
 }
