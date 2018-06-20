@@ -94,7 +94,6 @@ class FileSystemStatus extends Component {
     { presentationId },
     { startPresentationSessionStreamRecording }
   ) {
-    console.warn('onStartStreamRecorder', streamArgs, presentationId);
     return startPresentationSessionStreamRecording({
       presentationId,
       streamArgs

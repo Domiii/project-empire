@@ -218,8 +218,8 @@ export default {
           //});
         },
 
-        setAdminDisplayMode({ uid, enabled }, { }, { }, { set_userDisplayRole }) {
-          return set_userDisplayRole({ uid }, enabled ? Roles.Admin : Roles.User);
+        setAdminDisplayMode({ uid, enabled }, { userRole }, { }, { set_userDisplayRole }) {
+          return set_userDisplayRole({ uid }, enabled ? userRole({uid}) : Roles.User);
         },
 
         setUserData(

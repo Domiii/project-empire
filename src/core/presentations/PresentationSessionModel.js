@@ -1,3 +1,9 @@
+/**
+ * Some important aspects of working with PresentationSession:
+ * 
+ * -> Calls startStreamRecording to get started with streaming a new presentation.
+ */
+
 import map from 'lodash/map';
 import forEach from 'lodash/forEach';
 import filter from 'lodash/filter';
@@ -234,7 +240,7 @@ const sessionWriters = {
     await fixPresentationSessionOrder(sessionArgs);
   },
 
-  // NOTE: This only starts the streaming devices, does not actually start recording
+  // NOTE: This only sets the presentation, does not actually start recording
   async startPresentationSessionStreaming(
     sessionArgs,
     { get_presentationSessionOperatorUid },
@@ -260,7 +266,6 @@ const sessionWriters = {
     { },
     { set_streamFileId, set_presentationFileId, set_presentationStatus }
   ) {
-    console.warn('startPresentationSessionStreamRecording');
     return Promise.all([
       set_streamFileId(streamArgs, presentationId),
       set_presentationFileId({ presentationId }, presentationId),
@@ -314,8 +319,12 @@ const sessionWriters = {
       else {
         // reset stream
         const { sessionId } = sessionArgs;
-        return hasSelectedInputMedia() && await startStreamRecording({ streamId: sessionId });
-        //return true;
+        //console.warn(hasSelectedInputMedia());
+        if (hasSelectedInputMedia()) {
+          await startStreamRecording({ streamId: sessionId });
+          return true;
+        }
+        return false;
       }
     }
   },
@@ -336,7 +345,7 @@ const sessionWriters = {
     { },
     { _updateActivePresentationInSession }
   ) {
-    console.warn('finishPresentationSessionStreaming');
+    //console.warn('finishPresentationSessionStreaming');
     const { sessionId } = sessionArgs;
     return _updateActivePresentationInSession({ sessionId, newStatus: PresentationStatus.Finished });
   },
@@ -383,7 +392,7 @@ const sessionWriters = {
     // console.warn({...presentationArgs});
     await setActivePresentationInSession({ sessionId, ...presentationArgs });
 
-    // make sure, it's up next!
+    // make sure, it's at the right index!
     await movePresentationUpNext(presentationArgs);
 
 
@@ -414,6 +423,9 @@ const sessionWriters = {
     return res;
   },
 
+  /**
+   * Returns presentationId if successful
+   */
   async goToFirstPendingPresentationInSession(
     { sessionId },
     { getFirstPendingPresentationIdInSession },
@@ -633,14 +645,14 @@ const sessionWriters = {
   ) {
     const { sessionId } = sessionArgs;
 
-    const sess = get_presentationSession(sessionArgs);
-    const presentations = get_presentations(sessionArgs);
-    const liveSessionId = get_livePresentationSessionId();
-    if (sess === NOT_LOADED |
-      presentations === NOT_LOADED |
-      liveSessionId === NOT_LOADED) {
-      return NOT_LOADED;
-    }
+    const sess = await get_presentationSession.readAsync(sessionArgs);
+    const presentations = await get_presentations.readAsync(sessionArgs);
+    const liveSessionId = await get_livePresentationSessionId.readAsync();
+    // if (sess === NOT_LOADED |
+    //   presentations === NOT_LOADED |
+    //   liveSessionId === NOT_LOADED) {
+    //   return NOT_LOADED;
+    // }
 
     if (!sess) {
       throw new Error('invalid sessionId for deletion', sessionId);

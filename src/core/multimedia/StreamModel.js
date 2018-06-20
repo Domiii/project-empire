@@ -248,7 +248,13 @@ const mediaInputSelection = {
   },
 
   children: {
-    videoDeviceId: 'videoDeviceId',
+    videoDeviceId: {
+      path: 'videoDeviceId',
+      // reader(val) {
+      //   console.log('videoDeviceId', val);
+      //   return val;
+      // }
+    },
     audioDeviceId: 'audioDeviceId'
   }
 };
@@ -301,7 +307,7 @@ export default {
           const streamVersion = ++lastStreamVersion;
 
           // hack: notify any listener of `isAnyStreamOnline`
-          set_mediaStreams(get_mediaStreams());
+          get_mediaStreams.notifyPathChanged();
 
           // TODO: properly setup the recorder
           // see: https://github.com/muaz-khan/RecordRTC/tree/master/dev/MediaStreamRecorder.js

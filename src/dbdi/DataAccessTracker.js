@@ -237,6 +237,8 @@ s
         allArgs.val = allArgs.val.____proxyGetUnderlyingTarget;
       }
 
+      console.log('W ' + node.name, writeArgs[0]);
+
       return node.writeData(allArgs, this._readerProxy, this._injectProxy, this._writerProxy, this);
     };
 

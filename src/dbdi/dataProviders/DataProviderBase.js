@@ -54,7 +54,12 @@ export default class DataProviderBase {
     return this._loadState[localPath] === LoadState.Loaded;
   }
 
-  isDataLoadedInHierarchy(query) {
+  /**
+   * Generally speaking, if data is not fully loaded under a path,
+   * we don't return the incomplete version of that data, that is why we want
+   * to make sure that data is loaded at path (or any ancestory) before returning it.
+   */
+  isDataFullyAvailable(query) {
     const {
       localPath,
       remotePath
@@ -249,7 +254,7 @@ export default class DataProviderBase {
     const listenerData = this._listenerData.get(listener);
 
     if (!listenerData) {
-      console.error('[INTERNAL ERROR] listener not registered');
+      console.error('[INTERNAL ERROR] listener data not set at path: ' + localPath);
       return;
     }
 
@@ -283,7 +288,7 @@ export default class DataProviderBase {
       return;
     }
 
-    console.log('UNLOAD', localPath);
+    //console.log('UNLOAD', localPath);
     delete this._listenersByPath[localPath];
     this._queriesByLocalPath.delete(localPath);
     delete this._loadState[localPath];
@@ -306,12 +311,12 @@ export default class DataProviderBase {
     if (val === NOT_LOADED) {
       if (this.isDataLoaded(localPath)) {
         this.setLoadState(localPath, LoadState.NotLoaded);
-        console.log('UNLOAD ', localPath, ' -> ', val);
+        //console.log('UNLOAD ', localPath, ' -> ', val);
       }
     }
     else if (!this.isDataLoaded(localPath)) {
       this.setLoadState(localPath, LoadState.Loaded);
-      console.log('LOAD ', localPath, ' -> ', val);
+      //console.log('LOAD ', localPath, ' -> ', val);
     }
     else {
       //console.log('NEW DATA ', localPath, ' -> ', val);
@@ -341,7 +346,7 @@ export default class DataProviderBase {
     const { localPath } = query;
     const val = getDataIn(this._cache, localPath, NOT_LOADED);
 
-    if (this.isDataLoadedInHierarchy(query)) {
+    if (this.isDataFullyAvailable(query)) {
       if (val !== NOT_LOADED) {
         return val;
       }

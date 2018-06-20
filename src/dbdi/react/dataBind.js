@@ -33,6 +33,7 @@ import {
   getCustomContextFromReactContext,
   buildReactContextForDataBind
 } from './lib/dbdi-react-internals';
+
 //import { injectRenderArgs } from './react-util';
 
 export { NOT_LOADED } from '../dataProviders/DataProviderBase';
@@ -54,7 +55,6 @@ function initStatefulComponent(Comp, injectedArgs) {
   };
 
   return function render() {
-    this._shouldUpdate = false;
     const { WrappedComponent } = this;
 
     return (<WrappedComponent
@@ -116,14 +116,13 @@ export default (propsOrPropCb) => _WrappedComponent => {
 
     // bookkeeping ((currently) mostly unused)
     _isMounted;
-    _shouldUpdate;
+    _alreadyRefreshing;
 
     constructor(props, context) {
       super(props, context);
 
       autoBind(this);
 
-      this._shouldUpdate = false;
       this._isMounted = false;
 
       // prepare access tracker
@@ -458,7 +457,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
         enumerate() {
           throw new Error('[NYI] cannot enumerate "Function" proxy (yet)');
         },
-  
+
         ownKeys() {
           throw new Error('[NYI] cannot enumerate "Function" proxy (yet)');
         }
@@ -547,7 +546,7 @@ export default (propsOrPropCb) => _WrappedComponent => {
       // TODO: fix context handling (https://github.com/facebook/react/issues/2517)
 
       //return this.shouldUpdate;
-      // const should = !shallowEqual(nextProps, this.props) || !shallowEqual(nextState, this.state) || this._shouldUpdate;
+      // const should = !shallowEqual(nextProps, this.props) || !shallowEqual(nextState, this.state);
 
       // if (!should) {
       //   window.updateCount = (window.updateCount || 0) + 1;
@@ -563,23 +562,22 @@ export default (propsOrPropCb) => _WrappedComponent => {
         this._customFunctions.setContext(newContext);
       }
 
-      this._shouldUpdate = true;
-      this._isMounted = true;
       this._prepareInjectedProps();
       this.forceUpdate();
     }
 
     componentDidMount() {
       //console.log('dataBind.componentDidMount');
+      this._alreadyRefreshing = false;
+      this._isMounted = true;
     }
 
     componentWillUnmount() {
-      //console.log('dataBind.componentWillUnmount');
+      //console.warn('componentWillUnmount @', this.wrappedComponentName);
+      this._isMounted = false;
       this._dataAccessTracker.unmount();
 
       this._customChildContext = {}; // reset context
-      this._shouldUpdate = true;
-      this._isMounted = false;
     }
 
     _onNewData(query) {
@@ -588,21 +586,26 @@ export default (propsOrPropCb) => _WrappedComponent => {
       //   queryInput
       // } = query;
 
-      this._shouldUpdate = true;
       //console.warn(WrappedComponent.name || '<unnamed component>', 'onNewData', localPath, val);
       //this.forceUpdate();
-      if (this._isMounted) {
-        if (!this._isRendering) {
-          this.setState(EmptyObject);
-        }
-        else {
-          // new data could be triggered by render method → make sure, that that is taken care of
-          throw new Error('NYI: state updates during render');
-          // setTimeout(() => {
-          //   this.setState({});
-          // });
-        }
+      if (!this._alreadyRefreshing && this._isMounted) {
+        //if (!this._isRendering) {
+        this._alreadyRefreshing = true;
+        setTimeout(() => {
+          this._alreadyRefreshing = false;
+          if (this._isMounted) {
+            //console.warn('setState @', this.wrappedComponentName);
+            this.setState(EmptyObject);
+          }
+        });
       }
+      // else {
+      //   // new data could be triggered by render method → make sure, that that is taken care of
+      //   throw new Error('NYI: state updates during render');
+      //   // setTimeout(() => {
+      //   //   this.setState({});
+      //   // });
+      // }
     }
   }
 

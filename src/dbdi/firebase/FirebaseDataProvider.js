@@ -124,7 +124,7 @@ export default class FirebaseDataProvider extends DataProviderBase {
    * That is why we don't need to explicitely trigger anything during write operations.
    */
   _onWrite(action, remotePath, val) {
-    console.log('W [', action, remotePath, '] ', val);
+    // console.log('W [', action, remotePath, '] ', val);
 
     // send a notification early
     //  because it can save us the time of a round-trip to the database (which is on('value') fires)

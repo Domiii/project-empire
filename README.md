@@ -1,24 +1,11 @@
 ## 緊急的事情
-* presentationStatus gets overridden if I select the "preparing" presentation
+* proper testing!
+* clean up the TODO lists!
+
+* presentationStatus gets overridden when explicitely starting the "preparing" presentation
 * when fileId has been set before, "startPresentationSessionStreamRecording" causes problems:
       set_streamFileId(streamArgs, presentationId),
       set_presentationFileId({ presentationId }, presentationId),
-* Every third video, when finishing it won't jump to the next video
-    * Every second time, we get "debugUtil.js:20 Warning: Can't call setState (or forceUpdate) on an unmounted component. This is a no-op, but it indicates a memory leak in your application. To fix, cancel all subscriptions and asynchronous tasks in the componentWillUnmount method.
-    in FileSystemStatus_dataBind (at dataBind.js:60)
-    in FileSystemStatus_dataBind (at PresentationSessionOperatorView.js:199)
-    in div (at PresentationSessionOperatorView.js:197)"
-
-* Possibly unlreated Error?
-    * Could not get stream - TypeError: Failed to execute 'getUserMedia' on 'MediaDevices': At least one of audio and video must be requested
-    at getStream (StreamModel.js:79)
-    at _callee$ (StreamModel.js:293)
-    at tryCatch (runtime.js:65)
-    at Generator.invoke [as _invoke] (runtime.js:299)
-    at Generator.prototype.(anonymous function) [as next] (http://localhost:3000/main.js:85887:21)
-    at step (StreamModel.js:6)
-    at StreamModel.js:6
-    at StreamModel.js:84
 * Space: no errors shown when trying to save and out of space (or in general when writing blobs)
     * need a space indicator in the operator view
 * Show connection status in live session?
@@ -31,8 +18,14 @@
 * when user logs in sees self highlighted in list
     * also sees warning + estimated time in "live session" header
 
+* More explicitely enable the different debug switches?
+    * Any writer call
+    * Any Load/Unload
+    * Any change to data
+    * etc...
+
 ## TODO: External Camera
-* Camera resolution is not really @ 720p
+* webcam @ 720p is still really bad quality (especially in room that is not very well lit)
 * "Currently, people who want to do Video Conferencing with 'non-webcam' cameras, (internal/USB HDMI capture cards) are forced to use Xsplit to setup their video source, then Skype or Zoom will 'see' Xsplit as an available webcam input."
 * Try Webcamoid for Windows first - https://webcamoid.github.io/#downloads
   * virtual camera support: https://github.com/webcamoid/webcamoid/wiki/Virtual-camera-support

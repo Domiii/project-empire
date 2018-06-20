@@ -34,6 +34,17 @@ export default class MemoryDataProvider extends DataProviderBase {
     return node;
   }
 
+  /**
+   * TODO: Memory data provider might be used for different purposes.
+   * When acting as a cache for a remote API, isDataFullyAvailable behaves like it would
+   * for a remote DataProvider.
+   * When just storing some local values, this should just return true.
+   * Maybe we have to define these two uses cases through two different data providers?
+   */
+  // isDataFullyAvailable() {
+  //   return true;
+  // }
+
   // #################################################################
   // Any DataProvider can/needs to implement the following methods
   // #################################################################
@@ -54,7 +65,7 @@ export default class MemoryDataProvider extends DataProviderBase {
   }
 
   _onWrite(action, remotePath, val) {
-    console.log('W [', action, remotePath, '] ', val);
+    //console.log('W [', action, remotePath, '] ', val);
 
     // local and remote path are equal for the MemoryDataProvider (for now)
     const query = this.getOrCreateQuery(remotePath);
