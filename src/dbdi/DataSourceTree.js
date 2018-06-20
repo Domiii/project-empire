@@ -26,13 +26,14 @@ import DataAccessTracker from './DataAccessTracker';
  * Eventually, we can easily put them into separate NPM modules.
  * (because there is no specialized code outside of the plugins referring to the plugins)
  */
-//import { DataRelationshipPlugin } from './plugins/DataRelationshipGraph';
+import { DataRelationshipPlugin } from './plugins/DataRelationshipGraph';
 function addDefaultPlugins(plugins) {
-  // merge(plugins, {
-  //   tree: [
-  //     DataRelationshipPlugin
-  //   ]
-  // });
+  merge(plugins, {
+    // invoked via: this._notifyPlugins('tree', this);
+    tree: [
+      DataRelationshipPlugin
+    ]
+  });
 }
 
 export default function buildSourceTree(dataProviders, dataStructureCfgRaw, plugins) {
@@ -55,7 +56,7 @@ class DataSourceTree {
   _dataProviders;
 
   _plugins;
-  _pluginInstances;
+  _pluginInstances = {};
 
   /**
    * All DataSourceNodes
@@ -118,6 +119,8 @@ class DataSourceTree {
 
   _notifyPlugins(type, ...args) {
     // TODO: replace with event engine instead?
+    //console.warn('DataSourceTree._notifyPlugins', type);
+
     const plugins = this.getPlugins(type);
     if (plugins) {
       if (isFunction(plugins)) {
