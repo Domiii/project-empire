@@ -1,5 +1,8 @@
 /**
  * many2many indexing (only working for Firebase-style data organization for now)
+ * 
+ * TODO: Need more general approach for handling deletion.
+ *    → 'deleteA' + 'deleteB' cannot be overridden for just one relationship, but it must consider all relationships it is participating in
  */
 
 import size from 'lodash/size';
@@ -56,16 +59,20 @@ const _relationshipNameGenerators = {
   aIdsOfB: (n) => `${n.aIds}Of${n.B}`, // (e.g. uidsOfProject)
   aIdOfB: (n) => `${n.aId}Of${n.B}`, // (e.g. uidOfProject)
   countAsOfB: (n) => `count${n.As}Of${n.B}`, // (e.g. countUsersOfProject)
-  anyAsOfB: (n) => `any${n.As}Of${n.Bs}`, // (e.g. anyUsersOfProject)
+  anyAsOfB: (n) => `any${n.As}Of${n.B}`, // (e.g. anyUsersOfProject)
   bIdsWithoutA: (n) => `${n.bIds}Without${n.A}`, // (e.g. projectIdsWithoutUser)
 
   addAToB: n => `add${n.A}To${n.B}`,
   deleteAFromB: n => `delete${n.A}From${n.B}`,
   deleteAllAsFromB: n => `deleteAll${n.As}From${n.B}`,
+  deleteA: n => `delete${n.A}`,
   deleteB: n => `delete${n.B}`,
-  update_aIdOfB: (n) => `update_${n.aIdOfB}`,
-  update_aIdsOfB: (n) => `update_${n.aIdsOfB}`,
-  update_aIdsOfBs: (n) => `update_${n.aIdsOfBs}`
+  // update_aIdOfB: (n) => `update_${n.aIdOfB}`,
+  // update_aIdsOfB: (n) => `update_${n.aIdsOfB}`,
+  // update_aIdsOfBs: (n) => `update_${n.aIdsOfBs}`,
+
+  connectAB: n => `connect${n.A}${n.B}`,
+  disconnectAB: n => `disconnect${n.A}${n.B}`,
 };
 
 const _nameProxyHandler = {
@@ -93,7 +100,7 @@ function getNameProxy(...allNames) {
   }
 
   // check if all names satisfy criteria
-  _validateNames(allNames);
+  _validateNames([aName, bName, aIdName, bIdName]);
 
   // build all the names
   const n = {
@@ -121,9 +128,10 @@ function getNameProxy(...allNames) {
     BIds: pluralize(n.BId)
   });
 
+
   // build proxy
   const p = new Proxy(n, _nameProxyHandler);
-  n.toString = p.toString = () => `Names for ${nameSetId}`;
+  n.toString = p.toString = () => `Names: ${allNames.join(', ')}`;
 
   // cache proxy
   _allNameProxies[nameSetId] = p;
@@ -140,7 +148,7 @@ function _validateName(name) {
   if (!validNameRe.test(name)) {
     throw new Error(`invalid name in data relationship: ${name} - must be alphanumerical AND start lower-case!`);
   }
-  if (name !== pluralize(name)) {
+  if (name === pluralize(name)) {
     throw new Error(`invalid name in data relationship: ${name} - must be singular and different from it's own plural`);
   }
 }
@@ -153,7 +161,7 @@ function _validateName(name) {
 function _validateNames(allNames) {
   // overall criteria
   if (uniq(allNames).length < allNames.length) {
-    throw new Error(`invalid name in data relationship: "${allNames.join('_')}" - both names, and both variable names all must be unique`);
+    throw new Error(`invalid name in data relationship: "${allNames.join(', ')}" - all names, and all variable (id) names all must be unique`);
   }
 
   // individual criteria
@@ -259,6 +267,9 @@ const basicDataModelGenerators = {
           return size(ids);
         },
 
+        /**
+         * Whether given B has any A (at least one A) associated with it
+         */
         [n.anyAsOfB](args, readers) {
           const ids = readers[n.aIdsOfB](args);
           if (ids === NOT_LOADED) {
@@ -410,8 +421,8 @@ const specializedDataModelGenerators = {
    * @param {*} n2 Names for a-hasMany-b relationship (effectively reversing meaning of a + b)
    */
   manyToMany(n1, n2, cfg) {
-    const genDeleteB = ((n1, n2) => {
-      return async function (args, readers, injected, writers) {
+    const genDeleteB = (n1, n2) => {
+      return async (args, readers, injected, writers) => {
         const aIds = await readers[n1.aIdsOfB].readAsync(args) || EmptyObject;
 
         return await batchUpdate(args, writers, async (args) => {
@@ -431,7 +442,7 @@ const specializedDataModelGenerators = {
           updates[readers[n1.b].getPath(args)] = null;
         });
       };
-    })();
+    };
     return {
       children: {
       },
@@ -532,11 +543,16 @@ class Relationship {
    * @type Object
    */
   cfg;
-  
+
   constructor(a, b, cfg) {
     this.a = a;
     this.b = b;
     this.cfg = cfg;
+
+    this.dataProvider = this.a.treeNode.cfg.dataProviderName;
+    if (this.dataProvider !== this.b.treeNode.cfg.dataProviderName) {
+      throw new Error(`Tried to build relationship between nodes of different DataProviders. Not supported yet - ${this.a.name} (${this.a.treeNode.cfg.dataProviderName}) and ${this.b.name} (${this.b.treeNode.cfg.dataProviderName})`);
+    }
   }
 
   buildConfigEntry() {
@@ -561,8 +577,13 @@ class BHasManyARelationship extends Relationship {
   }
 
   buildConfigEntry() {
-    const n = getNameProxy();
-    return basicDataModelGenerators.hasMany(n, this.cfg);
+    const n = this.getNameProxy();
+    const { dataProvider } = this;
+
+    return {
+      dataProvider,
+      ...basicDataModelGenerators.hasMany(n, this.cfg)
+    };
   }
 
   getNameProxy() {
@@ -657,11 +678,11 @@ class GraphNode {
     const { hasMany } = configNode;
 
     // parse hasMany config
-    this.hasManyCfg = parseHasManyConfig(hasMany);
+    this.hasManyCfg = hasMany && parseHasManyConfig(hasMany) || null;
   }
 
   doesHaveMany(aName) {
-    return !!this.hasManyCfg[aName];
+    return !!this.hasManyCfg && !!this.hasManyCfg[aName];
   }
 
   get name() {
@@ -718,9 +739,22 @@ export class DataRelationshipGraph {
 
   _buildGraph() {
     // build graph of all nodes that have explicit relationships with other nodes
-    this.tree.root.forEachNodeInSubTree(this._getOrCreateGraphNodeForTreeNode);
+    this.tree.root.forEachNodeInSubTree(treeNode => {
+      const { cfg: configNode } = treeNode;
+      const {
+        hasMany,
+        relationship
+      } = configNode;
 
-    console.log(this.nodesByName);
+      if (hasMany || relationship) {
+        if (!treeNode.parent) {
+          throw new Error('Trying to (but not allowed to) add relationship to root node');
+        }
+        this._getOrCreateGraphNodeForTreeNode(treeNode);
+      }
+    });
+
+    //console.log(this.nodesByName);
 
     // actually build the relationships
     this._buildAllRelationships();
@@ -739,21 +773,8 @@ export class DataRelationshipGraph {
     let graphNode = this.getNode(treeNode.name);
     if (!graphNode) {
       // not added yet
-      const { cfg: configNode } = treeNode;
-
-      const {
-        hasMany,
-        relationship
-      } = configNode;
-
-      if (hasMany || relationship) {
-        if (!treeNode.parent) {
-          throw new Error('Trying to (but not allowed to) add relationship to root node');
-        }
-
-        graphNode = new GraphNode(this, treeNode);
-        this._addNode(graphNode);
-      }
+      graphNode = new GraphNode(this, treeNode);
+      this._addNode(graphNode);
     }
     return graphNode;
   }
@@ -770,11 +791,9 @@ export class DataRelationshipGraph {
    */
 
   _buildAllRelationships() {
-    this.relationshipDataConfigChildren = {
-      _relationships: {
-        path: '_relationships',
-        children: {}
-      }
+    this.relationshipDataConfig = {
+      path: '_relationships',
+      children: {}
     };
 
     // build graph nodes + add basic relationships
@@ -788,7 +807,7 @@ export class DataRelationshipGraph {
   }
 
   _getConfigNode(relationshipName) {
-    return this.relationshipDataConfigChildren.children[relationshipName];
+    return this.relationshipDataConfig.children[relationshipName];
   }
 
   /**
@@ -799,7 +818,7 @@ export class DataRelationshipGraph {
     console.assert(relationshipName, 'relationshipName not defined in Relationship');
     let node = this._getConfigNode(relationshipName);
     if (!node) {
-      node = this.relationshipDataConfigChildren.children[relationshipName] = {};
+      node = this.relationshipDataConfig.children[relationshipName] = {};
     }
     return node;
   }
@@ -817,7 +836,8 @@ export class DataRelationshipGraph {
         console.error(aTreeNode);
         throw new Error(`invalid "hasMany" relationship in ${bName}: ${aName} must be (but is not) readable and writable`);
       }
-      const aGraphNode = this._getOrCreateGraphNodeForTreeNode(aTreeNode);
+
+      let aGraphNode = this._getOrCreateGraphNodeForTreeNode(aTreeNode);
 
       // add hasMany relationship
       this.addHasManyRelation(aGraphNode, bGraphNode, hasManyCfg);
@@ -830,6 +850,7 @@ export class DataRelationshipGraph {
    * Add simple HasMany relationship
    */
   addHasManyRelation(a, b, hasManyCfg) {
+    //console.log('addHasManyRelation', a, b, hasManyCfg);
     const rel = new BHasManyARelationship(a, b, hasManyCfg);
     this.basicRelationships.push(rel);
     this.basicRelationshipsByNode.set(b, rel);
@@ -840,25 +861,27 @@ export class DataRelationshipGraph {
    * Build all specialized relationships (one-to-many and many-to-many)
    */
   buildSpecializedRelationships() {
-    this.basicRelationships.forEach(hasMany => {
+    this.basicRelationships.forEach(bHasManyA => {
       let newRel;
 
-      const relName = hasMany.relationshipName;
+      const relName = bHasManyA.relationshipName;
       console.assert(relName);
 
-      if (!this.basicRelationshipsByNode.get(hasMany.a)) {
+      const aHasManyB = this.basicRelationshipsByNode.get(bHasManyA.a);
+      if (!aHasManyB) {
         // only goes in one direction
-        newRel = new OneToManyRelationship(hasMany);
+        newRel = new OneToManyRelationship(bHasManyA);
       }
       else if (!this.specializedRelationships[relName]) {
         // found first node of an m2m relationship
-        newRel = new ManyToManyRelationship();
+        newRel = new ManyToManyRelationship(bHasManyA, aHasManyB);
       }
       else {
         // nothing to do! (second node of an m2m relationship)
       }
 
       if (newRel) {
+        //console.log('add relationship:', relName);
         this.specializedRelationships[relName] = newRel;
       }
     });
@@ -866,9 +889,10 @@ export class DataRelationshipGraph {
 
   buildRelationshipConfig() {
     forEach(this.specializedRelationships, rel => {
-      const cfgNode = this._getOrCreateConfigNodeForRelationship(rel);
+      let cfgNode = this._getOrCreateConfigNodeForRelationship(rel);
       cfgNode.path = rel.relationshipName;
-      cfgNode.children = rel.buildConfigEntry();
+      merge(cfgNode, rel.buildConfigEntry());
+      //console.log(cfgNode);
     });
   }
 
@@ -884,8 +908,8 @@ export function DataRelationshipPlugin(tree) {
   graph._buildGraph();
 
   // when finished building, add to tree!
-  console.warn(graph.relationshipDataConfigChildren);
-  tree.addChildrenToRoot(graph.relationshipDataConfigChildren);
+  console.warn(graph.relationshipDataConfig);
+  tree.addChildToRoot('_relationships', graph.relationshipDataConfig);
 
   return graph;
 }

@@ -1,6 +1,7 @@
+// TODO: migrate into proper testing
+
 import doWait from '../../util/doWait';
 import CancelablePromise from '../../util/CancelablePromise';
-import dataSourceTree from '../dataSourceTree';
 import { getOptionalArguments } from '../../dbdi/dataAccessUtil';
 
 let SimulatorModel;
@@ -38,12 +39,6 @@ process.env.NODE_ENV !== 'production' && (function () {
   // a bit hacky, but we'll fix it eventually!
   // this allows us to do something like this in the console:
   // dbdi.do.simPresentationSessionStart();
-  let dataAccess;
-  Object.defineProperty(window, 'dbdi', {
-    get() {
-      return dataAccess || (dataAccess = dataSourceTree.newAccessTracker('TESTER'));
-    }
-  });
 
   SimulatorModel = {
     simulator: {

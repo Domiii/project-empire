@@ -116,30 +116,39 @@ export class DataStructureConfigNode {
   // ################################################
 
   _parseConfig(cfg) {
-    this.dataProviderName = cfg.dataProvider || (this.parent && this.parent.dataProviderName);
-    if (this.parent && !this.dataProviderName) {
-      throw new Error('Missing dataProvider at root level');
-    }
-    //console.assert(this.dataProviderName, 'Node does not have dataProviderName: ' + this.name);
-
-    if (isString(cfg)) {
-      // path string
-      this._parsePath(cfg, cfg);
-    }
-    else if (isFunction(cfg)) {
+    if (isFunction(cfg)) {
       // path transformation function
       this._parsePath(cfg, cfg);
+      
+      this._ensureDataProvider(cfg);
+    }
+    else if (isString(cfg)) {
+      // path string
+      this._parsePath(cfg, cfg);
+      
+      this._ensureDataProvider(cfg);
     }
     else if (isPlainObject(cfg)) {
       // more complex descriptor node
-      Object.assign(this, cfg);
+      //Object.assign(this, cfg);
+
+      // TODO: hasMany, relationship stuff and a lot of other customizations should be entirely be handled from the outside (via Plugin mechanics)
+      this.hasMany = cfg.hasMany;
       this.isReadOnly = cfg.isReadOnly || false;
-      this._parsePath(cfg, cfg.path || cfg.pathTemplate);
-      this._parseChildren(cfg);
+      this._parsePath(cfg, cfg.path !== undefined ? cfg.path : cfg.pathTemplate);
       this._parseReader(cfg);
       this._parseFetch(cfg);
-      this._parseReaders(cfg);
       this._parseWriter(cfg);
+      
+
+      this.dataProviderName = cfg.dataProvider;
+      this._ensureDataProvider(cfg);
+
+      // parse children and recurse, once this node has been taken care of
+      this._parseChildren(cfg);
+      
+      // parse "readers" and "writers" (and add them to children)
+      this._parseReaders(cfg);
       this._parseWriters(cfg);
     }
     else {
@@ -147,11 +156,19 @@ export class DataStructureConfigNode {
     }
   }
 
+  _ensureDataProvider(cfg) {
+    this.dataProviderName = this.dataProviderName || (this.parent && this.parent.dataProviderName);
+    if (this.parent && this.pathConfig && !this.dataProviderName) {
+      console.error(this.parent, '>', this.name);
+      throw new Error('Missing dataProvider in config: ' + this.name + ' - ' + JSON.stringify(cfg, null, 2));
+    }
+  }
+
   _parsePath(cfg, pathConfig) {
     const { parent } = this;
     const parentPath = parent && parent.pathConfig && parent.pathConfig.pathTemplate || '';
     if (pathConfig === null || pathConfig === undefined) {
-      if (!parentPath || !cfg || !cfg.children) {
+      if (!cfg || !cfg.children) {
         this.pathConfig = null;
         return;
       }
@@ -163,7 +180,7 @@ export class DataStructureConfigNode {
     let pathTemplate;
     let queryParams = null;
     let indices = null;
-    let pathFn;
+    let pathFn = null;
 
     if (isString(pathConfig)) {
       pathTemplate = pathConfig;
@@ -237,8 +254,9 @@ export class DataStructureConfigNode {
 
       // add reader-only children
       const readerNodes = mapValues(readers, (reader, name) =>
-        new DataStructureConfigNode(name, this.parent, { reader })
+        new DataStructureConfigNode(name, this, { reader })
       );
+
       this.children = Object.assign({}, this.children, readerNodes);
     }
   }
@@ -261,7 +279,7 @@ export class DataStructureConfigNode {
 
       // add writer-only children
       const writerNodes = mapValues(writers, (writer, name) =>
-        new DataStructureConfigNode(name, this.parent, { writer })
+        new DataStructureConfigNode(name, this, { writer })
       );
       this.children = Object.assign({}, this.children, writerNodes);
     }

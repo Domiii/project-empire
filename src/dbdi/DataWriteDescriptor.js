@@ -134,7 +134,7 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
       writeData = this._buildCustomWriter(writerCfg);
     }
     else {
-      throw new Error('Could not make sense of writer config node (must be function or path config) - ' + JSON.stringify(writerCfg));
+      throw new Error(`Could not make sense of writer config node '${this.name}' - Must either be path (string) or function:\n${JSON.stringify(writerCfg, null, 2)}`);
     }
     this.writeData = this._wrapAccessFunction(writeData);
   }

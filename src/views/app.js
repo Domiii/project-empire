@@ -1,8 +1,6 @@
 import firebase from 'firebase/app';
 import 'firebase/auth';
 
-import DBStatusModel from 'src/core/DBStatusModel';
-
 import isEqual from 'lodash/isEqual';
 
 import React, { Component } from 'react';

@@ -36,6 +36,9 @@ function addDefaultPlugins(plugins) {
   });
 }
 
+/**
+ * @returns {DataSourceTree}
+ */
 export default function buildSourceTree(dataProviders, dataStructureCfgRaw, plugins) {
   plugins = plugins || {};
 
@@ -245,7 +248,7 @@ class DataSourceTree {
   _buildNodeOnly(configNode, parent, name, buildDataReadDescriptor, buildDataWriteDescriptor) {
     const dataProvider = this._dataProviders[configNode.dataProviderName];
     if (configNode.dataProviderName && !dataProvider) {
-      throw new Error(`Invalid dataProvider does not exist @${name}: "${configNode.dataProviderName}"`);
+      throw new Error(`Invalid dataProvider does not exist in node "${name}": "${configNode.dataProviderName}"`);
     }
     const fullName = (parent && parent.fullName && (parent.fullName + '.') || '') + name;
     const pathDescriptor = configNode.pathConfig &&
@@ -297,6 +300,10 @@ class DataSourceTree {
       const newDataNode = newNodes[name] = this._buildNodeOnly(configNode, parent, name,
         this._buildDataReadDescriptor,
         this._buildCustomDataSetDescriptor);
+
+      // HACKFIX: there is certain properties of the original configNode that derivatives should not hang on to
+      configNode = { ...configNode };
+      delete configNode.hasMany;
 
       if (configNode.pathConfig) {
         // build default writers at path
@@ -496,10 +503,13 @@ class DataSourceTree {
     node._writeDescendants = writeDescendants;
   }
 
+  /**
+   * @returns {DataAccessTracker}
+   */
   newAccessTracker(name, listener) {
     return new DataAccessTracker(
       this,
-      listener, 
+      listener,
       name
     );
   }
