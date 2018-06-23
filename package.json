@@ -27,13 +27,18 @@
     "start": "npm run server:dev",
 
     "build-test": "cross-env NODE_ENV=test webpack --display-chunks --progress",
-    "test": "npm run build-test && jest",
+    "test": "jest",
+    "test2": "npm run build-test && jest",
     "test:watch": "npm run test -- --watch"
   },
   "jest": {
     "testPathIgnorePatterns": [
       "<rootDir>/node_modules/"
-    ]
+    ],
+    "moduleFileExtensions": ["js", "jsx"],
+    "moduleDirectories": ["node_modules", "src", "<rootDir>"],
+    "verbose": true
+
   },
   "dependencies": {
     "babel-jest": "^23.0.1",

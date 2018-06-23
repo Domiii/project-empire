@@ -338,13 +338,14 @@ export default class DataProviderBase {
 
   readData(queryInput) {
     const query = this.getQueryByQueryInput(queryInput);
-    //console.warn('R [', queryInput, '] ', query, this._loadState[query.localPath]);
     if (!query) {
       return NOT_LOADED;
     }
 
     const { localPath } = query;
     const val = getDataIn(this._cache, localPath, NOT_LOADED);
+
+    //console.log('READ [', queryInput, ']', this._loadState[query.localPath], val);
 
     if (this.isDataFullyAvailable(query)) {
       if (val !== NOT_LOADED) {

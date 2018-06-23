@@ -207,17 +207,17 @@ if (ENV_TEST) {
 
   config.devtool = 'inline-source-map';
 
-  config.entry = {
-    main: ['./src/main.js']
-  };
+  // config.entry = {
+  //   main: ['./src/main.js']
+  // };
+
+  //config.entry.vendor = './src/vendor.js';
 
   config.output = {
     filename: '[name].js',
     path: path.resolve('./public'),
     publicPath: '/'
   };
-
-  config.entry.vendor = './src/vendor.js';
 
   config.output.filename = '[name].[chunkhash].js';
 

@@ -9,6 +9,7 @@ let tree, dbdi;
 
 
 beforeAll(() => {
+  delete console.log;
   const dataProviders = {
     memory: new MemoryDataProvider()
   };
@@ -23,7 +24,7 @@ beforeAll(() => {
               path: '$(xId)',
 
               children: {
-                xName: 'xName'
+                xName: 'name'
               },
 
               hasMany: ['y']
@@ -37,7 +38,7 @@ beforeAll(() => {
               path: '$(yId)',
 
               children: {
-                yName: 'yName'
+                yName: 'name'
               },
 
               hasMany: ['x']
@@ -52,13 +53,22 @@ beforeAll(() => {
   dbdi = tree.newAccessTracker('TESTER');
 });
 
+it('should have added all kinds of relationship readers + writers', async() => {
+  expect(dbdi.read.countYsOfX).toBeTruthy();
+  expect(dbdi.read.countXsOfY).toBeTruthy();
+  expect(dbdi.write.connectXY).toBeTruthy();
+});
+
 
 it('should be able to support all kinds of relationships', async () => {
-  const xId1 = dbdi.write.push_x().key;
-  const xId2 = dbdi.write.push_x().key;
+  const xId1 = dbdi.write.push_x({name: 'x1'}).key;
+  expect(Object.keys(dbdi.get.xs)).toEqual([xId1]);
+
+  const xId2 = dbdi.write.push_x({name: 'x2'}).key;
+  expect(Object.keys(dbdi.get.xs)).toEqual([xId1, xId2]);
   
-  const yId1 = dbdi.write.push_y().key;
-  const yId2 = dbdi.write.push_y().key;
+  const yId1 = dbdi.write.push_y({name: 'y1'}).key;
+  const yId2 = dbdi.write.push_y({name: 'y1'}).key;
 
   await dbdi.write.connectXY({xId: xId1, yId: yId1});
 

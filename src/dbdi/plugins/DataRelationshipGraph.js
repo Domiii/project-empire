@@ -443,6 +443,27 @@ const specializedDataModelGenerators = {
         });
       };
     };
+
+    const connectAB = async (args, readers, injected, writers) => {
+      return await batchUpdate(args, writers, async (args) => {
+        // add a to b and b to a
+        return {
+          [readers[n1.aIdOfB].getPath(args)]: 1,
+          [readers[n2.aIdOfB].getPath(args)]: 1
+        };
+      });
+    };
+
+    const disconnectAB = async (args, readers, injected, writers) => {
+      return await batchUpdate(args, writers, async (args) => {
+        // remove a of b and b of a
+        return {
+          [readers[n1.aIdOfB].getPath(args)]: null,
+          [readers[n2.aIdOfB].getPath(args)]: null
+        };
+      });
+    };
+
     return {
       children: {
       },
@@ -452,28 +473,14 @@ const specializedDataModelGenerators = {
         /**
          * NOTE: This is a bi-directional, homogeneous operation. It is the same for either a or b.
          */
-        async [n1.connectAB](args, readers, injected, writers) {
-          return await batchUpdate(args, writers, async (args) => {
-            // add a to b and b to a
-            return {
-              [readers[n1.aIdOfB].getPath(args)]: 1,
-              [readers[n2.aIdOfB].getPath(args)]: 1
-            };
-          });
-        },
+        [n1.connectAB]: connectAB,
+        [n2.connectAB]: connectAB,
 
         /**
          * NOTE: This is a bi-directional, homogeneous operation. It is the same for either a or b.
          */
-        async [n1.disconnectAB](args, readers, injected, writers) {
-          return await batchUpdate(args, writers, async (args) => {
-            // remove a of b and b of a
-            return {
-              [readers[n1.aIdOfB].getPath(args)]: null,
-              [readers[n2.aIdOfB].getPath(args)]: null
-            };
-          });
-        },
+        [n1.disconnectAB]: disconnectAB,
+        [n2.disconnectAB]: disconnectAB,
 
         // delete b and remove all relationship edges to and from it
         [n1.deleteB]: genDeleteB(n1, n2),
@@ -892,7 +899,7 @@ export class DataRelationshipGraph {
       let cfgNode = this._getOrCreateConfigNodeForRelationship(rel);
       cfgNode.path = rel.relationshipName;
       merge(cfgNode, rel.buildConfigEntry());
-      //console.log(cfgNode);
+      console.log(cfgNode);
     });
   }
 

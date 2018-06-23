@@ -270,10 +270,13 @@ s
    * we will track the given path once it has been read once, until unmount is called.
    */
   _recordDataAccess(dataProvider, path) {
-    if (this._listener) {
-      dataProvider.registerListener(path, this._listener, this._name);
-      this._dataProviders.add(dataProvider);
+    if (!this._listener) {
+      // we need this because registerListener adds the cached query in the DataProvider
+      this._listener = () => {};
     }
+
+    dataProvider.registerListener(path, this._listener, this._name);
+    this._dataProviders.add(dataProvider);
   }
 
 

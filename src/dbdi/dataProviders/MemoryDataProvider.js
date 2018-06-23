@@ -11,6 +11,7 @@ import map from 'lodash/map';
 import isPlainObject from 'lodash/isPlainObject';
 
 import autoBind from 'src/util/auto-bind';
+import uuid from 'uuid/v1';
 
 import {
   getDataIn,
@@ -24,16 +25,6 @@ export default class MemoryDataProvider extends DataProviderBase {
     autoBind(this);
   }
 
-  getOrCreateNode(path) {
-    let node = getDataIn(root, path);
-    if (!node) {
-      // in order to mirror firebase' push operation, all nodes are arrays
-      // also: make sure, the first element is not an issue
-      setDataIn(root, path, node = [null]);
-    }
-    return node;
-  }
-
   /**
    * TODO: Memory data provider might be used for different purposes.
    * When acting as a cache for a remote API, isDataFullyAvailable behaves like it would
@@ -41,9 +32,9 @@ export default class MemoryDataProvider extends DataProviderBase {
    * When just storing some local values, this should just return true.
    * Maybe we have to define these two uses cases through two different data providers?
    */
-  // isDataFullyAvailable() {
-  //   return true;
-  // }
+  isDataFullyAvailable() {
+    return true;
+  }
 
   // #################################################################
   // Any DataProvider can/needs to implement the following methods
@@ -70,7 +61,7 @@ export default class MemoryDataProvider extends DataProviderBase {
     // local and remote path are equal for the MemoryDataProvider (for now)
     const query = this.getOrCreateQuery(remotePath);
 
-    // if query object does not exist, it means, no listener has been registered on this path yet
+    // NOTE: if query object does not exist, it means, no listener has been registered on this path yet
 
     // TOOD: propagate to all ancestors that have listeners (Firebase does this, too)
     this.notifyNewData(query, val);
@@ -83,19 +74,17 @@ export default class MemoryDataProvider extends DataProviderBase {
       return Promise.resolve(true);
     },
 
+    /**
+     * (somewhat) mimics Firebase push behavior
+     * @see https://firebase.google.com/docs/reference/js/firebase.database.Reference#push
+     */
     push: (remotePath, val) => {
-      throw new Error('TODO: pushing to MemoryDataProvider is currently bugged - still need to fix it. HINT: Use a combination of get + set to work around this for now.');
-
-      // let node = this.getOrCreateNode(remotePath);
-      // debugger;
-      // node.push(val);
-
-      // const key = node.length - 1;
-      // const result = key;
-      // const promise = Promise.resolve(result);
-      // promise.key = key;
-      // this._onWrite('Pus', remotePath, val);
-      // return promise;
+      const key = uuid();
+      const promise = Promise.resolve(true);
+      promise.key = key;
+      //console.log('push', pathJoin(remotePath, key), val);
+      this._onWrite('Pus', pathJoin(remotePath, key), val);
+      return promise;
     },
 
     update: (remotePath, val) => {
