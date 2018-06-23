@@ -38,7 +38,8 @@ const loaders = [
   {
     test: /\.js[x]?$/,
     exclude: [
-      /node_modules/
+      /node_modules/,
+      /external/
     ],
     loader: 'babel-loader'
   },
@@ -202,9 +203,34 @@ if (ENV_PRODUCTION) {
 //  TEST
 //-------------------------------------
 if (ENV_TEST) {
+  config.context = path.join(__dirname, 'src');
+
   config.devtool = 'inline-source-map';
+
+  config.entry = {
+    main: ['./src/main.js']
+  };
+
+  config.output = {
+    filename: '[name].js',
+    path: path.resolve('./public'),
+    publicPath: '/'
+  };
+
+  config.entry.vendor = './src/vendor.js';
+
+  config.output.filename = '[name].[chunkhash].js';
 
   config.module = {
     loaders
   };
+
+  config.plugins.push(
+    new WebpackMd5Hash(),
+    new ExtractTextPlugin('styles.[contenthash].css'),
+    new webpack.optimize.CommonsChunkPlugin({
+      name: 'vendor',
+      minChunks: Infinity
+    })
+  );
 }
