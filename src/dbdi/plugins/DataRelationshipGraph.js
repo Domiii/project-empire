@@ -122,10 +122,10 @@ function getNameProxy(...allNames) {
     bIds: pluralize(n.bId)
   });
   Object.assign(n, {
-    As: pluralize(n.A),
-    Bs: pluralize(n.B),
-    AIds: pluralize(n.AId),
-    BIds: pluralize(n.BId)
+    As: capitalize(pluralize(n.a)),
+    Bs: capitalize(pluralize(n.b)),
+    AIds: capitalize(pluralize(n.aId)),
+    BIds: capitalize(pluralize(n.bId))
   });
 
 

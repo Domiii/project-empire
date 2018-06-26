@@ -2,11 +2,13 @@ import buildSourceTree from '../DataSourceTree';
 
 import React, { Component } from 'react';
 import MemoryDataProvider from '../dataProviders/MemoryDataProvider';
+import pluralize from 'pluralize';
 
 //import { NOT_LOADED } from '../../dbdi';
 
 let tree, dbdi;
 
+pluralize.addPluralRule(/x$/i, 'xs');
 
 beforeAll(() => {
   delete console.log;

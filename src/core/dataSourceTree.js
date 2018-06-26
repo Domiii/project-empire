@@ -44,6 +44,7 @@ const utility = {
   },
 
   writers: {
+    // TODO: fix this to work in general and add to DataAccessTracker or Tree
     updateAll(
       { pathArgs, readers, val }, 
       { },

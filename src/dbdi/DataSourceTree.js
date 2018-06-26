@@ -203,9 +203,14 @@ class DataSourceTree {
 
   _buildTree() {
     this._root = this._buildRoot(this._dataStructureCfgRoot);
+
+    // we need to compress once s.t. that plugins (such as DataRelationshipGraph) get full tree functionality
     this._compressHierarchy(this._root);
 
     this._notifyTreeBuilt();
+
+    // we need to compress a second time because plugins (such as DataRelationshipGraph) might have added new nodes that are yet compressed
+    this._compressHierarchy(this._root);
   }
 
   _notifyTreeBuilt() {
