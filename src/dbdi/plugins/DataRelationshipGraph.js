@@ -3,6 +3,8 @@
  * 
  * TODO: Need more general approach for handling deletion.
  *    → 'deleteA' + 'deleteB' cannot be overridden for just one relationship, but it must consider all relationships it is participating in
+ * 
+ * TODO: the newly inserted names might clash with existing ones - gotta fix (e.g. deletePresentationSession)
  */
 
 import size from 'lodash/size';

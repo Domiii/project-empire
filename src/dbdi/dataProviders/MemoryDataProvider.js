@@ -27,14 +27,15 @@ export default class MemoryDataProvider extends DataProviderBase {
 
   /**
    * TODO: Memory data provider might be used for different purposes.
-   * When acting as a cache for a remote API, isDataFullyAvailable behaves like it would
-   * for a remote DataProvider.
+   *  e.g.: fetchGood vs. 
+   * When acting as a cache for a remote API, isDataFullyAvailable 
+   * behaves like it would for a remote DataProvider.
    * When just storing some local values, this should just return true.
-   * Maybe we have to define these two uses cases through two different data providers?
+   * Path configuration should decide!
    */
-  isDataFullyAvailable() {
-    return true;
-  }
+  // isDataFullyAvailable() {
+  //   return true;
+  // }
 
   // #################################################################
   // Any DataProvider can/needs to implement the following methods

@@ -78,9 +78,10 @@ class PathDescriptorReader {
 
   // TODO: make fetch work through-out the hierarchy
   getFetchInHierarchy() {
+    // -> in case, this node does not have a fetch entry, but any of it's parents does, 
+    //      -> go to the closest parent and fetch that first
     // TODO: Problem - queryInput and callerNode need to be fixed correspondingly
     // TODO: hierarchical fetch lookup must be implemented in every place where fetch is used
-    //    -> in case, this node does not have a fetch entry, but any of it's parents does, go to the closest parent and fetch that first
     // let node = !fetch && callerNode.parent;
     // while (!fetch && node) {
     //   if (node.readDescriptor) {
@@ -178,7 +179,7 @@ class ImmediateRead extends PathDescriptorReader {
   }
 
   customFetchOnly = (args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) => {
-    // fetch is an asynchronous call that generally returns a prommise, and not an immediate value
+    // fetch is an asynchronous call that returns a prommise, and not an immediate value
     throw new Error('Invalid immediate read on node that does neither have path nor custom reader. ' +
       'Maybe you wanted to call readAsync (which returns a promise) instead?');
   }
@@ -212,7 +213,7 @@ class ImmediateRead extends PathDescriptorReader {
 
     const fetch = this.getFetchInHierarchy();
 
-    if (!fetch) return;
+    if (!fetch) return NOT_LOADED;
 
     (async () => {
       if (await dataProvider.fetchStart(queryInput)) {

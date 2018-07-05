@@ -220,7 +220,7 @@ class PresentationControls extends Component {
 class PresentationStatusSummary extends Component {
   render(
     { presentationId, isSelected },
-    { get_presentation, streamFileExists,
+    { get_presentation, streamFileExists, streamFilePath,
       isPresentationSessionOperator, isCurrentUserAdmin,
       ytVideoUrl },
     { }
@@ -270,6 +270,11 @@ class PresentationStatusSummary extends Component {
             // should all be great
             fileInfoEl = <FAIcon name="download" size=".8em" />;
           }
+        }
+        else {
+          // shit!
+          console.error('missing stream file: ' + streamFilePath({fileId}));
+          fileInfoEl = <FAIcon name="download" size=".8em" color="red" />;
         }
       }
     }
