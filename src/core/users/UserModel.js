@@ -226,7 +226,7 @@ export default {
         return set_userDisplayRole({ uid }, enabled ? userRole({ uid }) : Roles.User);
       },
 
-      setCurrentUserCohortId({ cohortId }, { set_userCohortId }, { currentUid: uid }) {
+      setCurrentUserCohortId({ cohortId }, {}, { currentUid: uid }, { set_userCohortId }) {
         return set_userCohortId({ uid }, cohortId);
       },
 

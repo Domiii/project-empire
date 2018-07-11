@@ -1,5 +1,7 @@
 import isEmpty from 'lodash/isEmpty';
 import map from 'lodash/map';
+import filter from 'lodash/filter';
+
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
@@ -11,12 +13,7 @@ import {
   Panel, Button, ListGroup, ListGroupItem, Alert, Badge
 } from 'react-bootstrap';
 
-import ConfirmModal from 'src/views/components/util/ConfirmModal';
-import { FAIcon } from 'src/views/components/util';
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
-
-import UserList from 'src/views/components/users/UserList';
-import UserIcon from 'src/views/components/users/UserIcon';
 
 import FancyPanelToggleTitle from 'src/views/components/util/FancyPanelToggleTitle';
 
@@ -40,13 +37,14 @@ export class CohortTable extends Component {
     { },
     { cohortList, currentUserCohortId }
   ) {
+    console.warn(cohortList);
     return (<div>{
-      map(cohortList, (cohort, cohortId) => {
+      map(filter(cohortList, (coh, id) => !!coh && !id), (cohort, cohortId) => {
         const {
           name
         } = cohort;
 
-        return (<Panel key={name}>
+        return (<Panel key={cohortId}>
           <Panel.Heading>{cohortId}. {name}</Panel.Heading>
           <Panel.Body>
             {
