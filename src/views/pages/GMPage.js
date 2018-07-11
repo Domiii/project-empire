@@ -11,6 +11,7 @@ import {
 } from 'react-router-bootstrap';
 import { LoadOverlay } from 'src/views/components/overlays';
 
+import CohortManager from 'src/views/components/admin/CohortManager';
 import UserManager from 'src/views/components/admin/UserManager';
 import RoleManager from 'src/views/components/admin/RoleManager';
 
@@ -37,6 +38,7 @@ export default class GMPage extends Component {
         <Well>
           Cohort: {currentUserCohortId}
         </Well>
+        <CohortManager />
         <UserManager />
         <RoleManager />
       </div>

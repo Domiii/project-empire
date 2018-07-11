@@ -292,8 +292,7 @@ s
     let readData = this._wrappedReaders[name];
     if (!readData) {
       const node = this._dataSourceTree.resolveReader(name);
-      this._wrappedReaders[name] = readData =
-        this._wrapReadData(node);
+      this._wrappedReaders[name] = readData = this._wrapReadData(node);
     }
     return readData;
   }

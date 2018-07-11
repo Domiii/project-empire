@@ -61,7 +61,7 @@ const writers = {
 };
 
 export default {
-  allCohortData: {
+  allCohorts: {
     path: '/cohorts',
     readers,
     writers,

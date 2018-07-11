@@ -1,6 +1,13 @@
 ## 緊急的事情
-* proper testing!
+* data by cohort
+* user registration with cohort consideration
+* make relationships work
 * clean up the TODO lists!
+
+* titles for session
+    * add session title to video title
+        * possibly remove original "presentation title
+* start doing those playlists
 
 * presentationStatus gets overridden when explicitely starting the "preparing" presentation
 * when fileId has been set before, "startPresentationSessionStreamRecording" causes problems:

@@ -1,6 +1,8 @@
 // see: https://firebase.google.com/docs/reference/admin/node/
 
-import admin from "firebase-admin";
+/* globals app, db */
+
+import admin from 'firebase-admin';
 import size from 'lodash/size';
 
 import readline from 'readline';
@@ -21,11 +23,11 @@ const secretPaths = {
 const appSettings = {
   production: {
     credential: admin.credential.cert(require(secretPaths.production)),
-    databaseURL: "https://project-empire.firebaseio.com"
+    databaseURL: 'https://project-empire.firebaseio.com'
   },
   test: {
     credential: admin.credential.cert(require(secretPaths.test)),
-    databaseURL: "TODO"
+    databaseURL: 'TODO'
   }
 };
 
@@ -56,6 +58,7 @@ function doInit(env) {
       console.error('5. Done.');
       process.exit(-1);
   }
+
   global.app = admin.initializeApp(envSettings);
   global.db = admin.database();
 
@@ -65,8 +68,10 @@ function doInit(env) {
     if (connectedSnap.val() === true) {
       isInitialized = true;
       console.log('#####################Connected#####################');
-    } else {
+    } 
+    else {
       if (isInitialized) {
+        isInitialized = false;
         console.log('#####################Disonnected#####################');
       }
     }
@@ -85,8 +90,8 @@ function migration(name) {
   console.log('##############################');
   console.log('migration: ' + name);
 
-  const res = migration().
-    then(() => {
+  const res = migration()
+    .then(() => {
       console.log();
     });
   return res;
@@ -109,12 +114,12 @@ function start(env) {
   try {
     console.log('Starting admin scripts...');
     
-    runMigrations().
-      catch(err => {
+    runMigrations()
+      .catch(err => {
         console.error(err.stack);
         process.exit(-1);
-      }).
-      then(() => {
+      })
+      .then(() => {
         console.log('Finished.');
         process.exit(0);
       });
@@ -147,7 +152,7 @@ rl.question('Which environment do you want to migrate? - (t)est or (p)roduction?
     throw new Error('Invalid choice: ' + answer);
   }
 
-  console.log("Environment: " + env);
+  console.log('Environment: ' + env);
 
   doInit(env);
   start(env);

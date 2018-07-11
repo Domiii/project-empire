@@ -37,6 +37,10 @@ export default {
         return isUserDataComplete({ uid: currentUid });
       },
 
+      isCurrentUserValidRegistered({ }, { isValidRegisteredUser }, { currentUid }) {
+        return isValidRegisteredUser({ uid: currentUid });
+      },
+
       isCurrentUserComplete({ }, { }, { isCurrentUserRegistered, isCurrentUserDataComplete }) {
         return isCurrentUserRegistered && isCurrentUserDataComplete;
       },
@@ -116,7 +120,7 @@ export default {
         }
 
         const allUids = Object.keys(usersPublic || EmptyObject);
-        const unregisteredUids = filter(allUids, uid => 
+        const unregisteredUids = filter(allUids, uid =>
           !usersPublic[uid].role || usersPublic[uid].role === Roles.Unregistered);
 
         return unregisteredUids;
@@ -124,299 +128,326 @@ export default {
     },
 
 
-      // #######################################################################
-      // User writers
-      // #######################################################################
+    // #######################################################################
+    // User writers
+    // #######################################################################
 
-      writers: {
-        _addNewUser(
-          { },
-          { },
-          { currentUid, currentUserAuthData },
-          { setUserData, set_userPrivateData }
-        ) {
-          const uid = currentUid;
-          const userArgs = { uid };
+    writers: {
+      _addNewUser(
+        { },
+        { },
+        { currentUid, currentUserAuthData },
+        { setUserData, set_userPrivateData }
+      ) {
+        const uid = currentUid;
+        const userArgs = { uid };
 
-          // TODO: proper cohort management
-          const defaultCohortId = 1;
+        // TODO: proper cohort management
+        const defaultCohortId = 0;
 
-          //setTimeout(() => {
-          const {
-            providerData,
-            displayName,
-            email
-          } = currentUserAuthData;
+        //setTimeout(() => {
+        const {
+          providerData,
+          displayName,
+          email
+        } = currentUserAuthData;
 
-          // user logged in, but has no record of user data yet
-          // -> get user data and add to userInfo DB
-          // see: https://firebase.google.com/docs/reference/js/firebase.UserInfo
-          let userData = providerData && providerData.length && providerData[0];
-          if (!userData) {
-            userData = {
-              displayName: displayName || '<unknown user>'
-            };
-          }
-
-          userData.cohortId = defaultCohortId;
-          userData.createdAt = firebase.database.ServerValue.TIMESTAMP;
-
-          console.warn('Registering new user:', userData);
-
-          const privateUserData = {
-            ...userData,
-            email
+        // user logged in, but has no record of user data yet
+        // -> get user data and add to userInfo DB
+        // see: https://firebase.google.com/docs/reference/js/firebase.UserInfo
+        let userData = providerData && providerData.length && providerData[0];
+        if (!userData) {
+          userData = {
+            displayName: displayName || '<unknown user>'
           };
+        }
 
-          return Promise.all([
-            setUserData({ uid, userData }),
-            set_userPrivateData(userArgs, privateUserData)
-          ]);
-        },
+        userData.cohortId = defaultCohortId;
+        userData.createdAt = firebase.database.ServerValue.TIMESTAMP;
 
-        _updateUserLastLoginTime(
-          { },
-          { },
-          { currentUid },
-          { set_userLastLogin }
-        ) {
-          const uid = currentUid;
-          const userArgs = { uid };
+        console.warn('Registering new user:', userData);
 
-          return set_userLastLogin(userArgs, firebase.database.ServerValue.TIMESTAMP);
-        },
+        const privateUserData = {
+          ...userData,
+          email
+        };
 
-        /**
-         * Store new user data in database after first login
-         */
-        async ensureUserInitialized(
-          { },
-          { user, userPrivate, get_currentUid },
-          { },
-          { _addNewUser, _updateUserLastLoginTime }
-        ) {
-          // wait for currentUid to have loaded
-          const uid = await get_currentUid.readAsync();
-          const userArgs = { uid };
+        return Promise.all([
+          setUserData({ uid, userData }),
+          set_userPrivateData(userArgs, privateUserData)
+        ]);
+      },
 
-          // wait for user data to have loaded
-          const [pub, priv] = await Promise.all([
-            await user.readAsync(userArgs),
-            await userPrivate.readAsync(userArgs),
-          ]);
+      _updateUserLastLoginTime(
+        { },
+        { },
+        { currentUid },
+        { set_userLastLogin }
+      ) {
+        const uid = currentUid;
+        const userArgs = { uid };
 
-          if (!!pub && !!priv) {
-            // existing user
-            await _updateUserLastLoginTime();
-            return true;
-          }
+        return set_userLastLogin(userArgs, firebase.database.ServerValue.TIMESTAMP);
+      },
 
-          await _addNewUser();
+      /**
+       * Store new user data in database after first login
+       */
+      async ensureUserInitialized(
+        { },
+        { user, userPrivate, get_currentUid },
+        { },
+        { _addNewUser, _updateUserLastLoginTime }
+      ) {
+        // wait for currentUid to have loaded
+        const uid = await get_currentUid.readAsync();
+        const userArgs = { uid };
+
+        // wait for user data to have loaded
+        const [pub, priv] = await Promise.all([
+          await user.readAsync(userArgs),
+          await userPrivate.readAsync(userArgs),
+        ]);
+
+        if (!!pub && !!priv) {
+          // existing user
           await _updateUserLastLoginTime();
-
           return true;
-          //});
-        },
+        }
 
-        setAdminDisplayMode({ uid, enabled }, { userRole }, { }, { set_userDisplayRole }) {
-          return set_userDisplayRole({ uid }, enabled ? userRole({uid}) : Roles.User);
-        },
+        await _addNewUser();
+        await _updateUserLastLoginTime();
 
-        setUserData(
-          { uid, userData },
-          { },
-          { },
-          { set_userPhotoURL, set_userDisplayName, set_userFullName, set_userCohortId, set_userCreatedAt }) {
-          console.log('Writing user data: ' + JSON.stringify(userData));
+        return true;
+        //});
+      },
 
-          const updates = [];
+      setAdminDisplayMode({ uid, enabled }, { userRole }, { }, { set_userDisplayRole }) {
+        return set_userDisplayRole({ uid }, enabled ? userRole({ uid }) : Roles.User);
+      },
 
-          const userArgs = { uid };
+      setCurrentUserCohortId({ cohortId }, { set_userCohortId }, { currentUid: uid }) {
+        return set_userCohortId({ uid }, cohortId);
+      },
 
-          if (userData.photoURL && userData.photoURL.trim()) {
-            updates.push(set_userPhotoURL(userArgs, userData.photoURL.trim()));
+      setUserData(
+        { uid, userData },
+        { },
+        { },
+        { set_userPhotoURL, set_userDisplayName, set_userFullName, set_userCohortId, set_userCreatedAt }) {
+        console.log('Writing user data: ' + JSON.stringify(userData));
+
+        const updates = [];
+
+        const userArgs = { uid };
+
+        if (userData.photoURL && userData.photoURL.trim()) {
+          updates.push(set_userPhotoURL(userArgs, userData.photoURL.trim()));
+        }
+
+        if (userData.displayName && userData.displayName.trim()) {
+          updates.push(set_userDisplayName(userArgs, userData.displayName.trim()));
+        }
+
+        if (userData.fullName && userData.fullName.trim()) {
+          updates.push(set_userFullName(userArgs, userData.fullName.trim()));
+        }
+
+        if (userData.cohortId) {
+          updates.push(set_userCohortId(userArgs, userData.cohortId));
+        }
+
+        if (userData.createdAt) {
+          updates.push(set_userCreatedAt(userArgs, userData.createdAt));
+        }
+
+        return Promise.all(updates);
+      },
+
+      setCurrentUserData(
+        { ...userData },
+        { },
+        { currentUid },
+        { setUserData }
+      ) {
+        const uid = currentUid;
+        return setUserData({ uid, userData });
+      },
+
+      setRole({ uid, role }, { }, { }, { update_user }) {
+        const roleNum = getRole(role) || 0;
+
+        // make sure to set display role first.
+        // in case, you demote yourself, you still need your original role for this.
+        // return this.set_userDisplayRole(uid, roleNum).then(() =>
+        //   this.set_userRole(uid, roleNum)
+        // );
+
+        const upd = {
+          role: roleNum,
+          displayRole: roleNum
+        };
+        return update_user({ uid }, upd);
+      },
+
+      registerAllUnregisteredUsers(
+        { },
+        { get_userRole },
+        { unregisteredUids },
+        { update_db }
+      ) {
+        const updates = {};
+
+        if (unregisteredUids === NOT_LOADED) {
+          return null;
+        }
+
+        forEach(unregisteredUids, uid =>
+          updates[get_userRole.getPath({ uid })] = Roles.User
+        );
+
+        return update_db(updates);
+      }
+    },
+
+    children: {
+      // private user information is not available to other users
+      usersPrivate: {
+        path: 'private',
+        children: {
+          userPrivate: {
+            path: '$(uid)',
+            onWrite: [
+              'updatedAt',
+              'createdAt'
+            ],
+            children: {
+              // personal user data (we copy this from firebase auth on first use)
+              userPrivateData: {
+                path: 'data',
+                children: {
+                  userEmail: 'email'
+                }
+              }
+            }
           }
-
-          if (userData.displayName && userData.displayName.trim()) {
-            updates.push(set_userDisplayName(userArgs, userData.displayName.trim()));
-          }
-
-          if (userData.fullName && userData.fullName.trim()) {
-            updates.push(set_userFullName(userArgs, userData.fullName.trim()));
-          }
-
-          if (userData.cohortId) {
-            updates.push(set_userCohortId(userArgs, userData.cohortId));
-          }
-
-          if (userData.createdAt) {
-            updates.push(set_userCreatedAt(userArgs, userData.createdAt));
-          }
-
-          return Promise.all(updates);
-        },
-
-        setCurrentUserData(
-          { ...userData },
-          { },
-          { currentUid },
-          { setUserData }
-        ) {
-          const uid = currentUid;
-          return setUserData({ uid, userData });
-        },
-
-        setRole({ uid, role }, { }, { }, { update_user }) {
-          const roleNum = getRole(role) || 0;
-
-          // make sure to set display role first.
-          // in case, you demote yourself, you still need your original role for this.
-          // return this.set_userDisplayRole(uid, roleNum).then(() =>
-          //   this.set_userRole(uid, roleNum)
-          // );
-
-          const upd = {
-            role: roleNum,
-            displayRole: roleNum
-          };
-          return update_user({ uid }, upd);
-        },
-
-        registerAllUnregisteredUsers(
-          { },
-          { get_userRole },
-          { unregisteredUids },
-          { update_db }
-        ) {
-          const updates = {};
-
-          if (unregisteredUids === NOT_LOADED) {
-            return null;
-          }
-
-          forEach(unregisteredUids, uid =>
-            updates[get_userRole.getPath({ uid })] = Roles.User
-          );
-
-          return update_db(updates);
         }
       },
 
-      children: {
-        // private user information is not available to other users
-        usersPrivate: {
-          path: 'private',
-          children: {
-            userPrivate: {
-              path: '$(uid)',
-              onWrite: [
-                'updatedAt',
-                'createdAt'
-              ],
-              children: {
-                // personal user data (we copy this from firebase auth on first use)
-                userPrivateData: {
-                  path: 'data',
-                  children: {
-                    userEmail: 'email'
-                  }
-                }
-              }
+      // public user information is shared
+      usersPublic: {
+        path: 'public',
+        readers: {
+          userPublic(args, { user }) {
+            return user(args);
+          },
+          get_userPublic(args, { user }) {
+            return user(args);
+          },
+          userPublic_isLoaded(args, { user }) {
+            return user.isLoaded(args);
+          },
+          currentUser(
+            { },
+            { userPublic },
+            { currentUid, currentUid_isLoaded }
+          ) {
+            if (!currentUid_isLoaded) {
+              return NOT_LOADED;
             }
+            return currentUid && userPublic({ uid: currentUid });
           }
         },
-
-        // public user information is shared
-        usersPublic: {
-          path: 'public',
-          readers: {
-            userPublic(args, { user }) {
-              return user(args);
-            },
-            get_userPublic(args, { user }) {
-              return user(args);
-            },
-            userPublic_isLoaded(args, { user }) {
-              return user.isLoaded(args);
-            },
-            currentUser(
-              { },
-              { userPublic },
-              { currentUid, currentUid_isLoaded }
-            ) {
-              if (!currentUid_isLoaded) {
-                return NOT_LOADED;
-              }
-              return currentUid && userPublic({ uid: currentUid });
+        children: {
+          gms: {
+            path: {
+              queryParams: [['orderByChild', 'role'], ['startAt', Roles.GM]]
             }
           },
-          children: {
-            gms: {
-              path: {
-                queryParams: [['orderByChild', 'role'], ['startAt', Roles.GM]]
-              }
-            },
-            usersOfCohort: {
-              path: {
-                indices: {
-                  cohortId: ['cohortId']
-                },
-                queryParams({ cohortId }) {
-                  return { cohortId: cohortId || null };
-                }
-              }
-            },
-            user: {
-              path: '$(uid)',
-              readers: {
-                isUserDataComplete({ uid }, { get_user }) {
-                  if (!uid) {
-                    return false;
-                  }
-
-                  const user = get_user({ uid });
-                  if (user === NOT_LOADED) {
-                    return NOT_LOADED;
-                  }
-                  if (!user) {
-                    return false;
-                  }
-                  return !!user.fullName;
-                }
+          usersOfCohort: {
+            path: {
+              indices: {
+                cohortId: ['cohortId']
               },
-              onWrite: [
-                'updatedAt',
-                //'createdAt' (doesn't work like that right now)
-              ],
-              children: {
-                userDisplayName: 'displayName',
-                userPhotoURL: 'photoURL',
-                userFullName: 'fullName',
-                userLastLogin: 'lastLogin',
-                userCohortId: 'cohortId',
-                userSelfLabel: 'selfLabel',
-                userLocale: 'locale',
-                userRole: 'role',
-                userDisplayRole: 'displayRole',
-                userPlaceId: 'placeId',
-                userCreatedAt: 'createdAt'
+              queryParams({ cohortId }) {
+                return { cohortId: cohortId || null };
               }
             }
-          }
-        },
+          },
+          user: {
+            path: '$(uid)',
+            readers: {
+              isUserDataComplete({ uid }, { get_user }) {
+                if (!uid) {
+                  return false;
+                }
 
-
-        // some UI user preferences
-        usersPrefs: {
-          path: 'prefs',
-          children: {
-            userPrefs: {
-              path: '$(uid)',
-              children: {
+                const user = get_user({ uid });
+                if (user === NOT_LOADED) {
+                  return NOT_LOADED;
+                }
+                if (!user) {
+                  return false;
+                }
+                return !!user.fullName;
+              },
+              isValidRegisteredUser({ uid }, { isUserDataComplete, get_user }) {
+                return isUserDataComplete({ uid }) && get_user({ uid }).cohortId;
               }
+            },
+            reader(user, args, { }, { currentUid, _tree: tree }) {
+              // TODO: Clean this up
+              if (user && currentUid && currentUid === args.uid) {
+                const { cohortId } = user;
+                if (cohortId) {
+                  const byCohortNode = tree.getNodeByName('byCohort');
+                  const cohortIdStr = cohortId + '';
+                  if (byCohortNode.pathDescriptor.getLocalPath() !== cohortIdStr) {
+                    byCohortNode.pathDescriptor.setPath(cohortIdStr);
+                    byCohortNode.forEachNodeInSubTree(function (node) {
+                      if (node.pathDescriptor) {
+                        node.pathDescriptor.updatePath();
+                      }
+                    });
+                    console.warn('updated cohortId path');
+                  }
+                }
+              }
+              return user;
+            },
+            onWrite: [
+              'updatedAt',
+              //'createdAt' (doesn't work like that right now)
+            ],
+            children: {
+              userDisplayName: 'displayName',
+              userPhotoURL: 'photoURL',
+              userFullName: 'fullName',
+              userLastLogin: 'lastLogin',
+              userCohortId: 'cohortId',
+              userSelfLabel: 'selfLabel',
+              userLocale: 'locale',
+              userRole: 'role',
+              userDisplayRole: 'displayRole',
+              userPlaceId: 'placeId',
+              userCreatedAt: 'createdAt'
             }
           }
-        },
-      }
+        }
+      },
+
+
+      // some UI user preferences
+      usersPrefs: {
+        path: 'prefs',
+        children: {
+          userPrefs: {
+            path: '$(uid)',
+            children: {
+            }
+          }
+        }
+      },
     }
-  };
+  }
+};

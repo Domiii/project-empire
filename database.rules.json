@@ -10,38 +10,41 @@
       ".read": "auth !== null",
       ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
     },
-
-    "projects": {
-      ".read": "auth !== null",
-      "list": {
-        ".indexOn": "updatedAt",
-        "$projectId": {
-          ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
-        }
-      }
-    },
-    "presentations": {
-      ".read": "auth !== null",
-      "list": {
-        ".indexOn": [
-          "updatedAt",
-          "sessionId"
-        ],
-        "$projectId": {
-          ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
-        }
-      }
-    },
-    "presentationSessions": {
-      ".read": "auth !== null",
-      "livePresentationSessionId": {
-        ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
-      },
-      "list": {
-        ".indexOn": "updatedAt",
-        "$projectId": {
-          ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
-        }
+    "byCohort": {
+      "$cohortId": {
+        "projects": {
+          ".read": "auth !== null",
+          "list": {
+            ".indexOn": "updatedAt",
+            "$projectId": {
+              ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+            }
+          }
+        },
+        "presentations": {
+          ".read": "auth !== null",
+          "list": {
+            ".indexOn": [
+              "updatedAt",
+              "sessionId"
+            ],
+            "$projectId": {
+              ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+            }
+          }
+        },
+        "presentationSessions": {
+          ".read": "auth !== null",
+          "livePresentationSessionId": {
+            ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+          },
+          "list": {
+            ".indexOn": "updatedAt",
+            "$projectId": {
+              ".write": "auth !== null && (root.child('users').child('public').child(auth.uid).child('role').val() >= 99)"
+            }
+          }
+        },
       }
     },
     "learnerKb": {

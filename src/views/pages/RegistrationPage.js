@@ -202,7 +202,8 @@ const SelfLabelButton = dataBind({
     content = label;
   }
 
-  return (<Button onClick={clickChangeLabel} bsStyle={bsStyle} bsSize="large"
+  return (<Button onClick={clickChangeLabel} 
+    bsStyle={bsStyle} bsSize="large"
     className={(isSelected && 'yellow-highlight-border') + ' ' + clazz}
     active={isSelected}
     disabled={isSelected}>
@@ -291,8 +292,11 @@ export class RegistrationFun extends Component {
     const label = userSelfLabel(uidArgs) || '';
 
     let cohortStatusEl;
-    if (!usersOfCurrentCohort) {
+    if (usersOfCurrentCohort === NOT_LOADED) {
       cohortStatusEl = <LoadIndicator />;
+    }
+    else if (!usersOfCurrentCohort) {
+      cohortStatusEl = '';
     }
     else {
       const nUsers = size(usersOfCurrentCohort);
@@ -302,8 +306,12 @@ export class RegistrationFun extends Component {
 
       let i = 0;
       cohortStatusEl = (<div >
-        <h3 className="inline inline-hcenter">已有 <span className="font-size-3 digital-number-font">{nUsers}</span> 個人登記成功</h3>
-        <h2 className="inline">{labelUrls[label] && <img src={labelUrls[label]} className="height-5" />}</h2>
+        <h3 className="inline inline-hcenter">
+          已有 <span className="font-size-3 digital-number-font">{nUsers}</span> 個人登記成功
+        </h3>
+        <h3 className="inline">
+          {labelUrls[label] && <img src={labelUrls[label]} className="height-5" />}
+        </h3>
         <hr />
         <div className="margin-bottom-5">
           <div className="position-relative font-size-2" style={cohortStyles}>
@@ -320,10 +328,15 @@ export class RegistrationFun extends Component {
 
     return (<div>
       <center className="padding3">
-        <h2>恭喜，<UserBadge size={2} uid={currentUid} />！你這隻 <input type="text" maxLength="14" size="18" placeholder={label}
-          onChange={this.onInputUpdate} ref={this.onInputReady} /> 登記成功！</h2>
+        <h2>
+          恭喜，<UserBadge size={2} uid={currentUid} />！你這隻 
+          <input type="text" maxLength="14" size="18" placeholder={label} onChange={this.onInputUpdate} ref={this.onInputReady} 
+          /> 登記成功！
+        </h2>
+        <h2>
+          Waiting for admin to accept your request～
+        </h2>
         {cohortStatusEl}
-        <span>（其他人就是（可愛的）豬～）</span>
       </center>
     </div>);
   }

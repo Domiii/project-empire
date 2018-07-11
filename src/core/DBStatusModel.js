@@ -1,23 +1,18 @@
-const DBStatusRef = {
-  pathTemplate: '/dbState',
+const DBStatusModel = {
+  isConnected: '.info/connected',
+  current: {
+    path: 'dbState/current',
 
-  methods: {
-    onBeforeWrite() {
-      return;
-    }
-  },
+    onWrite: [
+      'updatedAt'
+    ],
 
-  children: {
-    current: {
-      pathTemplate: 'current',
-
-      children: {
-        isLocked: 'isLocked',
-        version: 'version',
-        updatedAt: 'updatedAt'
-      }
+    children: {
+      isLocked: 'isLocked',
+      version: 'version',
+      updatedAt: 'updatedAt'
     }
   }
 };
 
-export default DBStatusRef;
+export default DBStatusModel;

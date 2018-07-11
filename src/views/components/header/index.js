@@ -43,7 +43,7 @@ class NavWrap extends Component {
 }
 
 
-const PresentationStatusIcon = dataBind()(function PresentationsStatus(
+const PresentationStatusIcon = dataBind()(function PresentationStatusIcon(
   { },
   { presentationSessionActivePresentationId, get_presentationStatus },
   { livePresentationSessionId }

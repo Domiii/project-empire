@@ -93,6 +93,15 @@ class DataSourceTree {
   //   }
   //   return !node.isDataLoaded(args);
   // }
+  getNodeByName(name) {
+    if (this.hasReader(name)) {
+      return this.resolveReader(name);
+    }
+    if (this.hasWriter(name)) {
+      return this.resolveWriter(name);
+    }
+    return null;
+  }
 
   hasReader(name) {
     return !!this._root._readDescendants[name];
@@ -202,15 +211,32 @@ class DataSourceTree {
   // #########################################################################
 
   _buildTree() {
-    this._root = this._buildRoot(this._dataStructureCfgRoot);
+    const cfg = this._dataStructureCfgRoot;
+
+    // build tree
+    this._root = this._buildRoot(cfg);
+
+    // add special nodes
+    this._addSpecialNodes();
 
     // we need to compress once s.t. that plugins (such as DataRelationshipGraph) get full tree functionality
     this._compressHierarchy(this._root);
 
+    // TODO: Make relationships work
     // this._notifyTreeBuilt();
 
     // // we need to compress a second time because plugins (such as DataRelationshipGraph) might have added new nodes that are yet compressed
     // this._compressHierarchy(this._root);
+  }
+
+  _addSpecialNodes() {
+    this.addChildrenToRoot({
+      _tree: {
+        reader: () => {
+          return this;
+        }
+      }
+    });
   }
 
   _notifyTreeBuilt() {

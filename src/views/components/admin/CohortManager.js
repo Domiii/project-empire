@@ -1,14 +1,5 @@
 import isEmpty from 'lodash/isEmpty';
 import map from 'lodash/map';
-import mapValues from 'lodash/mapValues';
-import sortBy from 'lodash/sortBy';
-import groupBy from 'lodash/groupBy';
-import zipObject from 'lodash/zipObject';
-
-import { EmptyObject, EmptyArray } from 'src/util';
-
-import Roles, { hasRole } from 'src/core/users/Roles';
-
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
@@ -30,24 +21,38 @@ import UserIcon from 'src/views/components/users/UserIcon';
 import FancyPanelToggleTitle from 'src/views/components/util/FancyPanelToggleTitle';
 
 @dataBind({
-  
+  clickChangeToCohort(evt, { cohortId }, { setCurrentUserCohortId }) {
+    setCurrentUserCohortId({ cohortId });
+  }
+})
+class SwitchCohortButton extends Component {
+  render({ }, { clickChangeToCohort }) {
+    return <Button onClick={clickChangeToCohort}>Switch</Button>;
+  }
+}
+
+@dataBind({
+
 })
 export class CohortTable extends Component {
   render(
     { },
-    { }
+    { },
+    { cohortList, currentUserCohortId }
   ) {
     return (<div>{
-      map([], (cohorts) => {
+      map(cohortList, (cohort, cohortId) => {
         const {
-          name,
-          list
-        } = cohorts;
+          name
+        } = cohort;
 
         return (<Panel key={name}>
-          <Panel.Heading>{name}</Panel.Heading>
+          <Panel.Heading>{cohortId}. {name}</Panel.Heading>
           <Panel.Body>
-            hi!
+            {
+              cohortId !== currentUserCohortId && 
+                <SwitchCohortButton cohortId={cohortId} />
+            }
           </Panel.Body>
         </Panel>);
       })

@@ -39,7 +39,7 @@ const signedInRoutes = [
 const AppRoutes = dataBind()(function AppRoutes(
   { },
   { },
-  { currentUid, currentUser_isLoaded, isCurrentUserComplete }
+  { currentUid, currentUser_isLoaded, isCurrentUserValidRegistered }
 ) {
   if (!currentUser_isLoaded) {
     return (<LoadOverlay message="logging in..." className="color-lightred" />);
@@ -55,7 +55,7 @@ const AppRoutes = dataBind()(function AppRoutes(
       </Switch>
     );
   }
-  else if (!isCurrentUserComplete) {
+  else if (!isCurrentUserValidRegistered) {
     // new user or user still has to fill in some data details
     return (
       <Switch>

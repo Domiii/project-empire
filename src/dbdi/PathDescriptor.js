@@ -3,6 +3,8 @@ import isArray from 'lodash/isArray';
 import isFunction from 'lodash/isFunction';
 import isPlainObject from 'lodash/isPlainObject';
 
+import { pathJoin } from 'src/util/pathUtil';
+
 
 import autoBind from 'src/util/auto-bind';
 
@@ -47,11 +49,26 @@ export default class PathDescriptor extends DataDescriptorNode {
     return this.parent;
   }
 
+  updatePath() {
+    this.setPath(this.config.localPathTemplate);
+  }
+
+  getLocalPath() {
+    return this.config.localPathTemplate;
+  }
+
+  setPath(path) {
+    this.config.localPathTemplate = path;
+    this.config.pathTemplate = pathJoin(this.parent.config.pathTemplate, path);
+    this._buildPathGetter();
+  }
+
   // ################################################
   // Private methods
   // ################################################
 
-  _buildPathGetter(pathConfig) {
+  _buildPathGetter() {
+    const pathConfig = this.config;
     let getPath;
     const { pathTemplate, queryParams, pathFn, indices } = pathConfig;
     

@@ -176,10 +176,6 @@ export class UserTable extends Component {
   }
 
   render_fullName = (cell, row, rowIndex, formatExtraData) => {
-    // const {
-    //   title,
-    //   iconUrl
-    // } = row;
     return (<span>
       {cell}
     </span>);

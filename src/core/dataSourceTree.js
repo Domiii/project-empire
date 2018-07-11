@@ -73,19 +73,26 @@ const dataModelConfig = {
   db: {
     dataProvider: 'firebase',
     path: '/',
-    children: merge({
-      isConnected: '.info/connected'
-    },
+    children: merge(
       UserModel,
-
       CohortModel,
-      
-      LearnerScheduleModel,
-      ProjectModel,
-      PresentationModels,
-
-      SimulatorModel
-
+      SimulatorModel,
+      {
+        allCohortData: {
+          path: 'byCohort',
+          children: {
+            byCohort: {
+              //path: '$(cohortId)',
+              path: '?',
+              children: merge(
+                LearnerScheduleModel,
+                ProjectModel,
+                PresentationModels,
+              )
+            }
+          }
+        }
+      }
       //GoalModel,
 
       // unused...

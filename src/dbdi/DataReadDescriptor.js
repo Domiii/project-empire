@@ -20,6 +20,7 @@ export default class DataReadDescriptor extends DataDescriptorNode {
     super({ pathDescriptor, reader, fetch }, name);
 
     autoBind(this);
+
     this.reader = reader;
     this.fetch = fetch;
 
@@ -232,8 +233,12 @@ class ImmediateRead extends PathDescriptorReader {
   }
 
   applyReadMod(result, args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) {
-    const { reader } = this.dataReadDescriptor;
-    return reader(result, args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
+    const { readMod } = this.dataReadDescriptor;
+    //if (reader) 
+    {
+      result = readMod(result, args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
+    }
+    return result;
   }
 }
 
@@ -322,8 +327,8 @@ class AsyncRead extends PathDescriptorReader {
   applyReadMod = async (result, args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker) => {
     // result is actually a promise here -> resolve before moving on!
     result = await result;
-    //const { reader } = this.dataReadDescriptor;
-    return await this.reader(result, args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
+    const { readMod } = this.dataReadDescriptor;
+    return await readMod(result, args, readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
   }
 }
 

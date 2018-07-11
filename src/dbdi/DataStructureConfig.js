@@ -199,10 +199,12 @@ export class DataStructureConfigNode {
     }
 
     // join with parent path
+    const localPathTemplate = pathTemplate;
     pathTemplate = pathJoin(parentPath, pathTemplate);
 
     this.pathConfig = {
       pathTemplate,
+      localPathTemplate,
       queryParams,
       indices,
       pathFn
