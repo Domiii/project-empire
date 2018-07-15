@@ -55,32 +55,10 @@
 //   dbdi = tree.newAccessTracker('TESTER');
 // });
 
-// it('should have added all kinds of relationship readers + writers', async() => {
-//   expect(dbdi.read.countYsOfX).toBeTruthy();
-//   expect(dbdi.read.countXsOfY).toBeTruthy();
-//   expect(dbdi.write.connectXY).toBeTruthy();
+// it('should support asynchronous read w/ fetch', async () => {
+
 // });
 
+// it('should support immediate (synchronous) fetch', async () => {
 
-// it('should be able to support all kinds of relationships', async () => {
-//   const xId1 = dbdi.write.push_x({name: 'x1'}).key;
-//   expect(Object.keys(dbdi.get.xs)).toEqual([xId1]);
-
-//   const xId2 = dbdi.write.push_x({name: 'x2'}).key;
-//   expect(Object.keys(dbdi.get.xs)).toEqual([xId1, xId2]);
-  
-//   const yId1 = dbdi.write.push_y({name: 'y1'}).key;
-//   const yId2 = dbdi.write.push_y({name: 'y1'}).key;
-
-//   await dbdi.write.connectXY({xId: xId1, yId: yId1});
-
-//   expect(Object.keys(dbdi.get.xIdsOfY)).toEqual([xId1]);
-  
-//   await dbdi.write.connectXY({xId: xId2, yId: yId1});
-
-//   expect(Object.keys(dbdi.get.xIdsOfY)).toEqual([xId1, xId2]);
-
-//   dbdi.write.disconnectXY({xId: xId2, yId: yId1});
-
-//   expect(Object.keys(dbdi.get.xIdsOfY)).toEqual([xId1]);
 // });
