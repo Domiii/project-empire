@@ -191,13 +191,19 @@ export const MediaPrepView = dataBind({})(function MediaPrepView(
       <div>
         <MediaSettingsPanel />
       </div>
-      <br />
-      <Button id="start-stream-btn"
-        bsSize="large" bsStyle="info"
-        disabled={!mediaReady}
-        onClick={startStreaming} block>
-        <FAIcon name="play-circle" /> Start!
-      </Button>
+      <Flexbox className="full-width">
+        <Flexbox>
+          <input type="text" />
+        </Flexbox>
+        <Flexbox className="full-width">
+          <Button id="start-stream-btn"
+            bsSize="large" bsStyle="info"
+            disabled={!mediaReady}
+            onClick={startStreaming} block>
+            <FAIcon name="play-circle" /> Start!
+          </Button>
+        </Flexbox>
+      </Flexbox>
     </div>);
   }
 });

@@ -147,6 +147,7 @@ if (ENV_DEVELOPMENT) {
     hot: true,
     port: PORT,
     publicPath: config.output.publicPath,
+    https: true,
     stats: {
       errorDetails: true, // this does show errors
       cached: true,

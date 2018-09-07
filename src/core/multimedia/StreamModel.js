@@ -76,6 +76,10 @@ export function isMediaRecorderCompatible() {
  */
 
 export function getStream(constraints) {
+  delete constraints.audio;
+  // getDeviceList().then(list => 
+  //   console.error(constraints, list)
+  // );
   return navigator.mediaDevices.getUserMedia(constraints)
     .then(mediaStream => {
       return mediaStream;
@@ -209,11 +213,16 @@ const mediaInputSelection = {
         return NOT_LOADED;
       }
 
+      // select ideal video resolution
+      // see: https://stackoverflow.com/a/48546227
+
       const constraints = {};
       constraints.video = videoDeviceId && {
         deviceId: videoDeviceId,
         width: { ideal: 4096 },
-        height: { ideal: 2160 }
+        height: { ideal: 2160 },
+        //height: { exact: 720 }
+        facingMode: 'environment'
       } || false;
 
       constraints.audio = audioDeviceId && {
@@ -296,7 +305,8 @@ export default {
           await stopStreamRecorder(streamArgs);
         }
 
-        const streamPromise = get_streamObject(streamArgs) || getStream(mediaInputConstraints);
+        const streamPromise = get_streamObject(streamArgs) || 
+          getStream(mediaInputConstraints);
         //const fileIdPromise = get_streamFileId(streamArgs) || newStreamFile();
 
         return Promise.all([
