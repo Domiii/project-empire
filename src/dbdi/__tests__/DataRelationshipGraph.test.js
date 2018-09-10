@@ -62,15 +62,15 @@ it('should have added all kinds of relationship readers + writers', async() => {
 });
 
 
-it('should be able to support all kinds of relationships', async () => {
-  const xId1 = dbdi.write.push_x({name: 'x1'}).key;
+it('should be able to support m2m relationships', async () => {
+  const xId1 = dbdi.write.push_xs({name: 'x1'}).key;
   expect(Object.keys(dbdi.get.xs)).toEqual([xId1]);
 
-  const xId2 = dbdi.write.push_x({name: 'x2'}).key;
+  const xId2 = dbdi.write.push_xs({name: 'x2'}).key;
   expect(Object.keys(dbdi.get.xs)).toEqual([xId1, xId2]);
   
-  const yId1 = dbdi.write.push_y({name: 'y1'}).key;
-  const yId2 = dbdi.write.push_y({name: 'y1'}).key;
+  const yId1 = dbdi.write.push_ys({name: 'y1'}).key;
+  const yId2 = dbdi.write.push_ys({name: 'y1'}).key;
 
   await dbdi.write.connectXY({xId: xId1, yId: yId1});
 

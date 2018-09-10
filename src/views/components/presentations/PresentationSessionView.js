@@ -151,6 +151,12 @@ class OrphanedPresentations extends Component {
     { set_livePresentationSessionId }
   ) {
     set_livePresentationSessionId(null);
+  },
+  clickShuffle(evt,
+    { sessionId },
+    { shufflePresentationSessionOrder }
+  ) {
+    shufflePresentationSessionOrder({ sessionId });
   }
 })
 class PresentationSessionControls extends Component {
@@ -172,8 +178,10 @@ class PresentationSessionControls extends Component {
 
   render(
     { sessionId },
-    { clickToggleEditMode, clickAddPresentation,
-      clickStartLiveSession, clickStopLiveSession },
+    { isPresentationSessionInProgress,
+      clickToggleEditMode, clickAddPresentation,
+      clickStartLiveSession, clickStopLiveSession,
+      clickShuffle },
     { livePresentationSessionId, isPresentEditMode }
   ) {
     if (livePresentationSessionId === NOT_LOADED) {
@@ -185,6 +193,14 @@ class PresentationSessionControls extends Component {
       onClick={clickToggleEditMode}>
       <FAIcon name="edit" />
     </Button>);
+
+    const isOperating = isPresentationSessionInProgress({sessionId});
+    const shuffleBtn = isPresentEditMode &&
+      (<Button bsStyle="info"
+        disabled={isOperating}
+        onClick={clickShuffle}>
+        <FAIcon name="random" />
+      </Button>);
 
     const addBtn = (<Button bsStyle="success"
       onClick={clickAddPresentation}>
@@ -211,6 +227,7 @@ class PresentationSessionControls extends Component {
       <Flexbox alignItems="center" className="spaced-inline-children-5">
         {editBtn}
         {addBtn}
+        {shuffleBtn}
       </Flexbox>
       <Flexbox alignItems="center">
         {startLiveSessionBtn}

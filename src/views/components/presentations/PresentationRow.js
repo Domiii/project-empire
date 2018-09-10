@@ -463,14 +463,20 @@ class PresentationRowDetails extends Component {
 export default class PresentationRow extends Component {
   render(
     args,
-    { ytIsVideoUploadInProgress }
+    { get_presentation, ytIsVideoUploadInProgress }
   ) {
     let detailsRow, uploadRow;
 
     const {
       presentationId, isSelected, selectRow
     } = args;
-    //const presentation = get_presentation({ presentationId });
+    const presentation = get_presentation({ presentationId });
+    if (!presentation) {
+      return (<FullWidthTableCell noBorder={true}>
+        presentation does not exist
+      </FullWidthTableCell>);
+    }
+    
 
     const draggingSnapshot = getOptionalArgument(args, 'draggingSnapshot');
     const isDragging = draggingSnapshot && draggingSnapshot.isDragging;

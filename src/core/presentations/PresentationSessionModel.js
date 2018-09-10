@@ -12,6 +12,8 @@ import last from 'lodash/last';
 import size from 'lodash/size';
 import pickBy from 'lodash/pickBy';
 import reduce from 'lodash/reduce';
+import shuffle from 'lodash/shuffle';
+import concat from 'lodash/concat';
 
 import paginationNodes from 'src/dbdi/nodes/paginationNodes';
 import { downloadSpreadsheetJSON } from '../../util/SpreadsheetUtil';
@@ -273,14 +275,16 @@ const sessionWriters = {
     ]);
   },
 
-  stopOperatingPresentationSession(
-    sessionArgs,
+  async stopOperatingPresentationSession(
+    { sessionId },
     { presentationSessionOperatorUid },
     { currentUid },
-    { set_presentationSessionOperatorUid }
+    { set_presentationSessionOperatorUid,
+      setActivePresentationInSession }
   ) {
-    if (currentUid && currentUid === presentationSessionOperatorUid(sessionArgs)) {
-      return set_presentationSessionOperatorUid(sessionArgs, null);
+    await setActivePresentationInSession({ sessionId, presentationId: null });
+    if (currentUid && currentUid === presentationSessionOperatorUid({sessionId})) {
+      return set_presentationSessionOperatorUid({ sessionId }, null);
     }
   },
 
@@ -423,6 +427,34 @@ const sessionWriters = {
     return res;
   },
 
+  async shufflePresentationSessionOrder(
+    sessionArgs,
+    { nonPendingPresentations, pendingPresentations, get_presentations },
+    { },
+    { set_presentationIndex, setGettingReadyPresentationInSession, update_db }
+  ) {
+    const presentations1 = nonPendingPresentations(sessionArgs);
+    const presentations2 = pendingPresentations(sessionArgs);
+
+    const presentations = concat(
+      presentations1,
+      shuffle(presentations2),
+    );
+
+    const updates = {};
+    forEach(presentations, ({ id }, i) => {
+      updates[set_presentationIndex.getPath({ presentationId: id })] = i;
+    });
+
+    const res = await update_db(updates);
+
+    setGettingReadyPresentationInSession(sessionArgs);
+
+    get_presentations.notifyPathChanged(sessionArgs);
+
+    return res;
+  },
+
   /**
    * Returns presentationId if successful
    */
@@ -442,8 +474,10 @@ const sessionWriters = {
 
   async setGettingReadyPresentationInSession(
     sessionArgs,
-    { getPresentationIdsByStatusInSession, get_presentationStatus,
-      getSecondPendingPresentationIdInSession },
+    { getPresentationIdsByStatusInSession, 
+      get_presentationStatus,
+      getSecondPendingPresentationIdInSession,
+      presentationSessionActivePresentationId },
     { },
     { update_db }
   ) {
@@ -459,9 +493,12 @@ const sessionWriters = {
     );
 
     // set next pres to "GettingReady"
-    let presentationId = getSecondPendingPresentationIdInSession(sessionArgs);
-    if (presentationId) {
-      upd[get_presentationStatus.getPath({ presentationId })] = PresentationStatus.GettingReady;
+    const activePresId = presentationSessionActivePresentationId(sessionArgs);
+    if (activePresId) {
+      let presentationId = getSecondPendingPresentationIdInSession(sessionArgs);
+      if (presentationId) {
+        upd[get_presentationStatus.getPath({ presentationId })] = PresentationStatus.GettingReady;
+      }
     }
 
     return update_db(upd);
@@ -601,12 +638,10 @@ const sessionWriters = {
     sessionArgs,
     { },
     { },
-    { setActivePresentationInSession,
-      stopOperatingPresentationSession,
+    { stopOperatingPresentationSession,
       shutdownStream }
   ) {
     const { sessionId } = sessionArgs;
-    await setActivePresentationInSession({ sessionId, presentationId: null });
     await stopOperatingPresentationSession(sessionArgs);
     const streamArgs = { streamId: sessionId };
     await shutdownStream(streamArgs);

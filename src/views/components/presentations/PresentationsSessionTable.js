@@ -230,6 +230,7 @@ class TableBody extends Component {
     }
     this.setState({ selectedPresentationId: id });
   }
+  
   render(
     args,
     { isPresentationSessionOperator,

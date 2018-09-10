@@ -39,7 +39,7 @@ export class CohortTable extends Component {
   ) {
     console.warn(cohortList);
     return (<div>{
-      map(filter(cohortList, (coh, id) => !!coh && !id), (cohort, cohortId) => {
+      map(filter(cohortList, (coh, id) => !!coh && !!id), (cohort, cohortId) => {
         const {
           name
         } = cohort;

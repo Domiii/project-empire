@@ -192,9 +192,9 @@ export const MediaPrepView = dataBind({})(function MediaPrepView(
         <MediaSettingsPanel />
       </div>
       <Flexbox className="full-width">
-        <Flexbox>
+        {/* <Flexbox>
           <input type="text" />
-        </Flexbox>
+        </Flexbox> */}
         <Flexbox className="full-width">
           <Button id="start-stream-btn"
             bsSize="large" bsStyle="info"
