@@ -42,7 +42,7 @@ function addDefaultPlugins(plugins) {
 export default function buildSourceTree(dataProviders, dataStructureCfgRaw, plugins) {
   plugins = plugins || {};
 
-  addDefaultPlugins(plugins);
+  //addDefaultPlugins(plugins);
 
   const tree = new DataSourceTree(dataProviders, dataStructureCfgRaw, plugins);
   tree._buildTree();
@@ -222,8 +222,8 @@ class DataSourceTree {
     // we need to compress once s.t. that plugins (such as DataRelationshipGraph) get full tree functionality
     this._compressHierarchy(this._root);
 
-    // TODO: Make relationships work
-    // this._notifyTreeBuilt();
+    // add relationships and do other plugin stuff
+    this._notifyTreeBuilt();
 
     // // we need to compress a second time because plugins (such as DataRelationshipGraph) might have added new nodes that are yet compressed
     // this._compressHierarchy(this._root);

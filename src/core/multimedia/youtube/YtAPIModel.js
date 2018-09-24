@@ -2,7 +2,8 @@ import gapi from 'resources/gapi.js';
 import {
   GapiStatus,
   gapiInit,
-  gapiAuth
+  gapiAuth,
+  gapiGrantScopes
 } from './YouTubeAPI';
 
 import VideoUploadModel from './VideoUploadModel';
@@ -23,21 +24,21 @@ export default {
       ) {
         return gapiStatus === GapiStatus.Authorized;
       },
-      gapiAuthObject(
-        { }, { },
-        { gapiStatus },
-        { gapiEnsureInitialized }
-      ) {
-        if (gapiStatus === NOT_LOADED) {
-          gapiEnsureInitialized();
-          return NOT_LOADED;
-        }
-        const auth = gapi.auth2.getAuthInstance();
-        // auth.isSignedIn.listen(isAuthorized =>
-        //   set_gapiStatus(isAuthorized ? GapiStatus.Authorized : GapiStatus.Initialized)
-        // );
-        return auth;
-      }
+      // gapiAuthObject(
+      //   { }, { },
+      //   { gapiStatus },
+      //   { gapiEnsureInitialized }
+      // ) {
+      //   if (gapiStatus === NOT_LOADED) {
+      //     gapiEnsureInitialized();
+      //     return NOT_LOADED;
+      //   }
+      //   const auth = gapi.auth2.getAuthInstance();
+      //   // auth.isSignedIn.listen(isAuthorized =>
+      //   //   set_gapiStatus(isAuthorized ? GapiStatus.Authorized : GapiStatus.Initialized)
+      //   // );
+      //   return auth;
+      // }
     },
 
     writers: {
@@ -82,10 +83,13 @@ export default {
           }
         }
         resetGapiStatus();
-        gapiHardAuth();
+        //gapiHardAuth();
         //}
       },
 
+      /**
+       * Initializes GAPI and also performs soft auth.
+       */
       async gapiEnsureInitialized(
         { }, { },
         { gapiStatus },
@@ -94,10 +98,11 @@ export default {
         if (!gapiStatus || gapiStatus < GapiStatus.Initializing) {
           set_gapiStatus(GapiStatus.Initializing);
           try {
-            await gapiInit();
+            const isSignedIn = await gapiInit();
             if (gapiStatus < GapiStatus.Initialized) {
-              return set_gapiStatus(GapiStatus.Initialized);
+              set_gapiStatus(GapiStatus.Initialized);
             }
+            return isSignedIn;
           }
           catch (err) {
             console.error('gapi init failed -', err);
@@ -105,6 +110,7 @@ export default {
             set_gapiStatus(GapiStatus.None);
           }
         }
+        return gapi.auth2.getAuthInstance().isSignedIn.get();
       },
 
       async _gapiDoAuth(
@@ -113,19 +119,21 @@ export default {
         { set_gapiStatus, set_gapiTokens, set_gapiError }
       ) {
         // see https://developers.google.com/api-client-library/javascript/reference/referencedocs#gapiauth2authresponse
+        //console.warn('gapiDoAuth', gapiStatus);
         if (gapiStatus === GapiStatus.Authorizing || gapiStatus < GapiStatus.Initialized) {
           // make sure we don't try to authorize repeatedly (by accident)
           return false;
         }
 
-        const { soft } = args;
-
         set_gapiStatus(GapiStatus.Authorizing);
         try {
           const prompt = getOptionalArgument(args, 'prompt', undefined);
-          const result = await gapiAuth(soft, prompt);
-          console.info('gapi auth successful', result);
-          set_gapiTokens(result);
+          //console.warn('gapiAuth', prompt);
+          const result = await gapiAuth(prompt);
+
+          const user = gapi.auth2.getAuthInstance().currentUser.get();
+          const response = user.getAuthResponse();
+          set_gapiTokens(response);
           set_gapiStatus(GapiStatus.Authorized);
           return true;
         }
@@ -154,19 +162,23 @@ export default {
       async gapiSoftAuth(
         { }, { },
         { gapiStatus, isGapiTokenFresh },
-        { gapiEnsureInitialized, _gapiDoAuth, set_gapiStatus }
+        { gapiEnsureInitialized, set_gapiStatus, set_gapiTokens }
       ) {
         if (gapiStatus === GapiStatus.Initializing || gapiStatus === GapiStatus.Authorizing) {
           // TODO: implement proper queueing behavior
           return false;
         }
         if (gapiStatus < GapiStatus.Authorized || !isGapiTokenFresh) {
-          await gapiEnsureInitialized();
-
-          const isAuthed = await _gapiDoAuth({ soft: true });
+          const isAuthed = await gapiEnsureInitialized();
           if (!isAuthed) {
             set_gapiStatus(GapiStatus.NeedUserConsent);
             return false;
+          }
+          else {
+            const user = gapi.auth2.getAuthInstance().currentUser.get();
+            const response = user.getAuthResponse();
+            set_gapiTokens(response);
+            set_gapiStatus(GapiStatus.Authorized);
           }
         }
         return true;
@@ -185,7 +197,7 @@ export default {
         const prompt = getOptionalArgument(args, 'prompt', null);
         let isAuthed;
         if (prompt) {
-          isAuthed = await _gapiDoAuth({ soft: false, prompt });
+          isAuthed = await _gapiDoAuth({ prompt });
         }
         else {
           isAuthed = await gapiSoftAuth();
@@ -193,9 +205,12 @@ export default {
             console.warn('YT immediate auth failed - requesting user consent');
 
             // could not authorize immediately -> show user consent screen
-            isAuthed = await _gapiDoAuth({ soft: false });
+            isAuthed = await _gapiDoAuth({ });
           }
         }
+        // if (isAuthed) {
+        //   await gapiGrantScopes();
+        // }
         return isAuthed;
       }
     },

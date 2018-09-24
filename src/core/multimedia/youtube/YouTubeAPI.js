@@ -28,10 +28,11 @@ export const GapiStatus = {
 
 const MaxVideosPerQuery = 30;
 const apiKey = firebaseConfig.apiKey;
-const OAUTH2_SCOPES = [
+const YOUTUBE_UPLOAD_SCOPES = [
+  'https://www.googleapis.com/auth/youtube.readonly',
   'https://www.googleapis.com/auth/youtube.force-ssl',
   'https://www.googleapis.com/auth/youtube.upload'
-];
+].join(' ');
 
 const DEBUGG = true;
 
@@ -82,48 +83,66 @@ export function gapiInit() {
 }
 
 async function _gapiInit() {
-  var discoveryDocs = ['https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest'];
+  const discoveryDocs = ['https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest'];
+  const clientId = OauthClientId;
 
   return await gapi.client.init({
     apiKey,
-    clientId: OauthClientId,
+    clientId,
     discoveryDocs,
-    scope: 'https://www.googleapis.com/auth/youtube.readonly'
+    //scope: 'https://www.googleapis.com/auth/youtube.readonly'
+    scope: YOUTUBE_UPLOAD_SCOPES
+  })
+  // return await gapi.client.init({
+  //   //apiKey,
+  //   client_id: clientId,
+  //   scope: 'https://www.googleapis.com/auth/youtube.readonly'
+  // })
+  .then(() => {
+    function updateSigninStatus(...args) {
+      console.warn('updateSigninStatus', ...args);
+    }
+
+    // Listen for sign-in state changes.
+    gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
+
+    // Handle the initial sign-in state.
+    return gapi.auth2.getAuthInstance().isSignedIn.get();
+
+    //return gapi.auth2.getAuthInstance();
+    // return gapi.auth2.init({
+    //   clientId
+    // });
   });
 }
 
 /**
  * @see https://developers.google.com/youtube/v3/guides/auth/client-side-web-apps
  */
-export async function gapiAuth(immediate, prompt) {
-  // auth!
-  return await new Promise((resolve, reject) => {
-    const cfg = {
-      client_id: OauthClientId,
-      scope: OAUTH2_SCOPES,
-      immediate
-    };
-    if (prompt) {
-      cfg.prompt = prompt;
-    }
-    gapi.auth.authorize(cfg, function(response) {
-      if (response.error) {
-        // An error happened!
-        return reject(response);
-      }
-      // The user authorized the application for the scopes requested.
-      // You can also now use gapi.client to perform authenticated requests.
-      resolve(response);
-    });
-  });
+export async function gapiAuth(prompt) {
+  return gapi.auth2.getAuthInstance().signIn();
+  // gapi.auth2.authorize(cfg, function(response) {
+  //   if (response.error) {
+  //     // An error happened!
+  //     return reject(response);
+  //   }
+  //   // The user authorized the application for the scopes requested.
+  //   // You can also now use gapi.client to perform authenticated requests.
+  //   resolve(response);
+  // });
+}
+
+export async function gapiLogout() {
+  return await gapi.auth2.getAuthInstance().signOut();
 }
 
 /**
  * @see https://developers.google.com/youtube/v3/guides/auth/client-side-web-apps#incrementalAuth
  */
 export async function gapiGrantScopes(newScopes) {
+  newScopes = newScopes || YOUTUBE_UPLOAD_SCOPES;
   const user = gapi.auth2.getAuthInstance().currentUser.get();
-  user.grant({'scope': newScopes});
+  return await user.grant({'scope': newScopes});
 }
 
 function prepareRequest(contentType, requestArgs) {
