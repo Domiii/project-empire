@@ -1,6 +1,6 @@
 import isEmpty from 'lodash/isEmpty';
 import map from 'lodash/map';
-import filter from 'lodash/filter';
+import pickBy from 'lodash/pickBy';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -39,7 +39,7 @@ export class CohortTable extends Component {
   ) {
     console.warn(cohortList);
     return (<div>{
-      map(filter(cohortList, (coh, id) => !!coh && !!id), (cohort, cohortId) => {
+      map(pickBy(cohortList, (coh, id) => !!coh && !!id), (cohort, cohortId) => {
         const {
           name
         } = cohort;

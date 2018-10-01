@@ -22,38 +22,53 @@ import { EmptyObject } from '../../../util';
 
 const itemsPerPage = 20;
 
-const BigButton = styled(Button) `
+const BigButton = styled(Button)`
   height: 4em;
   max-width: 50%;
   margin: auto;
 `;
 
-const PresentationSessionRow = dataBind()(function PresentationSessionRow(
-  { presentationSessionId }
+const PresentationSessionRow = withRouter(dataBind({
+  async clickCopyPresentationSession(
+    evt,
+    { presentationSessionId, history },
+    { copyPresentationSession }
+  ) {
+    await copyPresentationSession({ sessionId: presentationSessionId });
+    history.push(hrefPresentationSession());
+  }
+})(function PresentationSessionRow(
+  { presentationSessionId },
+  { clickCopyPresentationSession }
 ) {
   return (<Flexbox>
     <Flexbox alignItems="center">
       <Link to={hrefPresentationSessionView(presentationSessionId)}>
         {presentationSessionId}
       </Link>
-      
-        {/* <Button> */}
-        {/* </Button> */}
+
+      <Button onClick={clickCopyPresentationSession}>
+        Clone
+      </Button>
     </Flexbox>
   </Flexbox>);
-});
+}));
 
 const PresentationSessionLiveStatusElement = withRouter(dataBind({
-  async clickNewPresentationSession(evt, { history }, { newPresentationSession }, { }) {
+  async clickNewPresentationSession(evt, 
+    { history }, 
+    { newPresentationSession }, 
+    { }
+  ) {
     // new session is automatically live
     await newPresentationSession();
 
     // default view is live view
     history.push(hrefPresentationSession());
   },
-  clickGoToLivePresentationSession(evt, 
-    { history }, 
-    { }, 
+  clickGoToLivePresentationSession(evt,
+    { history },
+    { },
     { }
   ) {
     history.push(hrefPresentationSession());

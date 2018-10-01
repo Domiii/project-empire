@@ -76,7 +76,8 @@ export function isMediaRecorderCompatible() {
  */
 
 export function getStream(constraints) {
-  delete constraints.audio;
+  console.log(constraints);
+  //delete constraints.audio;
   // getDeviceList().then(list => 
   //   console.error(constraints, list)
   // );
@@ -305,6 +306,7 @@ export default {
           await stopStreamRecorder(streamArgs);
         }
 
+        //mediaInputConstraints.audio = true;
         const streamPromise = get_streamObject(streamArgs) || 
           getStream(mediaInputConstraints);
         //const fileIdPromise = get_streamFileId(streamArgs) || newStreamFile();
@@ -431,7 +433,7 @@ export default {
               return stream;
             }
 
-            // shutdown all streams
+            // get volume
             let volume;
             stream.getTracks().forEach(track => {
               const settings = track.getSettings();

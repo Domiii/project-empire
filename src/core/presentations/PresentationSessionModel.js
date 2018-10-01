@@ -283,7 +283,7 @@ const sessionWriters = {
       setActivePresentationInSession }
   ) {
     await setActivePresentationInSession({ sessionId, presentationId: null });
-    if (currentUid && currentUid === presentationSessionOperatorUid({sessionId})) {
+    if (currentUid && currentUid === presentationSessionOperatorUid({ sessionId })) {
       return set_presentationSessionOperatorUid({ sessionId }, null);
     }
   },
@@ -474,7 +474,7 @@ const sessionWriters = {
 
   async setGettingReadyPresentationInSession(
     sessionArgs,
-    { getPresentationIdsByStatusInSession, 
+    { getPresentationIdsByStatusInSession,
       get_presentationStatus,
       getSecondPendingPresentationIdInSession,
       presentationSessionActivePresentationId },
@@ -738,6 +738,43 @@ const sessionWriters = {
     });
 
     return Promise.all(promises);
+  },
+
+  async copyPresentationSession(
+    sessionArgs,
+    { get_presentationSession, get_presentations },
+    { currentUid },
+    { newPresentationSession, push_presentation }
+  ) {
+    const newSessionId = await newPresentationSession();
+
+    const [sess, presis] = await Promise.all([
+      get_presentationSession.readAsync({ sessionId: newSessionId }),
+      get_presentations.readAsync(sessionArgs)
+    ]);
+
+    const promises = map(presis, oldPres => {
+      const pres = {};
+      pres.sessionId = newSessionId;
+      pres.index = oldPres.index;
+      pres.presentationStatus = PresentationStatus.Pending;
+      pres.creatorUid = currentUid;
+      if (oldPres.userNames) {
+        pres.userNames = oldPres.userNames;
+      }
+      if (oldPres.title) {
+        pres.title = oldPres.title;
+      }
+      if (oldPres.userNamesString) {
+        pres.userNamesString = oldPres.userNamesString;
+      }
+
+      return push_presentation(pres);
+    });
+
+    await Promise.all(promises);
+
+    return newSessionId;
   }
 };
 
