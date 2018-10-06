@@ -104,7 +104,7 @@ TODO: Many more detailed required.
 
 # More Implementation Notes
 
-1. Since `firebase` is a real-time database, `dbdi` (via the `@dataBind` decorator) conviniently listens for any changes to any data that has been accessed for as long as the component that requested the data is still mounted. The event listener will be removed and data unloaded on unmount.
+1. Since `firebase` is a real-time database, `dbdi` (via the `@dataBind` decorator) conviniently listens for any changes to any data that has been accessed for as long as the component that requested the data is still mounted. The event listener will be removed and data unloaded once all components that requested that data unmounted.
 1. Unlike other modules I tried, `dbdi` will only ever load and listen on any data path once, no matter how many components access it, thereby reducing some overhead. (In early tests, IIRC, I found that `firebase`' [Reference.on("value", ...)](https://firebase.google.com/docs/reference/js/firebase.database.Reference#on) data listener would fetch remote data multiple times when called in quick succession, triggered by different components.)
 1. There are many more features, including simple plugins (e.g. the `updatedAt` and `createdAt` `onWrite` plugins) and basic many-to-many relationships (still in development).
 
