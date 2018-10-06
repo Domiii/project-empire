@@ -30,11 +30,10 @@ Given a tree containing a `currentUser` node with two data children `name` and `
 
 
 ```js
-
 @dataBind({
   /**
-   * Function to be called .
-   * (dataBind parameters are injected after caller arguments)
+   * Click handler used by "Add year" button in component.
+   * NOTE: dataBind parameters are injected after caller arguments.
    */
   clickAddYear(evt, // ignore the click event argument
     {}, // props
@@ -61,51 +60,35 @@ function CurrentUserInfo(
       </p>
       <p>
         Your age is: {currentUser.age} 
-      <Button onClick={clickAddYear}>Add a year!</Button>
+        <Button onClick={clickAddYear}>Add a year!</Button>
       </p>
     </Alert>);
   }
 }
 
-@dataBind({
-  clickAddYear(evt, // ignore the click event argument
-    {}, // props
-    { update_currentUserAge }, // injected reader + writer functions
-    { currentUser } // injected data (reader of given name is called without arguments)
-  ) {
-    return update_currentUserAge(currentUser.age+1);
-  }
-})
-export default class ProfilePage extends Component {
-  static propTypes = {
-
-  };
-
-  constructor(...args) {
-    super(...args);
+@dataBind()
+function ProfilePage(
+  { }, // props + custom arguments passed to @dataBind
+  { }, // injected reader + writer functions
+  { currentUser_isLoaded } // injected data
+) {
+  if (!currentUser_isLoaded) {
+    return (<Loading />);
   }
 
-  render(
-    { clickAddYear }, // props + custom arguments passed to @dataBind
-    { }, // injected reader + writer functions
-    { currentUser_isLoaded, currentUser } // injected data
-  ) {
-    if (!currentUser_isLoaded) {
-      return (<Loading />);
-    }
-
-    return (
-      <Panel bsStyle="primary">
-        <Panel.Heading>
-          Your Profile
-        </Panel.Heading>
-        <Panel.Body>
-          <CurrentUserInfo />
-        </Panel.Body>
-      </Panel>
-    );
-  }
+  return (
+    <Panel bsStyle="primary">
+      <Panel.Heading>
+        Your Profile
+      </Panel.Heading>
+      <Panel.Body>
+        <CurrentUserInfo />
+      </Panel.Body>
+    </Panel>
+  );
 }
+
+export default ProfilePage;
 ```
 
 ## Basic Example NOTES
