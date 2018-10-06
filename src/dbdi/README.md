@@ -3,27 +3,25 @@
 
 # Intro
 
-DBDI (short for DataBinding via Dependency Injection) allows to easily data-bind any `DataProvider` (e.g. a database, file-system, cache etc.) in with React components. I had this idea after I felt disappointed by other modules that are supposed to deliver React and Redux data-binding for firebase. Don't get me wrong, I really liked [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase) and the main author, Scott, is working hard on the project, but due to the overwhelming demand for basic features, advanced features that would not just easily provide data but also ensures that it does the least amount of overhead to get that data (both in terms of performance and loc) were missing.
+DBDI (short for DataBinding via Dependency Injection) allows to easily data-bind any `DataProvider` (e.g. a database, file-system, cache etc.) in with React components. I had this idea after I felt disappointed by other modules that are supposed to deliver React and Redux data-binding for firebase. (Don't get me wrong, I really liked [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase) initially and it is a bit of an inspiration for this project. Its main author, Scott, has been working hard on the project. But due to the overwhelming demand for basic features, advanced features that would not just easily provide data but also ensures that it does the least amount of overhead to get that data (both in terms of performance and loc) were missing.)
 
-Data-binding is done via [ES6 proxies](https://ponyfoo.com/articles/es6-proxies-in-depth): A customized `render` function receives several proxies to easily access data nodes that have been defined on the data tree that is provided in the current context.
+Data-binding in DBDI is done via [ES6 proxies](https://ponyfoo.com/articles/es6-proxies-in-depth): A customized `render` function receives several proxies to easily access data nodes that have been defined on the data tree that is provided via React context.
 
 DBDI currently supports two kinds of `DataProviders`:
 
 1. [FirebaseDataProvider](https://github.com/Domiii/project-empire/blob/master/src/dbdi/firebase/FirebaseDataProvider.js) provides CRUD for a firebase backend.
-1. [MemoryDataProvider](https://github.com/Domiii/project-empire/blob/master/src/dbdi/dataProviders/MemoryDataProvider.js) stores data in a JS object. This kind of data will be gone when page is reloaded and is mostly used as a way to cache data for any sort of remote API, using `fetch` in the tree definition.
+1. [MemoryDataProvider](https://github.com/Domiii/project-empire/blob/master/src/dbdi/dataProviders/MemoryDataProvider.js) stores data in a JS object. This kind of data will be gone when page is reloaded. It is mostly used as a cache for remote APIs, which can be called in the asynchronously treated `fetch` function in the tree definition.
 
 WARNING: Since only I currently use this for my own application prototypes, there is not quite a lot of documentation or testing in it YET.
 
 
 The idea is simple:
 
-1. Create a backend access configuration with a tree-like structure (`DataSourceTree`) of data accessors (functions that [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) (create, read, update, delete) data).
+1. Create a backend access configuration in form of a tree (`DataSourceTree`) of data accessors (functions that [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) (create, read, update, delete) data).
 
-2. Inject that configuration into any React component and it's entire sub-tree (via React context).
+1. Easily make use of any data accessor (reader or writer) by name in any `render` function or `functional component`.
 
-3. Easily make use of any data accessor (reader or writer) by name in any `render` function or `functional component`.
-
-4. Let `dbdi` take care of all data loading, view refreshing and dependency management automatically (but with options to customize).
+1. Let `dbdi` take care of all data loading, view refreshing and dependency management automatically (but with options to customize). It also injects a nicely wrapped version of the data access tree into any React component and it's entire sub-tree (via React context).
 
 
 # Basic Example
