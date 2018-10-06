@@ -26,16 +26,7 @@ The idea is simple:
 
 # Basic Example
 
-Given a tree containing a `currentUser` node with two data children `name` and `age`, we can render and manipulate data like in the following example.
-NOTES:
-
-1. `update_currentUser`, `currentUser_isLoaded` and many other utility accessors are automatically created and provided.
-1. Data definitions can also contain variables (most commonly used for `ids`) which can also be easily provided by name to a call to the giving data reader.
-1. If the data is defined on a remote `DataProvider` (e.g. the `FirebaseDataProvider`), then initially `currentUser_isLoaded` will return false and `currentUser` is null. However trying to read any data will automatically start reading from the remote end, and the component will be re-rendered once the data arrived.
-1. Since `firebase` is a real-time database, `dbdi` (via the `@dataBind` decorator) conviniently listens for any changes to any data that has been accessed for as long as the component that requested the data is still mounted. The event listener will be removed and data unloaded on unmount.
-1. Unlike other modules I tried, `dbdi` will only ever load and listen on any data path once, no matter how many components access it, thereby reducing some overhead. (In early tests, IIRC, I found that `firebase`' [Reference.on("value", ...)](https://firebase.google.com/docs/reference/js/firebase.database.Reference#on) data listener would fetch remote data multiple times when called in quick succession, triggered by different components.)
-1. DBDI also provides "fetch and cache" which, when used with the `MemoryDataProvider` can allow for actually data-binding any remote API. The [YtResourceModel's `ytMyChannels`](https://github.com/Domiii/project-empire/blob/aac9dfbe6d22b2f9495af927e6107cacc88b1c80/src/core/multimedia/youtube/YtResourceModel.js#L32) data node gives an example of how to easily fetch YouTube data through the YouTube API which gets cached automatically and is then also available through the same data injection schema as any other data.
-1. There are many more features, including simple plugins (e.g. the `updatedAt` and `createdAt` `onWrite` plugins) and basic many-to-many relationships (still in development).
+Given a tree containing a `currentUser` node with two data children `name` and `age`, we can render and manipulate data like in the following example:
 
 
 ```js
@@ -117,18 +108,28 @@ export default class ProfilePage extends Component {
 }
 ```
 
+## Basic Example NOTES
+
+1. `update_currentUser`, `currentUser_isLoaded` and many other utility accessors are automatically created and provided.
+1. Data definitions can also contain variables (most commonly used for `ids`) which can also be easily provided by name to a call to the giving data reader.
+1. If the data is defined on a remote `DataProvider` (e.g. the `FirebaseDataProvider`), then initially `currentUser_isLoaded` will return false and `currentUser` is null. However trying to read any data will automatically start reading from the remote end, and the component will be re-rendered once the data arrived.
+
+
 TODO: Many more detailed required.
 
 
 
-# More about the DataSourceTree
+# More Implementation Notes
 
-TODO
+1. Since `firebase` is a real-time database, `dbdi` (via the `@dataBind` decorator) conviniently listens for any changes to any data that has been accessed for as long as the component that requested the data is still mounted. The event listener will be removed and data unloaded on unmount.
+1. Unlike other modules I tried, `dbdi` will only ever load and listen on any data path once, no matter how many components access it, thereby reducing some overhead. (In early tests, IIRC, I found that `firebase`' [Reference.on("value", ...)](https://firebase.google.com/docs/reference/js/firebase.database.Reference#on) data listener would fetch remote data multiple times when called in quick succession, triggered by different components.)
+1. There are many more features, including simple plugins (e.g. the `updatedAt` and `createdAt` `onWrite` plugins) and basic many-to-many relationships (still in development).
 
 
 # Advanced Example
 
-The [DataRelationshipGraph test](https://github.com/Domiii/project-empire/blob/master/src/dbdi/__tests__/DataRelationshipGraph.test.js) shows some parts of how many-to-many relationships should work (close to feature-complete).
+1. DBDI also provides "fetch and cache", which, when used in `MemoryDataProvider` nodes, can allow for data-binding any remote API. The [YtResourceModel's `ytMyChannels`](https://github.com/Domiii/project-empire/blob/aac9dfbe6d22b2f9495af927e6107cacc88b1c80/src/core/multimedia/youtube/YtResourceModel.js#L32) data node gives an example of how to easily fetch YouTube data through the YouTube API which, thanks to DBDI, gets cached automatically and is available through the same data injection schema as any other data.
+1. The [DataRelationshipGraph test](https://github.com/Domiii/project-empire/blob/master/src/dbdi/__tests__/DataRelationshipGraph.test.js) shows some parts of how many-to-many relationships should work (close to feature-complete).
 
 
 # Unsorted notes
