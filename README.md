@@ -4,7 +4,7 @@ I use this in my classes to easily record, manage and upload arbitrary amounts o
 
 Features include:
 * Google login
-* Create lists of scheduled presentations
+* Manage lists of scheduled presentations
 * Automatically start, pause, resume and finish recordings and move through your list at the click of a button
 * YouTube integration: Upload all videos to YouTube and add them to a given playlist at the click of a button
 * Real-time status updates
