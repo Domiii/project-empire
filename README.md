@@ -1,5 +1,6 @@
-A prototype for a classroom presentation management system.
-I use it in my classes to easily record, manage and upload student presentation videos.
+# Classroom Presentation Management System
+
+I use this in my classes to easily record, manage and upload arbitrary amounts of student presentation videos.
 
 Features include:
 * Google login
