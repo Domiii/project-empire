@@ -1,4 +1,23 @@
-## 緊急的事情
+# Classroom Presentation Management System
+
+I use this in my classes to easily record, manage and upload arbitrary amounts of student presentation videos.
+
+Features include:
+* Google login
+* Manage lists of scheduled presentations
+* Automatically start, pause, resume and finish recordings and move through your list at the click of a button
+* YouTube integration: Upload all videos to YouTube and add them to a given playlist at the click of a button
+* Real-time status updates
+* Multi-cohort support (crude)
+* ... and more
+
+Uses React, Firebase, Bootstrap and (my own) DBDI (data-binding by dependency injection).
+
+Snapshot from an early version shows a presentation list that is currently live (presenting in progress or about to start):
+
+![](https://rawcdn.githack.com/Domiii/project-empire/dbb7cf18875f876c0f1d78d9fb8fcadf07900e9a/pe-screen.png)
+
+## TODO for Domi
 * data by cohort
 * user registration with cohort consideration
 * make relationships work
@@ -41,8 +60,6 @@
 ## TODO: Basics
 * Basic user management
     * Add new option: auto-registering of new users can be turned on + off (for short periods of time)
-        * -> Turn on next Friday
-        * annoying to test this -> consider doing some automated testing here
     * presentation <-> user name matching
       -> match user name to actual (but unregistered) user via admin interface
     * User table
@@ -65,8 +82,7 @@
 
 * External mic support
     * 沒有麥克風的時候，要收動叫系統切換 audio input
-    * can I detect when a multimedia device is gone?
-        * or poll continuously?
+    * can I detect when a multimedia device is gone or do we have to long-poll?
     * change to default when gone
         * restore when available again?
 
