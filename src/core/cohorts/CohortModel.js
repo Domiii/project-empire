@@ -3,20 +3,6 @@ import size from 'lodash/size';
 import { EmptyObject } from 'src/util';
 import { NOT_LOADED } from '../../dbdi/react';
 
-/**
- * Cohort data
- */
-const cohortsById = {
-  path: '$(cohortId)',
-  onWrite: [
-    'updatedAt',
-    'createdAt'
-  ],
-  children: {
-    cohortName: 'name',
-    cohortDescription: 'description'
-  }
-};
 
 const readers = {
   currentCohortId(
@@ -69,7 +55,17 @@ export default {
       cohortList: {
         path: 'list',
         children: {
-          cohortsById
+          cohortsById: {
+            path: '$(cohortId)',
+            onWrite: [
+              'updatedAt',
+              'createdAt'
+            ],
+            children: {
+              cohortName: 'name',
+              cohortDescription: 'description'
+            }
+          }
         }
       },
       // cohortUsers: {

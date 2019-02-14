@@ -2,7 +2,7 @@ import map from 'lodash/map';
 import flatten from 'lodash/flatten';
 import isArray from 'lodash/isArray';
 
-import gapi from 'resources/gapi.js';
+//import gapi from 'resources/gapi.js';
 
 import getFirebaseConfig, {
   OauthClientId

@@ -1,7 +1,7 @@
 import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
 
-import gapi from 'resources/gapi.js';
+//import gapi from 'resources/gapi.js';
 
 // #########################################################################################
 //
@@ -337,8 +337,15 @@ export default class MediaUploader {
           setTimeout(this.pollVideoStatus_, STATUS_POLLING_INTERVAL_MILLIS);
         }
         else {
-          const uploadStatus = response.items[0].status.uploadStatus;
+          console.log('video upload status update:', response);
+          if (!response.items || !response.items.length) {
+            setTimeout(this.pollVideoStatus_, STATUS_POLLING_INTERVAL_MILLIS);
+            return;
+          }
+
+          debugger;
           const res = response.items[0];
+          const uploadStatus = res.status.uploadStatus;
           //console.log('pollVideoStatus_ RES', res);
           switch (uploadStatus) {
             // This is a non-final status, so we need to poll again.
