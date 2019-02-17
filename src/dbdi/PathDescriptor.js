@@ -169,4 +169,8 @@ export default class PathDescriptor extends DataDescriptorNode {
     
     return path;
   }
+
+  toString() {
+    return this.config.pathTemplate;
+  }
 }

@@ -42,7 +42,7 @@ function addDefaultPlugins(plugins) {
 export default function buildSourceTree(dataProviders, dataStructureCfgRaw, plugins) {
   plugins = plugins || {};
 
-  //addDefaultPlugins(plugins);
+  addDefaultPlugins(plugins);
 
   const tree = new DataSourceTree(dataProviders, dataStructureCfgRaw, plugins);
   tree._buildTree();
@@ -127,6 +127,14 @@ class DataSourceTree {
         '(' + Object.keys(this._root._writeDescendants).join(', ') + ')');
     }
     return node;
+  }
+
+  getAllReaderNames() {
+    return Object.keys(this._root._readDescendants);
+  }
+
+  getAllWriterNames() {
+    return Object.keys(this._root._writeDescendants);
   }
 
   _notifyPlugins(type, ...args) {
@@ -225,15 +233,30 @@ class DataSourceTree {
     // add relationships and do other plugin stuff
     this._notifyTreeBuilt();
 
-    // // we need to compress a second time because plugins (such as DataRelationshipGraph) might have added new nodes that are yet compressed
-    // this._compressHierarchy(this._root);
+    // we need to compress a second time because plugins (such as DataRelationshipGraph) 
+    //    might have added new nodes that are yet compressed
+    this._compressHierarchy(this._root);
   }
 
   _addSpecialNodes() {
     this.addChildrenToRoot({
+      // special node: get instance of the tree itself
       _tree: {
         reader: () => {
           return this;
+        }
+      },
+
+      _rawDataProviderAction: {
+        writer: ({dataProvider: dataProviderName, action, remotePath, val}) => {
+          const dataProvider = this._dataProviders[dataProviderName];
+          if (!dataProvider) {
+            throw new Error('invalid dataProviderName: ' + dataProviderName);
+          }
+          if (!dataProvider.actions[action]) {
+            throw new Error('invalid actionName: ' + action);
+          }
+          return dataProvider.actions[action](remotePath, val);
         }
       }
     });

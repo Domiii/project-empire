@@ -15,7 +15,8 @@ import uuid from 'uuid/v1';
 
 import {
   getDataIn,
-  setDataIn
+  setDataIn,
+  getAllAncestorNodesInPath
 } from '../PathUtil';
 
 export default class MemoryDataProvider extends DataProviderBase {
@@ -57,15 +58,22 @@ export default class MemoryDataProvider extends DataProviderBase {
   }
 
   _onWrite(action, remotePath, val) {
-    //console.log('W [', action, remotePath, '] ', val);
+    console.log('W [', action, remotePath, '] ', val);
 
-    // local and remote path are equal for the MemoryDataProvider (for now)
+    // NOTE: local and remote path are equal for the MemoryDataProvider (for now)
     const query = this.getOrCreateQuery(remotePath);
-
-    // NOTE: if query object does not exist, it means, no listener has been registered on this path yet
-
-    // TOOD: propagate to all ancestors that have listeners (Firebase does this, too)
     this.notifyNewData(query, val);
+
+    // TODO: untested
+
+    // propagate to all ancestors that have listeners (Firebase does this, too)
+    for (let path of getAllAncestorNodesInPath(remotePath)) {
+      const query = this.getOrCreateQuery(path);
+      const { localPath } = query;
+      const val = getDataIn(this._cache, localPath);
+      this.notifyNewData(query, val);
+    }
+    
     return true;
   }
 

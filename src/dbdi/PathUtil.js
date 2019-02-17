@@ -194,10 +194,36 @@ export function getPathParent(path) {
     path = path.substring(0, path.length-1);
   }
 
+  if (!path) return null;
+
   const idx = path.lastIndexOf('/');
   if (idx < 0) {
-    return null;
+    // root path
+    return '';
   }
 
   return path.substring(0, idx);
+}
+
+export function* getAllNodesInPath(path) {
+  while (path.startsWith('/')) {
+    path = path.substring(1);
+  }
+  yield path;
+  if (path) {
+    yield * getAllAncestorNodesInPath(path);
+  }
+}
+
+export function* getAllAncestorNodesInPath(path) {
+  while (path.startsWith('/')) {
+    path = path.substring(1);
+  }
+
+  while ((path = getPathParent(path))) {
+    yield path;
+  }
+
+  // yield root
+  yield '';
 }

@@ -48,6 +48,9 @@ s
   _buildDataInjectProxyHandler() {
     return {
       get: (target, name) => {
+        if (name === 'toJSON') {
+          return null;
+        }
         // if (name in specialProxyProperties) {
         //   return specialProxyProperties[name](target);
         // }
@@ -65,12 +68,18 @@ s
         return !!fn;
       },
 
-      enumerate() {
-        throw new Error('[NYI] cannot enumerate "Inject" proxy (yet)');
+      enumerate: () => {
+        return this._dataSourceTree.getAllReaderNames();
+        //throw new Error('[NYI] cannot enumerate "Inject" proxy (yet)');
       },
 
-      ownKeys() {
-        throw new Error('[NYI] cannot enumerate "Inject" proxy (yet)');
+      ownKeys: () => {
+        return this._dataSourceTree.getAllReaderNames();
+        //throw new Error('[NYI] cannot enumerate "Inject" proxy (yet)');
+      },
+
+      [Symbol.iterator]: (target) => {
+        return this._dataSourceTree.getAllReaderNames();
       }
     };
   }
@@ -78,6 +87,9 @@ s
   _buildReaderProxyHandler() {
     return {
       get: (target, name) => {
+        if (name === 'toJSON') {
+          return null;
+        }
         // if (name in specialProxyProperties) {
         //   return specialProxyProperties[name](target);
         // }
@@ -95,12 +107,18 @@ s
         return !!fn;
       },
 
-      enumerate() {
-        throw new Error('[NYI] cannot enumerate "Reader" proxy (yet)');
+      enumerate: () => {
+        return this._dataSourceTree.getAllReaderNames();
+        //throw new Error('[NYI] cannot enumerate "Reader" proxy (yet)');
       },
 
-      ownKeys() {
-        throw new Error('[NYI] cannot enumerate "Reader" proxy (yet)');
+      ownKeys: () => {
+        return this._dataSourceTree.getAllReaderNames();
+        //throw new Error('[NYI] cannot enumerate "Reader" proxy (yet)');
+      },
+
+      [Symbol.iterator]: (target) => {
+        return this._dataSourceTree.getAllReaderNames();
       }
     };
   }
@@ -125,12 +143,18 @@ s
         return !!fn;
       },
 
-      enumerate() {
-        throw new Error('[NYI] cannot enumerate "Writer" proxy (yet)');
+      enumerate: () => {
+        return this._dataSourceTree.getAllWriterNames();
+        //throw new Error('[NYI] cannot enumerate "Writer" proxy (yet)');
       },
 
-      ownKeys() {
-        throw new Error('[NYI] cannot enumerate "Writer" proxy (yet)');
+      ownKeys: () => {
+        return this._dataSourceTree.getAllWriterNames();
+        //throw new Error('[NYI] cannot enumerate "Writer" proxy (yet)');
+      },
+
+      [Symbol.iterator]: (target) => {
+        return this._dataSourceTree.getAllWriterNames();
       }
     };
   }
@@ -153,11 +177,11 @@ s
       return target.hasOwnProperty(name);
     },
 
-    enumerate(target) {
+    enumerate: (target) => {
       return Object.keys(target);
     },
 
-    ownKeys(target) {
+    ownKeys: (target) => {
       return Object.keys(target);
     }
   };

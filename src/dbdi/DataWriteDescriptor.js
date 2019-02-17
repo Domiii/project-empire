@@ -1,6 +1,7 @@
 import isFunction from 'lodash/isFunction';
 import isArray from 'lodash/isArray';
 import isEmpty from 'lodash/isEmpty';
+import isString from 'lodash/isString';
 
 import { EmptyObject } from 'src/util';
 import autoBind from 'src/util/auto-bind';
@@ -141,18 +142,20 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
 
   _doGetPath(pathDescriptor, args, readerProxy, injectProxy, callerNode, accessTracker) {
     const pathOrPaths = pathDescriptor.getPath(args, readerProxy, injectProxy, callerNode, accessTracker);
-
-    if (pathOrPaths) {
-      if (isArray(pathOrPaths)) {
-        throw new Error('');
-      }
-      else {
+    
+    if (pathOrPaths !== undefined) {
+      if (isString(pathOrPaths)) {
         const path = pathOrPaths;
         return path;
       }
+      else { //if (isArray(pathOrPaths)) {
+        throw new Error('[NYI] pathOrPaths must be (but is not) string. PathDescriptor broken?');
+      }
     }
 
-    throw new Error('Tried to write to path but not all arguments were provided: ' + this._name);
+    throw new Error('Tried to write to path but not all arguments were provided: ' + 
+      this._name + ' - ' +
+        ' - ' + JSON.stringify(args) + ' vs. ' + JSON.stringify(pathDescriptor.config));
   }
 
   
@@ -217,11 +220,15 @@ export default class DataWriteDescriptor extends DataDescriptorNode {
     }
 
     // custom write hooks
-    const originalVal = dataProvider.readData(queryInput);
-    this.onWrite && this.onWrite(queryArgs, val, originalVal, this.actionName, 
-        readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
+    // TODO: Call on child nodes as well
+    if (this.onWrite) {
+      const originalVal = dataProvider.readData(queryInput);
+      this.onWrite(queryArgs, val, originalVal, this.actionName, 
+          readerProxy, injectProxy, writerProxy, callerNode, accessTracker);
+    }
 
     // perform write action
+    //console.warn(this.actionName, queryInput);
     return dataProvider.actions[this.actionName](queryInput, val);
   }
 }

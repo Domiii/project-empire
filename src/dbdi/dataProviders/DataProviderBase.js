@@ -10,7 +10,8 @@ import { EmptyObject, EmptyArray, waitAsync } from 'src/util';
 import {
   getDataIn,
   setDataIn,
-  getPathParent
+  getPathParent,
+  getAllNodesInPath
 } from '../PathUtil';
 
 export const NOT_LOADED = undefined;
@@ -70,13 +71,11 @@ export default class DataProviderBase {
     }
 
     if (localPath === remotePath) {
-      let path = remotePath;
-      do {
-        path = getPathParent(path);
+      for (let path in getAllNodesInPath(remotePath)) {
         if (this.isDataLoaded(path)) {
           return true;
         }
-      } while (path);
+      }
       return false;
     }
     else {
@@ -205,6 +204,7 @@ export default class DataProviderBase {
     if (!listeners) {
       // first time, anyone is showing interest in this path
       this._listenersByPath[localPath] = listeners = new Set();
+
       // if not already listening on path, register!
       //console.warn(who, '[onPathListenStart]', localPath);
 
@@ -343,9 +343,10 @@ export default class DataProviderBase {
     }
 
     const { localPath } = query;
+
     const val = getDataIn(this._cache, localPath, NOT_LOADED);
 
-    //console.log('READ [', queryInput, ']', this._loadState[query.localPath], val);
+    console.log('READ [', queryInput, ']', this._loadState[query.localPath], val);
 
     if (this.isDataFullyAvailable(query)) {
       if (val !== NOT_LOADED) {
@@ -356,6 +357,12 @@ export default class DataProviderBase {
       }
     }
     else {
+      if (val !== NOT_LOADED && val !== null) {
+        // TODO: i forgot the use-case for this, but I'm sure it would break something if we removed it
+        console.warn('data vailable but not "fully" available:', queryInput, ' - ', val);
+        return val;
+        //throw new Error('data vailable but not "fully" available - returning null: ' + queryInput + ' - ' + val);
+      }
       return NOT_LOADED;
     }
   }
@@ -369,12 +376,18 @@ export default class DataProviderBase {
 
   _notifyListeners(query) {
     const { localPath } = query;
+
     // notify all listeners
-    const listeners = this.getListeners(localPath) || EmptyArray;
+    let listeners = this.getListeners(localPath);
+    console.assert(!listeners || listeners instanceof Set, '[BUG] listeners is not a set at path = ' + localPath);
+    listeners = listeners || EmptyArray;
 
     // listeners will get called once per path
     //setTimeout(() => 
-    listeners.forEach(listener => listener(query));
+
+    for (const l of listeners) {
+      l(query);
+    }
   }
 
   // #################################################################################################

@@ -59,6 +59,6 @@
 
 // });
 
-// it('should support immediate (synchronous) fetch', async () => {
+it('should support immediate (synchronous) fetch', async () => {
 
-// });
+});

@@ -205,24 +205,30 @@ function getIdNameFromPathTemplate(pathTemplate) {
  * 
  * TODO: does not currently work when using paths of different dataProviders.
  */
-async function batchUpdate(args, writers, generateUpdates) {
-  let _batchedUpdates = getOptionalArgument(args, '_batchedUpdates');
-  const isFirstOnStack = !_batchedUpdates;
-  if (isFirstOnStack) {
-    // inject new _batchedUpdates object
-    _batchedUpdates = {};
-    args = { ...args, _batchedUpdates };
-  }
+async function batchUpdate(args, writers, dataProvider, generateUpdates) {
+  // let _batchedUpdates = getOptionalArgument(args, '_batchedUpdates');
+  // const isFirstOnStack = !_batchedUpdates;
+  // if (isFirstOnStack) {
+  //   // inject new _batchedUpdates object
+  //   _batchedUpdates = {};
+  //   args = { ...args, _batchedUpdates };
+  // }
 
   // collect updates (possibly recursively)
   const newUpdates = await generateUpdates(args);
-  Object.assign(_batchedUpdates, newUpdates);
+  //Object.assign(_batchedUpdates, newUpdates);
 
-  if (isFirstOnStack) {
+  //if (isFirstOnStack) {
     // actually send out the updates
-    return await writers.update_db(_batchedUpdates);
-  }
-  return _batchedUpdates;
+    const writeArgs = {
+      dataProvider,
+      action: 'update',
+      remotePath: '',
+      val: newUpdates
+    };
+    return await writers._rawDataProviderAction(writeArgs);
+  // }
+  // return _batchedUpdates;
 }
 
 /**
@@ -230,19 +236,35 @@ async function batchUpdate(args, writers, generateUpdates) {
  * Many2many relationships will add these once for each direction.
  */
 const basicDataModelGenerators = {
-  hasMany(n) {
+  hasMany(n, dataProvider, cfg) {
     return {
       children: {
         [n.aIdsOfBs]: {
           path: n.aIdsOfBs,
           children: {
             [n.aIdsOfB]: {
-              path: pathForVar(n.aId),
+              path: pathForVar(n.bId),
               reader(res) {
-                return res === null ? EmptyObject : res;
+                if (res === null) {
+                  return EmptyObject;
+                }
+                if (res === NOT_LOADED) {
+                  return res;
+                }
+                console.assert(isPlainObject(res));
+
+                // this is an object of shape: {
+                //  id1: 1,
+                //  id2: null,
+                //  id3: 1
+                // }
+                // NOTE: value might be null!
+                //    indicating, the relationship got removed.
+                const keys = Object.keys(res).filter(k => res[k]);
+                return keys;
               },
               children: {
-                [n.aIdOfB]: pathForVar(n.bId)
+                [n.aIdOfB]: pathForVar(n.aId)
               }
             }
           }
@@ -251,13 +273,13 @@ const basicDataModelGenerators = {
 
       readers: {
         [n.asOfB](args, readers) {
-          const objs = readers[n.aIdsOfB](args);
-          if (objs === NOT_LOADED) {
+          const ids = readers[n.aIdsOfB](args);
+          if (ids === NOT_LOADED) {
             return NOT_LOADED;
           }
-          return mapValues(
-            objs || EmptyObject,
-            (_, id) => readers[n.a]({ [n.aId]: id })
+          return zipObject(
+            ids || EmptyArray,
+            ids.map(id => readers[n.a]({ [n.aId]: id }))
           );
         },
 
@@ -353,7 +375,7 @@ const specializedDataModelGenerators = {
   /**
    * Only one-to-many relationships have these data model nodes
    */
-  oneToMany(n, cfg) {
+  oneToMany(n, dataProvider, cfg) {
     return {
       children: {
       },
@@ -361,7 +383,7 @@ const specializedDataModelGenerators = {
       },
       writers: {
         async [n.addAToB](args, readers, injected, writers) {
-          return await batchUpdate(args, writers, async (args) => {
+          return await batchUpdate(args, writers, dataProvider, async (args) => {
             return {
               [readers[n.aIdOfB].getPath(args)]: 1
             };
@@ -369,7 +391,7 @@ const specializedDataModelGenerators = {
         },
 
         async [n.deleteAFromB](args, readers, injected, writers) {
-          return await batchUpdate(args, writers, async (args) => {
+          return await batchUpdate(args, writers, dataProvider, async (args) => {
             return {
               [readers[n.aIdOfB].getPath(args)]: null
             };
@@ -377,7 +399,7 @@ const specializedDataModelGenerators = {
         },
 
         async [n.deleteAllAsFromB](args, readers, injected, writers) {
-          return await batchUpdate(args, writers, async (args) => {
+          return await batchUpdate(args, writers, dataProvider, async (args) => {
             throw new Error('NYI');
             // TODO!
             // return {
@@ -388,7 +410,7 @@ const specializedDataModelGenerators = {
 
         // handles the "b hasMany a" case
         async [n.deleteB](args, readers, injected, writers) {
-          return await batchUpdate(args, writers, async (args) => {
+          return await batchUpdate(args, writers, dataProvider, async (args) => {
             const updates = {};
             if (cfg.aBelongsToB) {
               const aIds = await readers[n.aIdsOfB].readAsync(args) || EmptyObject;
@@ -422,12 +444,12 @@ const specializedDataModelGenerators = {
    * @param {*} n1 Names for b-hasMany-a relationship
    * @param {*} n2 Names for a-hasMany-b relationship (effectively reversing meaning of a + b)
    */
-  manyToMany(n1, n2, cfg) {
+  manyToMany(n1, n2, dataProvider, cfg) {
     const genDeleteB = (n1, n2) => {
       return async (args, readers, injected, writers) => {
         const aIds = await readers[n1.aIdsOfB].readAsync(args) || EmptyObject;
 
-        return await batchUpdate(args, writers, async (args) => {
+        return await batchUpdate(args, writers, dataProvider, async (args) => {
           // remove b from all it's a's
           const updates = zipObject(
             map(aIds, aId => readers[n2.aIdOfB].getPath({
@@ -447,7 +469,7 @@ const specializedDataModelGenerators = {
     };
 
     const connectAB = async (args, readers, injected, writers) => {
-      return await batchUpdate(args, writers, async (args) => {
+      return await batchUpdate(args, writers, dataProvider, async (args) => {
         // add a to b and b to a
         return {
           [readers[n1.aIdOfB].getPath(args)]: 1,
@@ -457,7 +479,7 @@ const specializedDataModelGenerators = {
     };
 
     const disconnectAB = async (args, readers, injected, writers) => {
-      return await batchUpdate(args, writers, async (args) => {
+      return await batchUpdate(args, writers, dataProvider, async (args) => {
         // remove a of b and b of a
         return {
           [readers[n1.aIdOfB].getPath(args)]: null,
@@ -591,7 +613,7 @@ class BHasManyARelationship extends Relationship {
 
     return {
       dataProvider,
-      ...basicDataModelGenerators.hasMany(n, this.cfg)
+      ...basicDataModelGenerators.hasMany(n, dataProvider, this.cfg)
     };
   }
 
@@ -655,7 +677,7 @@ class ManyToManyRelationship extends Relationship {
     return merge({},
       this.bHasManyA.buildConfigEntry(),
       this.aHasManyB.buildConfigEntry(),
-      specializedDataModelGenerators.manyToMany(n1, n2, this.cfg)
+      specializedDataModelGenerators.manyToMany(n1, n2, this.dataProvider, this.cfg)
     );
   }
 
@@ -901,7 +923,6 @@ export class DataRelationshipGraph {
       let cfgNode = this._getOrCreateConfigNodeForRelationship(rel);
       cfgNode.path = rel.relationshipName;
       merge(cfgNode, rel.buildConfigEntry());
-      console.log(cfgNode);
     });
   }
 
@@ -917,7 +938,7 @@ export function DataRelationshipPlugin(tree) {
   graph._buildGraph();
 
   // when finished building, add to tree!
-  console.warn(graph.relationshipDataConfig);
+  //console.warn(graph.relationshipDataConfig);
   tree.addChildToRoot('_relationships', graph.relationshipDataConfig);
 
   return graph;
