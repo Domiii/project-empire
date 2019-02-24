@@ -9,7 +9,7 @@ import filesize from 'filesize';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
 
 import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/LoadIndicator';

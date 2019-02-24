@@ -14,7 +14,7 @@ import PropTypes from 'prop-types';
 
 import autoBind from 'react-autobind';
 
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
 
 import {
   Panel, Button, ListGroup, ListGroupItem, Alert, Badge

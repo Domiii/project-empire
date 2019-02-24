@@ -1,7 +1,7 @@
 import size from 'lodash/size';
 
 import { EmptyObject } from 'src/util';
-import { NOT_LOADED } from '../../dbdi/react';
+import { NOT_LOADED } from 'dbdi/react';
 
 
 const readers = {

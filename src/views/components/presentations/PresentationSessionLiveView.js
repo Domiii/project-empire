@@ -4,7 +4,8 @@ import { Redirect } from 'react-router-dom';
 import PresentationSessionView from './PresentationSessionView';
 import { hrefPresentationSession } from '../../href';
 import { LoadOverlay } from '../overlays';
-import dataBind, { NOT_LOADED } from '../../../dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
+import { NOT_LOADED } from 'dbdi/util';
 
 
 @dataBind()

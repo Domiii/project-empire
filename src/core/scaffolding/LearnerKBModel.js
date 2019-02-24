@@ -2,7 +2,7 @@ import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
 import groupBy from 'lodash/groupBy';
 
-import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
+import { getOptionalArguments } from 'dbdi/util';
 
 export const LearnerQuestionTypes = {
   Text: 1,

@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
 
 import DynamicForm from 'src/views/tools/DynamicForm';
 import {
   Alert, Button, Jumbotron, Well
 } from 'react-bootstrap';
-import { SimpleGrid, FormInputField, FAIcon } from 'src/views/components/util';
+import { FAIcon } from 'src/views/components/util';
 import { LoadOverlay } from 'src/views/components/overlays';
 
 

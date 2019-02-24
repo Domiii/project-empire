@@ -1,8 +1,8 @@
 import FirebaseDataProvider, {
   FirebaseAuthProvider
-} from 'src/dbdi/firebase/FirebaseDataProvider';
+} from 'dbdi/FirebaseDataProvider';
 
-import MemoryDataProvider from 'src/dbdi/dataProviders/MemoryDataProvider';
+import { MemoryDataProvider } from 'dbdi';
 
 export default {
   firebase: new FirebaseDataProvider(),

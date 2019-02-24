@@ -5,7 +5,7 @@ import zipObject from 'lodash/zipObject';
 import firebase from 'firebase/app';
 import 'firebase/database';
 
-import { NOT_LOADED } from '../../../../dbdi/react';
+import { NOT_LOADED } from 'dbdi/util';
 import { EmptyObject } from '../../../../util';
 
 export default {

@@ -22,8 +22,8 @@ import {
 } from 'react-bootstrap';
 import Flexbox from 'flexbox-react';
 
-import dataBind, { NOT_LOADED } from 'src/dbdi/react/dataBind';
-import { getOptionalArgument, getOptionalArguments } from 'src/dbdi/dataAccessUtil';
+import { dataBind } from 'dbdi/react';
+import { getOptionalArgument, getOptionalArguments, NOT_LOADED } from 'dbdi/util';
 
 import FAIcon from 'src/views/components/util/FAIcon';
 import ImageLoader from 'src/views/components/util/react-imageloader';

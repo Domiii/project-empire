@@ -13,7 +13,7 @@ import forEach from 'lodash/forEach';
 
 
 
-import { NOT_LOADED } from '../../dbdi/react';
+import { NOT_LOADED } from 'dbdi/util';
 import { EmptyObject } from '../../util';
 
 export default {

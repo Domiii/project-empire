@@ -1,9 +1,9 @@
 import some from 'lodash/some';
 
 import { EmptyObject } from '../../util';
-import { NOT_LOADED } from '../../dbdi/react';
+import { NOT_LOADED } from 'dbdi/util';
 
-import { getOptionalArgument } from 'src/dbdi/dataAccessUtil';
+import { getOptionalArgument } from 'dbdi/util';
 
 
 /* globals window */

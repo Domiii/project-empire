@@ -6,7 +6,8 @@ import moment from 'moment';
 
 import React, { Fragment, Component } from 'react';
 import PropTypes from 'prop-types';
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
+import { NOT_LOADED } from 'dbdi/util';
 
 import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
@@ -22,7 +23,6 @@ import Flexbox from 'flexbox-react';
 import VideoPlayer from './VideoPlayer';
 
 import { GapiStatus } from '../../../core/multimedia/youtube/YouTubeAPI';
-import { NOT_LOADED } from '../../../dbdi/react';
 import { VideoUploadStatus } from '../../../core/multimedia/youtube/VideoUploadModel';
 import { isString } from 'util';
 

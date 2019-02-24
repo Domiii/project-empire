@@ -6,14 +6,12 @@ import zipObject from 'lodash/zipObject';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
 
 import {
   Alert, Button, Badge, Well
 } from 'react-bootstrap';
 import Moment from 'react-moment';
-
-//import { NOT_LOADED } from 'src/dbdi/react/dataBind';
 
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
 

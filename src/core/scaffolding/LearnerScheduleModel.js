@@ -6,7 +6,7 @@
  */
 
 import moment from 'moment';
-import { NOT_LOADED } from '../../dbdi/react';
+import { NOT_LOADED } from 'dbdi/util';
 
 const readers = {
   currentScheduleCycleName(

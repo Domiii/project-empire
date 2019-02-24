@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
 
 import {
   Alert, Button, Jumbotron, Well, Panel
@@ -15,7 +15,7 @@ import { LoadOverlay } from 'src/views/components/overlays';
 import DynamicForm from 'src/views/tools/DynamicForm';
 import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
-import { NOT_LOADED } from '../../dbdi';
+import { NOT_LOADED } from 'dbdi/util';
 
 
 export const schemaTemplate = {

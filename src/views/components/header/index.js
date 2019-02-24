@@ -4,7 +4,7 @@ import React, { Component, Fragment as F } from 'react';
 import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
 
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
 
 import { Link } from 'react-router-dom';
 

@@ -1,10 +1,10 @@
 import map from 'lodash/map';
 import size from 'lodash/size';
 
-import { NOT_LOADED } from 'src/dbdi';
+import { NOT_LOADED } from 'dbdi/util';
+import { dataBind } from 'dbdi/react';
 
 import React, { Component } from 'react';
-import dataBind from 'src/dbdi/react/dataBind';
 
 import styled from 'styled-components';
 

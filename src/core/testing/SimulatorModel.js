@@ -2,7 +2,7 @@
 
 import doWait from '../../util/doWait';
 import CancelablePromise from '../../util/CancelablePromise';
-import { getOptionalArguments } from '../../dbdi/dataAccessUtil';
+import { getOptionalArguments } from 'dbdi/util';
 
 let SimulatorModel;
 

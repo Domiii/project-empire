@@ -7,7 +7,7 @@ import isEqual from 'lodash/isEqual';
 import zipObject from 'lodash/zipObject';
 
 import { EmptyObject, EmptyArray } from '../../util';
-import { NOT_LOADED } from '../../dbdi/react';
+import { NOT_LOADED } from 'dbdi/util';
 
 import fs from 'bro-fs';
 import uuid from 'uuid/v1';

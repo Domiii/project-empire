@@ -5,7 +5,7 @@ import size from 'lodash/size';
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
 
 import Moment from 'react-moment';
 import {

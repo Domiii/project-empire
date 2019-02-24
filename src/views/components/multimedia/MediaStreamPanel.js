@@ -6,7 +6,7 @@ import moment from 'moment';
 
 import React, { Fragment, Component } from 'react';
 import PropTypes from 'prop-types';
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
 
 import filesize from 'filesize';
 
@@ -27,7 +27,7 @@ import MediaInputSelect from './MediaInputSelect';
 import { YtMyChannelInfo, YtStatusPanel } from './VideoUploadPanel';
 
 import { MediaStatus } from '../../../core/multimedia/StreamModel';
-import { getOptionalArgument } from '../../../dbdi/dataAccessUtil';
+import { getOptionalArgument } from 'dbdi/util';
 
 
 function log(...args) {

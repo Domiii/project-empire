@@ -1,7 +1,7 @@
 import React, { Component, Fragment as F } from 'react';
 import PropTypes from 'prop-types';
 import { Redirect, withRouter } from 'react-router-dom';
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
 import {
   hrefPresentationSession,
   hrefPresentationSessionView
@@ -21,7 +21,7 @@ import PresentationSessionView from 'src/views/components/presentations/Presenta
 import LiveHeader from 'src/views/components/presentations/LiveHeader';
 import PresentationSessionOperatorView from 'src/views/components/presentations/PresentationSessionOperatorView';
 
-import { NOT_LOADED } from '../../dbdi';
+import { NOT_LOADED } from 'dbdi/util';
 import { LoadOverlay } from 'src/views/components/overlays';
 import styled from 'styled-components';
 

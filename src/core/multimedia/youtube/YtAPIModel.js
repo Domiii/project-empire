@@ -10,8 +10,7 @@ import VideoUploadModel from './VideoUploadModel';
 import VideoUploadQueueModel from './VideoUploadQueueModel';
 import YtResourceModel from './YtResourceModel';
 
-import { NOT_LOADED } from 'src/dbdi/react';
-import { getOptionalArgument } from 'src/dbdi/dataAccessUtil';
+import { getOptionalArgument } from 'dbdi/util';
 
 export default {
   ytApi: {

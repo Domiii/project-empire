@@ -1,7 +1,6 @@
 import {
   sendYtRequest
 } from './YouTubeAPI';
-import { NOT_LOADED } from '../../../dbdi/react';
 
 /**
  * Provide an interface to access/query any YouTube resources

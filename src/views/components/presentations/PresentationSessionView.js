@@ -2,10 +2,10 @@ import size from 'lodash/size';
 import map from 'lodash/map';
 
 import { EmptyObject } from '../../../util';
-import { NOT_LOADED } from 'src/dbdi';
 
 import React, { Component, Fragment as F } from 'react';
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
+import { NOT_LOADED } from 'dbdi/util';
 
 import {
   Panel, Well, Alert, FormControl, Button

@@ -3,7 +3,7 @@ import {
   isProjectStatusOver
 } from 'src/core/projects/ProjectDef';
 
-import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
+import { getOptionalArguments } from 'dbdi/util';
 
 import map from 'lodash/map';
 import isEmpty from 'lodash/isEmpty';
@@ -14,7 +14,7 @@ import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
 import { Redirect, withRouter } from 'react-router-dom';
 
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
 
 import Moment from 'react-moment';
 import {

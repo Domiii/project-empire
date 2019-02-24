@@ -6,7 +6,8 @@ import { EmptyObject, EmptyArray } from '../../../util';
 import filesize from 'filesize';
 
 import React, { Component, Fragment as F } from 'react';
-import dataBind, { NOT_LOADED } from '../../../dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
+import { NOT_LOADED } from 'dbdi/util';
 
 import {
   Button, Alert, Panel, Table, ProgressBar

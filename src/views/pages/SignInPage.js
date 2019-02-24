@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 
-import { signInWithGoogle } from 'src/dbdi/firebase/firebase-util';
+import { signInWithGoogle } from 'dbdi/firebase-util';
 
 import {
   Alert, Button, Well, Panel

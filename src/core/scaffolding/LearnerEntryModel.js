@@ -3,7 +3,6 @@ import mapValues from 'lodash/mapValues';
 import groupBy from 'lodash/groupBy';
 import zipObject from 'lodash/zipObject';
 
-import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 import { EmptyObject } from '../../util/miscUtil';
 
 const readers = {

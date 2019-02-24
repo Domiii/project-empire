@@ -99,6 +99,7 @@ config.plugins = [
 if (ENV_DEVELOPMENT || ENV_PRODUCTION) {
   config.entry = {
     main: ['./src/main.js']
+    //main: ['./src/test.js']
   };
 
   config.output = {
@@ -128,8 +129,7 @@ if (ENV_DEVELOPMENT) {
   config.entry.main.unshift(
     `webpack-dev-server/client?http://${HOST}:${PORT}`,
     'webpack/hot/only-dev-server',
-    'react-hot-loader/patch',
-    'babel-polyfill'
+    'react-hot-loader/patch'
   );
 
   config.module = {

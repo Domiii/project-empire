@@ -10,7 +10,8 @@ import Roles, { hasRole } from 'src/core/users/Roles';
 
 import React, { Component, Fragment as F } from 'react';
 import PropTypes from 'prop-types';
-import dataBind, { NOT_LOADED } from '../../../dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
+import { NOT_LOADED } from 'dbdi/util';
 
 import autoBind from 'react-autobind';
 

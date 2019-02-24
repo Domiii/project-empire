@@ -10,7 +10,7 @@ import PropTypes from 'prop-types';
 //   Panel, Button, Alert, Well
 // } from 'react-bootstrap';
 
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
 
 import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/LoadIndicator';

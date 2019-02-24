@@ -1,5 +1,5 @@
 import React, { Component, Fragment as F } from 'react';
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
 
 import {
   Panel, Well, Alert

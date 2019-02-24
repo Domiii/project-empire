@@ -10,7 +10,7 @@ import Flexbox from 'flexbox-react';
 
 import { EmptyObject } from 'src/util';
 
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
 import UserIcon from 'src/views/components/users/UserIcon';
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
 

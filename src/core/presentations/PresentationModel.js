@@ -9,7 +9,7 @@ import times from 'lodash/times';
 import constant from 'lodash/constant';
 import findIndex from 'lodash/findIndex';
 
-import { NOT_LOADED } from '../../dbdi/react/dataBind';
+import { NOT_LOADED } from 'dbdi/util';
 
 export const PresentationStatus = {
   Pending: 1,

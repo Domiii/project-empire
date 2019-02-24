@@ -4,7 +4,8 @@ import mapValues from 'lodash/mapValues';
 
 
 import React, { Component } from 'react';
-import dataBind, { NOT_LOADED } from '../../../dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
+import { NOT_LOADED } from 'dbdi/util';
 
 import {
   Button, Alert, Panel

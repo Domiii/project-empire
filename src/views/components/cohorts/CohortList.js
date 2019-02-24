@@ -8,7 +8,7 @@ import isEmpty from 'lodash/isEmpty';
 import size from 'lodash/size';
 
 import React from 'react';
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
 
 import {
   ListGroup, ListGroupItem, Panel, Well, Alert

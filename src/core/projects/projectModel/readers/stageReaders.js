@@ -16,7 +16,7 @@ import {
 } from 'src/core/projects/ProjectPath';
 
 import { EmptyObject, EmptyArray } from 'src/util';
-import { getOptionalArgument, getOptionalArguments } from 'src/dbdi/dataAccessUtil';
+import { getOptionalArgument, getOptionalArguments } from 'dbdi/util';
 
 import map from 'lodash/map';
 import sortBy from 'lodash/sortBy';

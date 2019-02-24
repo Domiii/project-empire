@@ -5,7 +5,7 @@ import isPlainObject from 'lodash/isPlainObject';
 
 import { EmptyObject } from 'src/util';
 
-import { NOT_LOADED } from 'src/dbdi/react/dataBind';
+import { NOT_LOADED } from 'dbdi/util';
 
 
 export const goalSchemaTemplate = {

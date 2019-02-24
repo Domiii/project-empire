@@ -8,7 +8,7 @@ import PropTypes from 'prop-types';
 import autoBind from 'react-autobind';
 import Flexbox from 'flexbox-react';
 
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
 
 import Header from './components/header';
 import { FAIcon } from 'src/views/components/util';

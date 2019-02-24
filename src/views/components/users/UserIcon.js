@@ -2,7 +2,7 @@ import isNumber from 'lodash/isNumber';
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
 
 import ImageLoader from 'src/views/components/util/react-imageloader';
 import LoadIndicator from 'src/views/components/util/LoadIndicator';

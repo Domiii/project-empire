@@ -4,11 +4,10 @@ import {
 } from 'src/core/projects/ProjectDef';
 
 import { EmptyObject } from 'src/util';
-import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
 
 import readers from './readers';
 import writers from './writers';
-import paginationNodes from 'src/dbdi/nodes/paginationNodes';
+import paginationNodes from 'dbdi/paginationNodes';
 
 /**
  * Project main data

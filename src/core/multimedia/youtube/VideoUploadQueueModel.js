@@ -1,4 +1,4 @@
-import { getOptionalArgument } from "../../../dbdi/dataAccessUtil";
+import { getOptionalArgument } from "dbdi/util";
 import { EmptyObject } from "../../../util";
 
 

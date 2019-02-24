@@ -1,12 +1,12 @@
 import { EmptyObject, EmptyArray } from 'src/util';
-import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
+import { getOptionalArguments } from 'dbdi/util';
 
 import mapValues from 'lodash/mapValues';
 import filter from 'lodash/filter';
 import sortBy from 'lodash/sortBy';
 import size from 'lodash/size';
 
-import { NOT_LOADED } from 'src/dbdi/react/dataBind';
+import { NOT_LOADED } from 'dbdi';
 
 export default {
   // #########################################################################

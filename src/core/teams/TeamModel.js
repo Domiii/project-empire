@@ -1,5 +1,5 @@
 import { EmptyObject } from 'src/util';
-import { getOptionalArguments } from 'src/dbdi/dataAccessUtil';
+import { getOptionalArguments } from 'dbdi/util';
 
 /**
  * Team data

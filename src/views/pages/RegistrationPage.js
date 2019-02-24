@@ -7,7 +7,7 @@ import random from 'lodash/random';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
 
 import DynamicForm from 'src/views/tools/DynamicForm';
 import UserBadge from 'src/views/components/users/UserBadge';
@@ -15,7 +15,7 @@ import {
   Alert, Button, Jumbotron, Well
 } from 'react-bootstrap';
 import FAIcon from 'src/views/components/util/FAIcon';
-import { NOT_LOADED } from '../../dbdi/react';
+import { NOT_LOADED } from 'dbdi/util';
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
 import { EmptyArray } from '../../util';
 

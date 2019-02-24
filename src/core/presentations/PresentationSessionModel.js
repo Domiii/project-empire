@@ -15,11 +15,11 @@ import reduce from 'lodash/reduce';
 import shuffle from 'lodash/shuffle';
 import concat from 'lodash/concat';
 
-import paginationNodes from 'src/dbdi/nodes/paginationNodes';
+import paginationNodes from 'dbdi/paginationNodes';
 import { downloadSpreadsheetJSON } from '../../util/SpreadsheetUtil';
 import { PresentationStatus } from './PresentationModel';
 //import { Promise } from 'firebase';
-import { NOT_LOADED } from '../../dbdi';
+import { NOT_LOADED } from 'dbdi/util';
 import { EmptyObject } from '../../util';
 
 async function doWait(ms) {

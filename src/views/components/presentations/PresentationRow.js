@@ -4,7 +4,8 @@ import size from 'lodash/size';
 import { EmptyObject, EmptyArray } from '../../../util';
 
 import React, { Component, Fragment as F } from 'react';
-import dataBind, { NOT_LOADED } from '../../../dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
+import { NOT_LOADED } from 'dbdi/util';
 
 import {
   Button, Alert, Panel, Table
@@ -22,7 +23,7 @@ import {
 } from '../../../core/presentations/PresentationModel';
 
 import PresentationEditor from './PresentationEditor';
-import { getOptionalArgument } from '../../../dbdi/dataAccessUtil';
+import { getOptionalArgument } from 'dbdi/util';
 
 const TrOfStatus = styled.tr`
   color: ${({ presentationStatus }) => {

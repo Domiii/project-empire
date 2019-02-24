@@ -1,7 +1,7 @@
 import isPlainObject from 'lodash/isPlainObject';
 
 import MediaUploader from './MediaUploader';
-import { getOptionalArguments, getOptionalArgument } from '../../../dbdi/dataAccessUtil';
+import { getOptionalArguments, getOptionalArgument } from 'dbdi/util';
 
 // /**
 //  * YouTube video uploader class

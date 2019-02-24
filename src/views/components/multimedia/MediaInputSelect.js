@@ -3,8 +3,8 @@ import filter from 'lodash/filter';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import dataBind from 'src/dbdi/react/dataBind';
-import { getOptionalArgument } from 'src/dbdi/dataAccessUtil';
+import { dataBind } from 'dbdi/react';
+import { getOptionalArgument, NOT_LOADED } from 'dbdi/util';
 
 import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
@@ -17,7 +17,6 @@ import {
 
 import Flexbox from 'flexbox-react';
 import Select from 'react-select';
-import { NOT_LOADED } from '../../../dbdi/react';
 //import { Promise } from 'firebase';
 
 const validDeviceIdRegex = /[0-9A-Fa-f]{6}/g;

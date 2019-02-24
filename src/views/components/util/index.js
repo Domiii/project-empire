@@ -1,6 +1,6 @@
-export SimpleGrid from './SimpleGrid';
+// export SimpleGrid from './SimpleGrid';
 
-export FAIcon from './FAIcon';
+// export FAIcon from './FAIcon';
 
 // import React, { Component, PureComponent } from 'react';
 // import PropTypes from 'prop-types';

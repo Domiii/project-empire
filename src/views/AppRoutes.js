@@ -3,7 +3,7 @@ import { Route, Switch, Redirect } from 'react-router-dom';
 
 import { routeTemplates } from './routes';
 
-import dataBind from 'src/dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
 
 import SignInPage from './pages/SignInPage';
 import RegistrationPage from './pages/RegistrationPage';

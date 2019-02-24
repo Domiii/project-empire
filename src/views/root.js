@@ -3,7 +3,7 @@ import { BrowserRouter } from 'react-router-dom';
 
 import App from './app';
 import AppRoutes from './AppRoutes';
-import DataSourceProvider from 'src/dbdi/react/DataSourceProvider';
+import { DataSourceProvider } from 'dbdi/react';
 import dataSourceTree from 'src/core/dataSourceTree';
 
 export default function Root({ }) {

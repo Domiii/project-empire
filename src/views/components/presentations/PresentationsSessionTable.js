@@ -4,7 +4,8 @@ import { EmptyObject, EmptyArray } from '../../../util';
 import filesize from 'filesize';
 
 import React, { Component, Fragment as F } from 'react';
-import dataBind, { NOT_LOADED } from '../../../dbdi/react/dataBind';
+import { dataBind } from 'dbdi/react';
+import { NOT_LOADED } from 'dbdi/util';
 
 import {
   Button, Alert, Panel, Table
@@ -23,7 +24,7 @@ import { YtStatusPanel } from '../multimedia/VideoUploadPanel';
 
 import PresentationRow from './PresentationRow';
 import shallowEqual from '../../../util/shallowEqual';
-import { getOptionalArguments, getOptionalArgument } from '../../../dbdi/dataAccessUtil';
+import { getOptionalArguments, getOptionalArgument } from 'dbdi/util';
 import { PresentationStatus } from '../../../core/presentations/PresentationModel';
 
 
