@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { 
   Alert, Button, Modal
 } from 'react-bootstrap';
-import { FAIcon } from 'src/views/components/util';
+import FAIcon from 'src/views/components/util/FAIcon';
 import autoBind from 'react-autobind';
 
 

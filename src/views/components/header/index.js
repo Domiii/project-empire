@@ -17,7 +17,7 @@ import {
 } from 'react-router-bootstrap';
 
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
-import { FAIcon } from 'src/views/components/util';
+import FAIcon from 'src/views/components/util/FAIcon';
 import { PresentationStatus } from '../../../core/presentations/PresentationModel';
 
 class NavWrap extends Component {

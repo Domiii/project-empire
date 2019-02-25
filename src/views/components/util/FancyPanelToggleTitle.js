@@ -6,7 +6,7 @@ import {
 } from 'react-bootstrap';
 
 import Flexbox from 'flexbox-react';
-import { FAIcon } from 'src/views/components/util';
+import FAIcon from 'src/views/components/util/FAIcon';
 
 function OpenIndicatorDefault() {
   return (

@@ -24,7 +24,7 @@ import { LinkContainer } from 'react-router-bootstrap';
 import Flexbox from 'flexbox-react';
 
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
-import { FAIcon } from 'src/views/components/util';
+import FAIcon from 'src/views/components/util/FAIcon';
 
 
 

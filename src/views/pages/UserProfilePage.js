@@ -7,7 +7,7 @@ import DynamicForm from 'src/views/tools/DynamicForm';
 import {
   Alert, Button, Jumbotron, Well
 } from 'react-bootstrap';
-import { FAIcon } from 'src/views/components/util';
+import FAIcon from 'src/views/components/util/FAIcon';
 import { LoadOverlay } from 'src/views/components/overlays';
 
 

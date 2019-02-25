@@ -13,6 +13,7 @@ import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 
 import 'video.js/dist/video-js.min.css';
 
+import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 import moment from 'moment';
 
@@ -48,6 +49,8 @@ setupDebugTools();
 
 // GO!
 firebase.initializeApp(firebaseConfig);
+
+console.log('called firebase.initializeApp')
 const rootElement = document.getElementById('root');
 
 

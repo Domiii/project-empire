@@ -30,7 +30,7 @@ import merge from 'lodash/merge';
 import times from 'lodash/times';
 import zipObject from 'lodash/zipObject';
 
-import buildSourceTree from 'dbdi';
+import { buildSourceTree } from 'dbdi';
 
 const utility = {
   readers: {

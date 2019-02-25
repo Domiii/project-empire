@@ -17,7 +17,7 @@ import MissionHeader from 'src/views/components/missions/MissionHeader';
 import MissionEditorForm from 'src/views/components/missions/MissionEditorForm';
 
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
-import { FAIcon } from 'src/views/components/util';
+import FAIcon from 'src/views/components/util/FAIcon';
 
 
 export const MissionBody = dataBind({})(function MissionBody(

@@ -79,7 +79,10 @@ config.resolve = {
   modules: [
     path.resolve(__dirname, 'node_modules'),
     path.resolve(__dirname, './'),
-  ]
+  ],
+  alias: {
+    dbdi: path.resolve(__dirname, 'node_modules/dbdi/dist')
+  }
 };
 
 config.plugins = [
@@ -124,7 +127,7 @@ if (ENV_DEVELOPMENT || ENV_PRODUCTION) {
 //  DEVELOPMENT
 //-------------------------------------
 if (ENV_DEVELOPMENT) {
-  config.devtool = 'source-map';
+  config.devtool = 'eval-source-map';
 
   config.entry.main.unshift(
     `webpack-dev-server/client?http://${HOST}:${PORT}`,

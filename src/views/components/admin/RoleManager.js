@@ -21,7 +21,7 @@ import {
 } from 'react-bootstrap';
 
 import ConfirmModal from 'src/views/components/util/ConfirmModal';
-import { FAIcon } from 'src/views/components/util';
+import FAIcon from 'src/views/components/util/FAIcon';
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 import UserList from 'src/views/components/users/UserList';

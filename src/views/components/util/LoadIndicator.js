@@ -2,7 +2,7 @@ import isNumber from 'lodash/isNumber';
 
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { FAIcon } from 'src/views/components/util';
+import FAIcon from 'src/views/components/util/FAIcon';
 
 
 export default class LoadIndicator extends PureComponent {

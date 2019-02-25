@@ -17,7 +17,7 @@ import {
   LinkContainer
 } from 'react-router-bootstrap';
 import { LoadOverlay } from 'src/views/components/overlays';
-import { FAIcon } from 'src/views/components/util';
+import FAIcon from 'src/views/components/util/FAIcon';
 
 //import ProjectControlList from 'src/views/components/projects/ProjectControlList';
 //import { ProjectMeetingPanel } from 'src/views/components/projects/MeetingView';

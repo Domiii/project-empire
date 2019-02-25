@@ -11,7 +11,6 @@ import Flexbox from 'flexbox-react';
 import { dataBind } from 'dbdi/react';
 
 import Header from './components/header';
-import { FAIcon } from 'src/views/components/util';
 
 import { Overlay, LoadOverlay } from 'src/views/components/overlays';
 import styled from 'styled-components';
@@ -25,7 +24,7 @@ margin-bottom: 5px;
 `;
 
 @dataBind()
-export class App extends Component {
+class App extends Component {
   static contextTypes = {
     //router: PropTypes.object.isRequired
   };
