@@ -12,10 +12,13 @@ import { dataBind } from 'dbdi/react';
 import {
   Panel, Button, ListGroup, ListGroupItem, Alert, Badge
 } from 'react-bootstrap';
+import Flexbox from 'flexbox-react';
 
 import LoadIndicator from 'src/views/components/util/LoadIndicator';
 
 import FancyPanelToggleTitle from 'src/views/components/util/FancyPanelToggleTitle';
+
+import CohortEditor from './CohortEditor';
 
 @dataBind({
   clickChangeToCohort(evt, { cohortId }, { setCurrentUserCohortId }) {
@@ -24,7 +27,51 @@ import FancyPanelToggleTitle from 'src/views/components/util/FancyPanelToggleTit
 })
 class SwitchCohortButton extends Component {
   render({ }, { clickChangeToCohort }) {
-    return <Button onClick={clickChangeToCohort}>Switch</Button>;
+    return <Button onClick={clickChangeToCohort}>Select this Cohort</Button>;
+  }
+}
+
+@dataBind({
+
+})
+export class CohortPanel extends Component {
+  state = {
+    expanded: false
+  };
+
+  toggleExpand = () => {
+    const { expanded } = this.state;
+    this.setState({ expanded: !expanded });
+  }
+
+  render(
+    { cohortId },
+    { cohortName },
+    { currentUserCohortId }
+  ) {
+    const name = cohortName({ cohortId });
+    const { expanded } = this.state;
+
+    return (<Panel key={cohortId} expanded={expanded} onToggle={this.toggleExpand}>
+      <Panel.Heading>
+        <Flexbox justifyContent="space-between" className="full-width">
+          <FancyPanelToggleTitle compressed={true}>
+            {cohortId}. {name} &nbsp;
+          </FancyPanelToggleTitle>
+          <>
+            {cohortId !== currentUserCohortId &&
+              <SwitchCohortButton cohortId={cohortId} />
+            }
+            {cohortId === currentUserCohortId &&
+              <Badge>(currently selected cohort)</Badge>
+            }
+          </>
+        </Flexbox>
+      </Panel.Heading>
+      <Panel.Body collapsible>
+        {expanded && <CohortEditor cohortId={cohortId} />}
+      </Panel.Body>
+    </Panel>);
   }
 }
 
@@ -35,24 +82,11 @@ export class CohortTable extends Component {
   render(
     { },
     { },
-    { cohortList, currentUserCohortId }
+    { cohortList }
   ) {
-    console.warn(cohortList);
     return (<div>{
       map(pickBy(cohortList, (coh, id) => !!coh && !!id), (cohort, cohortId) => {
-        const {
-          name
-        } = cohort;
-
-        return (<Panel key={cohortId}>
-          <Panel.Heading>{cohortId}. {name}</Panel.Heading>
-          <Panel.Body>
-            {
-              cohortId !== currentUserCohortId && 
-                <SwitchCohortButton cohortId={cohortId} />
-            }
-          </Panel.Body>
-        </Panel>);
+        return (<CohortPanel key={cohortId} cohortId={cohortId} />);
       })
     }</div>);
   }
@@ -88,9 +122,7 @@ export default class CohortManager extends Component {
       );
     }
 
-
     const { expanded } = this.state;
-
     return (<Panel expanded={expanded} onToggle={this.toggleExpand}>
       <Panel.Heading>
         <FancyPanelToggleTitle>

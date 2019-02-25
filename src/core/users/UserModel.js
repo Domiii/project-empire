@@ -396,20 +396,22 @@ export default {
               }
             },
             reader(user, args, { }, { currentUid, _tree: tree }) {
+              // when currentUser changes: fetch all data of user's currently selected cohort
               // TODO: Clean this up
               if (user && currentUid && currentUid === args.uid) {
                 const { cohortId } = user;
                 if (cohortId) {
                   const byCohortNode = tree.getNodeByName('byCohort');
                   const cohortIdStr = cohortId + '';
-                  if (byCohortNode.pathDescriptor.getLocalPath() !== cohortIdStr) {
+                  const pathCohortId = byCohortNode.pathDescriptor.getLocalPath();
+                  if (pathCohortId != cohortIdStr) {
                     byCohortNode.pathDescriptor.setPath(cohortIdStr);
                     byCohortNode.forEachNodeInSubTree(function (node) {
                       if (node.pathDescriptor) {
                         node.pathDescriptor.updatePath();
                       }
                     });
-                    console.warn('updated cohortId path');
+                    //console.warn('updated cohortId path');
                   }
                 }
               }

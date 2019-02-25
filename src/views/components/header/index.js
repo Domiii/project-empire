@@ -43,6 +43,22 @@ class NavWrap extends Component {
 }
 
 
+const CurrentCohortInfo = dataBind()(function CurrentCohortInfo(
+  { },
+  { cohortName },
+  { currentUserCohortId: cohortId }
+) {
+  if (!cohortId) {
+    return '';
+  }
+
+  const name = cohortName({ cohortId })
+
+  return (<Navbar.Text>
+    {name}
+  </Navbar.Text>);
+});
+
 const PresentationStatusIcon = dataBind()(function PresentationStatusIcon(
   { },
   { presentationSessionActivePresentationId, get_presentationStatus },
@@ -58,7 +74,7 @@ const PresentationStatusIcon = dataBind()(function PresentationStatusIcon(
   const isInProgress = status === PresentationStatus.InProgress;
 
   return (
-    <FAIcon className={isInProgress && 'slow-blink' || ''} 
+    <FAIcon className={isInProgress && 'slow-blink' || ''}
       name="microphone"
       color={isInProgress && 'red' || 'gray'} />
   );
@@ -184,8 +200,7 @@ export default class Header extends Component {
 
     const adminEls = isCurrentUserAdmin && [
       (
-        <NavWrap key="divider1" className="divider-vertical">
-        </NavWrap>
+        <NavWrap key="divider1" className="divider-vertical" />
       ),
       (
         <LinkContainer key="projects" to="/projects">
@@ -238,6 +253,8 @@ export default class Header extends Component {
           </Navbar.Header>
           <Navbar.Collapse className="no-padding no-margin">
             <Nav>
+              <NavWrap key="divider1" className="divider-vertical" />
+              <CurrentCohortInfo />
               <LinkContainer key="pres" to="/pres">
                 <NavItem eventKey={10}>
                   Presentations <PresentationStatusIcon />
