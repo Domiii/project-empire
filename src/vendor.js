@@ -1,7 +1,4 @@
-// Polyfills
-import 'babel-polyfill';
-
-// React Redux
+// React stuff
 import 'react';
 import 'react-dom';
 import 'react-hot-loader';
