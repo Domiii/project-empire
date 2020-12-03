@@ -15,7 +15,7 @@ Uses React, Firebase, Bootstrap and (my own) DBDI (data-binding by dependency in
 
 Snapshot from an early version shows a presentation list that is currently live (presenting in progress or about to start):
 
-![](https://rawcdn.githack.com/Domiii/project-empire/dbb7cf18875f876c0f1d78d9fb8fcadf07900e9a/pe-screen.png)
+![](screen1.png)
 
 ## TODO for Domi
 * data by cohort
